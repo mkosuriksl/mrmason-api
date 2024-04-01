@@ -1,0 +1,9 @@
+package com.application.mrmason.dto;
+
+import lombok.Data;
+
+@Data
+public class ResponseLoginDto {
+	private String message;
+	private CustomerRegistrationDto loginDetails;
+}

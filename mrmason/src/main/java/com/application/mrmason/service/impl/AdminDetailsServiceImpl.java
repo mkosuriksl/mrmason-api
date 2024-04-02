@@ -13,12 +13,15 @@ import com.application.mrmason.entity.CustomerLogin;
 import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.service.AdminDetailsService;
+import com.application.mrmason.service.OtpGenerationService;
 
 @Service
 public class AdminDetailsServiceImpl implements AdminDetailsService {
 	@Autowired
 	public AdminDetailsRepo adminRepo;
-
+	
+	@Autowired
+	OtpGenerationService otpService;
 	@Override
 	public AdminDetails registerDetails(AdminDetails admin) {
 		BCryptPasswordEncoder byCrypt = new BCryptPasswordEncoder();
@@ -87,6 +90,8 @@ public class AdminDetailsServiceImpl implements AdminDetailsService {
 			return null;
 		}
 	}
+	
+	
 
 	@Override
 	public String adminLoginDetails(String userEmail, String phno, String userPassword) {
@@ -111,5 +116,60 @@ public class AdminDetailsServiceImpl implements AdminDetailsService {
 			}
 		}
 		return "invalid";
+	}
+	
+	@Override
+	public String changePassword(String usermail, String oldPass, String newPass, String confPass, String phno) {
+		BCryptPasswordEncoder byCrypt=new BCryptPasswordEncoder();
+		Optional<AdminDetails> user= Optional.of(adminRepo.findByEmailOrMobile(usermail, phno));
+		if(user.isPresent()) {
+			if(byCrypt.matches(oldPass,user.get().getPassword() )) {
+				if(newPass.equals(confPass)) {
+					String encryptPassword =byCrypt.encode(confPass);
+					user.get().setPassword(encryptPassword);
+					adminRepo.save(user.get());
+					return "changed";
+				}else {
+					return "notMatched";
+				}
+			}else {
+				return "incorrect";
+			}
+		}else {
+			return "invalid";
+		}
+	}
+	
+	@Override
+	public String sendMail(String email) {
+		Optional<AdminDetails> userOp = Optional.of(adminRepo.findByEmail(email));
+		if (userOp.isPresent()) {
+			otpService.generateOtp(email);
+			return "otp";
+		}
+		return null;
+	}
+
+	@Override
+	public String forgetPassword(String email,String mobile, String otp, String newPass, String confPass) {
+		BCryptPasswordEncoder byCrypt = new BCryptPasswordEncoder();
+
+		Optional<AdminDetails> userOp = Optional.of(adminRepo.findByEmailOrMobile(email,mobile));
+		if (userOp.isPresent()) {
+			if (otpService.verifyOtp(email, otp)) {
+				if (newPass.equals(confPass)) {
+					String encryptPassword = byCrypt.encode(confPass);
+					userOp.get().setPassword(encryptPassword);
+					adminRepo.save(userOp.get());
+					return "changed";
+				} else {
+					return "notMatched";
+				}
+			} else {
+				return "incorrect";
+			}
+		}
+		return null;
+
 	}
 }

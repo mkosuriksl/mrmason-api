@@ -10,5 +10,5 @@ import com.application.mrmason.entity.AdminDetails;
 public interface AdminDetailsRepo extends JpaRepository<AdminDetails,Long >{
 	AdminDetails findByEmailOrMobile(String email,String mobile);
 	List<AdminDetails>  findByAdminType(String adminType);
-	
+	AdminDetails findByEmail(String email);
 }

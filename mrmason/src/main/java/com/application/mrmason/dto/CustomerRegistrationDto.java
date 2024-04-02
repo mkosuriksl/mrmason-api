@@ -18,7 +18,5 @@ public class CustomerRegistrationDto {
 	private String userState;
 	private String userPincode;
 	private String regDate;
-	
-	private String fromDate;
-	private String toDate;
+
 }

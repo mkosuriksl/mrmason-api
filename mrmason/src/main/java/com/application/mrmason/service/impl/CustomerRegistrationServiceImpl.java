@@ -89,7 +89,7 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 			repo.save(existedById.get());
 			return "Success";
 		}else {
-			return "invalid";
+			return null;
 		}
 	}
 	@Override

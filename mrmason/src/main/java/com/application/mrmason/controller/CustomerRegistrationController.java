@@ -12,8 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ChangePasswordDto;
-import com.application.mrmason.dto.CustomerRegistrationDto;
+import com.application.mrmason.dto.FilterCustomerDto;
 import com.application.mrmason.dto.ResponseCustomerRegDto;
+import com.application.mrmason.dto.ResponseUpdateDto;
 import com.application.mrmason.dto.UpdateProfileDto;
 import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.service.CustomerRegistrationService;
@@ -37,7 +38,7 @@ public class CustomerRegistrationController {
 	}
 
 	@GetMapping("/filterCustomers")
-	public ResponseEntity<?> getCustomers(@RequestBody CustomerRegistrationDto customer) {
+	public ResponseEntity<?> getCustomers(@RequestBody FilterCustomerDto customer) {
 		
 	    String userEmail=customer.getUserEmail();
 	    String userMobile=customer.getUserMobile();
@@ -73,7 +74,7 @@ public class CustomerRegistrationController {
 	}
 
 	@PutMapping("/updateProfile")
-	public ResponseEntity<String> updateCustomer(@RequestBody UpdateProfileDto request) {
+	public ResponseEntity<?> updateCustomer(@RequestBody UpdateProfileDto request) {
 		String userName = request.getUserName();
 		String userTown = request.getUserTown();
 		String userState = request.getUserState();
@@ -81,9 +82,12 @@ public class CustomerRegistrationController {
 		String userPinCode = request.getUserPincode();
 		String userid = request.getUserid();
 		
+		ResponseUpdateDto response =new ResponseUpdateDto();
 		try {
 			if (service.updateCustomerData(userName, userTown, userState, userDistrict, userPinCode, userid) != null) {
-				return new ResponseEntity<>("Successfully Updated.", HttpStatus.OK);
+				response.setUpdateProfile(service.getProfileData(userid));
+				response.setMessage("Successfully Updated.");
+				return new ResponseEntity<>(response, HttpStatus.OK);
 
 			}
 		} catch (Exception e) {

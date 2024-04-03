@@ -68,8 +68,7 @@ public class CustomerAssetsController {
 			return new ResponseEntity<List<CustomerAssets>>(entity, HttpStatus.OK);
 
 		} catch (Exception e) {
-			e.getMessage();
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
 		}
 
 	}

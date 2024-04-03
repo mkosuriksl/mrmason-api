@@ -2,6 +2,7 @@ package com.application.mrmason.controller;
 
 import java.util.Optional;
 
+import com.application.mrmason.dto.Logindto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,7 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.application.mrmason.dto.LoginDto;
+
 import com.application.mrmason.entity.CustomerEmailOtp;
 import com.application.mrmason.repository.CustomerEmailOtpRepo;
 import com.application.mrmason.service.CustomerEmailOtpService;
@@ -29,8 +30,8 @@ public class CustomerEmailOtpController {
 	CustomerEmailOtpRepo otpRepo;
 
 	@PostMapping("/sendOtp")
-	public ResponseEntity<String> sendEmail(@RequestBody LoginDto login) {
-		String userEmail = login.getUserEmail();
+	public ResponseEntity<String> sendEmail(@RequestBody Logindto login) {
+		String userEmail = login.getEmail();
 		if (emailLoginService.isEmailExists(userEmail) == null) {
 			return new ResponseEntity<String>("Invalid EmailId..!", HttpStatus.NOT_FOUND);
 		} else {
@@ -45,8 +46,8 @@ public class CustomerEmailOtpController {
 	}
 
 	@PostMapping("/verifyOtp")
-	public ResponseEntity<String> verifyCustomer(@RequestBody LoginDto login) {
-		String userEmail = login.getUserEmail();
+	public ResponseEntity<String> verifyCustomer(@RequestBody Logindto login) {
+		String userEmail = login.getEmail();
 		String otp = login.getOtp();
 
 		if (otpService.verifyOtp(userEmail, otp)) {

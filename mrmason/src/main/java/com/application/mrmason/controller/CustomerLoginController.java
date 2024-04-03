@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ChangePasswordDto;
-import com.application.mrmason.dto.LoginDto;
+import com.application.mrmason.dto.Logindto;
 import com.application.mrmason.dto.ResponseLoginDto;
 import com.application.mrmason.service.CustomerLoginService;
 import com.application.mrmason.service.CustomerRegistrationService;
@@ -21,10 +21,10 @@ public class CustomerLoginController {
 	CustomerRegistrationService regService;
 
 	@PostMapping("/loginWithPass")
-	public ResponseEntity<?> login(@RequestBody LoginDto login) {
-		String userEmail = login.getUserEmail();
-		String userMobile = login.getUserMobile();
-		String userPassword = login.getUserPassword();
+	public ResponseEntity<?> login(@RequestBody Logindto login) {
+		String userEmail = login.getEmail();
+		String userMobile = login.getMobile();
+		String userPassword = login.getPassword();
 
 		try {
 			if (loginService.loginDetails(userEmail, userMobile, userPassword) == "login") {
@@ -49,9 +49,9 @@ public class CustomerLoginController {
 	}
 
 	@PostMapping("/forgetPassword/sendOtp")
-	public ResponseEntity<String> sendOtpForPasswordChange(@RequestBody LoginDto login) {
+	public ResponseEntity<String> sendOtpForPasswordChange(@RequestBody Logindto login) {
 		try {
-			String userMail=login.getUserEmail();
+			String userMail=login.getEmail();
 			if (loginService.sendMail(userMail) != null) {
 				return new ResponseEntity<String>("OTP Sent to Registered EmailId.", HttpStatus.OK);
 			}

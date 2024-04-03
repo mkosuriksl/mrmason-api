@@ -1,7 +1,8 @@
 package com.application.mrmason.controller;
 
-import java.util.List;
 
+
+import com.application.mrmason.dto.Logindto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.AdminDetailsDto;
 import com.application.mrmason.dto.ChangePasswordDto;
-import com.application.mrmason.dto.LoginDto;
 import com.application.mrmason.dto.ResponceAdminDetailsDto;
 import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.service.AdminDetailsService;
@@ -80,10 +80,10 @@ public class AdminDetailsController {
 	}
 
 	@PostMapping("/adminLoginWithPass")
-	public ResponseEntity<?> login(@RequestBody LoginDto login) {
-		String userEmail = login.getUserEmail();
-		String userMobile = login.getUserMobile();
-		String userPassword = login.getUserPassword();
+	public ResponseEntity<?> login(@RequestBody Logindto login) {
+		String userEmail = login.getEmail();
+		String userMobile = login.getMobile();
+		String userPassword = login.getPassword();
 		ResponceAdminDetailsDto response=new ResponceAdminDetailsDto();
 		
 		try {
@@ -129,9 +129,9 @@ public class AdminDetailsController {
 	}
 	
 	@PostMapping("/admin/forgetPassword/sendOtp")
-	public ResponseEntity<String> sendOtpForPasswordChange(@RequestBody LoginDto login) {
+	public ResponseEntity<String> sendOtpForPasswordChange(@RequestBody Logindto login) {
 		try {
-			String userMail=login.getUserEmail();
+			String userMail=login.getEmail();
 			if (adminService.sendMail(userMail) != null) {
 				return new ResponseEntity<String>("OTP Sent to Registered EmailId.", HttpStatus.OK);
 			}

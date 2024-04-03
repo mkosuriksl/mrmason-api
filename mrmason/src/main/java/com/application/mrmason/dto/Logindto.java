@@ -10,4 +10,5 @@ public class Logindto {
 	public String email;
 	public String password;
 	public String mobile;
+	public  String otp;
 }

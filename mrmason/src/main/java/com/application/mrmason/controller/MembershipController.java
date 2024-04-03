@@ -1,7 +1,5 @@
 package com.application.mrmason.controller;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,33 +24,32 @@ public class MembershipController {
 	public MembershipDetailsRepo memDetailsRepo;
 
 	@PostMapping("/addMembership")
-	public ResponseEntity<?> addMembership(@RequestBody List<MembershipDetails>  member) {
+	public ResponseEntity<?> addMembership(@RequestBody MembershipDetails member) {
 		ResponseMembership response = new ResponseMembership();
 		try {
-			for (MembershipDetails membership : member) {
-				String addedMember = memService.addOrUpdateMembership(membership);
-				
-				if (addedMember =="added") {
-					// If membership was successfully added, return a custom response
-					response.setMembership(memService.getMembership(membership));
-					response.setMessage("Membership successfully added.");
-					return new ResponseEntity<>(response, HttpStatus.OK);
-				} else if(addedMember=="renewel"){
-					// If membership addition failed, return an error response
-					response.setMembership(memService.getMembership(membership));
-					response.setMessage("Membership successfully renewed.");
-					return new ResponseEntity<>(response, HttpStatus.OK);
-					
-				}else if(addedMember=="present") {
-					return new ResponseEntity<>("A Membership is in active for this asset.!!", HttpStatus.ALREADY_REPORTED);
-				}
 
-	        }
-		    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to add membership, Invalid User");
-		}catch(Exception e) {
+			String addedMember = memService.addOrUpdateMembership(member);
+
+			if (addedMember == "added") {
+				// If membership was successfully added, return a custom response
+				response.setMembership(memService.getMembership(member));
+				response.setMessage("Membership successfully added.");
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			} else if (addedMember == "renewel") {
+				// If membership addition failed, return an error response
+				response.setMembership(memService.getMembership(member));
+				response.setMessage("Membership successfully renewed.");
+				return new ResponseEntity<>(response, HttpStatus.OK);
+
+			} else if (addedMember == "present") {
+				return new ResponseEntity<>("A Membership is in active for this asset.!!", HttpStatus.ALREADY_REPORTED);
+			}
+
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("Failed to add membership, Invalid User");
+		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
 		}
-		
-		
+
 	}
 }

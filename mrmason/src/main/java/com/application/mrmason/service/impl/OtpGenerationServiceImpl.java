@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+<<<<<<< HEAD
 import com.application.mrmason.service.EmailService;
 import com.application.mrmason.service.OtpGenerationService;
 @Service
@@ -19,6 +20,19 @@ public class OtpGenerationServiceImpl implements OtpGenerationService{
 	private final Map<String, String> otpStorage = new HashMap<>(); // Store OTPs temporarily
 
     // Generate and send OTP to the user (via email, SMS, etc.)
+=======
+@Service
+public class OtpGenerationServiceImpl {
+
+	@Autowired
+	EmailServiceImpl mailService;
+	
+	LocalTime local=LocalTime.now();
+	
+	private final Map<String, String> otpStorage = new HashMap<>(); 
+
+   
+>>>>>>> service-person-module
     public String generateOtp(String mail) {
     	int randomNum = (int) (Math.random() * 900000) + 100000;
 		String otp = String.valueOf(randomNum);
@@ -32,5 +46,8 @@ public class OtpGenerationServiceImpl implements OtpGenerationService{
         return storedOtp != null && storedOtp.equals(enteredOtp);
     }
 
+<<<<<<< HEAD
    
+=======
+>>>>>>> service-person-module
 }

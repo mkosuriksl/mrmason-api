@@ -1,11 +1,5 @@
 package com.application.mrmason.dto;
 
-import java.util.Date;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,7 +22,7 @@ public class Userdto {
     public String updatedDate;
 
 	
-	public Date registeredDate;
+	public String registeredDate;
     public String verified;
     public String serviceCategory;
     private String userType;

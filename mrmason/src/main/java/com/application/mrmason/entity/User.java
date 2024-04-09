@@ -63,7 +63,7 @@ public class User {
 
 	@CreationTimestamp
 	@Column(name = "REGISTRATION_DATETIME")
-	public Date registeredDate;
+	public String registeredDate;
 
 	@Column(name = "VERIFIED")
 	@Builder.Default

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ChangePasswordDto;
-import com.application.mrmason.dto.FilterCustomerDto;
+import com.application.mrmason.dto.FilterCustomerAndUser;
 import com.application.mrmason.dto.ResponseCustomerRegDto;
 import com.application.mrmason.dto.ResponseUpdateDto;
 import com.application.mrmason.dto.UpdateProfileDto;
@@ -38,7 +38,7 @@ public class CustomerRegistrationController {
 	}
 
 	@GetMapping("/filterCustomers")
-	public ResponseEntity<?> getCustomers(@RequestBody FilterCustomerDto customer) {
+	public ResponseEntity<?> getCustomers(@RequestBody FilterCustomerAndUser customer) {
 		
 	    String userEmail=customer.getUserEmail();
 	    String userMobile=customer.getUserMobile();

@@ -1,5 +1,6 @@
 package com.application.mrmason.service.impl;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -174,6 +175,19 @@ public class UserService {
 		}
 
 		return null;
+
+	}
+	public List<User> getServicePersonData(String email,String phNo,String location,String status,String category,String fromDate,String toDate) {
+		if(fromDate==null && toDate==null&& location==null  && category==null && status!=null|| email!=null || phNo!=null) {
+			return userDAO.findByEmailOrMobileOrStatusOrderByRegisteredDateDesc(email, phNo, status);
+		}else if(category!=null){
+			return userDAO.findByServiceCategory(category);
+		}else if(location!=null) {
+			return userDAO.findByState(location);
+		}
+		else {
+			return userDAO.findByRegisteredDateBetween(fromDate, toDate);
+		}
 
 	}
 }

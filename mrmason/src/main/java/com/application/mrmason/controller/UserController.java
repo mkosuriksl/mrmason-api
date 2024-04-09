@@ -1,5 +1,7 @@
 package com.application.mrmason.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -7,10 +9,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ChangeForfotdto;
+import com.application.mrmason.dto.FilterCustomerAndUser;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.repository.SPAvailabilityRepo;
 import com.application.mrmason.repository.UserDAO;
@@ -123,6 +125,28 @@ public class UserController {
 		}
 
 		return new ResponseEntity<>(userService.getServiceProfile(email), HttpStatus.OK);
+
+	}
+	@GetMapping("/filterServicePerson")
+	public ResponseEntity<?> getCustomers(@RequestBody FilterCustomerAndUser user) {
+
+	    String userEmail=user.getUserEmail();
+	    String userMobile=user.getUserMobile();
+		String userState=user.getUserState();
+		String fromDate=user.getFromDate();
+		String toDate=user.getToDate();
+		String status=user.getStatus();
+		String category=user.getServiceCategory();
+		try {
+			List<User> entity = userService.getServicePersonData(userEmail, userMobile,userState,status,category, fromDate, toDate);
+			if (!entity.isEmpty()) {
+				return ResponseEntity.ok(entity);
+			} else {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Error: Failed to fetch users. Please try again later.");
+			}
+		}catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+		}
 
 	}
 

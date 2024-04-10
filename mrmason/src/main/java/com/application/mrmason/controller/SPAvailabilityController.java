@@ -32,8 +32,7 @@ public class SPAvailabilityController {
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred");
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid user");
 	}
@@ -44,12 +43,15 @@ public class SPAvailabilityController {
 		String email = upDto.getEmail();
 
 		List<SPAvailability> availability = spAvailableService.getAvailability(email, mobile);
-
-		if (!availability.isEmpty()) {
-			return new ResponseEntity<>(availability, HttpStatus.OK);
-		} else {
-			return new ResponseEntity<>("No user found for the given parameters.", HttpStatus.NOT_FOUND);
+		try {
+			if (!availability.isEmpty()) {
+				return new ResponseEntity<>(availability, HttpStatus.OK);
+			} else {
+				return new ResponseEntity<>("No user found for the given parameters.", HttpStatus.NOT_FOUND);
+			}
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
-	}
 
+	}
 }

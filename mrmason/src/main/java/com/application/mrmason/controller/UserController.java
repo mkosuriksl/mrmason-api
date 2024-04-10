@@ -32,28 +32,36 @@ public class UserController {
 
 	@PostMapping("/sp-register")
 	public ResponseEntity<String> create(@RequestBody User registrationDetails) {
+		try {
+			if (userService.isEmailExists(registrationDetails.getEmail())) {
+				return new ResponseEntity<>("Email already exists", HttpStatus.BAD_REQUEST);
+			}
+			if (userService.isMobileExists(registrationDetails.getMobile())) {
+				return new ResponseEntity<>("PhoneNumber already exists", HttpStatus.BAD_REQUEST);
+			}
 
-		if (userService.isEmailExists(registrationDetails.getEmail())) {
-			return new ResponseEntity<>("Email already exists", HttpStatus.BAD_REQUEST);
+			userService.addDetails(registrationDetails);
+			return new ResponseEntity<>("User added successfully", HttpStatus.OK);
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
-		if (userService.isMobileExists(registrationDetails.getMobile())) {
-			return new ResponseEntity<>("PhoneNumber already exists", HttpStatus.BAD_REQUEST);
-		}
-
-		userService.addDetails(registrationDetails);
-		return new ResponseEntity<>("User added successfully", HttpStatus.OK);
 	}
 
 	@PutMapping("/sp-update-profile")
 	public ResponseEntity<?> updateServiceProfile(@RequestBody User registrationDetails) {
 
-		String email=registrationDetails.getEmail();
+		String email = registrationDetails.getEmail();
 		User updatedUser = userService.updateProfile(registrationDetails, email);
-		if (updatedUser == null) {
-			return new ResponseEntity<>("invalid Email", HttpStatus.NOT_FOUND);
-		} else {
-			String successMessage = "Profile updated successfully";
-			return ResponseEntity.ok().body(successMessage);
+
+		try {
+			if (updatedUser == null) {
+				return new ResponseEntity<>("invalid Email", HttpStatus.NOT_FOUND);
+			} else {
+				String successMessage = "Profile updated successfully";
+				return ResponseEntity.ok().body(successMessage);
+			}
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
 	}
 
@@ -74,8 +82,7 @@ public class UserController {
 				return new ResponseEntity<>("Old Password is Incorrect", HttpStatus.UNAUTHORIZED);
 			}
 		} catch (Exception e) {
-			e.getMessage();
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.NOT_FOUND);
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
 		return new ResponseEntity<>("Invalid User.!", HttpStatus.NOT_FOUND);
 	}
@@ -88,8 +95,7 @@ public class UserController {
 				return new ResponseEntity<String>("OTP Sent to Registered EmailId.", HttpStatus.OK);
 			}
 		} catch (Exception e) {
-			e.getMessage();
-			return new ResponseEntity<>("Invalid EmailId..!", HttpStatus.NOT_FOUND);
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
 		return new ResponseEntity<>("Invalid EmailId..!", HttpStatus.NOT_FOUND);
 	}
@@ -111,8 +117,7 @@ public class UserController {
 				return new ResponseEntity<>("Invalid OTP..!", HttpStatus.UNAUTHORIZED);
 			}
 		} catch (Exception e) {
-			e.getMessage();
-			return new ResponseEntity<>("Invalid EmailId..!", HttpStatus.NOT_FOUND);
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
 		return new ResponseEntity<>("Invalid EmailId..!", HttpStatus.NOT_FOUND);
 	}
@@ -120,31 +125,39 @@ public class UserController {
 	@GetMapping("/sp-get-profile")
 	public ResponseEntity<?> getProfile(@RequestBody ChangeForfotdto cfPwd) {
 		String email = cfPwd.getEmail();
-		if (userService.getServiceProfile(email) == null) {
-			return new ResponseEntity<>("Invalid Email ....!", HttpStatus.BAD_REQUEST);
+
+		try {
+			if (userService.getServiceProfile(email) == null) {
+				return new ResponseEntity<>("Invalid Email ....!", HttpStatus.BAD_REQUEST);
+			}
+
+			return new ResponseEntity<>(userService.getServiceProfile(email), HttpStatus.OK);
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
 
-		return new ResponseEntity<>(userService.getServiceProfile(email), HttpStatus.OK);
-
 	}
+
 	@GetMapping("/filterServicePerson")
 	public ResponseEntity<?> getCustomers(@RequestBody FilterCustomerAndUser user) {
 
-	    String userEmail=user.getUserEmail();
-	    String userMobile=user.getUserMobile();
-		String userState=user.getUserState();
-		String fromDate=user.getFromDate();
-		String toDate=user.getToDate();
-		String status=user.getStatus();
-		String category=user.getServiceCategory();
+		String userEmail = user.getUserEmail();
+		String userMobile = user.getUserMobile();
+		String userState = user.getUserState();
+		String fromDate = user.getFromDate();
+		String toDate = user.getToDate();
+		String status = user.getStatus();
+		String category = user.getServiceCategory();
 		try {
-			List<User> entity = userService.getServicePersonData(userEmail, userMobile,userState,status,category, fromDate, toDate);
+			List<User> entity = userService.getServicePersonData(userEmail, userMobile, userState, status, category,
+					fromDate, toDate);
 			if (!entity.isEmpty()) {
 				return ResponseEntity.ok(entity);
 			} else {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Error: Failed to fetch users. Please try again later.");
+				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+						.body("Error: Failed to fetch users. Please try again later.");
 			}
-		}catch (Exception e) {
+		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
 

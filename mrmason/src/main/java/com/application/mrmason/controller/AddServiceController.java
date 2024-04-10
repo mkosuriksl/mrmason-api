@@ -1,6 +1,7 @@
 package com.application.mrmason.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,9 +13,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.AddServiceGetDto;
+import com.application.mrmason.dto.ResponseServiceReportDto;
 import com.application.mrmason.entity.AddServices;
+import com.application.mrmason.entity.User;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.impl.AddServicesServiceIml;
+import com.application.mrmason.service.impl.SPAvailabilityServiceIml;
 import com.application.mrmason.service.impl.UserService;
 
 @RestController
@@ -28,6 +32,9 @@ public class AddServiceController {
 
 	@Autowired
 	UserDAO userDAO;
+
+	@Autowired
+	SPAvailabilityServiceIml spAvailibilityImpl;
 
 	@PostMapping("/add-service")
 	public ResponseEntity<String> addService(@RequestBody AddServices add) {
@@ -61,9 +68,8 @@ public class AddServiceController {
 				return ResponseEntity.ok().body(successMessage);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
-		return null;
 
 	}
 
@@ -74,13 +80,40 @@ public class AddServiceController {
 		String bodSeqNo = get.getBodSeqNo();
 		String useridServiceId = get.getUserIdServiceId();
 		List<AddServices> getService = service.getPerson(bodSeqNo, serviceSubCategory, useridServiceId);
-		if (getService == null) {
-			return new ResponseEntity<>("No services found for the given parameters.", HttpStatus.NOT_FOUND);
-		} else if (getService.isEmpty()) {
-			return new ResponseEntity<>("Invalid user......!", HttpStatus.BAD_REQUEST);
-		} else {
-			return new ResponseEntity<>(getService, HttpStatus.OK);
+
+		try {
+			if (getService == null) {
+				return new ResponseEntity<>("No services found for the given parameters.", HttpStatus.NOT_FOUND);
+			} else if (getService.isEmpty()) {
+				return new ResponseEntity<>("Invalid user......!", HttpStatus.BAD_REQUEST);
+			} else {
+				return new ResponseEntity<>(getService, HttpStatus.OK);
+			}
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
 	}
 
+	@GetMapping("/sp-user-report")
+	public ResponseEntity<?> getService(@RequestBody AddServiceGetDto get) {
+
+		String bodSeqNo = get.getBodSeqNo();
+		ResponseServiceReportDto serviceReport = new ResponseServiceReportDto();
+		Optional<User> user = Optional.of(userDAO.findByBodSeqNo(bodSeqNo));
+		try {
+			if (userService.getServiceProfile(user.get().getEmail()) != null) {
+				serviceReport.setRegData(userService.getServiceProfile(user.get().getEmail()));
+				serviceReport.setMsge("success");
+				serviceReport.setServData(service.getPerson(bodSeqNo, null, null));
+				serviceReport.setAvailData(spAvailibilityImpl.getAvailability(user.get().getEmail(), bodSeqNo));
+				return new ResponseEntity<>(serviceReport, HttpStatus.OK);
+			}
+
+			return null;
+
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+		}
+
+	}
 }

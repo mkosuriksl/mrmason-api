@@ -2,17 +2,16 @@ package com.application.mrmason.controller;
 
 import java.util.Optional;
 
+import com.application.mrmason.dto.Logindto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+
 import org.springframework.web.bind.annotation.RestController;
 
-import com.application.mrmason.dto.Logindto;
-import com.application.mrmason.dto.Userdto;
-import com.application.mrmason.entity.CustomerEmailOtp;
+
 import com.application.mrmason.entity.ServicePersonLogin;
 import com.application.mrmason.repository.ServicePersonLoginDAO;
 import com.application.mrmason.service.impl.OtpGenerationServiceImpl;

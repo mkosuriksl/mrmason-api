@@ -45,7 +45,7 @@ public class AdminDetailsServiceImpl implements AdminDetailsService {
 			AdminDetailsDto adminDto = new AdminDetailsDto();
 			adminDto.setId(adminDetails.getId());
 			adminDto.setAdminName(adminDetails.getAdminName());
-			adminDto.setAdminType(adminDetails.getAdminType());
+			adminDto.setAdminType(String.valueOf(adminDetails.getUserType()));
 			adminDto.setEmail(adminDetails.getEmail());
 			adminDto.setMobile(adminDetails.getMobile());
 			adminDto.setStatus(adminDetails.getStatus());
@@ -65,7 +65,7 @@ public class AdminDetailsServiceImpl implements AdminDetailsService {
 		if (user.isPresent()) {
 			admin.setId(adminDetails.getId());
 			admin.setAdminName(adminDetails.getAdminName());
-			admin.setAdminType(adminDetails.getAdminType());
+			admin.setAdminType(String.valueOf(adminDetails.getUserType()));
 			admin.setEmail(adminDetails.getEmail());
 			admin.setMobile(adminDetails.getMobile());
 			admin.setStatus(adminDetails.getStatus());
@@ -82,7 +82,7 @@ public class AdminDetailsServiceImpl implements AdminDetailsService {
 				.ofNullable(adminRepo.findByEmailOrMobile(admin.getEmail(), admin.getMobile()));
 		if (user.isPresent()) {
 			user.get().setAdminName(admin.getAdminName());
-			user.get().setAdminType(admin.getAdminType());
+			user.get().setUserType(admin.getUserType());
 
 			adminRepo.save(user.get());
 			return "Success";

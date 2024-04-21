@@ -2,22 +2,21 @@ package com.application.mrmason.entity;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
+import java.util.Collection;
+import java.util.Collections;
 
+import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 
 @Entity
 @Getter
@@ -25,30 +24,41 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name ="users")
-@Builder
-public class User {
+public class User implements UserDetails {
 
+	private static final long serialVersionUID = 5342327L;
+	
 	@Id
 	@Column(name = "BOD_SEQ_NO")
 	public String bodSeqNo;
+
 	@Column(name = "NAME")
 	public String name;
+
 	@Column(name = "BUSINESS_NAME")
 	public String businessName;
+
 	@Column(name = "MOBILE_NO")
 	public String mobile;
+
 	@Column(name = "EMAIL_ID")
 	public String email;
+
 	@Column(name = "PASSWORD")
 	public String password;
+
 	@Column(name = "ADDRESS")
 	public String address;
+
 	@Column(name = "CITY")
 	public String city;
+
 	@Column(name = "DISTRICT")
 	public String district;
+
 	@Column(name = "STATE")
 	public String state;
+
 	@Column(name = "PINCODE_NO")
 	public String pincodeNo;
 
@@ -59,22 +69,21 @@ public class User {
 	@Column(name = "UPDATE_DATETIME")
 	public String updatedDate;
 
-
-
 	@CreationTimestamp
 	@Column(name = "REGISTRATION_DATETIME")
 	public String registeredDate;
 
 	@Column(name = "VERIFIED")
-	@Builder.Default
 	public String verified ="no";
+
 	@Column(name = "SERVICE_CATEGORY")
 	public String serviceCategory;
+
 	@Column(name = "USER_TYPE")
-	@Builder.Default
-	private String userType ="Developer";
+	@Enumerated(EnumType.STRING)
+	private UserType userType ;
+
 	@Column(name = "STATUS")
-	@Builder.Default
 	private String status = "active";
 
 	@PrePersist
@@ -97,6 +106,34 @@ public class User {
 	}
 
 
+	@Override
+	public Collection<? extends GrantedAuthority> getAuthorities() {
+		return Collections.singleton(new SimpleGrantedAuthority("ROLE_" + getUserType().name()));
 
-	
+	}
+
+	@Override
+	public String getUsername() {
+		return this.email;
+	}
+
+	@Override
+	public boolean isAccountNonExpired() {
+		return true;
+	}
+
+	@Override
+	public boolean isAccountNonLocked() {
+		return true;
+	}
+
+	@Override
+	public boolean isCredentialsNonExpired() {
+		return true;
+	}
+
+	@Override
+	public boolean isEnabled() {
+		return true;
+	}
 }

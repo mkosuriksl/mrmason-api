@@ -19,7 +19,6 @@ public class EmailServiceImpl implements EmailService {
 	public void sendMail(String toMail, String body){
 
 		SimpleMailMessage mail=new SimpleMailMessage();
-		
 		mail.setTo(toMail);
 		mail.setSubject("YOUR OTP FOR VERIFICATION.");
 		mail.setText(body);
@@ -29,7 +28,6 @@ public class EmailServiceImpl implements EmailService {
 
 		MimeMessage message = mailsender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, "utf-8");
-
         try {
         	helper.setTo(toMail);
     		helper.setSubject("OTP LOGIN SUCCESSFUL");

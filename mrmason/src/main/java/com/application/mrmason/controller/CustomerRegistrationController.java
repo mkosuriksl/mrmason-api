@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -13,13 +14,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ChangePasswordDto;
 import com.application.mrmason.dto.FilterCustomerAndUser;
+import com.application.mrmason.dto.Logindto;
 import com.application.mrmason.dto.ResponseCustomerRegDto;
+import com.application.mrmason.dto.ResponseLoginDto;
 import com.application.mrmason.dto.ResponseUpdateDto;
 import com.application.mrmason.dto.UpdateProfileDto;
 import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.service.CustomerRegistrationService;
 
+import jakarta.annotation.security.PermitAll;
+
 @RestController
+@PermitAll
 public class CustomerRegistrationController {
 
 	@Autowired
@@ -30,47 +36,40 @@ public class CustomerRegistrationController {
 		if (!service.isUserUnique(customer)) {
 			return new ResponseEntity<>("Email or Phone Number already exists.", HttpStatus.BAD_REQUEST);
 		}
-		ResponseCustomerRegDto response =new ResponseCustomerRegDto();
+		ResponseCustomerRegDto response = new ResponseCustomerRegDto();
 		response.setRegister(service.saveData(customer));
 		response.setMessage("Customer added Successfully..");
-		
+
 		return ResponseEntity.ok(response);
 	}
 
 	@GetMapping("/filterCustomers")
 	public ResponseEntity<?> getCustomers(@RequestBody FilterCustomerAndUser customer) {
-		
-	    String userEmail=customer.getUserEmail();
-	    String userMobile=customer.getUserMobile();
-		String userState=customer.getUserState();
-		String fromDate=customer.getFromDate();
-		String toDate=customer.getToDate();
+
+		String userEmail = customer.getUserEmail();
+		String userMobile = customer.getUserMobile();
+		String userState = customer.getUserState();
+		String fromDate = customer.getFromDate();
+		String toDate = customer.getToDate();
 		try {
-			List<CustomerRegistration> entity = service.getCustomerData(userEmail, userMobile,userState, fromDate, toDate);
+			List<CustomerRegistration> entity = service.getCustomerData(userEmail, userMobile, userState, fromDate,
+					toDate);
 			if (!entity.isEmpty()) {
 				return ResponseEntity.ok(entity);
 			} else {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Error: Failed to fetch users. Please try again later.");
+				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+						.body("Error: Failed to fetch users. Please try again later.");
 			}
-		}catch (Exception e) {
+		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
-		
+
 	}
 
 	@GetMapping("/getProfile")
-	public ResponseEntity<?> getProfile(@RequestBody CustomerRegistration customer) {
-		try {
-			String userid= customer.getUserid();
-			if (service.getProfileData(userid) != null) {
-				return new ResponseEntity<>(service.getProfileData(userid), HttpStatus.OK);
-			}
-		}
-		catch (Exception e) {
-			e.getMessage();
-			return new ResponseEntity<>("Profile Not Found.", HttpStatus.NOT_FOUND);
-		}
-		return new ResponseEntity<>("Profile Not Found.", HttpStatus.NOT_FOUND);
+	public ResponseEntity<?> getProfile(Authentication authentication) {
+		CustomerRegistration userPrincipal = (CustomerRegistration) authentication.getPrincipal();
+		return new ResponseEntity<>(service.getProfileData(userPrincipal.getUserid()), HttpStatus.OK);
 	}
 
 	@PutMapping("/updateProfile")
@@ -81,8 +80,8 @@ public class CustomerRegistrationController {
 		String userDistrict = request.getUserDistrict();
 		String userPinCode = request.getUserPincode();
 		String userid = request.getUserid();
-		
-		ResponseUpdateDto response =new ResponseUpdateDto();
+
+		ResponseUpdateDto response = new ResponseUpdateDto();
 		try {
 			if (service.updateCustomerData(userName, userTown, userState, userDistrict, userPinCode, userid) != null) {
 				response.setUpdateProfile(service.getProfileData(userid));
@@ -103,14 +102,14 @@ public class CustomerRegistrationController {
 		String oldPass = request.getOldPass();
 		String newPass = request.getNewPass();
 		String confPass = request.getConfPass();
-		String userMobile=request.getUserMobile();
-		
+		String userMobile = request.getUserMobile();
+
 		try {
-			if (service.changePassword(userMail, oldPass, newPass, confPass,userMobile) == "changed") {
+			if (service.changePassword(userMail, oldPass, newPass, confPass, userMobile) == "changed") {
 				return new ResponseEntity<>("Password Changed Successfully..", HttpStatus.OK);
-			} else if (service.changePassword(userMail, oldPass, newPass, confPass,userMobile) == "notMatched") {
+			} else if (service.changePassword(userMail, oldPass, newPass, confPass, userMobile) == "notMatched") {
 				return new ResponseEntity<>("New Passwords Not Matched.!", HttpStatus.BAD_REQUEST);
-			} else if (service.changePassword(userMail, oldPass, newPass, confPass,userMobile) == "incorrect") {
+			} else if (service.changePassword(userMail, oldPass, newPass, confPass, userMobile) == "incorrect") {
 				return new ResponseEntity<>("Old Password is Incorrect", HttpStatus.UNAUTHORIZED);
 			}
 		} catch (Exception e) {
@@ -118,6 +117,22 @@ public class CustomerRegistrationController {
 			return new ResponseEntity<>("Invalid User.!", HttpStatus.NOT_FOUND);
 		}
 		return new ResponseEntity<>("Invalid User.!", HttpStatus.NOT_FOUND);
+
+	}
+
+	@PostMapping("/login")
+	public ResponseEntity<ResponseLoginDto> login(@RequestBody Logindto requestDto) {
+		String userEmail = requestDto.getEmail();
+		String phno = requestDto.getMobile();
+		String userPassword = requestDto.getPassword();
+
+		ResponseLoginDto response = service.loginDetails(userEmail, phno, userPassword);
+		if (response.getJwtToken() == null) {
+			response.setMessage("Invalid username and password");
+			return new ResponseEntity<ResponseLoginDto>(response, HttpStatus.UNAUTHORIZED);
+		}
+
+		return new ResponseEntity<ResponseLoginDto>(response, HttpStatus.OK);
 
 	}
 }

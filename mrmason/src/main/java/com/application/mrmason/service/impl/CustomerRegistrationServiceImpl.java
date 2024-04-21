@@ -8,15 +8,18 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.dto.CustomerRegistrationDto;
+import com.application.mrmason.dto.ResponseLoginDto;
 import com.application.mrmason.entity.CustomerEmailOtp;
 import com.application.mrmason.entity.CustomerLogin;
 import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.repository.CustomerEmailOtpRepo;
 import com.application.mrmason.repository.CustomerLoginRepo;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
+import com.application.mrmason.security.JwtService;
 import com.application.mrmason.service.CustomerRegistrationService;
+
 @Service
-public class CustomerRegistrationServiceImpl implements CustomerRegistrationService{
+public class CustomerRegistrationServiceImpl implements CustomerRegistrationService {
 
 	@Autowired
 	CustomerEmailOtpRepo emailRepo;
@@ -24,33 +27,38 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 	public CustomerRegistrationRepo repo;
 	@Autowired
 	public CustomerLoginRepo loginRepo;
+	@Autowired
+	BCryptPasswordEncoder byCrypt;
+	@Autowired
+	JwtService jwtService;
+	@Autowired
+	CustomerRegistrationRepo customerRegistrationRepo;
 
-	
 	@Override
 	public CustomerRegistrationDto saveData(CustomerRegistration customer) {
-		BCryptPasswordEncoder byCrypt=new BCryptPasswordEncoder();
-		String encryptPassword =byCrypt.encode(customer.getUserPassword());
+		BCryptPasswordEncoder byCrypt = new BCryptPasswordEncoder();
+		String encryptPassword = byCrypt.encode(customer.getUserPassword());
 		customer.setUserPassword(encryptPassword);
 		repo.save(customer);
-	    
-		CustomerLogin loginEntity=new CustomerLogin();
+
+		CustomerLogin loginEntity = new CustomerLogin();
 		loginEntity.setUserEmail(customer.getUserEmail());
 		loginEntity.setUserMobile(customer.getUserMobile());
 		loginEntity.setUserPassword(customer.getUserPassword());
 		loginEntity.setMobileVerified("yes");
 		loginEntity.setEmailVerified("no");
 		loginEntity.setStatus("inactive");
-		
+
 		loginRepo.save(loginEntity);
-		
-		CustomerEmailOtp emailLoginEntity=new CustomerEmailOtp();
+
+		CustomerEmailOtp emailLoginEntity = new CustomerEmailOtp();
 		emailLoginEntity.setEmail(customer.getUserEmail());
-		
+
 		emailRepo.save(emailLoginEntity);
-		
-		CustomerRegistrationDto customerDto=new CustomerRegistrationDto();
+
+		CustomerRegistrationDto customerDto = new CustomerRegistrationDto();
 		customerDto.setId(customer.getId());
-		customerDto.setUserName(customer.getUserName());
+		customerDto.setUserName(customer.getUsername());
 		customerDto.setUserEmail(customer.getUserEmail());
 		customerDto.setUserid(customer.getUserid());
 		customerDto.setUserMobile(customer.getUserMobile());
@@ -58,29 +66,34 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 		customerDto.setUserPincode(customer.getUserPincode());
 		customerDto.setUserState(customer.getUserState());
 		customerDto.setUserTown(customer.getUserTown());
-		customerDto.setUsertype(customer.getUsertype());
+		customerDto.setUsertype(String.valueOf(customer.getUserType()));
 		customerDto.setUserDistrict(customer.getUserDistrict());
-		
+
 		return customerDto;
 	}
+
 	@Override
 	public boolean isUserUnique(CustomerRegistration customer) {
-		CustomerRegistration user=repo.findByUserEmailOrUserMobile(customer.getUserEmail(), customer.getUserMobile());
-		return user==null;
+		CustomerRegistration user = repo.findByUserEmailOrUserMobile(customer.getUserEmail(), customer.getUserMobile());
+		return user == null;
 	}
+
 	@Override
-	public List<CustomerRegistration> getCustomerData(String email,String phNo,String userState,String fromDate,String toDate) {
-		if(fromDate==null && toDate==null && email!=null || phNo!=null || userState!=null) {
+	public List<CustomerRegistration> getCustomerData(String email, String phNo, String userState, String fromDate,
+			String toDate) {
+		if (fromDate == null && toDate == null && email != null || phNo != null || userState != null) {
 			return repo.findAllByUserEmailOrUserMobileOrUserState(email, phNo, userState);
-		}else {
+		} else {
 			return repo.findByRegDateBetween(fromDate, toDate);
 		}
-		
+
 	}
+
 	@Override
-	public String updateCustomerData(String userName,String userTown,String userState,String userDist,String userPinCode,String userid) {
+	public String updateCustomerData(String userName, String userTown, String userState, String userDist,
+			String userPinCode, String userid) {
 		Optional<CustomerRegistration> existedById = Optional.of(repo.findByUserid(userid));
-		if(existedById.isPresent()) {
+		if (existedById.isPresent()) {
 			existedById.get().setUserName(userName);
 			existedById.get().setUserPincode(userPinCode);
 			existedById.get().setUserState(userState);
@@ -88,52 +101,100 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 			existedById.get().setUserDistrict(userDist);
 			repo.save(existedById.get());
 			return "Success";
-		}else {
+		} else {
 			return null;
 		}
 	}
+
 	@Override
-	public CustomerRegistration getCustomer(String email,String phno) {
-		return repo.findByUserEmailOrUserMobile(email,phno);
+	public CustomerRegistration getCustomer(String email, String phno) {
+		return repo.findByUserEmailOrUserMobile(email, phno);
 	}
+
 	public CustomerRegistrationDto getProfileData(String userid) {
-		CustomerRegistrationDto customerDto=new CustomerRegistrationDto();
-		Optional<CustomerRegistration> user=Optional.of(repo.findByUserid(userid));
+		CustomerRegistrationDto customerDto = new CustomerRegistrationDto();
+		Optional<CustomerRegistration> user = Optional.of(repo.findByUserid(userid));
 		customerDto.setId(user.get().getId());
 		customerDto.setRegDate(user.get().getRegDate());
 		customerDto.setUserDistrict((user.get().getUserDistrict()));
 		customerDto.setUserEmail(user.get().getUserEmail());
 		customerDto.setUserid(user.get().getUserid());
 		customerDto.setUserMobile(user.get().getUserMobile());
-		customerDto.setUserName(user.get().getUserName());
+		customerDto.setUserName(user.get().getUsername());
 		customerDto.setUserPincode(user.get().getUserPincode());
 		customerDto.setUserState(user.get().getUserState());
 		customerDto.setUserTown(user.get().getUserTown());
-		customerDto.setUsertype(user.get().getUsertype());
+		customerDto.setUsertype(String.valueOf(user.get().getUserType()));
 		return customerDto;
 	}
-	
-	
+
 	@Override
 	public String changePassword(String usermail, String oldPass, String newPass, String confPass, String phno) {
-		BCryptPasswordEncoder byCrypt=new BCryptPasswordEncoder();
-		Optional<CustomerLogin> user= Optional.of(loginRepo.findByUserEmailOrUserMobile(usermail, phno));
-		if(user.isPresent()) {
-			if(byCrypt.matches(oldPass,user.get().getUserPassword() )) {
-				if(newPass.equals(confPass)) {
-					String encryptPassword =byCrypt.encode(confPass);
+		BCryptPasswordEncoder byCrypt = new BCryptPasswordEncoder();
+		Optional<CustomerLogin> user = Optional.of(loginRepo.findByUserEmailOrUserMobile(usermail, phno));
+		if (user.isPresent()) {
+			if (byCrypt.matches(oldPass, user.get().getUserPassword())) {
+				if (newPass.equals(confPass)) {
+					String encryptPassword = byCrypt.encode(confPass);
 					user.get().setUserPassword(encryptPassword);
 					loginRepo.save(user.get());
 					return "changed";
-				}else {
+				} else {
 					return "notMatched";
 				}
-			}else {
+			} else {
 				return "incorrect";
 			}
-		}else {
+		} else {
 			return "invalid";
 		}
-		
+
 	}
+
+	@Override
+	public ResponseLoginDto loginDetails(String userEmail, String phno, String userPassword) {
+		ResponseLoginDto response = new ResponseLoginDto();
+
+		CustomerLogin loginDb = loginRepo.findByUserEmailOrUserMobile(userEmail, phno);
+		if (loginDb != null) {
+			if (loginDb.getStatus().equalsIgnoreCase("active")) {
+				CustomerRegistration customerRegistration = customerRegistrationRepo
+						.findByUserEmail(loginDb.getUserEmail());
+				if (userEmail != null && phno == null) {
+					if (loginDb.getEmailVerified().equalsIgnoreCase("yes")) {
+						if (byCrypt.matches(userPassword, loginDb.getUserPassword())) {
+							String jwtToken = jwtService.generateToken(customerRegistration);
+							response.setMessage("login");
+							response.setJwtToken(jwtToken);
+							return response;
+
+						} else {
+							response.setMessage("InvalidPassword");
+						}
+					} else {
+						response.setMessage("verifyEmail");
+					}
+				} else if (userEmail == null && phno != null) {
+					if (loginDb.getMobileVerified().equalsIgnoreCase("yes")) {
+						if (byCrypt.matches(userPassword, loginDb.getUserPassword())) {
+							String jwtToken = jwtService.generateToken(customerRegistration);
+							response.setJwtToken(jwtToken);
+							response.setMessage("login");
+							return response;
+						} else {
+							response.setMessage("InvalidPassword");
+						}
+					} else {
+						response.setMessage("verifyMobile");
+					}
+				}
+			} else {
+				response.setMessage("inactive");
+			}
+		}
+
+		response.setMessage("invalid");
+		return response;
+	}
+
 }

@@ -2,11 +2,11 @@ package com.application.mrmason.service.impl;
 
 import java.util.Optional;
 
+import com.application.mrmason.dto.Userdto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.ServicePersonLogin;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.repository.ServicePersonLoginDAO;
@@ -63,7 +63,7 @@ public class ServicePersonLoginService {
 		dto.setState(userdb.getState());
 		dto.setPincodeNo(userdb.getPincodeNo());
 		dto.setVerified(userdb.getVerified());
-		dto.setUserType(userdb.getUserType());
+		dto.setUserType(String.valueOf(userdb.getUserType()));
 		dto.setStatus(userdb.getStatus());
 		dto.setBusinessName(userdb.getBusinessName());
 		dto.setBodSeqNo(userdb.getBodSeqNo());
@@ -74,21 +74,20 @@ public class ServicePersonLoginService {
 
 	}
 
-	public String loginDetails(String email, String mobile, String password) {
+	public String loginDetails(String email, String password, String s) {
 
 		BCryptPasswordEncoder byCrypt = new BCryptPasswordEncoder();
 
-		Optional<ServicePersonLogin> loginDb = Optional.of((emailLoginRepo.findByEmailOrMobile(email, mobile)));
+		Optional<ServicePersonLogin> loginDb = Optional.of((emailLoginRepo.findByEmailOrMobile(email, email)));
 
 		if (loginDb.isPresent()) {
-			Optional<User> userEmailMobile = Optional.of(userDAO.findByEmailOrMobile(email, mobile));
+			Optional<User> userEmailMobile = Optional.of(userDAO.findByEmailOrMobile(email, email));
 			User user = userEmailMobile.get();
 			String status = user.getStatus();
 
 			if (userEmailMobile.isPresent()) {
 				if (status != null && status.equalsIgnoreCase("active")) {
-
-					if (email != null && mobile == null) {
+					if (email != null) {
 						if (loginDb.get().getEVerify().equalsIgnoreCase("yes")) {
 
 							if (byCrypt.matches(password, user.getPassword())) {
@@ -99,7 +98,7 @@ public class ServicePersonLoginService {
 						} else {
 							return "verifyEmail";
 						}
-					} else if (email == null && mobile != null) {
+					} else if (email == null) {
 						if (loginDb.get().getMobVerify().equalsIgnoreCase("yes")) {
 
 							if (byCrypt.matches(password, user.getPassword())) {

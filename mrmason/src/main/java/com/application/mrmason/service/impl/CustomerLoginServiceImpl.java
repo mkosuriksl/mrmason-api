@@ -1,20 +1,18 @@
 package com.application.mrmason.service.impl;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.FileCopyUtils;
 
 import com.application.mrmason.dto.CustomerRegistrationDto;
+import com.application.mrmason.dto.ResponseLoginDto;
 import com.application.mrmason.entity.CustomerLogin;
 import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.repository.CustomerLoginRepo;
+import com.application.mrmason.repository.CustomerRegistrationRepo;
+import com.application.mrmason.security.JwtService;
 import com.application.mrmason.service.CustomerLoginService;
 import com.application.mrmason.service.CustomerRegistrationService;
 import com.application.mrmason.service.OtpGenerationService;
@@ -30,17 +28,24 @@ public class CustomerLoginServiceImpl implements CustomerLoginService {
 	@Autowired
 	CustomerRegistrationService regService;
 
-	@Override
-	public String readHtmlContent(String filePath) {
-		try {
-			Resource resource = new ClassPathResource(filePath);
-			byte[] contentBytes = FileCopyUtils.copyToByteArray(resource.getInputStream());
-			return new String(contentBytes, StandardCharsets.UTF_8);
-		} catch (IOException e) {
-			// Handle exception
-			return "";
-		}
-	}
+	@Autowired
+	CustomerRegistrationRepo customerRegistrationRepo;
+	@Autowired
+	JwtService jwtService;
+	@Autowired
+	BCryptPasswordEncoder byCrypt;
+
+//	@Override
+//	public String readHtmlContent(String filePath) {
+//		try {
+//			Resource resource = new ClassPathResource(filePath);
+//			byte[] contentBytes = FileCopyUtils.copyToByteArray(resource.getInputStream());
+//			return new String(contentBytes, StandardCharsets.UTF_8);
+//		} catch (IOException e) {
+//			// Handle exception
+//			return "";
+//		}
+//	}
 
 	@Override
 	public String existedInData(String email) {
@@ -62,41 +67,48 @@ public class CustomerLoginServiceImpl implements CustomerLoginService {
 	}
 
 	@Override
-	public String loginDetails(String userEmail, String phno, String userPassword) {
-		BCryptPasswordEncoder byCrypt = new BCryptPasswordEncoder();
-		if (loginRepo.findByUserEmailOrUserMobile(userEmail, phno) != null) {
-			Optional<CustomerLogin> user = Optional.of(loginRepo.findByUserEmailOrUserMobile(userEmail, phno));
-			if (user.isPresent()) {
-				CustomerLogin loginDb = user.get();
-				if (loginDb.getStatus().equalsIgnoreCase("active")) {
-					if (userEmail != null && phno == null) {
-						if (loginDb.getEmailVerified().equalsIgnoreCase("yes")) {
-							if (byCrypt.matches(userPassword, loginDb.getUserPassword())) {
-								return "login";
-							} else {
-								return "InvalidPassword";
-							}
-						} else {
+	public ResponseLoginDto loginDetails(String userEmail, String phno, String userPassword) {
+		ResponseLoginDto response = new ResponseLoginDto();
+		CustomerLogin loginDb = loginRepo.findByUserEmailOrUserMobile(userEmail, phno);
+		if (loginDb != null) {
+			if (loginDb.getStatus().equalsIgnoreCase("active")) {
+				CustomerRegistration customerRegistration = customerRegistrationRepo
+						.findByUserEmail(loginDb.getUserEmail());
+				if (userEmail != null && phno == null) {
+					if (loginDb.getEmailVerified().equalsIgnoreCase("yes")) {
+						if (byCrypt.matches(userPassword, loginDb.getUserPassword())) {
+							String jwtToken = jwtService.generateToken(customerRegistration);
+							response.setMessage("login");
+							response.setJwtToken(jwtToken);
+							return response;
 
-							return "verifyEmail";
-						}
-					} else if (userEmail == null && phno != null) {
-						if (loginDb.getMobileVerified().equalsIgnoreCase("yes")) {
-							if (byCrypt.matches(userPassword, loginDb.getUserPassword())) {
-								return "login";
-							} else {
-								return "InvalidPassword";
-							}
 						} else {
-							return "verifyMobile";
+							response.setMessage("InvalidPassword");
 						}
+					} else {
+						response.setMessage("verifyEmail");
 					}
-				} else {
-					return "inactive";
+				} else if (userEmail == null && phno != null) {
+					if (loginDb.getMobileVerified().equalsIgnoreCase("yes")) {
+						if (byCrypt.matches(userPassword, loginDb.getUserPassword())) {
+							String jwtToken = jwtService.generateToken(customerRegistration);
+							response.setJwtToken(jwtToken);
+							response.setMessage("login");
+							return response;
+						} else {
+							response.setMessage("InvalidPassword");
+						}
+					} else {
+						response.setMessage("verifyMobile");
+					}
 				}
+			} else {
+				response.setMessage("inactive");
 			}
 		}
-		return "invalid";
+
+		response.setMessage("invalid");
+		return null;
 	}
 
 	@Override
@@ -109,11 +121,11 @@ public class CustomerLoginServiceImpl implements CustomerLoginService {
 		customerDto.setUserEmail(customerOp.get().getUserEmail());
 		customerDto.setUserid(customerOp.get().getUserid());
 		customerDto.setUserMobile(customerOp.get().getUserMobile());
-		customerDto.setUserName(customerOp.get().getUserName());
+		customerDto.setUserName(customerOp.get().getUsername());
 		customerDto.setUserPincode(customerOp.get().getUserPincode());
 		customerDto.setUserState(customerOp.get().getUserState());
 		customerDto.setUserTown(customerOp.get().getUserTown());
-		customerDto.setUsertype(customerOp.get().getUsertype());
+		customerDto.setUsertype(String.valueOf(customerOp.get().getUserType()));
 		return customerDto;
 	}
 
@@ -129,8 +141,6 @@ public class CustomerLoginServiceImpl implements CustomerLoginService {
 
 	@Override
 	public String forgetPassword(String email, String otp, String newPass, String confPass) {
-		BCryptPasswordEncoder byCrypt = new BCryptPasswordEncoder();
-
 		Optional<CustomerLogin> userOp = Optional.of(loginRepo.findByUserEmail(email));
 		if (userOp.isPresent()) {
 			if (otpService.verifyOtp(email, otp)) {
@@ -149,7 +159,5 @@ public class CustomerLoginServiceImpl implements CustomerLoginService {
 		return null;
 
 	}
-	
-	
 
 }

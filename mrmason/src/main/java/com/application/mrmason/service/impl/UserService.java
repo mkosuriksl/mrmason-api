@@ -3,15 +3,17 @@ package com.application.mrmason.service.impl;
 import java.util.List;
 import java.util.Optional;
 
+
+import com.application.mrmason.dto.Userdto;
+import com.application.mrmason.repository.ServicePersonLoginDAO;
+import com.application.mrmason.repository.UserDAO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.ServicePersonLogin;
 import com.application.mrmason.entity.User;
-import com.application.mrmason.repository.ServicePersonLoginDAO;
-import com.application.mrmason.repository.UserDAO;
+
 
 @Service
 public class UserService {
@@ -19,10 +21,12 @@ public class UserService {
 	OtpGenerationServiceImpl otpService;
 
 	@Autowired
-	private UserDAO userDAO;
+	UserDAO userDAO;
 
 	@Autowired
 	ServicePersonLoginDAO serviceLoginRepo;
+	@Autowired
+	BCryptPasswordEncoder byCrypt;
 
 	public boolean isEmailExists(String email) {
 		return userDAO.existsByEmail(email);
@@ -33,7 +37,6 @@ public class UserService {
 	}
 
 	public Userdto addDetails(User user) {
-		BCryptPasswordEncoder byCrypt = new BCryptPasswordEncoder();
 		String encryptPassword = byCrypt.encode(user.getPassword());
 		user.setPassword(encryptPassword);
 		userDAO.save(user);
@@ -56,7 +59,7 @@ public class UserService {
 		dto.setState(user.getState());
 		dto.setPincodeNo(user.getPincodeNo());
 		dto.setVerified(user.getVerified());
-		dto.setUserType(user.getUserType());
+		dto.setUserType(String.valueOf(user.getUserType()));
 		dto.setStatus(user.getStatus());
 		dto.setBusinessName(user.getBusinessName());
 		dto.setBodSeqNo(user.getBodSeqNo());
@@ -95,7 +98,6 @@ public class UserService {
 	}
 
 	public String changePassword(String email, String oldPassword, String newPassword, String confirmPassword) {
-		BCryptPasswordEncoder byCrypt = new BCryptPasswordEncoder();
 		Optional<User> user = Optional.of(userDAO.findByEmail(email));
 		if (user.isPresent()) {
 			if (byCrypt.matches(oldPassword, user.get().getPassword())) {
@@ -126,7 +128,6 @@ public class UserService {
 	}
 
 	public String forgetPassword(String email, String otp, String newPassword, String confirmPassword) {
-		BCryptPasswordEncoder byCrypt = new BCryptPasswordEncoder();
 
 		Optional<User> userOp = Optional.of(userDAO.findByEmail(email));
 		if (userOp.isPresent()) {
@@ -164,7 +165,7 @@ public class UserService {
 			dto.setState(userdb.getState());
 			dto.setPincodeNo(userdb.getPincodeNo());
 			dto.setVerified(userdb.getVerified());
-			dto.setUserType(userdb.getUserType());
+			dto.setUserType(String.valueOf(userdb.getUserType()));
 			dto.setStatus(userdb.getStatus());
 			dto.setBusinessName(userdb.getBusinessName());
 			dto.setBodSeqNo(userdb.getBodSeqNo());

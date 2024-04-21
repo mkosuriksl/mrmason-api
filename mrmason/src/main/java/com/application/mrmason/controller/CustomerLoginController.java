@@ -1,5 +1,7 @@
 package com.application.mrmason.controller;
 
+import com.application.mrmason.dto.Logindto;
+import jakarta.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -8,12 +10,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ChangePasswordDto;
-import com.application.mrmason.dto.Logindto;
+
 import com.application.mrmason.dto.ResponseLoginDto;
 import com.application.mrmason.service.CustomerLoginService;
 import com.application.mrmason.service.CustomerRegistrationService;
 
 @RestController
+@PermitAll
 public class CustomerLoginController {
 	@Autowired
 	CustomerLoginService loginService;
@@ -27,18 +30,24 @@ public class CustomerLoginController {
 		String userPassword = login.getPassword();
 
 		try {
-			if (loginService.loginDetails(userEmail, userMobile, userPassword) == "login") {
-				ResponseLoginDto response=new ResponseLoginDto();
+			String loginStatus= String.valueOf(loginService.loginDetails(userEmail, userMobile, userPassword));
+			if(loginStatus.equals("login")){
+				ResponseLoginDto response = new ResponseLoginDto();
 				response.setLoginDetails(loginService.getCustomerDetails(userEmail, userMobile));
 				response.setMessage("Login Successful..!");
-				return new ResponseEntity<>(response, HttpStatus.OK);
-			}else if (loginService.loginDetails(userEmail, userMobile, userPassword) == "inactive") {
+				return ResponseEntity.ok(response);
+
+			}
+			else if (loginStatus.equals("inactive")) {
 				return new ResponseEntity<>("Admin blocked you.!, please try after some time.", HttpStatus.UNAUTHORIZED);
-			}else if (loginService.loginDetails(userEmail, userMobile, userPassword) == "InvalidPassword") {
+			}
+			else if ( loginStatus.equals("InvalidPassword")) {
 				return new ResponseEntity<>("Invalid Password.!", HttpStatus.UNAUTHORIZED);
-			} else if (loginService.loginDetails(userEmail, userMobile, userPassword) == "verifyEmail") {
+			}
+			else if (loginStatus.equals("verifyEmail")) {
 				return new ResponseEntity<>("Please Verify Email Before Login.", HttpStatus.UNAUTHORIZED);
-			} else if (loginService.loginDetails(userEmail, userMobile, userPassword) == "verifyMobile") {
+			}
+			else if (loginStatus.equals("verifyMobile")) {
 				return new ResponseEntity<>("Please Verify MobileNumber Before Login.", HttpStatus.UNAUTHORIZED);
 			}
 		} catch (Exception e) {

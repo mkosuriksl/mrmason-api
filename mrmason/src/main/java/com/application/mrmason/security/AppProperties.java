@@ -37,8 +37,5 @@ public class AppProperties {
     @Value("${mrmason.textLocal.url}")
     private String url;
 
-    @Value("${mrmason.otp.sms-message}")
-    private String smsMessage;
-
 
 }

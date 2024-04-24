@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -13,12 +14,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ChangeForfotdto;
 import com.application.mrmason.dto.FilterCustomerAndUser;
+import com.application.mrmason.dto.Logindto;
+import com.application.mrmason.dto.ResponseSpLoginDto;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.repository.SPAvailabilityRepo;
 import com.application.mrmason.repository.UserDAO;
+import com.application.mrmason.service.impl.ServicePersonLoginService;
 import com.application.mrmason.service.impl.UserService;
 
+import jakarta.annotation.security.PermitAll;
+
 @RestController
+
 public class UserController {
 
 	@Autowired
@@ -26,7 +33,10 @@ public class UserController {
 
 	@Autowired
 	UserDAO userDAO;
-
+	
+	@Autowired
+	ServicePersonLoginService loginService;
+	
 	@Autowired
 	SPAvailabilityRepo availabilityReo;
 
@@ -47,6 +57,7 @@ public class UserController {
 		}
 	}
 
+	@PreAuthorize("hasAuthority('Developer')")
 	@PutMapping("/sp-update-profile")
 	public ResponseEntity<?> updateServiceProfile(@RequestBody User registrationDetails) {
 
@@ -65,6 +76,7 @@ public class UserController {
 		}
 	}
 
+	@PreAuthorize("hasAuthority('Developer')")
 	@PostMapping("/change-password")
 	public ResponseEntity<String> changeCustomerPassword(@RequestBody ChangeForfotdto cfPwd) {
 
@@ -87,6 +99,7 @@ public class UserController {
 		return new ResponseEntity<>("Invalid User.!", HttpStatus.NOT_FOUND);
 	}
 
+	@PreAuthorize("hasAuthority('Developer')")
 	@PostMapping("/forget-pwd-send-otp")
 	public ResponseEntity<String> sendOtpForPasswordChange(@RequestBody ChangeForfotdto cfPwd) {
 		String email = cfPwd.getEmail();
@@ -100,6 +113,7 @@ public class UserController {
 		return new ResponseEntity<>("Invalid EmailId..!", HttpStatus.NOT_FOUND);
 	}
 
+	@PreAuthorize("hasAuthority('Developer')")
 	@PostMapping("/forget-pwd-change")
 	public ResponseEntity<String> verifyOtpForPasswordChange(@RequestBody ChangeForfotdto cfPwd) {
 
@@ -122,6 +136,7 @@ public class UserController {
 		return new ResponseEntity<>("Invalid EmailId..!", HttpStatus.NOT_FOUND);
 	}
 
+	@PreAuthorize("hasAuthority('Developer')")
 	@GetMapping("/sp-get-profile")
 	public ResponseEntity<?> getProfile(@RequestBody ChangeForfotdto cfPwd) {
 		String email = cfPwd.getEmail();
@@ -138,6 +153,7 @@ public class UserController {
 
 	}
 
+	@PreAuthorize("hasAuthority('Adm')")
 	@GetMapping("/filterServicePerson")
 	public ResponseEntity<?> getCustomers(@RequestBody FilterCustomerAndUser user) {
 
@@ -161,6 +177,23 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
 
+	}
+	
+	@PostMapping("/sp-login")
+	public ResponseEntity<?> login(@RequestBody Logindto login) {
+		String email = login.getEmail();
+		String mobile = login.getMobile();
+		String password = login.getPassword();
+
+		try {
+			ResponseSpLoginDto response= userService.loginDetails(email, mobile, password);
+			if (response.getJwtToken()!=null) {
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			}
+			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+		}
 	}
 
 }

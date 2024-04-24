@@ -1,8 +1,6 @@
 package com.application.mrmason.controller;
 
 import java.util.Optional;
-
-import com.application.mrmason.dto.Logindto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import org.springframework.web.bind.annotation.RestController;
 
-
+import com.application.mrmason.dto.Logindto;
+import com.application.mrmason.entity.CustomerMobileOtp;
 import com.application.mrmason.entity.ServicePersonLogin;
 import com.application.mrmason.repository.ServicePersonLoginDAO;
 import com.application.mrmason.service.impl.OtpGenerationServiceImpl;
@@ -19,6 +18,7 @@ import com.application.mrmason.service.impl.ServicePersonLoginService;
 import com.application.mrmason.service.impl.UserService;
 
 @RestController
+
 public class ServicePersonLoginController {
 
 	@Autowired
@@ -26,6 +26,7 @@ public class ServicePersonLoginController {
 
 	@Autowired
 	OtpGenerationServiceImpl otpService;
+	
 
 	@Autowired
 	UserService userService;
@@ -33,7 +34,7 @@ public class ServicePersonLoginController {
 	@Autowired
 	ServicePersonLoginDAO servicePersonDao;
 
-	@PostMapping("/sp-send-otp")
+	@PostMapping("/sp-send-email-otp")
 	public ResponseEntity<String> sendEmail(@RequestBody ServicePersonLogin login) {
 		String email = login.getEmail();
 
@@ -43,7 +44,7 @@ public class ServicePersonLoginController {
 			} else {
 				Optional<ServicePersonLogin> user = Optional.of(servicePersonDao.findByEmail(email));
 
-				if (user.get().getEOtp() == null) {
+				if (user.get().getEVerify().equalsIgnoreCase("no")) {
 					otpService.generateOtp(email);
 					return new ResponseEntity<String>("Otp sent to the registered EmailId.", HttpStatus.OK);
 				}
@@ -54,7 +55,7 @@ public class ServicePersonLoginController {
 		}
 	}
 
-	@PostMapping("/sp-verify-otp")
+	@PostMapping("/sp-verify-email-otp")
 	public ResponseEntity<String> verifyUserEmail(@RequestBody ServicePersonLogin login) {
 		String email = login.getEmail();
 		String eOtp = login.getEOtp();
@@ -62,7 +63,7 @@ public class ServicePersonLoginController {
 		try {
 			if (otpService.verifyOtp(email, eOtp)) {
 
-				loginService.updateData(eOtp, email);
+				loginService.updateEmailData(eOtp, email);
 				return new ResponseEntity<>(" Email Verified successful", HttpStatus.OK);
 
 			}
@@ -72,29 +73,37 @@ public class ServicePersonLoginController {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
 	}
-
-	@PostMapping("/sp-login")
-	public ResponseEntity<?> login(@RequestBody Logindto login) {
-		String email = login.getEmail();
+	
+	@PostMapping("/sp-send-mobile-otp")
+	public ResponseEntity<String> sendSms(@RequestBody Logindto login) {
 		String mobile = login.getMobile();
-		String password = login.getPassword();
+		if (servicePersonDao.findByMobile(mobile) == null) {
+			return new ResponseEntity<String>("Invalid mobile number..!", HttpStatus.NOT_FOUND);
+		} else {
+			Optional<ServicePersonLogin> user = Optional.of(servicePersonDao.findByMobile(mobile));
 
-		try {
-			if (loginService.loginDetails(email, mobile, password).equals("login")) {
-				return new ResponseEntity<>(loginService.getUserDto(email, mobile), HttpStatus.OK);
-			} else if (loginService.loginDetails(email, mobile, password).equals("InvalidPassword")) {
-				return new ResponseEntity<>("Invalid Password,Please enter correct password", HttpStatus.UNAUTHORIZED);
-			} else if (loginService.loginDetails(email, mobile, password).equals("verifyEmail")) {
-				return new ResponseEntity<>("Please Verify Email Before Login.", HttpStatus.UNAUTHORIZED);
-			} else if (loginService.loginDetails(email, mobile, password).equals("verifyMobile")) {
-				return new ResponseEntity<>("Please Verify MobileNumber Before Login.", HttpStatus.UNAUTHORIZED);
-			} else if (loginService.loginDetails(email, mobile, password).equals("inactive")) {
-				return new ResponseEntity<>("Admin blocked you, Please contact admin once.", HttpStatus.UNAUTHORIZED);
+			if (user.get().getMobVerify().equalsIgnoreCase("no")) {
+				otpService.generateMobileOtp(mobile);
+				return new ResponseEntity<String>("Otp sent to the registered mobile number.", HttpStatus.OK);
 			}
-
-			return new ResponseEntity<>("Invalid User....!", HttpStatus.NOT_FOUND);
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+			return new ResponseEntity<String>("mobile already verified.", HttpStatus.CREATED);
 		}
 	}
+
+	@PostMapping("/sp-verify-mobile-otp")
+	public ResponseEntity<String> verifyMobile(@RequestBody Logindto login) {
+		String mobile = login.getMobile();
+		String otp = login.getOtp();
+
+		if (otpService.verifyMobileOtp(mobile, otp)) {
+
+			loginService.updateMobileData(otp, mobile);
+			return new ResponseEntity<String>("Mobile number verified successfully..", HttpStatus.OK);
+
+		}
+		return new ResponseEntity<String>("Invalid Otp..!", HttpStatus.BAD_REQUEST);
+
+	}
+
+	
 }

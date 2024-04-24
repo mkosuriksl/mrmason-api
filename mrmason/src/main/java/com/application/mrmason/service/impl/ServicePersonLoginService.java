@@ -36,12 +36,23 @@ public class ServicePersonLoginService {
 		return null;
 	}
 
-	public ServicePersonLogin updateData(String otp, String email) {
+	public ServicePersonLogin updateEmailData(String otp, String email) {
 		Optional<ServicePersonLogin> existedById = Optional.of(emailLoginRepo.findByEmail(email));
 		if (existedById.isPresent()) {
 			existedById.get().setEOtp(otp);
-			existedById.get().setEVerify("Yes");
+			existedById.get().setEVerify("yes");
 			userService.updateDataWithEmail(email);
+
+			return emailLoginRepo.save(existedById.get());
+		}
+		return null;
+	}
+	public ServicePersonLogin updateMobileData(String otp, String mobile) {
+		Optional<ServicePersonLogin> existedById = Optional.of(emailLoginRepo.findByMobile(mobile));
+		if (existedById.isPresent()) {
+			existedById.get().setEOtp(otp);
+			existedById.get().setEVerify("yes");
+			userService.updateDataWithMobile(mobile);
 
 			return emailLoginRepo.save(existedById.get());
 		}
@@ -74,49 +85,6 @@ public class ServicePersonLoginService {
 
 	}
 
-	public String loginDetails(String email, String password, String s) {
-
-		BCryptPasswordEncoder byCrypt = new BCryptPasswordEncoder();
-
-		Optional<ServicePersonLogin> loginDb = Optional.of((emailLoginRepo.findByEmailOrMobile(email, email)));
-
-		if (loginDb.isPresent()) {
-			Optional<User> userEmailMobile = Optional.of(userDAO.findByEmailOrMobile(email, email));
-			User user = userEmailMobile.get();
-			String status = user.getStatus();
-
-			if (userEmailMobile.isPresent()) {
-				if (status != null && status.equalsIgnoreCase("active")) {
-					if (email != null) {
-						if (loginDb.get().getEVerify().equalsIgnoreCase("yes")) {
-
-							if (byCrypt.matches(password, user.getPassword())) {
-								return "login";
-							} else {
-								return "InvalidPassword";
-							}
-						} else {
-							return "verifyEmail";
-						}
-					} else if (email == null) {
-						if (loginDb.get().getMobVerify().equalsIgnoreCase("yes")) {
-
-							if (byCrypt.matches(password, user.getPassword())) {
-								return "login";
-							} else {
-								return "InvalidPassword";
-							}
-						} else {
-							return "verifyMobile";
-						}
-					}
-				} else {
-					return "inactive";
-				}
-			} 
-
-		}
-		return "inavalid user";
-	}
+	
 
 }

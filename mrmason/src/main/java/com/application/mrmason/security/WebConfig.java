@@ -43,7 +43,7 @@ public class WebConfig {
 		http.cors(AbstractHttpConfigurer::disable).csrf(AbstractHttpConfigurer::disable)
 				.exceptionHandling((exception) -> exception.authenticationEntryPoint(new JwtAuthEntryPoint()))
 				.sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-				.authorizeHttpRequests(auth -> auth.requestMatchers("/login", "/addNewUser").permitAll().anyRequest().authenticated());
+				.authorizeHttpRequests(auth -> auth.requestMatchers("/login","/addAdminDetails","/adminLoginWithPass","/addNewUser","/sendOtp","/verifyOtp","/sendSmsOtp","/verifySmsOtp","/sp-register","/sp-login","/sp-send-email-otp","/sp-verify-email-otp","/sp-send-mobile-otp","/sp-verify-mobile-otp").permitAll().anyRequest().authenticated());
 
 		http.authenticationProvider(customDaoAuthenticationProvider());
 		http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);

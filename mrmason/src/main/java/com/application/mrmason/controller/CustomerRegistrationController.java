@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,15 +23,12 @@ import com.application.mrmason.dto.UpdateProfileDto;
 import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.service.CustomerRegistrationService;
 
-import jakarta.annotation.security.PermitAll;
-
 @RestController
-@PermitAll
 public class CustomerRegistrationController {
 
 	@Autowired
 	public CustomerRegistrationService service;
-
+	
 	@PostMapping("/addNewUser")
 	public ResponseEntity<?> newCustomer(@RequestBody CustomerRegistration customer) {
 		if (!service.isUserUnique(customer)) {
@@ -42,7 +40,7 @@ public class CustomerRegistrationController {
 
 		return ResponseEntity.ok(response);
 	}
-
+	@PreAuthorize("hasAuthority('Adm')")
 	@GetMapping("/filterCustomers")
 	public ResponseEntity<?> getCustomers(@RequestBody FilterCustomerAndUser customer) {
 
@@ -65,14 +63,19 @@ public class CustomerRegistrationController {
 		}
 
 	}
-
+	
 	@GetMapping("/getProfile")
 	public ResponseEntity<?> getProfile(Authentication authentication) {
-		CustomerRegistration userPrincipal = (CustomerRegistration) authentication.getPrincipal();
-		return new ResponseEntity<>(service.getProfileData(userPrincipal.getUserid()), HttpStatus.OK);
+		try {
+			CustomerRegistration userPrincipal = (CustomerRegistration) authentication.getPrincipal();
+			return new ResponseEntity<>(service.getProfileData(userPrincipal.getUserid()), HttpStatus.OK);
+		}catch (Exception e) {
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.OK);
+		}
 	}
-
+	@PreAuthorize("hasAuthority('EC')")
 	@PutMapping("/updateProfile")
+	
 	public ResponseEntity<?> updateCustomer(@RequestBody UpdateProfileDto request) {
 		String userName = request.getUserName();
 		String userTown = request.getUserTown();
@@ -95,7 +98,7 @@ public class CustomerRegistrationController {
 		}
 		return new ResponseEntity<>("Profile Not Found.", HttpStatus.NOT_FOUND);
 	}
-
+	@PreAuthorize("hasAuthority('EC')")
 	@PostMapping("/changePassword")
 	public ResponseEntity<String> changeCustomerPassword(@RequestBody ChangePasswordDto request) {
 		String userMail = request.getUserMail();
@@ -127,12 +130,10 @@ public class CustomerRegistrationController {
 		String userPassword = requestDto.getPassword();
 
 		ResponseLoginDto response = service.loginDetails(userEmail, phno, userPassword);
-		if (response.getJwtToken() == null) {
-			response.setMessage("Invalid username and password");
-			return new ResponseEntity<ResponseLoginDto>(response, HttpStatus.UNAUTHORIZED);
+		if(response.getJwtToken()!=null) {
+			return new ResponseEntity<ResponseLoginDto>(response, HttpStatus.OK);
 		}
-
-		return new ResponseEntity<ResponseLoginDto>(response, HttpStatus.OK);
+		return new ResponseEntity<ResponseLoginDto>(response, HttpStatus.UNAUTHORIZED);
 
 	}
 }

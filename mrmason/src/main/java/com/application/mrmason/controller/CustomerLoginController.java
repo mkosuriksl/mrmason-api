@@ -5,6 +5,7 @@ import jakarta.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,47 +17,13 @@ import com.application.mrmason.service.CustomerLoginService;
 import com.application.mrmason.service.CustomerRegistrationService;
 
 @RestController
-@PermitAll
+@PreAuthorize("hasAuthority('EC')")
 public class CustomerLoginController {
 	@Autowired
 	CustomerLoginService loginService;
 	@Autowired
 	CustomerRegistrationService regService;
-
-	@PostMapping("/loginWithPass")
-	public ResponseEntity<?> login(@RequestBody Logindto login) {
-		String userEmail = login.getEmail();
-		String userMobile = login.getMobile();
-		String userPassword = login.getPassword();
-
-		try {
-			String loginStatus= String.valueOf(loginService.loginDetails(userEmail, userMobile, userPassword));
-			if(loginStatus.equals("login")){
-				ResponseLoginDto response = new ResponseLoginDto();
-				response.setLoginDetails(loginService.getCustomerDetails(userEmail, userMobile));
-				response.setMessage("Login Successful..!");
-				return ResponseEntity.ok(response);
-
-			}
-			else if (loginStatus.equals("inactive")) {
-				return new ResponseEntity<>("Admin blocked you.!, please try after some time.", HttpStatus.UNAUTHORIZED);
-			}
-			else if ( loginStatus.equals("InvalidPassword")) {
-				return new ResponseEntity<>("Invalid Password.!", HttpStatus.UNAUTHORIZED);
-			}
-			else if (loginStatus.equals("verifyEmail")) {
-				return new ResponseEntity<>("Please Verify Email Before Login.", HttpStatus.UNAUTHORIZED);
-			}
-			else if (loginStatus.equals("verifyMobile")) {
-				return new ResponseEntity<>("Please Verify MobileNumber Before Login.", HttpStatus.UNAUTHORIZED);
-			}
-		} catch (Exception e) {
-			e.getMessage();
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.NOT_FOUND);
-		}
-		return new ResponseEntity<>("Invalid User.!", HttpStatus.NOT_FOUND);
-	}
-
+	
 	@PostMapping("/forgetPassword/sendOtp")
 	public ResponseEntity<String> sendOtpForPasswordChange(@RequestBody Logindto login) {
 		try {

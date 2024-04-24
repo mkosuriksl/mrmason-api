@@ -65,6 +65,17 @@ public class CustomerLoginServiceImpl implements CustomerLoginService {
 		}
 		return null;
 	}
+	
+	@Override
+	public CustomerLogin updateDataWithMobile(String mobile) {
+		Optional<CustomerLogin> existedById = Optional.of(loginRepo.findByUserMobile(mobile));
+		if (existedById.isPresent()) {
+			existedById.get().setMobileVerified("yes");
+			existedById.get().setStatus("active");
+			return loginRepo.save(existedById.get());
+		}
+		return null;
+	}
 
 	@Override
 	public ResponseLoginDto loginDetails(String userEmail, String phno, String userPassword) {

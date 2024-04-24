@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -17,7 +18,9 @@ import com.application.mrmason.dto.UpdateAssetDto;
 import com.application.mrmason.entity.CustomerAssets;
 import com.application.mrmason.service.CustomerAssetsService;
 
+
 @RestController
+@PreAuthorize("hasAuthority('EC')")
 public class CustomerAssetsController {
 	@Autowired
 	CustomerAssetsService assetService;
@@ -34,8 +37,7 @@ public class CustomerAssetsController {
 			}
 			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
-			e.getMessage();
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
 		}
 
 	}
@@ -54,7 +56,7 @@ public class CustomerAssetsController {
 			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
 
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
 		}
 	}
 

@@ -6,6 +6,7 @@ import com.application.mrmason.dto.Logindto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -17,6 +18,8 @@ import com.application.mrmason.dto.ChangePasswordDto;
 import com.application.mrmason.dto.ResponceAdminDetailsDto;
 import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.service.AdminDetailsService;
+
+import jakarta.annotation.security.PermitAll;
 
 @RestController
 public class AdminDetailsController {
@@ -31,7 +34,7 @@ public class AdminDetailsController {
 		try {
 			if (adminService.registerDetails(admin) != null) {
 
-				response.setRegister(adminService.getDetails(userEmail, userMobile));
+				response.setData(adminService.getDetails(userEmail, userMobile));
 				response.setMessage("Admin details added successfully..");
 				return ResponseEntity.ok(response);
 			}
@@ -42,7 +45,7 @@ public class AdminDetailsController {
 		}
 
 	}
-
+	@PreAuthorize("hasAuthority('Adm')")
 	@PutMapping("/updateAdminDetails")
 	public ResponseEntity<?> updateCustomer(@RequestBody AdminDetails admin) {
 		ResponceAdminDetailsDto response = new ResponceAdminDetailsDto();
@@ -50,7 +53,7 @@ public class AdminDetailsController {
 		String userMobile = admin.getMobile();
 		try {
 			if (adminService.updateAdminData(admin) != null) {
-				response.setRegister(adminService.getDetails(userEmail, userMobile));
+				response.setData(adminService.getDetails(userEmail, userMobile));
 				response.setMessage("Successfully Updated.");
 				return ResponseEntity.ok(response);
 
@@ -62,7 +65,7 @@ public class AdminDetailsController {
 		}
 
 	}
-
+	@PreAuthorize("hasAuthority('Adm')")
 	@GetMapping("/getAdminDetails")
 	public ResponseEntity<?> getAdminDetails(@RequestBody AdminDetailsDto admin) {
 		try {
@@ -78,23 +81,18 @@ public class AdminDetailsController {
 		}
 
 	}
-
+	
 	@PostMapping("/adminLoginWithPass")
 	public ResponseEntity<?> login(@RequestBody Logindto login) {
 		String userEmail = login.getEmail();
 		String userMobile = login.getMobile();
 		String userPassword = login.getPassword();
-		ResponceAdminDetailsDto response=new ResponceAdminDetailsDto();
+		ResponceAdminDetailsDto response=adminService.adminLoginDetails(userEmail, userMobile, userPassword);
 		
 		try {
-			if (adminService.adminLoginDetails(userEmail, userMobile, userPassword) == "login") {
-				response.setRegister(adminService.getDetails(userEmail, userMobile));
-				response.setMessage("Login Successful..!");
+			if (response.getJwtToken()!=null) {
+				
 				return new ResponseEntity<>(response, HttpStatus.OK);
-			}else if (adminService.adminLoginDetails(userEmail, userMobile, userPassword) == "inactive") {
-				return new ResponseEntity<>("Inactive.!,Please try after some time.", HttpStatus.UNAUTHORIZED);
-			}else if (adminService.adminLoginDetails(userEmail, userMobile, userPassword) == "InvalidPassword") {
-				return new ResponseEntity<>("Invalid Password.!", HttpStatus.UNAUTHORIZED);
 			}
 			return new ResponseEntity<>("Invalid Admin.!", HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
@@ -103,7 +101,7 @@ public class AdminDetailsController {
 		}
 	
 	}
-	
+	@PreAuthorize("hasAuthority('Adm')")
 	@PostMapping("/changeAdminPassword")
 	public ResponseEntity<String> changeCustomerPassword(@RequestBody ChangePasswordDto request) {
 		String userMail = request.getUserMail();
@@ -127,7 +125,7 @@ public class AdminDetailsController {
 		return new ResponseEntity<>("Invalid User.!", HttpStatus.NOT_FOUND);
 
 	}
-	
+	@PreAuthorize("hasAuthority('Adm')")
 	@PostMapping("/admin/forgetPassword/sendOtp")
 	public ResponseEntity<String> sendOtpForPasswordChange(@RequestBody Logindto login) {
 		try {
@@ -142,7 +140,7 @@ public class AdminDetailsController {
 		}
 		
 	}
-
+	@PreAuthorize("hasAuthority('Adm')")
 	@PostMapping("/admin/forgetPassword/verifyOtpAndChangePassword")
 	public ResponseEntity<String> verifyOtpForPasswordChange(@RequestBody ChangePasswordDto request) {
 		String userMail = request.getUserMail();

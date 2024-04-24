@@ -1,6 +1,5 @@
 package com.application.mrmason.service.impl;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,10 +7,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.dto.AdminDetailsDto;
+import com.application.mrmason.dto.ResponceAdminDetailsDto;
+import com.application.mrmason.dto.ResponseSpLoginDto;
 import com.application.mrmason.entity.AdminDetails;
-import com.application.mrmason.entity.CustomerLogin;
-import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.repository.AdminDetailsRepo;
+import com.application.mrmason.security.JwtService;
 import com.application.mrmason.service.AdminDetailsService;
 import com.application.mrmason.service.OtpGenerationService;
 
@@ -19,6 +19,9 @@ import com.application.mrmason.service.OtpGenerationService;
 public class AdminDetailsServiceImpl implements AdminDetailsService {
 	@Autowired
 	public AdminDetailsRepo adminRepo;
+	
+	@Autowired
+	JwtService jwtService;
 	
 	@Autowired
 	OtpGenerationService otpService;
@@ -94,28 +97,37 @@ public class AdminDetailsServiceImpl implements AdminDetailsService {
 	
 
 	@Override
-	public String adminLoginDetails(String userEmail, String phno, String userPassword) {
+	public ResponceAdminDetailsDto adminLoginDetails(String userEmail, String phno, String userPassword) {
 		BCryptPasswordEncoder byCrypt = new BCryptPasswordEncoder();
+		ResponceAdminDetailsDto response=new ResponceAdminDetailsDto();
 		if (adminRepo.findByEmailOrMobile(userEmail, phno) != null) {
 			Optional<AdminDetails> user = Optional.ofNullable(adminRepo.findByEmailOrMobile(userEmail, phno));
+			
 			if (user.isPresent()) {
 				AdminDetails loginDb = user.get();
 				if (loginDb.getStatus().equalsIgnoreCase("active")) {
 					if (userEmail != null || phno != null) {
 
 						if (byCrypt.matches(userPassword, loginDb.getPassword())) {
-							return "login";
+							String jwtToken = jwtService.generateToken(loginDb);
+							response.setJwtToken(jwtToken);
+							response.setMessage("Login Successful.");
+							response.setData(getDetails(userEmail, phno));
+							return response;
 						} else {
-							return "InvalidPassword";
+							response.setMessage("Invalid Password.");
+							return response;
 						}
 
 					}
 				} else {
-					return "inactive";
+					response.setMessage("Inactive User");
+					return response;
 				}
 			}
 		}
-		return "invalid";
+		response.setMessage("Invalid User.!");
+		return response;
 	}
 	
 	@Override

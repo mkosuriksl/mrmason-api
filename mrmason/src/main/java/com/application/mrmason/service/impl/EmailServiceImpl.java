@@ -16,11 +16,12 @@ public class EmailServiceImpl implements EmailService {
 	@Autowired
 	private JavaMailSender mailsender;
 	
-	public void sendMail(String toMail, String body){
+	public void sendMail(String toMail, String otp){
 
 		SimpleMailMessage mail=new SimpleMailMessage();
 		mail.setTo(toMail);
 		mail.setSubject("YOUR OTP FOR VERIFICATION.");
+		String body="Thanks for registering with us. Your OTP to verify your email is "+otp+" - www.mrmason.in";
 		mail.setText(body);
 		mailsender.send(mail);
 	}

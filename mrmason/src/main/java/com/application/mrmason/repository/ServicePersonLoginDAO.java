@@ -12,4 +12,6 @@ public interface ServicePersonLoginDAO extends JpaRepository<ServicePersonLogin,
 
 	ServicePersonLogin findByEmailOrMobile(String email, String mobile);
 
+	ServicePersonLogin findByMobile(String mobile);
+
 }

@@ -1,6 +1,7 @@
 package com.application.mrmason.service;
 
 import com.application.mrmason.dto.AdminDetailsDto;
+import com.application.mrmason.dto.ResponceAdminDetailsDto;
 import com.application.mrmason.entity.AdminDetails;
 
 public interface AdminDetailsService {
@@ -12,7 +13,7 @@ public interface AdminDetailsService {
 
 	String updateAdminData(AdminDetails admin);
 
-	String adminLoginDetails(String userEmail, String phno, String userPassword);
+	ResponceAdminDetailsDto adminLoginDetails(String userEmail, String phno, String userPassword);
 
 	String changePassword(String usermail, String oldPass, String newPass, String confPass, String phno);
 

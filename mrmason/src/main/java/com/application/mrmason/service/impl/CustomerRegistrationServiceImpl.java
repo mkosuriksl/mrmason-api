@@ -164,36 +164,44 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 					if (loginDb.getEmailVerified().equalsIgnoreCase("yes")) {
 						if (byCrypt.matches(userPassword, loginDb.getUserPassword())) {
 							String jwtToken = jwtService.generateToken(customerRegistration);
-							response.setMessage("login");
+							response.setMessage("Login Successful.");
 							response.setJwtToken(jwtToken);
+							response.setLoginDetails(getProfileData(customerRegistration.getUserid()));
 							return response;
 
 						} else {
-							response.setMessage("InvalidPassword");
+							response.setMessage("Invalid Password");
+							return response;
 						}
 					} else {
-						response.setMessage("verifyEmail");
+						response.setMessage("verify Email");
+						return response;
 					}
 				} else if (userEmail == null && phno != null) {
 					if (loginDb.getMobileVerified().equalsIgnoreCase("yes")) {
+						CustomerRegistration user=repo.findByUserEmailOrUserMobile(userEmail, phno);
 						if (byCrypt.matches(userPassword, loginDb.getUserPassword())) {
 							String jwtToken = jwtService.generateToken(customerRegistration);
 							response.setJwtToken(jwtToken);
-							response.setMessage("login");
+							response.setMessage("Login Successful.");
+							response.setLoginDetails(getProfileData(user.getUserid()));
 							return response;
 						} else {
-							response.setMessage("InvalidPassword");
+							response.setMessage("Invalid Password");
+							return response;
 						}
 					} else {
-						response.setMessage("verifyMobile");
+						response.setMessage("verify Mobile");
+						return response;
 					}
 				}
 			} else {
-				response.setMessage("inactive");
+				response.setMessage("Inactive User");
+				return response;
 			}
 		}
 
-		response.setMessage("invalid");
+		response.setMessage("Invalid User.!");
 		return response;
 	}
 

@@ -18,10 +18,7 @@ public class Userdto {
 	public String district;
 	public String state;
 	public String pincodeNo;
-
     public String updatedDate;
-
-	
 	public String registeredDate;
     public String verified;
     public String serviceCategory;

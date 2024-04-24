@@ -15,10 +15,12 @@ public class OtpGenerationServiceImpl implements OtpGenerationService{
 	EmailService mailService;
 
 	LocalTime local=LocalTime.now();
-
+	@Autowired
+	SmsService smsService;
 	private final Map<String, String> otpStorage = new HashMap<>(); // Store OTPs temporarily
 
 	// Generate and send OTP to the user (via email, SMS, etc.)
+	@Override
 	public String generateOtp(String mail) {
 		int randomNum = (int) (Math.random() * 900000) + 100000;
 		String otp = String.valueOf(randomNum);
@@ -27,8 +29,23 @@ public class OtpGenerationServiceImpl implements OtpGenerationService{
 
 		return otp;
 	}
+	@Override
 	public boolean verifyOtp(String email, String enteredOtp) {
 		String storedOtp = otpStorage.get(email);
+		return storedOtp != null && storedOtp.equals(enteredOtp);
+	}
+	
+	@Override
+	public String generateMobileOtp(String mobile) {
+		int randomNum = (int) (Math.random() * 900000) + 100000;
+		String otp = String.valueOf(randomNum);
+		otpStorage.put(mobile, otp);
+		smsService.sendSMSMessage(mobile, otp);
+		return otp;
+	}
+	@Override
+	public boolean verifyMobileOtp(String mobile, String enteredOtp) {
+		String storedOtp = otpStorage.get(mobile);
 		return storedOtp != null && storedOtp.equals(enteredOtp);
 	}
 

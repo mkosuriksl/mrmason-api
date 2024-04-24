@@ -26,7 +26,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 @Table(name ="users")
 public class User implements UserDetails {
 
-	private static final long serialVersionUID = 5342327L;
+//	private static final long serialVersionUID = 5342327L;
 	
 	@Id
 	@Column(name = "BOD_SEQ_NO")
@@ -95,7 +95,8 @@ public class User implements UserDetails {
 		String hour = String.format("%02d", now.getHour()); 
 		String minute = String.format("%02d", now.getMinute()); 
 		String second = String.format("%02d", now.getSecond()); 
-		this.bodSeqNo = "SP" + year + month + day + hour + minute + second;
+		String millis = String.format("%03d", now.getNano() / 1000000).substring(0, 2);
+		this.bodSeqNo = "SP" + year + month + day + hour + minute + second+millis;
 		
 		
 		

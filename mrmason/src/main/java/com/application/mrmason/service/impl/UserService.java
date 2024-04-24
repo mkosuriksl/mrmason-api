@@ -3,10 +3,12 @@ package com.application.mrmason.service.impl;
 import java.util.List;
 import java.util.Optional;
 
-
+import com.application.mrmason.dto.ResponseSpLoginDto;
 import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.repository.ServicePersonLoginDAO;
 import com.application.mrmason.repository.UserDAO;
+import com.application.mrmason.security.JwtService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,10 +21,16 @@ import com.application.mrmason.entity.User;
 public class UserService {
 	@Autowired
 	OtpGenerationServiceImpl otpService;
+	
+	@Autowired
+	ServicePersonLoginDAO emailLoginRepo;
 
 	@Autowired
 	UserDAO userDAO;
-
+	
+	@Autowired
+	JwtService jwtService;
+	
 	@Autowired
 	ServicePersonLoginDAO serviceLoginRepo;
 	@Autowired
@@ -44,8 +52,8 @@ public class UserService {
 		ServicePersonLogin service = new ServicePersonLogin();
 		service.setEmail(user.getEmail());
 		service.setMobile(user.getMobile());
-		service.setMobVerify("No");
-		service.setEVerify("No");
+		service.setMobVerify("no");
+		service.setEVerify("no");
 
 		serviceLoginRepo.save(service);
 
@@ -77,6 +85,15 @@ public class UserService {
 			existedByEmail.get().setVerified("Yes");
 			existedByEmail.get().setStatus("Active");
 			return userDAO.save(existedByEmail.get());
+		}
+		return null;
+	}
+	public User updateDataWithMobile(String mobile) {
+		Optional<User> existedByMobile = Optional.of(userDAO.findByEmailOrMobile(mobile, mobile));
+		if (existedByMobile.isPresent()) {
+			existedByMobile.get().setVerified("yes");
+			existedByMobile.get().setStatus("active");
+			return userDAO.save(existedByMobile.get());
 		}
 		return null;
 	}
@@ -190,5 +207,68 @@ public class UserService {
 			return userDAO.findByRegisteredDateBetween(fromDate, toDate);
 		}
 
+	}
+	
+	
+	
+	public ResponseSpLoginDto loginDetails(String email, String mobile, String password) {
+
+		Optional<ServicePersonLogin> loginDb = Optional.of((emailLoginRepo.findByEmailOrMobile(email, mobile)));
+		ResponseSpLoginDto response=new ResponseSpLoginDto();
+		
+		if (loginDb.isPresent()) {
+			Optional<User> userEmailMobile = Optional.of(userDAO.findByEmailOrMobile(email, mobile));
+			User user = userEmailMobile.get();
+			String status = user.getStatus();
+			
+			
+			
+			if (userEmailMobile.isPresent()) {
+				if (status != null && status.equalsIgnoreCase("active")) {
+					if (email != null && mobile==null) {
+						if (loginDb.get().getEVerify().equalsIgnoreCase("yes")) {
+
+							if (byCrypt.matches(password, user.getPassword())) {
+								String jwtToken = jwtService.generateToken(userEmailMobile.get());
+								response.setJwtToken(jwtToken);
+								response.setMessage("Login Successful.");
+								response.setLoginDetails(getServiceProfile(email));
+								return response;
+							} else {
+								response.setMessage("Invalid Password");
+								return response;
+							}
+						} else {
+							response.setMessage("verify Email");
+							return response;
+						}
+					} else if (email == null && mobile !=null) {
+						if (loginDb.get().getMobVerify().equalsIgnoreCase("yes")) {
+							
+
+							if (byCrypt.matches(password, user.getPassword())) {
+								String jwtToken = jwtService.generateToken(userEmailMobile.get());
+								response.setJwtToken(jwtToken);
+								response.setMessage("Login Successful.");
+								response.setLoginDetails(getServiceProfile(loginDb.get().getEmail()));
+								return response;
+							} else {
+								response.setMessage("Invalid Password");
+								return response;
+							}
+						} else {
+							response.setMessage("verify Mobile");
+							return response;
+						}
+					}
+				} else {
+					response.setMessage("Inactive User");
+					return response;
+				}
+			} 
+
+		}
+		response.setMessage("Invalid User.!");
+		return response;
 	}
 }

@@ -18,7 +18,10 @@ import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.security.JwtService;
 import com.application.mrmason.service.CustomerRegistrationService;
 
+import jakarta.transaction.Transactional;
+
 @Service
+@Transactional
 public class CustomerRegistrationServiceImpl implements CustomerRegistrationService {
 
 	@Autowired

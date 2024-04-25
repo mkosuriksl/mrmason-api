@@ -99,7 +99,6 @@ public class UserController {
 		return new ResponseEntity<>("Invalid User.!", HttpStatus.NOT_FOUND);
 	}
 
-	@PreAuthorize("hasAuthority('Developer')")
 	@PostMapping("/forget-pwd-send-otp")
 	public ResponseEntity<String> sendOtpForPasswordChange(@RequestBody ChangeForfotdto cfPwd) {
 		String email = cfPwd.getEmail();
@@ -113,7 +112,6 @@ public class UserController {
 		return new ResponseEntity<>("Invalid EmailId..!", HttpStatus.NOT_FOUND);
 	}
 
-	@PreAuthorize("hasAuthority('Developer')")
 	@PostMapping("/forget-pwd-change")
 	public ResponseEntity<String> verifyOtpForPasswordChange(@RequestBody ChangeForfotdto cfPwd) {
 

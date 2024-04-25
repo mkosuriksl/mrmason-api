@@ -125,7 +125,7 @@ public class AdminDetailsController {
 		return new ResponseEntity<>("Invalid User.!", HttpStatus.NOT_FOUND);
 
 	}
-	@PreAuthorize("hasAuthority('Adm')")
+	
 	@PostMapping("/admin/forgetPassword/sendOtp")
 	public ResponseEntity<String> sendOtpForPasswordChange(@RequestBody Logindto login) {
 		try {
@@ -140,7 +140,7 @@ public class AdminDetailsController {
 		}
 		
 	}
-	@PreAuthorize("hasAuthority('Adm')")
+	
 	@PostMapping("/admin/forgetPassword/verifyOtpAndChangePassword")
 	public ResponseEntity<String> verifyOtpForPasswordChange(@RequestBody ChangePasswordDto request) {
 		String userMail = request.getUserMail();

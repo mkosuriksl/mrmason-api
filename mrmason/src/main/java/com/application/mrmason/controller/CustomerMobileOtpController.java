@@ -31,7 +31,7 @@ public class CustomerMobileOtpController {
 	CustomerMobileOtpRepo otpRepo;
 
 	@PostMapping("/sendSmsOtp")
-	public ResponseEntity<String> sendEmail(@RequestBody Logindto login) {
+	public ResponseEntity<String> sendMobileOtp(@RequestBody Logindto login) {
 		String mobile = login.getMobile();
 		if (otpRepo.findByMobileNum(mobile) == null) {
 			return new ResponseEntity<String>("Invalid mobile number..!", HttpStatus.NOT_FOUND);
@@ -47,7 +47,7 @@ public class CustomerMobileOtpController {
 	}
 
 	@PostMapping("/verifySmsOtp")
-	public ResponseEntity<String> verifyCustomer(@RequestBody Logindto login) {
+	public ResponseEntity<String> verifyMobileOtp(@RequestBody Logindto login) {
 		String mobile = login.getMobile();
 		String otp = login.getOtp();
 

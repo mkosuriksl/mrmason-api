@@ -17,7 +17,6 @@ import com.application.mrmason.service.CustomerLoginService;
 import com.application.mrmason.service.CustomerRegistrationService;
 
 @RestController
-@PreAuthorize("hasAuthority('EC')")
 public class CustomerLoginController {
 	@Autowired
 	CustomerLoginService loginService;

@@ -3,6 +3,8 @@ package com.application.mrmason.service.impl;
 
 import com.application.mrmason.security.AppProperties;
 import com.application.mrmason.service.SmsSender;
+
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional
 public class SmsService implements SmsSender {
 
     private final AppProperties appProperties;

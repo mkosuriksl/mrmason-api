@@ -9,7 +9,10 @@ import org.springframework.stereotype.Service;
 
 import com.application.mrmason.service.EmailService;
 import com.application.mrmason.service.OtpGenerationService;
+
+import jakarta.transaction.Transactional;
 @Service
+@Transactional
 public class OtpGenerationServiceImpl implements OtpGenerationService{
 	@Autowired
 	EmailService mailService;

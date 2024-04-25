@@ -9,7 +9,10 @@ import com.application.mrmason.dto.ServiceCategoryDto;
 import com.application.mrmason.entity.ServiceCategory;
 import com.application.mrmason.repository.ServiceCategoryRepo;
 import com.application.mrmason.service.ServiceCategoryService;
+
+import jakarta.transaction.Transactional;
 @Service
+@Transactional
 public class ServiceCategoryServiceImpl implements ServiceCategoryService{
     @Autowired
 	ServiceCategoryRepo serviceRepo;

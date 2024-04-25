@@ -39,7 +39,7 @@ public class ServiceCategoryController {
 	}
 	
 	@GetMapping("/getServiceCategory")
-	public ResponseEntity<?> getAssetDetails(@RequestBody ServiceCategory service) {
+	public ResponseEntity<?> getServiceCategory(@RequestBody ServiceCategory service) {
 		try {
 			List<ServiceCategory> entity = categoryService.getServiceCategory(service);
 			if (entity.isEmpty()) {
@@ -55,7 +55,7 @@ public class ServiceCategoryController {
 	}
 
 	@PutMapping("/updateServiceCategory")
-	public ResponseEntity<?> updateAssetDetails(@RequestBody ServiceCategory service) {
+	public ResponseEntity<?> updateServiceCategory(@RequestBody ServiceCategory service) {
 		ResponceServiceDto response=new ResponceServiceDto();
 		try {
 

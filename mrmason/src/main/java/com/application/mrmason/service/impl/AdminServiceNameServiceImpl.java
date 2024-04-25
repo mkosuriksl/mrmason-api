@@ -10,7 +10,10 @@ import com.application.mrmason.dto.AdminServiceNameDto;
 import com.application.mrmason.entity.AdminServiceName;
 import com.application.mrmason.repository.AdminServiceNameRepo;
 import com.application.mrmason.service.AdminServiceNameService;
+
+import jakarta.transaction.Transactional;
 @Service
+@Transactional
 public class AdminServiceNameServiceImpl implements AdminServiceNameService{
 	@Autowired
 	AdminServiceNameRepo serviceRepo;

@@ -16,7 +16,10 @@ import com.application.mrmason.repository.MembershipDetailsRepo;
 import com.application.mrmason.repository.MembershipRepo;
 import com.application.mrmason.service.MembershipDetailsService;
 
+import jakarta.transaction.Transactional;
+
 @Service
+@Transactional
 public class MembershipServiceImpl implements MembershipDetailsService {
 	
 	@Autowired

@@ -13,7 +13,10 @@ import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.repository.UserDAO;
 
+import jakarta.transaction.Transactional;
+
 @Service
+@Transactional
 public class CustomUserService implements UserDetailsService {
 
 	@Autowired

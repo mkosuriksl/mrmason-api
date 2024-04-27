@@ -12,7 +12,6 @@ import com.application.mrmason.service.CustomerMobileOtpService;
 
 import jakarta.transaction.Transactional;
 @Service
-@Transactional
 public class CustomerMobileOtpServiceImpl implements CustomerMobileOtpService{
 	@Autowired
 	CustomerMobileOtpRepo mobileRepo;

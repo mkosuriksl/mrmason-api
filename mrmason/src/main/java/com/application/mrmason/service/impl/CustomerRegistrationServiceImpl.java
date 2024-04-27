@@ -21,7 +21,6 @@ import com.application.mrmason.service.CustomerRegistrationService;
 import jakarta.transaction.Transactional;
 
 @Service
-@Transactional
 public class CustomerRegistrationServiceImpl implements CustomerRegistrationService {
 
 	@Autowired

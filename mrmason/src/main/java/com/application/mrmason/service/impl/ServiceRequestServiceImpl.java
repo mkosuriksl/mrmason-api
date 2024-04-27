@@ -17,7 +17,6 @@ import com.application.mrmason.service.ServiceRequestService;
 
 import jakarta.transaction.Transactional;
 @Service
-@Transactional
 public class ServiceRequestServiceImpl implements ServiceRequestService{
     @Autowired
 	public ServiceRequestRepo requestRepo;

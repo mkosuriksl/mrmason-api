@@ -16,7 +16,6 @@ import com.application.mrmason.service.CustomerAssetsService;
 import jakarta.transaction.Transactional;
 
 @Service
-@Transactional
 public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 	@Autowired
 	CustomerAssetsRepo assetRepo;

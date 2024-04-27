@@ -18,7 +18,6 @@ import com.application.mrmason.service.OtpGenerationService;
 import jakarta.transaction.Transactional;
 
 @Service
-@Transactional
 public class AdminDetailsServiceImpl implements AdminDetailsService {
 	@Autowired
 	public AdminDetailsRepo adminRepo;

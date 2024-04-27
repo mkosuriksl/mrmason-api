@@ -12,7 +12,6 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.transaction.Transactional;
 @Service
-@Transactional
 public class EmailServiceImpl implements EmailService {
 	
 	@Autowired

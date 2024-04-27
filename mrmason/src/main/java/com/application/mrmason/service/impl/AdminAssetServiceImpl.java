@@ -14,7 +14,6 @@ import com.application.mrmason.service.AdminAssetService;
 import jakarta.transaction.Transactional;
 
 @Service
-@Transactional
 public class AdminAssetServiceImpl implements AdminAssetService {
 
 	@Autowired

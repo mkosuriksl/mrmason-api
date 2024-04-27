@@ -15,7 +15,6 @@ import com.application.mrmason.service.RentelService;
 
 import jakarta.transaction.Transactional;
 @Service
-@Transactional
 public class RentelServiceImpl implements RentelService{
 	@Autowired
 	public RentelRepo rentRepo;

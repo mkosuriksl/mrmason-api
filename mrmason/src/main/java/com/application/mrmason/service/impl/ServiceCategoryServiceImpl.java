@@ -12,7 +12,6 @@ import com.application.mrmason.service.ServiceCategoryService;
 
 import jakarta.transaction.Transactional;
 @Service
-@Transactional
 public class ServiceCategoryServiceImpl implements ServiceCategoryService{
     @Autowired
 	ServiceCategoryRepo serviceRepo;

@@ -16,7 +16,6 @@ import com.application.mrmason.repository.UserDAO;
 import jakarta.transaction.Transactional;
 
 @Service
-@Transactional
 public class CustomUserService implements UserDetailsService {
 
 	@Autowired

@@ -12,7 +12,6 @@ import com.application.mrmason.service.CustomerLoginService;
 
 import jakarta.transaction.Transactional;
 @Service
-@Transactional
 public class CustomerEmailOtpServiceImpl implements CustomerEmailOtpService{
 
 	@Autowired

@@ -12,7 +12,6 @@ import com.application.mrmason.service.AdminAmcRateService;
 import jakarta.transaction.Transactional;
 
 @Service
-@Transactional
 public class AdminAmcRateServiceImpl implements AdminAmcRateService{
 
 	@Autowired

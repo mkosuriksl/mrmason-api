@@ -20,7 +20,6 @@ import java.nio.charset.StandardCharsets;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-@Transactional
 public class SmsService implements SmsSender {
 
     private final AppProperties appProperties;

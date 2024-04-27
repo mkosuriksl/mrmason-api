@@ -20,7 +20,6 @@ import com.application.mrmason.entity.User;
 
 
 @Service
-@Transactional
 public class UserService {
 	@Autowired
 	OtpGenerationServiceImpl otpService;

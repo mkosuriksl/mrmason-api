@@ -13,7 +13,6 @@ import com.application.mrmason.service.AdminServiceNameService;
 
 import jakarta.transaction.Transactional;
 @Service
-@Transactional
 public class AdminServiceNameServiceImpl implements AdminServiceNameService{
 	@Autowired
 	AdminServiceNameRepo serviceRepo;

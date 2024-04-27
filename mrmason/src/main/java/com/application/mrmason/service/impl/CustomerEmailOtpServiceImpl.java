@@ -10,7 +10,6 @@ import com.application.mrmason.repository.CustomerEmailOtpRepo;
 import com.application.mrmason.service.CustomerEmailOtpService;
 import com.application.mrmason.service.CustomerLoginService;
 
-import jakarta.transaction.Transactional;
 @Service
 public class CustomerEmailOtpServiceImpl implements CustomerEmailOtpService{
 

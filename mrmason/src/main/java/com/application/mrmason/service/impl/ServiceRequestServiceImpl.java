@@ -15,7 +15,6 @@ import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.repository.ServiceRequestRepo;
 import com.application.mrmason.service.ServiceRequestService;
 
-import jakarta.transaction.Transactional;
 @Service
 public class ServiceRequestServiceImpl implements ServiceRequestService{
     @Autowired

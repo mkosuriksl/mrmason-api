@@ -10,7 +10,6 @@ import com.application.mrmason.entity.User;
 import com.application.mrmason.repository.SPAvailabilityRepo;
 import com.application.mrmason.repository.UserDAO;
 
-import jakarta.transaction.Transactional;
 
 @Service
 public class SPAvailabilityServiceIml {

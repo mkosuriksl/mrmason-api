@@ -10,7 +10,7 @@ import com.application.mrmason.service.EmailService;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import jakarta.transaction.Transactional;
+
 @Service
 public class EmailServiceImpl implements EmailService {
 	

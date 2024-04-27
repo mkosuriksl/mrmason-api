@@ -18,7 +18,6 @@ import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.security.JwtService;
 import com.application.mrmason.service.CustomerRegistrationService;
 
-import jakarta.transaction.Transactional;
 
 @Service
 public class CustomerRegistrationServiceImpl implements CustomerRegistrationService {

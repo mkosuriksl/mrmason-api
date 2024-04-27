@@ -11,8 +11,6 @@ import com.application.mrmason.entity.AdminAsset;
 import com.application.mrmason.repository.AdminAssetRepo;
 import com.application.mrmason.service.AdminAssetService;
 
-import jakarta.transaction.Transactional;
-
 @Service
 public class AdminAssetServiceImpl implements AdminAssetService {
 

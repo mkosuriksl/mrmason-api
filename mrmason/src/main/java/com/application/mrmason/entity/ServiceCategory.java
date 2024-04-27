@@ -26,8 +26,8 @@ import lombok.Setter;
 @Builder
 public class ServiceCategory {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    @Column(name = "id")
+    private String id;
     @Column(name="service_category")
     private String serviceCategory;
     @Column(name="service_sub_category")
@@ -49,6 +49,8 @@ public class ServiceCategory {
         LocalDateTime now = LocalDateTime.now();
         this.createDate = now.format(formatter);
         this.updatedDate = now.format(formatter); 
+        
+        this.id=serviceCategory+"_"+serviceSubCategory;
     }
 
     @PreUpdate

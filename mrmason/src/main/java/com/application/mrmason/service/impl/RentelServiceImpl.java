@@ -13,7 +13,6 @@ import com.application.mrmason.repository.CustomerAssetsRepo;
 import com.application.mrmason.repository.RentelRepo;
 import com.application.mrmason.service.RentelService;
 
-import jakarta.transaction.Transactional;
 @Service
 public class RentelServiceImpl implements RentelService{
 	@Autowired

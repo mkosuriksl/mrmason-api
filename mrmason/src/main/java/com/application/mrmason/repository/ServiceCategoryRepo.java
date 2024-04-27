@@ -7,8 +7,8 @@ import org.springframework.stereotype.Repository;
 
 import com.application.mrmason.entity.ServiceCategory;
 @Repository
-public interface ServiceCategoryRepo extends JpaRepository<ServiceCategory,Long>{
-	List<ServiceCategory>  findByIdOrderByCreateDateDesc(long id);
+public interface ServiceCategoryRepo extends JpaRepository<ServiceCategory,String>{
+	List<ServiceCategory>  findByIdOrderByCreateDateDesc(String id);
 	List<ServiceCategory>  findByServiceCategoryOrderByCreateDateDesc(String category);
 	
 	

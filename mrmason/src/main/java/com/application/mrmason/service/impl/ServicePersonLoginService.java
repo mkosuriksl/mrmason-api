@@ -4,7 +4,6 @@ import java.util.Optional;
 
 import com.application.mrmason.dto.Userdto;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.entity.ServicePersonLogin;
@@ -12,10 +11,7 @@ import com.application.mrmason.entity.User;
 import com.application.mrmason.repository.ServicePersonLoginDAO;
 import com.application.mrmason.repository.UserDAO;
 
-import jakarta.transaction.Transactional;
-
 @Service
-
 public class ServicePersonLoginService {
 
 	@Autowired

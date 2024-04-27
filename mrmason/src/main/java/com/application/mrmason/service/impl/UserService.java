@@ -9,7 +9,6 @@ import com.application.mrmason.repository.ServicePersonLoginDAO;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.JwtService;
 
-import jakarta.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;

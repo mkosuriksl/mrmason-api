@@ -10,7 +10,6 @@ import com.application.mrmason.repository.CustomerMobileOtpRepo;
 import com.application.mrmason.service.CustomerLoginService;
 import com.application.mrmason.service.CustomerMobileOtpService;
 
-import jakarta.transaction.Transactional;
 @Service
 public class CustomerMobileOtpServiceImpl implements CustomerMobileOtpService{
 	@Autowired

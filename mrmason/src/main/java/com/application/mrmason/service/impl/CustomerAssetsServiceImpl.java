@@ -13,8 +13,6 @@ import com.application.mrmason.repository.CustomerAssetsRepo;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.service.CustomerAssetsService;
 
-import jakarta.transaction.Transactional;
-
 @Service
 public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 	@Autowired

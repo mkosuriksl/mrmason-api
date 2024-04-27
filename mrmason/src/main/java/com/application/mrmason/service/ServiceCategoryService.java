@@ -9,5 +9,5 @@ public interface ServiceCategoryService {
 	ServiceCategoryDto addServiceCategory(ServiceCategory service);
 	List<ServiceCategory> getServiceCategory(ServiceCategory service);
 	ServiceCategoryDto updateServiceCategory(ServiceCategory service);
-	ServiceCategoryDto getServiceById(long id);
+	ServiceCategoryDto getServiceById(String id);
 }

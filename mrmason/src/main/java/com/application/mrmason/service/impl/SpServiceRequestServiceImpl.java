@@ -12,8 +12,6 @@ import com.application.mrmason.repository.SpServiceRequestRepo;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.SpServiceRequestService;
 
-import jakarta.transaction.Transactional;
-
 @Service
 public class SpServiceRequestServiceImpl implements SpServiceRequestService{
 	@Autowired

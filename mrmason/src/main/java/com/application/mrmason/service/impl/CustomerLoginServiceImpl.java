@@ -17,7 +17,6 @@ import com.application.mrmason.service.CustomerLoginService;
 import com.application.mrmason.service.CustomerRegistrationService;
 import com.application.mrmason.service.OtpGenerationService;
 
-import jakarta.transaction.Transactional;
 
 @Service
 public class CustomerLoginServiceImpl implements CustomerLoginService {

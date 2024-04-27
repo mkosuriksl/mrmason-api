@@ -10,7 +10,6 @@ import com.application.mrmason.entity.ServiceCategory;
 import com.application.mrmason.repository.ServiceCategoryRepo;
 import com.application.mrmason.service.ServiceCategoryService;
 
-import jakarta.transaction.Transactional;
 @Service
 public class ServiceCategoryServiceImpl implements ServiceCategoryService{
     @Autowired
@@ -25,11 +24,11 @@ public class ServiceCategoryServiceImpl implements ServiceCategoryService{
 
 	@Override
 	public List<ServiceCategory> getServiceCategory(ServiceCategory service) {
-		Long id=service.getId();
+		String id=service.getId();
 		String category=service.getServiceCategory();
 		
         if( id !=null && category==null ) {
-			Optional<List<ServiceCategory>> user=Optional.of((serviceRepo.findByIdOrderByCreateDateDesc(id.longValue())));
+			Optional<List<ServiceCategory>> user=Optional.of((serviceRepo.findByIdOrderByCreateDateDesc(id)));
 			return user.get();
 		}else {
 			List<ServiceCategory> user=(serviceRepo.findByServiceCategoryOrderByCreateDateDesc(category));
@@ -39,15 +38,15 @@ public class ServiceCategoryServiceImpl implements ServiceCategoryService{
 
 	@Override
 	public ServiceCategoryDto updateServiceCategory(ServiceCategory service) {
-		long id=service.getId();
+		String id=service.getId();
 		String updatedBy=service.getUpdatedBy();
 		String category=service.getServiceCategory();
 		String subCategory=service.getServiceSubCategory();
 		
 		Optional<ServiceCategory>  serviceCategory=serviceRepo.findById(id);
 		if(serviceCategory.isPresent()) {
-			serviceCategory.get().setUpdatedBy(updatedBy);;
-			serviceCategory.get().setServiceCategory(category);;
+			serviceCategory.get().setUpdatedBy(updatedBy);
+			serviceCategory.get().setServiceCategory(category);
 			serviceCategory.get().setServiceSubCategory(subCategory);
 			
 			serviceRepo.save(serviceCategory.get());
@@ -57,7 +56,7 @@ public class ServiceCategoryServiceImpl implements ServiceCategoryService{
 	}
 	
 	@Override
-	public ServiceCategoryDto getServiceById(long id) {
+	public ServiceCategoryDto getServiceById(String id) {
 		if (serviceRepo.findById(id) != null) {
 			Optional<ServiceCategory> serviceCat = serviceRepo.findById(id);
 			ServiceCategory serviceCatData = serviceCat.get();

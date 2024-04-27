@@ -6,7 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ServiceCategoryDto {
-	private long id;
+	private String id;
 	private String serviceCategory;
 	private String serviceSubCategory;
 	private String updatedDate;

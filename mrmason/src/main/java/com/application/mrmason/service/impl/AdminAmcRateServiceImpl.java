@@ -9,8 +9,6 @@ import com.application.mrmason.entity.AdminAmcRate;
 import com.application.mrmason.repository.AdminAmcRateRepo;
 import com.application.mrmason.service.AdminAmcRateService;
 
-import jakarta.transaction.Transactional;
-
 @Service
 public class AdminAmcRateServiceImpl implements AdminAmcRateService{
 

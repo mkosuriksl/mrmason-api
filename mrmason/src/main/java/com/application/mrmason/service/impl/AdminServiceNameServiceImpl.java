@@ -11,7 +11,6 @@ import com.application.mrmason.entity.AdminServiceName;
 import com.application.mrmason.repository.AdminServiceNameRepo;
 import com.application.mrmason.service.AdminServiceNameService;
 
-import jakarta.transaction.Transactional;
 @Service
 public class AdminServiceNameServiceImpl implements AdminServiceNameService{
 	@Autowired

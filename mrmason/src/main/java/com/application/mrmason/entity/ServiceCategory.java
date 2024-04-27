@@ -22,15 +22,15 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name="admin_service_category")
+@Table(name="admin_mrmason_service_category")
 @Builder
 public class ServiceCategory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-    @Column(name="serviceCategory")
+    @Column(name="service_category")
     private String serviceCategory;
-    @Column(name="serviceSubCategory")
+    @Column(name="service_sub_category")
     private String serviceSubCategory;
     @Column(name="updated_date")
     private String updatedDate; 
@@ -39,7 +39,7 @@ public class ServiceCategory {
     private String updatedBy = "none";
     @Column(name="added_by")
     private String addedBy;
-    @Column(name="create_date")
+    @Column(name="creation_date")
     private String createDate; 
     
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy hh:mm a");

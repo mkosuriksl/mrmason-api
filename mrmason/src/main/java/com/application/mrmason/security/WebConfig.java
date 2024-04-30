@@ -48,7 +48,7 @@ public class WebConfig {
 						"/sp-login", "/sp-send-email-otp", "/sp-verify-email-otp", "/sp-send-mobile-otp",
 						"/sp-verify-mobile-otp", "/forgetPassword/sendOtp",
 						"/forgetPassword/verifyOtpAndChangePassword", "/forget-pwd-send-otp", "/forget-pwd-change",
-						"/admin/forgetPassword/sendOtp", "/admin/forgetPassword/verifyOtpAndChangePassword").permitAll()
+						"/admin/forgetPassword/sendOtp", "/admin/forgetPassword/verifyOtpAndChangePassword","/getData").permitAll()
 						.anyRequest().authenticated());
 
 		http.authenticationProvider(customDaoAuthenticationProvider());

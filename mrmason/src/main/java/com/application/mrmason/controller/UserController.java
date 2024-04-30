@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ChangeForfotdto;
@@ -33,10 +34,10 @@ public class UserController {
 
 	@Autowired
 	UserDAO userDAO;
-	
+
 	@Autowired
 	ServicePersonLoginService loginService;
-	
+
 	@Autowired
 	SPAvailabilityRepo availabilityReo;
 
@@ -176,7 +177,7 @@ public class UserController {
 		}
 
 	}
-	
+
 	@PostMapping("/sp-login")
 	public ResponseEntity<?> login(@RequestBody Logindto login) {
 		String email = login.getEmail();
@@ -184,8 +185,8 @@ public class UserController {
 		String password = login.getPassword();
 
 		try {
-			ResponseSpLoginDto response= userService.loginDetails(email, mobile, password);
-			if (response.getJwtToken()!=null) {
+			ResponseSpLoginDto response = userService.loginDetails(email, mobile, password);
+			if (response.getJwtToken() != null) {
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
@@ -193,5 +194,10 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
 	}
+	@GetMapping("/getData")
+	public ResponseEntity<User> get(@RequestParam(name="email") String email) {
 
+		return new ResponseEntity<>(userService.getServiceDataProfile(email), HttpStatus.OK);
+
+	}
 }

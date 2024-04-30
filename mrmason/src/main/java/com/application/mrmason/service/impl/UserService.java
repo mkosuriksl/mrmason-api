@@ -272,4 +272,9 @@ public class UserService {
 		response.setMessage("Invalid User.!");
 		return response;
 	}
+	public User getServiceDataProfile(String email) {
+
+		Optional<User> user = Optional.ofNullable(userDAO.findByEmail(email));
+		return user.get();
+	}
 }

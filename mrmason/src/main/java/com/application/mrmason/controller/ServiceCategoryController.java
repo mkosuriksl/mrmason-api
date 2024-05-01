@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ResponceServiceDto;
+import com.application.mrmason.dto.ServiceCategoryDto;
 import com.application.mrmason.entity.ServiceCategory;
+import com.application.mrmason.entity.ServiceCategoryMech;
 import com.application.mrmason.service.ServiceCategoryService;
 
 @RestController
@@ -26,13 +28,14 @@ public class ServiceCategoryController {
 	public ResponseEntity<?> addRentRequest(@RequestBody ServiceCategory service) {
 		ResponceServiceDto response=new ResponceServiceDto();
 		try {
-			if (categoryService.addServiceCategory(service) != null) {
-				response.setData(categoryService.addServiceCategory(service));
+			ServiceCategoryDto data= categoryService.addServiceCategory(service);
+			if (data!= null) {
+				response.setData(data);
 				response.setMessage("Service category added successfully..");
 				
 				return ResponseEntity.ok(response);
 			}
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>("A service is already present wih this sub category.!", HttpStatus.BAD_REQUEST);
 		} catch (Exception e) {
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
 		}
@@ -41,14 +44,16 @@ public class ServiceCategoryController {
 	@GetMapping("/getServiceCategory")
 	public ResponseEntity<?> getServiceCategory(@RequestBody ServiceCategory service) {
 		try {
-			List<ServiceCategory> entity = categoryService.getServiceCategory(service);
-			if (entity.isEmpty()) {
-				return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+			List<ServiceCategory> entity1 = categoryService.getServiceCategory(service);
+			List<ServiceCategoryMech> entity2 = categoryService.getMechServiceCategory(service);
+			if (!entity1.isEmpty()&& entity2.isEmpty()) {
+				return new ResponseEntity<List<ServiceCategory>>(entity1, HttpStatus.OK);	
+			}else if(entity1.isEmpty()&& !entity2.isEmpty()) {
+				return new ResponseEntity<List<ServiceCategoryMech>>(entity2, HttpStatus.OK);
 			}
-			return new ResponseEntity<List<ServiceCategory>>(entity, HttpStatus.OK);
+			return new ResponseEntity<>("Invalid User.!", HttpStatus.BAD_REQUEST);
 
 		} catch (Exception e) {
-
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
 		}
 
@@ -58,14 +63,14 @@ public class ServiceCategoryController {
 	public ResponseEntity<?> updateServiceCategory(@RequestBody ServiceCategory service) {
 		ResponceServiceDto response=new ResponceServiceDto();
 		try {
-
-			if (categoryService.updateServiceCategory(service) != null) {
+			ServiceCategoryDto data= categoryService.updateServiceCategory(service);
+			if (data != null) {
 				
-				response.setData(categoryService.updateServiceCategory(service));
+				response.setData(data);
 				response.setMessage("Service category updated successfully..");
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>("Invalid User.!", HttpStatus.BAD_REQUEST);
 		} catch (Exception e) {
 
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);

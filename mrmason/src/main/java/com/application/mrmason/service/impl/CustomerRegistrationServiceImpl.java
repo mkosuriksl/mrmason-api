@@ -11,9 +11,11 @@ import com.application.mrmason.dto.CustomerRegistrationDto;
 import com.application.mrmason.dto.ResponseLoginDto;
 import com.application.mrmason.entity.CustomerEmailOtp;
 import com.application.mrmason.entity.CustomerLogin;
+import com.application.mrmason.entity.CustomerMobileOtp;
 import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.repository.CustomerEmailOtpRepo;
 import com.application.mrmason.repository.CustomerLoginRepo;
+import com.application.mrmason.repository.CustomerMobileOtpRepo;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.security.JwtService;
 import com.application.mrmason.service.CustomerRegistrationService;
@@ -25,9 +27,11 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 	@Autowired
 	CustomerEmailOtpRepo emailRepo;
 	@Autowired
-	public CustomerRegistrationRepo repo;
+	CustomerMobileOtpRepo mobileRepo;
 	@Autowired
-	public CustomerLoginRepo loginRepo;
+	CustomerRegistrationRepo repo;
+	@Autowired
+    CustomerLoginRepo loginRepo;
 	@Autowired
 	BCryptPasswordEncoder byCrypt;
 	@Autowired
@@ -46,7 +50,7 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 		loginEntity.setUserEmail(customer.getUserEmail());
 		loginEntity.setUserMobile(customer.getUserMobile());
 		loginEntity.setUserPassword(customer.getUserPassword());
-		loginEntity.setMobileVerified("yes");
+		loginEntity.setMobileVerified("no");
 		loginEntity.setEmailVerified("no");
 		loginEntity.setStatus("inactive");
 
@@ -56,6 +60,12 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 		emailLoginEntity.setEmail(customer.getUserEmail());
 
 		emailRepo.save(emailLoginEntity);
+		
+		CustomerMobileOtp mobileLoginEntity = new CustomerMobileOtp();
+		mobileLoginEntity.setMobileNum(customer.getUserMobile());
+		
+		mobileRepo.save(mobileLoginEntity);
+		
 
 		CustomerRegistrationDto customerDto = new CustomerRegistrationDto();
 		customerDto.setId(customer.getId());

@@ -10,6 +10,7 @@ import com.application.mrmason.entity.ServiceCategory;
 public interface ServiceCategoryRepo extends JpaRepository<ServiceCategory,String>{
 	List<ServiceCategory>  findByIdOrderByCreateDateDesc(String id);
 	List<ServiceCategory>  findByServiceCategoryOrderByCreateDateDesc(String category);
+	ServiceCategory findByServiceCategoryAndServiceSubCategory(String serviceCategory, String serviceSubCategory);
 	
 	
 }

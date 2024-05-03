@@ -12,5 +12,6 @@ public interface ServiceCategoryRepo extends JpaRepository<ServiceCategory,Strin
 	List<ServiceCategory>  findByServiceCategoryOrderByCreateDateDesc(String category);
 	ServiceCategory findByServiceCategoryAndServiceSubCategory(String serviceCategory, String serviceSubCategory);
 	
+	List<ServiceCategory>  findByServiceCategoryNotOrderByCreateDateDesc(String category);
 	
 }

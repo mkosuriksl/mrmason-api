@@ -25,18 +25,18 @@ public class SPAvailabilityController {
 	@PostMapping("/sp-update-avalability")
 	public ResponseEntity<?> updateAvailabilityOfAddress(@RequestBody SPAvailability available) {
 		try {
-			String bodSeqNo = available.getBodSeqNo();
 
-			SPAvailability availability = spAvailableService.availability(available, bodSeqNo);
+			SPAvailability availability = spAvailableService.availability(available);
 
 			if (availability != null) {
 				return new ResponseEntity<>("Address updated successfully", HttpStatus.OK);
 			}
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid user");
 
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid user");
+		
 	}
 
 	@GetMapping("/sp-get-update-availability")

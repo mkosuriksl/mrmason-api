@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.application.mrmason.dto.AdminDetailsDto;
 import com.application.mrmason.dto.ResponceAdminDetailsDto;
 import com.application.mrmason.entity.AdminDetails;
+import com.application.mrmason.entity.UserType;
 import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.security.JwtService;
 import com.application.mrmason.service.AdminDetailsService;

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import com.application.mrmason.entity.ServicePersonLogin;
 import com.application.mrmason.entity.User;
+import com.application.mrmason.entity.UserType;
 
 
 @Service
@@ -48,7 +49,7 @@ public class UserService {
 	public Userdto addDetails(User user) {
 		String encryptPassword = byCrypt.encode(user.getPassword());
 		user.setPassword(encryptPassword);
-		userDAO.save(user);
+		User data= userDAO.save(user);
 
 		ServicePersonLogin service = new ServicePersonLogin();
 		service.setEmail(user.getEmail());
@@ -68,7 +69,7 @@ public class UserService {
 		dto.setState(user.getState());
 		dto.setPincodeNo(user.getPincodeNo());
 		dto.setVerified(user.getVerified());
-		dto.setUserType(String.valueOf(user.getUserType()));
+		dto.setUserType(String.valueOf(data.getUserType()));
 		dto.setStatus(user.getStatus());
 		dto.setBusinessName(user.getBusinessName());
 		dto.setBodSeqNo(user.getBodSeqNo());

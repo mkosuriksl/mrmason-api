@@ -13,6 +13,7 @@ import com.application.mrmason.entity.CustomerEmailOtp;
 import com.application.mrmason.entity.CustomerLogin;
 import com.application.mrmason.entity.CustomerMobileOtp;
 import com.application.mrmason.entity.CustomerRegistration;
+import com.application.mrmason.entity.UserType;
 import com.application.mrmason.repository.CustomerEmailOtpRepo;
 import com.application.mrmason.repository.CustomerLoginRepo;
 import com.application.mrmason.repository.CustomerMobileOtpRepo;
@@ -44,7 +45,7 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 		BCryptPasswordEncoder byCrypt = new BCryptPasswordEncoder();
 		String encryptPassword = byCrypt.encode(customer.getUserPassword());
 		customer.setUserPassword(encryptPassword);
-		repo.save(customer);
+		CustomerRegistration registration= repo.save(customer);
 
 		CustomerLogin loginEntity = new CustomerLogin();
 		loginEntity.setUserEmail(customer.getUserEmail());
@@ -77,7 +78,7 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 		customerDto.setUserPincode(customer.getUserPincode());
 		customerDto.setUserState(customer.getUserState());
 		customerDto.setUserTown(customer.getUserTown());
-		customerDto.setUsertype(String.valueOf(customer.getUserType()));
+		customerDto.setUsertype(String.valueOf(registration.getUserType()));
 		customerDto.setUserDistrict(customer.getUserDistrict());
 
 		return customerDto;

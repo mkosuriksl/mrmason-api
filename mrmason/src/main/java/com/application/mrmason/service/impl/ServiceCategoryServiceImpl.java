@@ -8,8 +8,6 @@ import org.springframework.stereotype.Service;
 
 import com.application.mrmason.dto.ServiceCategoryDto;
 import com.application.mrmason.entity.ServiceCategory;
-import com.application.mrmason.entity.ServiceCategoryMech;
-import com.application.mrmason.repository.ServiceCategoryMechRepo;
 import com.application.mrmason.repository.ServiceCategoryRepo;
 import com.application.mrmason.service.ServiceCategoryService;
 
@@ -17,26 +15,15 @@ import com.application.mrmason.service.ServiceCategoryService;
 public class ServiceCategoryServiceImpl implements ServiceCategoryService {
 	@Autowired
 	ServiceCategoryRepo serviceRepo;
-	@Autowired
-	ServiceCategoryMechRepo mechRepo;
 
 	@Override
 	public ServiceCategoryDto addServiceCategory(ServiceCategory service) {
 		String serviceCat = service.getServiceCategory();
 		String serviceSubCat = service.getServiceSubCategory();
-		if (serviceRepo.findByServiceCategoryAndServiceSubCategory(serviceCat, serviceSubCat) == null
-				&& mechRepo.findByServiceCategoryAndServiceSubCategory(serviceCat, serviceSubCat) == null) {
-			if (service.getServiceCategory().equalsIgnoreCase("civil")) {
-				ServiceCategory data = serviceRepo.save(service);
-				return getServiceById(data.getId());
-			} else {
-				ServiceCategoryMech mech = new ServiceCategoryMech();
-				mech.setAddedBy(service.getAddedBy());
-				mech.setServiceCategory(serviceCat);
-				mech.setServiceSubCategory(serviceSubCat);
-				ServiceCategoryMech mechData = mechRepo.save(mech);
-				return getMechServiceById(mechData.getId());
-			}
+		if (serviceRepo.findByServiceCategoryAndServiceSubCategory(serviceCat, serviceSubCat) == null) {
+			ServiceCategory data = serviceRepo.save(service);
+			return getServiceById(data.getId());
+
 		} else {
 			return null;
 		}
@@ -56,20 +43,6 @@ public class ServiceCategoryServiceImpl implements ServiceCategoryService {
 			return user;
 		}
 	}
-	
-	@Override
-	public List<ServiceCategoryMech> getMechServiceCategory(ServiceCategory service) {
-		String id = service.getId();
-		String category = service.getServiceCategory();
-
-		if (id != null && category == null) {
-			Optional<List<ServiceCategoryMech>> user = Optional.of((mechRepo.findByIdOrderByCreateDateDesc(id)));
-			return user.get();
-		} else {
-			List<ServiceCategoryMech> user = (mechRepo.findByServiceCategoryOrderByCreateDateDesc(category));
-			return user;
-		}
-	}
 
 	@Override
 	public ServiceCategoryDto updateServiceCategory(ServiceCategory service) {
@@ -79,21 +52,13 @@ public class ServiceCategoryServiceImpl implements ServiceCategoryService {
 		String subCategory = service.getServiceSubCategory();
 
 		Optional<ServiceCategory> serviceCategory = serviceRepo.findById(id);
-		Optional<ServiceCategoryMech> serviceCategoryMech = mechRepo.findById(id);
-		if (serviceCategory.isPresent()&& !serviceCategoryMech.isPresent()) {
+		if (serviceCategory.isPresent()) {
 			serviceCategory.get().setUpdatedBy(updatedBy);
 			serviceCategory.get().setServiceCategory(category);
 			serviceCategory.get().setServiceSubCategory(subCategory);
 
 			serviceRepo.save(serviceCategory.get());
 			return getServiceById(id);
-		}else if(!serviceCategory.isPresent()&& serviceCategoryMech.isPresent()) {
-			serviceCategoryMech.get().setUpdatedBy(updatedBy);
-			serviceCategoryMech.get().setServiceCategory(category);
-			serviceCategoryMech.get().setServiceSubCategory(subCategory);
-
-			mechRepo.save(serviceCategoryMech.get());
-			return getMechServiceById(id);
 		}
 		return null;
 	}
@@ -120,22 +85,18 @@ public class ServiceCategoryServiceImpl implements ServiceCategoryService {
 	}
 
 	@Override
-	public ServiceCategoryDto getMechServiceById(String id) {
+	public List<ServiceCategory> getServiceCategoryCivil(String category) {
 
-		Optional<ServiceCategoryMech> serviceCat = mechRepo.findById(id);
-		ServiceCategoryMech serviceCatData = serviceCat.get();
-		ServiceCategoryDto serviceDto = new ServiceCategoryDto();
+		List<ServiceCategory> user = (serviceRepo.findByServiceCategoryOrderByCreateDateDesc(category));
+		return user;
 
-		serviceDto.setId(serviceCatData.getId());
-		serviceDto.setServiceCategory(serviceCatData.getServiceCategory());
-		serviceDto.setServiceSubCategory(serviceCatData.getServiceSubCategory());
-		serviceDto.setUpdatedBy(serviceCatData.getUpdatedBy());
-		serviceDto.setUpdatedDate(serviceCatData.getUpdatedDate());
-		serviceDto.setCreateDate(serviceCatData.getCreateDate());
-		serviceDto.setAddedBy(serviceCatData.getAddedBy());
+	}
 
-		return serviceDto;
+	@Override
+	public List<ServiceCategory> getServiceCategoryNonCivil(String category) {
 
+		List<ServiceCategory> user = (serviceRepo.findByServiceCategoryNotOrderByCreateDateDesc(category));
+		return user;
 	}
 
 }

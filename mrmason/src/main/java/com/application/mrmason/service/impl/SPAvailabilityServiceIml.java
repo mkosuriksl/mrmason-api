@@ -21,12 +21,15 @@ public class SPAvailabilityServiceIml {
 	UserDAO userDAO;
 	 
 	
-	public SPAvailability availability(SPAvailability available,String bodSeqNo) {
+	public SPAvailability availability(SPAvailability available) {
 		
-		Optional<User> present= Optional.of(userDAO.findByBodSeqNo(bodSeqNo));
-		if(present.isPresent()) {
-			User userDb = present.get();
-			if(bodSeqNo != null && userDb.getStatus().equalsIgnoreCase("Active")) {
+		
+		Optional<User> userExists = Optional.ofNullable(userDAO.findByBodSeqNo(available.getBodSeqNo()));
+		if(userExists.isPresent()) {
+	
+			User userDb = userExists.get();
+			if(available.getBodSeqNo() != null && userDb.getStatus().equalsIgnoreCase("Active")) {
+				
 				return availabilityReo.save(available);
 			}
 		}

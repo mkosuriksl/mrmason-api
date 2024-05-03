@@ -19,11 +19,12 @@ import com.application.mrmason.entity.ServiceCategory;
 import com.application.mrmason.service.ServiceCategoryService;
 
 @RestController
-@PreAuthorize("hasAuthority('EC')")
+
 public class ServiceCategoryController {
 
 	@Autowired
 	public ServiceCategoryService categoryService;
+	@PreAuthorize("hasAuthority('Adm')")
 	@PostMapping("/addServiceCategory")
 	public ResponseEntity<?> addRentRequest(@RequestBody ServiceCategory service) {
 		ResponceServiceDto response=new ResponceServiceDto();
@@ -40,7 +41,7 @@ public class ServiceCategoryController {
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
 		}
 	}
-	
+	@PreAuthorize("hasAuthority('Adm')")
 	@GetMapping("/getServiceCategory")
 	public ResponseEntity<?> getServiceCategory(@RequestBody ServiceCategory service) {
 		try {
@@ -88,7 +89,7 @@ public class ServiceCategoryController {
 		}
 
 	}
-
+	@PreAuthorize("hasAuthority('Adm')")
 	@PutMapping("/updateServiceCategory")
 	public ResponseEntity<?> updateServiceCategory(@RequestBody ServiceCategory service) {
 		ResponceServiceDto response=new ResponceServiceDto();

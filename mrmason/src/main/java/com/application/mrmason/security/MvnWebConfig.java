@@ -14,7 +14,8 @@ public class MvnWebConfig implements WebMvcConfigurer {
 //	}
 	@Override
 	public void addCorsMappings(CorsRegistry registry) {
-		registry.addMapping("/**").allowedOrigins("http://localhost:4200","https://localhost:4200")
+//		registry.addMapping("/**").allowedOrigins("http://localhost:54288","https://localhost:4200")
+		registry.addMapping("/**").allowedOrigins("*")
 				.allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS").allowedHeaders("*").allowCredentials(true)
 				.maxAge(3600);
 	}

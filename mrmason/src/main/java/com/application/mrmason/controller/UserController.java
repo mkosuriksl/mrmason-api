@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -16,14 +17,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.application.mrmason.dto.ChangeForfotdto;
 import com.application.mrmason.dto.FilterCustomerAndUser;
 import com.application.mrmason.dto.Logindto;
+import com.application.mrmason.dto.ResponseLoginDto;
 import com.application.mrmason.dto.ResponseSpLoginDto;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.repository.SPAvailabilityRepo;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.impl.ServicePersonLoginService;
 import com.application.mrmason.service.impl.UserService;
-
-import jakarta.annotation.security.PermitAll;
 
 @RestController
 
@@ -194,10 +194,23 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
 	}
+
 	@GetMapping("/getData")
-	public ResponseEntity<User> get(@RequestParam(name="email") String email) {
+	public ResponseEntity<User> get(@RequestParam(name = "email") String email) {
 
 		return new ResponseEntity<>(userService.getServiceDataProfile(email), HttpStatus.OK);
 
 	}
+
+	@GetMapping("/error")
+	@PostMapping("/error")
+	@PutMapping("/error")
+	@DeleteMapping("/error")
+	public ResponseEntity<ResponseLoginDto> error() {
+		ResponseLoginDto response = new ResponseLoginDto();
+		response.setMessage("Access Denied");
+		return new ResponseEntity<ResponseLoginDto>(response, HttpStatus.UNAUTHORIZED);
+
+	}
+
 }

@@ -36,9 +36,12 @@ public class AdminDetailsController {
 
 				response.setData(adminService.getDetails(userEmail, userMobile));
 				response.setMessage("Admin details added successfully..");
+				response.setStatus(true);
 				return ResponseEntity.ok(response);
 			}
-			return new ResponseEntity<>("Email or Mobile already exists.!", HttpStatus.UNAUTHORIZED);
+			response.setMessage("Email or Mobile already exists.!");
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
 
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
@@ -55,10 +58,13 @@ public class AdminDetailsController {
 			if (adminService.updateAdminData(admin) != null) {
 				response.setData(adminService.getDetails(userEmail, userMobile));
 				response.setMessage("Successfully Updated.");
+				response.setStatus(true);
 				return ResponseEntity.ok(response);
 
 			}
-			return new ResponseEntity<>("Admin Not Found.", HttpStatus.NOT_FOUND);
+			response.setMessage("Admin Not Found.");
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 		} catch (Exception e) {
 
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
@@ -94,7 +100,9 @@ public class AdminDetailsController {
 				
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
-			return new ResponseEntity<>("Invalid Admin.!", HttpStatus.UNAUTHORIZED);
+			response.setMessage("Invalid Admin.!");
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
 			
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);

@@ -9,7 +9,8 @@ import lombok.Data;
 
 @Data
 public class ResponseServiceReportDto {
-	String msge;
+	String message;
+	private boolean status;
 	Userdto regData;
 	List<AddServices> servData;
 	List<SPAvailability> availData;

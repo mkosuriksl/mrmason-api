@@ -28,10 +28,12 @@ public class AdminAmcRateController {
 			if (adminService.addAdminamc(amc) != null) {
 				response.setAdminAmcRates(adminService.addAdminamc(amc));
 				response.setMessage("AMC added successfully..");
-				
+				response.setStatus(true);
 				return ResponseEntity.ok(response);
 			}
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+			response.setMessage("Invalid User.!");
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
 		}
@@ -62,9 +64,12 @@ public class AdminAmcRateController {
 				
 				response.setAdminAmcRates(adminService.updateAmcRates(updateAmc));
 				response.setMessage("Admin Amc Rates updated successfully..");
+				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+			response.setMessage("Invalid User.!");
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
 
 			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);

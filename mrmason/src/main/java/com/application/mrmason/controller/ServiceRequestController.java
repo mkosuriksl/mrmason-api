@@ -23,13 +23,16 @@ public class ServiceRequestController {
 	@PostMapping("/addServiceRequest")
 	public ResponseEntity<?> addRequest(@RequestBody ServiceRequest request){
 		try {
+			ResponseServiceReqDto response=new ResponseServiceReqDto();
 			if(reqService.addRequest(request)!=null) {	
-				ResponseServiceReqDto response=new ResponseServiceReqDto();
 				response.setAddService(reqService.addRequest(request));
 				response.setMessage("Service request added successfully..");
+				response.setStatus(true);
 				return new ResponseEntity<>(response,HttpStatus.OK);
 			}else {
-				return new ResponseEntity<>("Invalid user..!",HttpStatus.BAD_REQUEST);
+				response.setMessage("Invalid User.!");
+				response.setStatus(false);
+				return new ResponseEntity<>(response,HttpStatus.BAD_REQUEST);
 			}
 		}catch(Exception e) {
 			e.getMessage();

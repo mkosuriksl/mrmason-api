@@ -25,14 +25,17 @@ public class RentelController {
 	@PostMapping("/addRentalData")
 	public ResponseEntity<?> addRentRequest(@RequestBody Rentel rent) {
 		try {
+			ResponseRentalDto response=new ResponseRentalDto();
 			if (rentService.addRentalReq(rent) != null) {
-				ResponseRentalDto response=new ResponseRentalDto();
+				
 				response.setAddRental(rentService.addRentalReq(rent));
 				response.setMessage("Rental asset added successfully..");
-				
+				response.setStatus(true);
 				return ResponseEntity.ok(response);
 			}
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+			response.setMessage("Invalid User.!");
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
 			e.getMessage();
 			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
@@ -56,13 +59,16 @@ public class RentelController {
 	@PutMapping("/updateRentalData")
 	public ResponseEntity<?> updateRentRequest(@RequestBody Rentel rent) {
 		try {
+			ResponseRentalDto response=new ResponseRentalDto();
 			if (rentService.updateRentalReq(rent) != null) {
-				ResponseRentalDto response=new ResponseRentalDto();
 				response.setAddRental(rentService.updateRentalReq(rent));
 				response.setMessage("Rental asset updated successfully..");
+				response.setStatus(true);
 				return ResponseEntity.ok(response);
 			}
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+			response.setMessage("Invalid User.!");
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
 			e.getMessage();
 			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);

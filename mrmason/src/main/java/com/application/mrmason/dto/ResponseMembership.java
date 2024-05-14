@@ -6,5 +6,6 @@ import lombok.Data;
 @Data
 public class ResponseMembership {
 	private String message;
+	private boolean status;
 	private MembershipDetails membership;
 }

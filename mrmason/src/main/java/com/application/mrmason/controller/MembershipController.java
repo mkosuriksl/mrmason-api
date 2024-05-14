@@ -36,19 +36,22 @@ public class MembershipController {
 				// If membership was successfully added, return a custom response
 				response.setMembership(memService.getMembership(member));
 				response.setMessage("Membership successfully added.");
+				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			} else if (addedMember == "renewel") {
 				// If membership addition failed, return an error response
 				response.setMembership(memService.getMembership(member));
 				response.setMessage("Membership successfully renewed.");
+				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 
 			} else if (addedMember == "present") {
 				return new ResponseEntity<>("A Membership is in active for this asset.!!", HttpStatus.ALREADY_REPORTED);
 			}
-
+			response.setMessage("Failed to add membership, Invalid User");
+			response.setStatus(false);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body("Failed to add membership, Invalid User");
+					.body(response);
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
 		}

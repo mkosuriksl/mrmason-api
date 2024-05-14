@@ -37,7 +37,7 @@ public class CustomerRegistrationController {
 		ResponseCustomerRegDto response = new ResponseCustomerRegDto();
 		response.setRegister(service.saveData(customer));
 		response.setMessage("Customer added Successfully..");
-
+		response.setStatus(true);
 		return ResponseEntity.ok(response);
 	}
 	@PreAuthorize("hasAuthority('Adm')")
@@ -89,6 +89,7 @@ public class CustomerRegistrationController {
 			if (service.updateCustomerData(userName, userTown, userState, userDistrict, userPinCode, userid) != null) {
 				response.setUpdateProfile(service.getProfileData(userid));
 				response.setMessage("Successfully Updated.");
+				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 
 			}
@@ -96,7 +97,9 @@ public class CustomerRegistrationController {
 			e.getMessage();
 			return new ResponseEntity<>("Profile Not Found.", HttpStatus.NOT_FOUND);
 		}
-		return new ResponseEntity<>("Profile Not Found.", HttpStatus.NOT_FOUND);
+		response.setMessage("Profile Not Found.");
+		response.setStatus(false);
+		return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 	}
 	@PreAuthorize("hasAuthority('EC')")
 	@PostMapping("/changePassword")

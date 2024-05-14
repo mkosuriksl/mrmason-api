@@ -31,9 +31,12 @@ public class AdminAssetController {
 
 				response.setAddAsset(adminService.addAdminAssets(asset));
 				response.setMessage("Asset added successfully..");
+				response.setStatus(true);
 				return ResponseEntity.ok(response);
 			}
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+			response.setMessage("Invalid User.!");
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
 
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
@@ -64,9 +67,12 @@ public class AdminAssetController {
 				
 				response.setAddAsset(adminService.updateAssets(updateAsset));
 				response.setMessage("Admin asset updated successfully..");
+				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+			response.setMessage("Invalid User.!");
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
 
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);

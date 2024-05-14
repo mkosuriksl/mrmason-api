@@ -234,6 +234,7 @@ public class UserService {
 								String jwtToken = jwtService.generateToken(userEmailMobile.get());
 								response.setJwtToken(jwtToken);
 								response.setMessage("Login Successful.");
+								response.setStatus(true);
 								response.setLoginDetails(getServiceProfile(email));
 								return response;
 							} else {
@@ -252,6 +253,7 @@ public class UserService {
 								String jwtToken = jwtService.generateToken(userEmailMobile.get());
 								response.setJwtToken(jwtToken);
 								response.setMessage("Login Successful.");
+								response.setStatus(true);
 								response.setLoginDetails(getServiceProfile(loginDb.get().getEmail()));
 								return response;
 							} else {

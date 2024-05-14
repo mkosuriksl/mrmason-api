@@ -30,6 +30,7 @@ public class SpServiceRequestController {
 	        if (addedService != null) {
 	            response.setMessage("SP Service request added successfully..");
 	            response.setData(addedService);
+	            response.setStatus(true);
 	            return ResponseEntity.ok(response);
 	        }
 	        return new ResponseEntity<>("Invalid ServicePersonId or RequestId.!", HttpStatus.UNAUTHORIZED);
@@ -64,9 +65,12 @@ public class SpServiceRequestController {
 
 				response.setData(adminService.updateServiceRequest(service));
 				response.setMessage("Service Request updated successfully..");
+				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+			response.setMessage("Invalid User.!");
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
 
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);

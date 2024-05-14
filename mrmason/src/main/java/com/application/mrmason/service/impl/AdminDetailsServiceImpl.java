@@ -112,6 +112,7 @@ public class AdminDetailsServiceImpl implements AdminDetailsService {
 						if (byCrypt.matches(userPassword, loginDb.getPassword())) {
 							String jwtToken = jwtService.generateToken(loginDb);
 							response.setJwtToken(jwtToken);
+							response.setStatus(true);
 							response.setMessage("Login Successful.");
 							response.setData(getDetails(userEmail, phno));
 							return response;

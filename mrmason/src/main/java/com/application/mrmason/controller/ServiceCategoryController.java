@@ -33,10 +33,12 @@ public class ServiceCategoryController {
 			if (data!= null) {
 				response.setData(data);
 				response.setMessage("Service category added successfully..");
-				
+				response.setStatus(true);
 				return ResponseEntity.ok(response);
 			}
-			return new ResponseEntity<>("A service is already present wih this sub category.!", HttpStatus.BAD_REQUEST);
+			response.setMessage("A service is already present wih this sub category.!");
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 		} catch (Exception e) {
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
 		}
@@ -99,9 +101,12 @@ public class ServiceCategoryController {
 				
 				response.setData(data);
 				response.setMessage("Service category updated successfully..");
+				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.BAD_REQUEST);
+			response.setMessage("Invalid User.!");
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 		} catch (Exception e) {
 
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);

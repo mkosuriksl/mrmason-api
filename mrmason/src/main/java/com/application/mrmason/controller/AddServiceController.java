@@ -67,6 +67,7 @@ public class AddServiceController {
 
 			} else {
 				String successMessage = "Profile updated successfully";
+				
 				return ResponseEntity.ok().body(successMessage);
 			}
 		} catch (Exception e) {
@@ -105,13 +106,15 @@ public class AddServiceController {
 		try {
 			if (userService.getServiceProfile(user.get().getEmail()) != null) {
 				serviceReport.setRegData(userService.getServiceProfile(user.get().getEmail()));
-				serviceReport.setMsge("success");
+				serviceReport.setMessage("success");
+				serviceReport.setStatus(true);
 				serviceReport.setServData(service.getPerson(bodSeqNo, null, null));
 				serviceReport.setAvailData(spAvailibilityImpl.getAvailability(user.get().getEmail(), bodSeqNo));
 				return new ResponseEntity<>(serviceReport, HttpStatus.OK);
 			}
-
-			return null;
+			serviceReport.setMessage("Invalid user.!");
+			serviceReport.setStatus(false);
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(serviceReport);
 
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

@@ -28,14 +28,17 @@ public class CustomerAssetsController {
 	@PostMapping("/addAssets")
 	public ResponseEntity<?> newCustomer(@RequestBody CustomerAssets asset) {
 		try {
+			ResponseAssetDto response = new ResponseAssetDto();
 			if (assetService.saveAssets(asset) != null) {
 				assetService.saveAssets(asset);
-				ResponseAssetDto response = new ResponseAssetDto();
 				response.setAddAsset(assetService.getAssetByAssetId(asset.getAssetId()));
 				response.setMessage("Asset added successfully..");
+				response.setStatus(true);
 				return ResponseEntity.ok(response);
 			}
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+			response.setMessage("Invalid User.!");
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
 		}
@@ -45,15 +48,17 @@ public class CustomerAssetsController {
 	@PutMapping("/updateAssets")
 	public ResponseEntity<?> updateAssetDetails(@RequestBody CustomerAssetDto updateAsset) {
 		try {
-
+			ResponseAssetDto response = new ResponseAssetDto();
 			if (assetService.updateAssets(updateAsset) != null) {
 				assetService.updateAssets(updateAsset);
-				ResponseAssetDto response = new ResponseAssetDto();
 				response.setAddAsset(assetService.getAssetByAssetId(updateAsset.getAssetId()));
 				response.setMessage("Asset updated successfully..");
+				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+			response.setMessage("Invalid User.!");
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
 
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);

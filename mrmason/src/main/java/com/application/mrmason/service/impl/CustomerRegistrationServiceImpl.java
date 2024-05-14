@@ -178,6 +178,7 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 							String jwtToken = jwtService.generateToken(customerRegistration);
 							response.setMessage("Login Successful.");
 							response.setJwtToken(jwtToken);
+							response.setStatus(true);
 							response.setLoginDetails(getProfileData(customerRegistration.getUserid()));
 							return response;
 
@@ -196,6 +197,7 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 							String jwtToken = jwtService.generateToken(customerRegistration);
 							response.setJwtToken(jwtToken);
 							response.setMessage("Login Successful.");
+							response.setStatus(true);
 							response.setLoginDetails(getProfileData(user.getUserid()));
 							return response;
 						} else {

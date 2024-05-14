@@ -32,10 +32,13 @@ public class AdminServiceNameController{
 			if ( admin != null) {
 				response.setData(admin);
 				response.setMessage("Admin Service added successfully..");
+				response.setStatus(true);
 
 				return ResponseEntity.ok(response);
 			}
-			return new ResponseEntity<>("ServiceId is already present.!", HttpStatus.UNAUTHORIZED);
+			response.setMessage("ServiceId is already present.!");
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
 		}
@@ -67,9 +70,12 @@ public class AdminServiceNameController{
 
 				response.setData(admin);
 				response.setMessage("Admin Service updated successfully..");
+				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+			response.setMessage("Invalid User.!");
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
 
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);

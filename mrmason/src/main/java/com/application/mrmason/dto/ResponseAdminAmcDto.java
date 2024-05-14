@@ -7,5 +7,6 @@ import lombok.Data;
 @Data
 public class ResponseAdminAmcDto {
 	private String message;
+	private boolean status;
 	private AdminAmcRate adminAmcRates;
 }

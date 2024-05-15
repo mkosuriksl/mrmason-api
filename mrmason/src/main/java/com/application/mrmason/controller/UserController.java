@@ -19,6 +19,9 @@ import com.application.mrmason.dto.FilterCustomerAndUser;
 import com.application.mrmason.dto.Logindto;
 import com.application.mrmason.dto.ResponseLoginDto;
 import com.application.mrmason.dto.ResponseSpLoginDto;
+import com.application.mrmason.dto.ResponseUserDTO;
+import com.application.mrmason.dto.ResponseUserUpdateDto;
+import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.repository.SPAvailabilityRepo;
 import com.application.mrmason.repository.UserDAO;
@@ -40,19 +43,25 @@ public class UserController {
 
 	@Autowired
 	SPAvailabilityRepo availabilityReo;
-
+	
+	ResponseUserDTO response =  new ResponseUserDTO();
+	ResponseUserUpdateDto userResponse = new ResponseUserUpdateDto();
 	@PostMapping("/sp-register")
-	public ResponseEntity<String> create(@RequestBody User registrationDetails) {
+	public ResponseEntity<?> create(@RequestBody User registrationDetails) {
 		try {
 			if (userService.isEmailExists(registrationDetails.getEmail())) {
-				return new ResponseEntity<>("Email already exists", HttpStatus.BAD_REQUEST);
+				response.setMessage("Email already exists");
+				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 			}
 			if (userService.isMobileExists(registrationDetails.getMobile())) {
-				return new ResponseEntity<>("PhoneNumber already exists", HttpStatus.BAD_REQUEST);
+				response.setMessage("Mobile already exists");
+				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 			}
-
-			userService.addDetails(registrationDetails);
-			return new ResponseEntity<>("User added successfully", HttpStatus.OK);
+			Userdto userDetails=userService.addDetails(registrationDetails);
+			response.setMessage("User added successfully");
+			response.setStatus(true);
+			response.setUserData(userDetails);
+			return new ResponseEntity<>( response,HttpStatus.OK);
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
@@ -67,10 +76,13 @@ public class UserController {
 
 		try {
 			if (updatedUser == null) {
-				return new ResponseEntity<>("invalid Email", HttpStatus.NOT_FOUND);
+				response.setMessage("invalid Email");
+				return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 			} else {
-				String successMessage = "Profile updated successfully";
-				return ResponseEntity.ok().body(successMessage);
+				response.setMessage("Profile updated successfully");
+				
+				response.setStatus(true);
+				return ResponseEntity.ok().body(response);
 			}
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -79,7 +91,7 @@ public class UserController {
 
 	@PreAuthorize("hasAuthority('Developer')")
 	@PostMapping("/change-password")
-	public ResponseEntity<String> changeCustomerPassword(@RequestBody ChangeForfotdto cfPwd) {
+	public ResponseEntity<String> changePassword(@RequestBody ChangeForfotdto cfPwd) {
 
 		String email = cfPwd.getEmail();
 		String oldPassword = cfPwd.getOldPassword();
@@ -139,13 +151,14 @@ public class UserController {
 	@GetMapping("/sp-get-profile")
 	public ResponseEntity<?> getProfile(@RequestBody ChangeForfotdto cfPwd) {
 		String email = cfPwd.getEmail();
-
+		Userdto profile=userService.getServiceProfile(email);
 		try {
-			if (userService.getServiceProfile(email) == null) {
-				return new ResponseEntity<>("Invalid Email ....!", HttpStatus.BAD_REQUEST);
+			if ( profile == null) {
+				response.setMessage("Invalid Email ....!");
+				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 			}
 
-			return new ResponseEntity<>(userService.getServiceProfile(email), HttpStatus.OK);
+			return new ResponseEntity<>(profile, HttpStatus.OK);
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}

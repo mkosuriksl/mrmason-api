@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.application.mrmason.dto.ResponseSPAvailabilityDto;
 import com.application.mrmason.dto.UpdateAvailableDto;
 import com.application.mrmason.entity.SPAvailability;
 import com.application.mrmason.service.impl.SPAvailabilityServiceIml;
@@ -22,6 +23,8 @@ public class SPAvailabilityController {
 	@Autowired
 	SPAvailabilityServiceIml spAvailableService;
 
+	ResponseSPAvailabilityDto response=new ResponseSPAvailabilityDto();
+	
 	@PostMapping("/sp-update-avalability")
 	public ResponseEntity<?> updateAvailabilityOfAddress(@RequestBody SPAvailability available) {
 		try {
@@ -29,9 +32,11 @@ public class SPAvailabilityController {
 			SPAvailability availability = spAvailableService.availability(available);
 
 			if (availability != null) {
-				return new ResponseEntity<>("Address updated successfully", HttpStatus.OK);
+				response.setMessage("Address updated successfully");
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid user");
+			response.setMessage("Invalid user");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("response");
 
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -47,9 +52,12 @@ public class SPAvailabilityController {
 		List<SPAvailability> availability = spAvailableService.getAvailability(email, mobile);
 		try {
 			if (!availability.isEmpty()) {
-				return new ResponseEntity<>(availability, HttpStatus.OK);
+				response.setMessage(" Availability details");
+				response.setGetData(availability);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			} else {
-				return new ResponseEntity<>("No user found for the given parameters.", HttpStatus.NOT_FOUND);
+				response.setMessage("No user found for the given parameters");
+				return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 			}
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

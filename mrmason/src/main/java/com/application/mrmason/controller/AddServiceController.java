@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.AddServiceGetDto;
+import com.application.mrmason.dto.ResponseAddServiceDto;
+import com.application.mrmason.dto.ResponseAddServiceGetDto;
 import com.application.mrmason.dto.ResponseServiceReportDto;
 import com.application.mrmason.entity.AddServices;
 import com.application.mrmason.entity.User;
@@ -38,19 +40,25 @@ public class AddServiceController {
 	@Autowired
 	SPAvailabilityServiceIml spAvailibilityImpl;
 
+	ResponseAddServiceDto response= new ResponseAddServiceDto();
+	
 	@PostMapping("/add-service")
-	public ResponseEntity<String> addService(@RequestBody AddServices add) {
+	public ResponseEntity<?> addService(@RequestBody AddServices add) {
 		try {
 			String bodSeqNo = add.getBodSeqNo();
 			AddServices addedService = service.addServicePerson(add, bodSeqNo);
 			if (addedService != null) {
-				return ResponseEntity.status(HttpStatus.CREATED).body("Service added successfully");
+				response.setMessage("Service added successfully");
+				response.setStatus(true);
+				response.setAddServicesData(addedService);
+				return ResponseEntity.status(HttpStatus.CREATED).body(response);
 			} else {
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Failed to add service");
+				response.setMessage("Failed to add service");
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 			}
 		} catch (Exception e) {
-
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Record already exists");
+            response.setMessage("Record already exists");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 		}
 	}
 
@@ -63,12 +71,15 @@ public class AddServiceController {
 			AddServices upServices = service.updateAddServiceDetails(update, userIdServiceId, serviceSubCategory,
 					bodSeqNo);
 			if (upServices == null) {
-				return new ResponseEntity<>("inavalid user", HttpStatus.BAD_REQUEST);
+				response.setMessage("inavalid user");
+				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 
 			} else {
-				String successMessage = "Profile updated successfully";
 				
-				return ResponseEntity.ok().body(successMessage);
+				response.setMessage("Profile updated successfully");
+				response.setStatus(true);
+				
+				return ResponseEntity.ok().body(response);
 			}
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -83,14 +94,19 @@ public class AddServiceController {
 		String bodSeqNo = get.getBodSeqNo();
 		String useridServiceId = get.getUserIdServiceId();
 		List<AddServices> getService = service.getPerson(bodSeqNo, serviceSubCategory, useridServiceId);
-
+		ResponseAddServiceGetDto responseGet= new ResponseAddServiceGetDto();
 		try {
 			if (getService == null) {
-				return new ResponseEntity<>("No services found for the given parameters.", HttpStatus.NOT_FOUND);
+				responseGet.setMessage("No services found for the given parameters");
+				return new ResponseEntity<>(responseGet, HttpStatus.NOT_FOUND);
 			} else if (getService.isEmpty()) {
-				return new ResponseEntity<>("Invalid user......!", HttpStatus.BAD_REQUEST);
+				responseGet.setMessage("Invalid user......!");
+				return new ResponseEntity<>(responseGet, HttpStatus.BAD_REQUEST);
 			} else {
-				return new ResponseEntity<>(getService, HttpStatus.OK);
+				responseGet.setMessage("AddService details");
+				responseGet.setStatus(true);
+				responseGet.setGetAddServicesData(getService);
+				return new ResponseEntity<>(responseGet, HttpStatus.OK);
 			}
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.application.mrmason.dto.ChangePasswordDto;
 
 import com.application.mrmason.dto.ResponseLoginDto;
+import com.application.mrmason.dto.ResponseMessageDto;
 import com.application.mrmason.service.CustomerLoginService;
 import com.application.mrmason.service.CustomerRegistrationService;
 
@@ -22,39 +23,47 @@ public class CustomerLoginController {
 	CustomerLoginService loginService;
 	@Autowired
 	CustomerRegistrationService regService;
-	
+	ResponseMessageDto response=new ResponseMessageDto();
 	@PostMapping("/forgetPassword/sendOtp")
-	public ResponseEntity<String> sendOtpForPasswordChange(@RequestBody Logindto login) {
+	public ResponseEntity<ResponseMessageDto> sendOtpForPasswordChange(@RequestBody Logindto login) {
 		try {
 			String userMail=login.getEmail();
 			if (loginService.sendMail(userMail) != null) {
-				return new ResponseEntity<String>("OTP Sent to Registered EmailId.", HttpStatus.OK);
+				response.setMessage("OTP Sent to Registered EmailId.");
+				response.setStatus(true);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 		} catch (Exception e) {
-			e.getMessage();
-			return new ResponseEntity<>("Invalid EmailId..!", HttpStatus.NOT_FOUND);
+			response.setMessage(e.getMessage());
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
 		}
-		return new ResponseEntity<>("Invalid EmailId..!", HttpStatus.NOT_FOUND);
+		response.setMessage("Invalid EmailId..!");
+		return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 	}
 
 	@PostMapping("/forgetPassword/verifyOtpAndChangePassword")
-	public ResponseEntity<String> verifyOtpForPasswordChange(@RequestBody ChangePasswordDto request) {
+	public ResponseEntity<ResponseMessageDto> verifyOtpForPasswordChange(@RequestBody ChangePasswordDto request) {
 		String userMail = request.getUserMail();
 		String otp = request.getOtp();
 		String newPass = request.getNewPass();
 		String confPass = request.getConfPass();
 		try {
 			if (loginService.forgetPassword(userMail, otp, newPass, confPass) == "changed") {
-				return new ResponseEntity<>("Password Changed Successfully..", HttpStatus.OK);
+				response.setMessage("Password Changed Successfully..");
+				response.setStatus(true);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			} else if (loginService.forgetPassword(userMail, otp, newPass, confPass) == "notMatched") {
-				return new ResponseEntity<>("New Passwords Not Matched.!", HttpStatus.BAD_REQUEST);
+				response.setMessage("New Passwords Not Matched.!");
+				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 			} else if (loginService.forgetPassword(userMail, otp, newPass, confPass) == "incorrect") {
-				return new ResponseEntity<>("Invalid OTP..!", HttpStatus.UNAUTHORIZED);
+				response.setMessage("Invalid OTP..!");
+				return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 			}
 		} catch (Exception e) {
-			e.getMessage();
-			return new ResponseEntity<>("Invalid EmailId..!", HttpStatus.NOT_FOUND);
+			response.setMessage(e.getMessage());
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
 		}
-		return new ResponseEntity<>("Invalid EmailId..!", HttpStatus.NOT_FOUND);
+		response.setMessage("Invalid EmailId..!");
+		return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 	}
 }

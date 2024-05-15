@@ -18,6 +18,7 @@ import com.application.mrmason.dto.ChangeForfotdto;
 import com.application.mrmason.dto.FilterCustomerAndUser;
 import com.application.mrmason.dto.Logindto;
 import com.application.mrmason.dto.ResponseLoginDto;
+import com.application.mrmason.dto.ResponseMessageDto;
 import com.application.mrmason.dto.ResponseSpLoginDto;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.repository.SPAvailabilityRepo;
@@ -40,6 +41,8 @@ public class UserController {
 
 	@Autowired
 	SPAvailabilityRepo availabilityReo;
+	
+	ResponseMessageDto response2=new ResponseMessageDto();
 
 	@PostMapping("/sp-register")
 	public ResponseEntity<String> create(@RequestBody User registrationDetails) {
@@ -79,7 +82,7 @@ public class UserController {
 
 	@PreAuthorize("hasAuthority('Developer')")
 	@PostMapping("/change-password")
-	public ResponseEntity<String> changeCustomerPassword(@RequestBody ChangeForfotdto cfPwd) {
+	public ResponseEntity<ResponseMessageDto> changeCustomerPassword(@RequestBody ChangeForfotdto cfPwd) {
 
 		String email = cfPwd.getEmail();
 		String oldPassword = cfPwd.getOldPassword();
@@ -88,33 +91,44 @@ public class UserController {
 
 		try {
 			if (userService.changePassword(email, oldPassword, newPassword, confirmPassword) == "changed") {
-				return new ResponseEntity<>("Password Changed Successfully..", HttpStatus.OK);
+				response2.setMessage("Password Changed Successfully..");
+				response2.setStatus(true);
+				return new ResponseEntity<>(response2, HttpStatus.OK);
+				
 			} else if (userService.changePassword(email, oldPassword, newPassword, confirmPassword) == "notMatched") {
-				return new ResponseEntity<>("New Passwords Not Matched.!", HttpStatus.BAD_REQUEST);
+				response2.setMessage("New Passwords Not Matched.!");
+				return new ResponseEntity<>(response2, HttpStatus.BAD_REQUEST);
 			} else if (userService.changePassword(email, oldPassword, newPassword, confirmPassword) == "incorrect") {
-				return new ResponseEntity<>("Old Password is Incorrect", HttpStatus.UNAUTHORIZED);
+				response2.setMessage("Old Password is Incorrect");
+				return new ResponseEntity<>(response2, HttpStatus.UNAUTHORIZED);
 			}
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+			response2.setMessage(e.getMessage());
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response2);
 		}
-		return new ResponseEntity<>("Invalid User.!", HttpStatus.NOT_FOUND);
+		response2.setMessage("Invalid User.!");
+		return new ResponseEntity<>(response2, HttpStatus.NOT_FOUND);
 	}
 
 	@PostMapping("/forget-pwd-send-otp")
-	public ResponseEntity<String> sendOtpForPasswordChange(@RequestBody ChangeForfotdto cfPwd) {
+	public ResponseEntity<ResponseMessageDto> sendOtpForPasswordChange(@RequestBody ChangeForfotdto cfPwd) {
 		String email = cfPwd.getEmail();
 		try {
 			if (userService.sendMail(email) != null) {
-				return new ResponseEntity<String>("OTP Sent to Registered EmailId.", HttpStatus.OK);
+				response2.setMessage("OTP Sent to Registered EmailId.");
+				response2.setStatus(true);
+				return new ResponseEntity<>(response2, HttpStatus.OK);
 			}
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+			response2.setMessage(e.getMessage());
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response2);
 		}
-		return new ResponseEntity<>("Invalid EmailId..!", HttpStatus.NOT_FOUND);
+		response2.setMessage("Invalid EmailId..!");
+		return new ResponseEntity<>(response2, HttpStatus.NOT_FOUND);
 	}
 
 	@PostMapping("/forget-pwd-change")
-	public ResponseEntity<String> verifyOtpForPasswordChange(@RequestBody ChangeForfotdto cfPwd) {
+	public ResponseEntity<ResponseMessageDto> verifyOtpForPasswordChange(@RequestBody ChangeForfotdto cfPwd) {
 
 		String email = cfPwd.getEmail();
 		String otp = cfPwd.getOtp();
@@ -123,16 +137,22 @@ public class UserController {
 
 		try {
 			if (userService.forgetPassword(email, otp, newPassword, confirmPassword) == "changed") {
-				return new ResponseEntity<>("Password Changed Successfully..", HttpStatus.OK);
+				response2.setMessage("Password Changed Successfully..");
+				response2.setStatus(true);
+				return new ResponseEntity<>(response2, HttpStatus.OK);
 			} else if (userService.forgetPassword(email, otp, newPassword, confirmPassword) == "notMatched") {
-				return new ResponseEntity<>("New Passwords Not Matched.!", HttpStatus.BAD_REQUEST);
+				response2.setMessage("New Passwords Not Matched.!");
+				return new ResponseEntity<>(response2, HttpStatus.BAD_REQUEST);
 			} else if (userService.forgetPassword(email, otp, newPassword, confirmPassword) == "incorrect") {
-				return new ResponseEntity<>("Invalid OTP..!", HttpStatus.UNAUTHORIZED);
+				response2.setMessage("Invalid OTP..!");
+				return new ResponseEntity<>(response2, HttpStatus.UNAUTHORIZED);
 			}
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+			response2.setMessage(e.getMessage());
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response2);
 		}
-		return new ResponseEntity<>("Invalid EmailId..!", HttpStatus.NOT_FOUND);
+		response2.setMessage("Invalid EmailId..!");
+		return new ResponseEntity<>(response2, HttpStatus.NOT_FOUND);
 	}
 
 	@PreAuthorize("hasAuthority('Developer')")

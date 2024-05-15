@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.application.mrmason.dto.ResponseMessageDto;
 import com.application.mrmason.dto.ResponseSpServiceRequestDto;
 import com.application.mrmason.dto.SpServiceRequestDto;
 import com.application.mrmason.entity.SpServiceRequest;
@@ -23,7 +24,7 @@ public class SpServiceRequestController {
 	SpServiceRequestService adminService;
 
 	@PostMapping("/addSpServiceRequest")
-	public ResponseEntity<?> addServiceRequest(@RequestBody SpServiceRequest service) {
+	public ResponseEntity<ResponseSpServiceRequestDto> addServiceRequest(@RequestBody SpServiceRequest service) {
 	    ResponseSpServiceRequestDto response = new ResponseSpServiceRequestDto();
 	    try {
 	        SpServiceRequestDto addedService = adminService.addServiceRequest(service);
@@ -33,9 +34,11 @@ public class SpServiceRequestController {
 	            response.setStatus(true);
 	            return ResponseEntity.ok(response);
 	        }
-	        return new ResponseEntity<>("Invalid ServicePersonId or RequestId.!", HttpStatus.UNAUTHORIZED);
+	        response.setMessage("Invalid ServicePersonId or RequestId.!");
+	        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 	    } catch (Exception e) {
-	        return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+	    	response.setMessage(e.getMessage());
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
 	    }
 	}
 
@@ -72,8 +75,8 @@ public class SpServiceRequestController {
 			response.setStatus(false);
 			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
-
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+			response.setMessage(e.getMessage());
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
 		}
 	}
 }

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ResponseSPAvailabilityDto;
+import com.application.mrmason.dto.ResponseSPAvailabilityUpdateDto;
 import com.application.mrmason.dto.UpdateAvailableDto;
 import com.application.mrmason.entity.SPAvailability;
 import com.application.mrmason.service.impl.SPAvailabilityServiceIml;
@@ -24,7 +25,7 @@ public class SPAvailabilityController {
 	SPAvailabilityServiceIml spAvailableService;
 
 	ResponseSPAvailabilityDto response=new ResponseSPAvailabilityDto();
-	
+	ResponseSPAvailabilityUpdateDto response2= new ResponseSPAvailabilityUpdateDto();
 	@PostMapping("/sp-update-avalability")
 	public ResponseEntity<?> updateAvailabilityOfAddress(@RequestBody SPAvailability available) {
 		try {
@@ -32,10 +33,13 @@ public class SPAvailabilityController {
 			SPAvailability availability = spAvailableService.availability(available);
 
 			if (availability != null) {
-				response.setMessage("Address updated successfully");
-				return new ResponseEntity<>(response, HttpStatus.OK);
+				response2.setMessage("Address updated successfully");
+				response2.setStatus(true);
+				response2.setGetData(availability);
+				return new ResponseEntity<>(response2, HttpStatus.OK);
 			}
-			response.setMessage("Invalid user");
+			response2.setMessage("Invalid user");
+			response2.setStatus(false);
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("response");
 
 		} catch (Exception e) {
@@ -54,9 +58,11 @@ public class SPAvailabilityController {
 			if (!availability.isEmpty()) {
 				response.setMessage(" Availability details");
 				response.setGetData(availability);
+				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			} else {
 				response.setMessage("No user found for the given parameters");
+				response.setStatus(false);
 				return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 			}
 		} catch (Exception e) {

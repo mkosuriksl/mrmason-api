@@ -54,6 +54,7 @@ public class AddServiceController {
 				return ResponseEntity.status(HttpStatus.CREATED).body(response);
 			} else {
 				response.setMessage("Failed to add service");
+				response.setStatus(false);
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 			}
 		} catch (Exception e) {
@@ -72,13 +73,14 @@ public class AddServiceController {
 					bodSeqNo);
 			if (upServices == null) {
 				response.setMessage("inavalid user");
+				response.setStatus(false);
 				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 
 			} else {
 				
 				response.setMessage("Profile updated successfully");
 				response.setStatus(true);
-				
+				response.setAddServicesData(upServices);
 				return ResponseEntity.ok().body(response);
 			}
 		} catch (Exception e) {
@@ -98,9 +100,11 @@ public class AddServiceController {
 		try {
 			if (getService == null) {
 				responseGet.setMessage("No services found for the given parameters");
+				responseGet.setStatus(false);
 				return new ResponseEntity<>(responseGet, HttpStatus.NOT_FOUND);
 			} else if (getService.isEmpty()) {
 				responseGet.setMessage("Invalid user......!");
+				responseGet.setStatus(false);
 				return new ResponseEntity<>(responseGet, HttpStatus.BAD_REQUEST);
 			} else {
 				responseGet.setMessage("AddService details");

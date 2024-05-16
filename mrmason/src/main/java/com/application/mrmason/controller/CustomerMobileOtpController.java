@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.Logindto;
+import com.application.mrmason.dto.ResponseMessageDto;
 import com.application.mrmason.entity.CustomerMobileOtp;
 import com.application.mrmason.repository.CustomerMobileOtpRepo;
 import com.application.mrmason.service.CustomerMobileOtpService;
@@ -29,35 +30,42 @@ public class CustomerMobileOtpController {
 	CustomerRegistrationService regService;
 	@Autowired
 	CustomerMobileOtpRepo otpRepo;
-
+	ResponseMessageDto response=new ResponseMessageDto();
 	@PostMapping("/sendSmsOtp")
-	public ResponseEntity<String> sendMobileOtp(@RequestBody Logindto login) {
+	public ResponseEntity<ResponseMessageDto> sendMobileOtp(@RequestBody Logindto login) {
 		String mobile = login.getMobile();
 		if (otpRepo.findByMobileNum(mobile) == null) {
-			return new ResponseEntity<String>("Invalid mobile number..!", HttpStatus.NOT_FOUND);
+			response.setMessage("Invalid mobile number..!");
+			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 		} else {
 			Optional<CustomerMobileOtp> user = Optional.of(otpRepo.findByMobileNum(mobile));
 
 			if (user.get().getOtp() == null) {
 				otpService.generateMobileOtp(mobile);
-				return new ResponseEntity<String>("Otp sent to the registered mobile number.", HttpStatus.OK);
+				response.setStatus(true);
+				response.setMessage("Otp sent to the registered mobile number.");
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
-			return new ResponseEntity<String>("mobile already verified.", HttpStatus.CREATED);
+			response.setMessage("Mobile number already verified.");
+			return new ResponseEntity<>(response, HttpStatus.CREATED);
 		}
 	}
 
 	@PostMapping("/verifySmsOtp")
-	public ResponseEntity<String> verifyMobileOtp(@RequestBody Logindto login) {
+	public ResponseEntity<ResponseMessageDto> verifyMobileOtp(@RequestBody Logindto login) {
 		String mobile = login.getMobile();
 		String otp = login.getOtp();
 
 		if (otpService.verifyMobileOtp(mobile, otp)) {
 
 			mobileService.updateData(otp, mobile);
-			return new ResponseEntity<String>("Mobile number verified successfully..", HttpStatus.OK);
+			response.setStatus(true);
+			response.setMessage(" Email Verified successful");
+			return new ResponseEntity<>(response, HttpStatus.OK);
 
 		}
-		return new ResponseEntity<String>("Invalid Otp..!", HttpStatus.BAD_REQUEST);
+		response.setMessage("Incorrect OTP, Please enter correct Otp");
+		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 
 	}
 }

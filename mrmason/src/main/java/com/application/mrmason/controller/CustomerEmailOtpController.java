@@ -2,7 +2,6 @@ package com.application.mrmason.controller;
 
 import java.util.Optional;
 
-import com.application.mrmason.dto.Logindto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,7 +9,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-
+import com.application.mrmason.dto.Logindto;
+import com.application.mrmason.dto.ResponseMessageDto;
 import com.application.mrmason.entity.CustomerEmailOtp;
 import com.application.mrmason.repository.CustomerEmailOtpRepo;
 import com.application.mrmason.service.CustomerEmailOtpService;
@@ -28,35 +28,44 @@ public class CustomerEmailOtpController {
 	CustomerRegistrationService regService;
 	@Autowired
 	CustomerEmailOtpRepo otpRepo;
+	
+	ResponseMessageDto response=new ResponseMessageDto();
 
 	@PostMapping("/sendOtp")
-	public ResponseEntity<String> sendEmail(@RequestBody Logindto login) {
+	public ResponseEntity<ResponseMessageDto> sendEmail(@RequestBody Logindto login) {
 		String userEmail = login.getEmail();
 		if (emailLoginService.isEmailExists(userEmail) == null) {
-			return new ResponseEntity<String>("Invalid EmailId..!", HttpStatus.NOT_FOUND);
+			response.setMessage("Invalid EmailId..!");
+			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 		} else {
 			Optional<CustomerEmailOtp> user = Optional.of(otpRepo.findByEmail(userEmail));
 
 			if (user.get().getOtp() == null) {
 				otpService.generateOtp(userEmail);
-				return new ResponseEntity<String>("Otp sent to the registered EmailId.", HttpStatus.OK);
+				response.setMessage("OTP Sent to Registered EmailId.");
+				response.setStatus(true);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
-			return new ResponseEntity<String>("Email already verified.", HttpStatus.CREATED);
+			response.setMessage("Email already verified.");
+			return new ResponseEntity<>(response, HttpStatus.CREATED);
 		}
 	}
 
 	@PostMapping("/verifyOtp")
-	public ResponseEntity<String> verifyCustomer(@RequestBody Logindto login) {
+	public ResponseEntity<ResponseMessageDto> verifyCustomer(@RequestBody Logindto login) {
 		String userEmail = login.getEmail();
 		String otp = login.getOtp();
 
 		if (otpService.verifyOtp(userEmail, otp)) {
 
 			emailLoginService.updateData(otp, userEmail);
-			return new ResponseEntity<String>("Email verified Successfully..", HttpStatus.OK);
+			response.setStatus(true);
+			response.setMessage(" Email Verified successful");
+			return new ResponseEntity<>(response, HttpStatus.OK);
 
 		}
-		return new ResponseEntity<String>("Invalid Otp..!", HttpStatus.BAD_REQUEST);
+		response.setMessage("Incorrect OTP, Please enter correct Otp");
+		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 
 	}
 }

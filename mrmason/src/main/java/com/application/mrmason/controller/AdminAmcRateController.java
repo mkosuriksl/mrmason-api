@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ResponseAdminAmcDto;
-
+import com.application.mrmason.dto.ResponseListAdminAmcRate;
 import com.application.mrmason.entity.AdminAmcRate;
 import com.application.mrmason.service.AdminAmcRateService;
 @RestController
@@ -21,6 +21,7 @@ import com.application.mrmason.service.AdminAmcRateService;
 public class AdminAmcRateController {
 	@Autowired
 	public AdminAmcRateService adminService;
+	ResponseListAdminAmcRate response=new ResponseListAdminAmcRate();
 	@PostMapping("/addAdminAmc")
 	public ResponseEntity<?> addRentRequest(@RequestBody AdminAmcRate amc) {
 		ResponseAdminAmcDto response=new ResponseAdminAmcDto();
@@ -44,19 +45,25 @@ public class AdminAmcRateController {
 		try {
 			List<AdminAmcRate> entity = adminService.getAmcRates(getAmc);
 			if (entity.isEmpty()) {
-				return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+				response.setMessage("Invalid User.!");
+				response.setStatus(false);
+				return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 			}
-			return new ResponseEntity<List<AdminAmcRate>>(entity, HttpStatus.OK);
+			response.setMessage("Amc details fetched successfully.");
+			response.setStatus(true);
+			response.setData(entity);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 
 		} catch (Exception e) {
-
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+			response.setMessage(e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 
 	}
 
 	@PutMapping("/updateAdminAmcRates")
-	public ResponseEntity<?> updateAssetDetails(@RequestBody AdminAmcRate updateAmc) {
+	public ResponseEntity<ResponseAdminAmcDto> updateAssetDetails(@RequestBody AdminAmcRate updateAmc) {
 		ResponseAdminAmcDto response=new ResponseAdminAmcDto();
 		try {
 
@@ -71,8 +78,9 @@ public class AdminAmcRateController {
 			response.setStatus(false);
 			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
-
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+			response.setMessage(e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 	}
 }

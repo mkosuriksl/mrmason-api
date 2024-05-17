@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ResponceServiceDto;
+import com.application.mrmason.dto.ResponseListServiceCatDto;
 import com.application.mrmason.dto.ServiceCategoryDto;
 import com.application.mrmason.entity.ServiceCategory;
 import com.application.mrmason.service.ServiceCategoryService;
@@ -24,6 +25,8 @@ public class ServiceCategoryController {
 
 	@Autowired
 	public ServiceCategoryService categoryService;
+	
+	ResponseListServiceCatDto response2=new ResponseListServiceCatDto();
 	@PreAuthorize("hasAuthority('Adm')")
 	@PostMapping("/addServiceCategory")
 	public ResponseEntity<?> addRentRequest(@RequestBody ServiceCategory service) {
@@ -45,49 +48,70 @@ public class ServiceCategoryController {
 	}
 	@PreAuthorize("hasAuthority('Adm')")
 	@GetMapping("/getServiceCategory")
-	public ResponseEntity<?> getServiceCategory(@RequestBody ServiceCategory service) {
+	public ResponseEntity<ResponseListServiceCatDto> getServiceCategory(@RequestBody ServiceCategory service) {
 		try {
 			List<ServiceCategory> entity = categoryService.getServiceCategory(service);
 			
 			if (!entity.isEmpty()) {
-				return new ResponseEntity<List<ServiceCategory>>(entity, HttpStatus.OK);	
+				response2.setMessage("Service data fetched successfully.!");
+				response2.setStatus(true);
+				response2.setData(entity);
+				return new ResponseEntity<>(response2, HttpStatus.OK);	
 			}
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.BAD_REQUEST);
+			response2.setMessage("Invalid User.!");
+			response2.setStatus(false);
+			return new ResponseEntity<>(response2, HttpStatus.BAD_REQUEST);
 
 		} catch (Exception e) {
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+			response2.setMessage(e.getMessage());
+			response2.setStatus(false);
+			return new ResponseEntity<>(response2, HttpStatus.UNAUTHORIZED);
 		}
 
 	}
 	
 	@GetMapping("/getServiceCategory/civil/{serviceCategory}")
-	public ResponseEntity<?> getServiceCategoryCivil(@PathVariable String serviceCategory) {
+	public ResponseEntity<ResponseListServiceCatDto> getServiceCategoryCivil(@PathVariable String serviceCategory) {
 		try {
 			List<ServiceCategory> entity = categoryService.getServiceCategoryCivil(serviceCategory);
 			
 			if (!entity.isEmpty()) {
-				return new ResponseEntity<List<ServiceCategory>>(entity, HttpStatus.OK);	
+				response2.setMessage("Civil service data fetched successfully.!");
+				response2.setStatus(true);
+				response2.setData(entity);
+				return new ResponseEntity<>(response2, HttpStatus.OK);	
 			}
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.BAD_REQUEST);
+			response2.setMessage("Invalid User.!");
+			response2.setStatus(false);
+			return new ResponseEntity<>(response2, HttpStatus.BAD_REQUEST);
 
 		} catch (Exception e) {
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+			response2.setMessage(e.getMessage());
+			response2.setStatus(false);
+			return new ResponseEntity<>(response2, HttpStatus.UNAUTHORIZED);
 		}
 
 	}
 	
 	@GetMapping("/getServiceCategory/nonCivil/{serviceCategory}")
-	public ResponseEntity<?> getServiceCategoryNonCivil(@PathVariable String serviceCategory) {
+	public ResponseEntity<ResponseListServiceCatDto> getServiceCategoryNonCivil(@PathVariable String serviceCategory) {
 		try {
 			List<ServiceCategory> entity = categoryService.getServiceCategoryNonCivil(serviceCategory);
 			
 			if (!entity.isEmpty()) {
-				return new ResponseEntity<List<ServiceCategory>>(entity, HttpStatus.OK);	
+				response2.setMessage("Non-Civil service data fetched successfully.!");
+				response2.setStatus(true);
+				response2.setData(entity);
+				return new ResponseEntity<>(response2, HttpStatus.OK);	
 			}
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.BAD_REQUEST);
+			response2.setMessage("Invalid User.!");
+			response2.setStatus(false);
+			return new ResponseEntity<>(response2, HttpStatus.BAD_REQUEST);
 
 		} catch (Exception e) {
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+			response2.setMessage(e.getMessage());
+			response2.setStatus(false);
+			return new ResponseEntity<>(response2, HttpStatus.UNAUTHORIZED);
 		}
 
 	}
@@ -110,6 +134,7 @@ public class ServiceCategoryController {
 		} catch (Exception e) {
 
 			response.setMessage(e.getMessage());
+			response.setStatus(false);
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
 		}
 	}

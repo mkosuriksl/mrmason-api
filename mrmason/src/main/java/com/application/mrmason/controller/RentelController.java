@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.RentalDto;
+import com.application.mrmason.dto.ResponseListRentelDto;
 import com.application.mrmason.dto.ResponseRentalDto;
 import com.application.mrmason.entity.Rentel;
 import com.application.mrmason.service.RentelService;
@@ -21,11 +22,12 @@ import com.application.mrmason.service.RentelService;
 public class RentelController {
 	@Autowired
 	public RentelService rentService;
+	ResponseListRentelDto response=new ResponseListRentelDto();
 
 	@PostMapping("/addRentalData")
-	public ResponseEntity<?> addRentRequest(@RequestBody Rentel rent) {
+	public ResponseEntity<ResponseRentalDto> addRentRequest(@RequestBody Rentel rent) {
+		ResponseRentalDto response=new ResponseRentalDto();
 		try {
-			ResponseRentalDto response=new ResponseRentalDto();
 			if (rentService.addRentalReq(rent) != null) {
 				
 				response.setAddRental(rentService.addRentalReq(rent));
@@ -37,8 +39,9 @@ public class RentelController {
 			response.setStatus(false);
 			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
-			e.getMessage();
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+			response.setMessage(e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 	}
 	
@@ -46,13 +49,19 @@ public class RentelController {
 	public ResponseEntity<?> getRentRequest(@RequestBody RentalDto rent) {
 		try {
 			if (rentService.getRentalReq(rent).isEmpty()) {
-				return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+				response.setMessage("Invalid User.!");
+				response.setStatus(false);
+				return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 			}
-			return new ResponseEntity<>(rentService.getRentalReq(rent), HttpStatus.OK);
+			response.setMessage("Rental data fetched successfully.");
+			response.setStatus(true);
+			response.setData(rentService.getRentalReq(rent));
+			return new ResponseEntity<>(response, HttpStatus.OK);
 			
 		} catch (Exception e) {
-			e.getMessage();
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+			response.setMessage(e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 	}
 	
@@ -70,8 +79,9 @@ public class RentelController {
 			response.setStatus(false);
 			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
-			e.getMessage();
-			return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+			response.setMessage(e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 	}
 	

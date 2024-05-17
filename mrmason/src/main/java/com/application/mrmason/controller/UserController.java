@@ -1,5 +1,7 @@
 package com.application.mrmason.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ChangeForfotdto;
+import com.application.mrmason.dto.FilterCustomerAndUser;
 import com.application.mrmason.dto.Logindto;
+import com.application.mrmason.dto.ResponseListUserDto;
 import com.application.mrmason.dto.ResponseLoginDto;
 import com.application.mrmason.dto.ResponseMessageDto;
 import com.application.mrmason.dto.ResponseSpLoginDto;
@@ -181,12 +185,17 @@ public class UserController {
 		try {
 			if ( profile == null) {
 				response.setMessage("Invalid Email ....!");
+				response.setStatus(false);
 				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 			}
-
-			return new ResponseEntity<>(profile, HttpStatus.OK);
+			response.setMessage("Profile fetched successfully.");
+			response.setStatus(false);
+			response.setUserData(profile);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+			response.setMessage(e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 
 	}
@@ -208,7 +217,39 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
 	}
+	@PreAuthorize("hasAuthority('Adm')")
+	@GetMapping("/filterServicePerson")
+	public ResponseEntity<?> getCustomers(@RequestBody FilterCustomerAndUser user) {
+		ResponseListUserDto response3=new ResponseListUserDto();
+		
+		String userEmail = user.getUserEmail();
+		String userMobile = user.getUserMobile();
+		String userState = user.getUserState();
+		String fromDate = user.getFromDate();
+		String toDate = user.getToDate();
+		String status = user.getStatus();
+		String category = user.getServiceCategory();
+		try {
+			List<User> entity = userService.getServicePersonData(userEmail, userMobile, userState, status, category,
+					fromDate, toDate);
+			if (!entity.isEmpty()) {
+				response3.setMessage("Service person details fetched successfully.!");
+				response3.setStatus(true);
+				response3.setData(entity);
+				return ResponseEntity.ok(response3);
+			} else {
+				response3.setMessage("Error: Failed to fetch users. Please try again later.");
+				response3.setStatus(false);
+				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+						.body(response3);
+			}
+		} catch (Exception e) {
+			response3.setMessage(e.getMessage());
+			response3.setStatus(false);
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response3);
+		}
 
+	}
 	@GetMapping("/getData")
 	public ResponseEntity<User> get(@RequestParam(name = "email") String email) {
 
@@ -216,15 +257,15 @@ public class UserController {
 
 	}
 
-	@GetMapping("/error")
-	@PostMapping("/error")
-	@PutMapping("/error")
-	@DeleteMapping("/error")
-	public ResponseEntity<ResponseLoginDto> error() {
-		ResponseLoginDto response = new ResponseLoginDto();
-		response.setMessage("Access Denied");
-		return new ResponseEntity<ResponseLoginDto>(response, HttpStatus.UNAUTHORIZED);
-
-	}
+//	@GetMapping("/error")
+//	@PostMapping("/error")
+//	@PutMapping("/error")
+//	@DeleteMapping("/error")
+//	public ResponseEntity<ResponseLoginDto> error() {
+//		ResponseLoginDto response = new ResponseLoginDto();
+//		response.setMessage("Access Denied");
+//		return new ResponseEntity<ResponseLoginDto>(response, HttpStatus.UNAUTHORIZED);
+//
+//	}
 
 }

@@ -17,11 +17,10 @@ import com.application.mrmason.dto.ChangePasswordDto;
 import com.application.mrmason.dto.FilterCustomerAndUser;
 import com.application.mrmason.dto.Logindto;
 import com.application.mrmason.dto.ResponseCustomerRegDto;
+import com.application.mrmason.dto.ResponseListCustomerData;
 import com.application.mrmason.dto.ResponseLoginDto;
 import com.application.mrmason.dto.ResponseMessageDto;
 import com.application.mrmason.dto.ResponseUpdateDto;
-import com.application.mrmason.dto.ResponseUserDTO;
-import com.application.mrmason.dto.ResponseUserUpdateDto;
 import com.application.mrmason.dto.UpdateProfileDto;
 import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.service.CustomerRegistrationService;
@@ -32,14 +31,15 @@ public class CustomerRegistrationController {
 	@Autowired
 	public CustomerRegistrationService service;
 	ResponseMessageDto response2 = new ResponseMessageDto();
-
+	
+	ResponseCustomerRegDto response = new ResponseCustomerRegDto();
 	@PostMapping("/addNewUser")
 	public ResponseEntity<?> newCustomer(@RequestBody CustomerRegistration customer) {
 		if (!service.isUserUnique(customer)) {
 			return new ResponseEntity<>("Email or Phone Number already exists.", HttpStatus.BAD_REQUEST);
 		}
-		ResponseCustomerRegDto response = new ResponseCustomerRegDto();
-		response.setRegister(service.saveData(customer));
+		
+		response.setData(service.saveData(customer));
 		response.setMessage("Customer added Successfully..");
 		response.setStatus(true);
 		return ResponseEntity.ok(response);
@@ -48,7 +48,8 @@ public class CustomerRegistrationController {
 	@PreAuthorize("hasAuthority('Adm')")
 	@GetMapping("/filterCustomers")
 	public ResponseEntity<?> getCustomers(@RequestBody FilterCustomerAndUser customer) {
-
+		ResponseListCustomerData response=new ResponseListCustomerData();
+		
 		String userEmail = customer.getUserEmail();
 		String userMobile = customer.getUserMobile();
 		String userState = customer.getUserState();
@@ -58,13 +59,20 @@ public class CustomerRegistrationController {
 			List<CustomerRegistration> entity = service.getCustomerData(userEmail, userMobile, userState, fromDate,
 					toDate);
 			if (!entity.isEmpty()) {
-				return ResponseEntity.ok(entity);
+				response.setMessage("Fetched users successfully.");
+				response.setStatus(true);
+				response.setData(entity);
+				return ResponseEntity.ok(response);
 			} else {
+				response.setMessage("Error: Failed to fetch users. Please try again later.");
+				response.setStatus(false);
 				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body("Error: Failed to fetch users. Please try again later.");
+						.body(response);
 			}
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+			response.setMessage(e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 
 	}
@@ -73,9 +81,14 @@ public class CustomerRegistrationController {
 	public ResponseEntity<?> getProfile(Authentication authentication) {
 		try {
 			CustomerRegistration userPrincipal = (CustomerRegistration) authentication.getPrincipal();
-			return new ResponseEntity<>(service.getProfileData(userPrincipal.getUserid()), HttpStatus.OK);
+			response.setMessage("Profile fetched succeslly.!");
+			response.setStatus(true);
+			response.setData(service.getProfileData(userPrincipal.getUserid()));
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.OK);
+			response.setMessage(e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
 
@@ -97,15 +110,16 @@ public class CustomerRegistrationController {
 				response.setMessage("Successfully Updated.");
 				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
-
 			}
+			response.setMessage("Profile Not Found.");
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 		} catch (Exception e) {
-			e.getMessage();
-			return new ResponseEntity<>("Profile Not Found.", HttpStatus.NOT_FOUND);
+			response.setMessage(e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 		}
-		response.setMessage("Profile Not Found.");
-		response.setStatus(false);
-		return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+		
 	}
 
 	@PreAuthorize("hasAuthority('EC')")
@@ -134,6 +148,7 @@ public class CustomerRegistrationController {
 			}
 		} catch (Exception e) {
 			response2.setMessage(e.getMessage());
+			response2.setStatus(false);
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response2);
 		}
 		response2.setMessage("Invalid User.!");

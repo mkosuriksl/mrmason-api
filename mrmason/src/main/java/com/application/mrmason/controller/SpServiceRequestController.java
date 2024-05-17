@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.application.mrmason.dto.ResponseMessageDto;
+import com.application.mrmason.dto.ResponseListSpServiceRequestDto;
 import com.application.mrmason.dto.ResponseSpServiceRequestDto;
 import com.application.mrmason.dto.SpServiceRequestDto;
 import com.application.mrmason.entity.SpServiceRequest;
@@ -22,6 +22,8 @@ import com.application.mrmason.service.SpServiceRequestService;
 public class SpServiceRequestController {
 	@Autowired
 	SpServiceRequestService adminService;
+	ResponseListSpServiceRequestDto response=new ResponseListSpServiceRequestDto();
+	
 
 	@PostMapping("/addSpServiceRequest")
 	public ResponseEntity<ResponseSpServiceRequestDto> addServiceRequest(@RequestBody SpServiceRequest service) {
@@ -35,9 +37,11 @@ public class SpServiceRequestController {
 	            return ResponseEntity.ok(response);
 	        }
 	        response.setMessage("Invalid ServicePersonId or RequestId.!");
+	        response.setStatus(false);
 	        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 	    } catch (Exception e) {
 	    	response.setMessage(e.getMessage());
+	    	response.setStatus(false);
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
 	    }
 	}
@@ -48,13 +52,19 @@ public class SpServiceRequestController {
 		try {
 			List<SpServiceRequest> entity = adminService.getServiceRequest(service);
 			if (entity.isEmpty()) {
-				return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+				response.setMessage("Invalid User.!");
+				response.setStatus(false);
+				return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 			}
-			return new ResponseEntity<>(entity, HttpStatus.OK);
+			response.setData(entity);
+			response.setMessage("SpServiceRequest data fetched successfully..");
+			response.setStatus(true);
+			return ResponseEntity.ok(response);
 
 		} catch (Exception e) {
-
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+			response.setMessage(e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 
 	}
@@ -76,6 +86,7 @@ public class SpServiceRequestController {
 			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
+			response.setStatus(false);
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
 		}
 	}

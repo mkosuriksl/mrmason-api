@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.CustomerAssetDto;
 import com.application.mrmason.dto.ResponseAssetDto;
+import com.application.mrmason.dto.ResponseListCustomerAssets;
 import com.application.mrmason.dto.UpdateAssetDto;
 import com.application.mrmason.entity.CustomerAssets;
 import com.application.mrmason.service.CustomerAssetsService;
@@ -24,11 +25,14 @@ import com.application.mrmason.service.CustomerAssetsService;
 public class CustomerAssetsController {
 	@Autowired
 	CustomerAssetsService assetService;
+	
+	ResponseListCustomerAssets response=new ResponseListCustomerAssets();
 
 	@PostMapping("/addAssets")
-	public ResponseEntity<?> newCustomer(@RequestBody CustomerAssets asset) {
+	public ResponseEntity<ResponseAssetDto> newCustomer(@RequestBody CustomerAssets asset) {
+		ResponseAssetDto response = new ResponseAssetDto();
 		try {
-			ResponseAssetDto response = new ResponseAssetDto();
+			
 			if (assetService.saveAssets(asset) != null) {
 				assetService.saveAssets(asset);
 				response.setAddAsset(assetService.getAssetByAssetId(asset.getAssetId()));
@@ -40,7 +44,9 @@ public class CustomerAssetsController {
 			response.setStatus(false);
 			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+			response.setMessage(e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 
 	}
@@ -60,22 +66,30 @@ public class CustomerAssetsController {
 			response.setStatus(false);
 			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
-
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+			response.setMessage(e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 	}
 
 	@GetMapping("/getAssets")
-	public ResponseEntity<?> getAssetDetails(@RequestBody UpdateAssetDto getDto) {
+	public ResponseEntity<ResponseListCustomerAssets> getAssetDetails(@RequestBody UpdateAssetDto getDto) {
 		try {
 			List<CustomerAssets> entity = assetService.getAssets(getDto);
 			if (entity.isEmpty()) {
-				return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+				response.setMessage("Invalid User.!");
+				response.setStatus(false);
+				return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 			}
-			return new ResponseEntity<List<CustomerAssets>>(entity, HttpStatus.OK);
+			response.setMessage("Assets fetched successfully.");
+			response.setStatus(true);
+			response.setData(entity);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 
 		} catch (Exception e) {
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+			response.setMessage(e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 
 	}

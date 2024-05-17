@@ -19,6 +19,7 @@ public class RentelServiceImpl implements RentelService{
 	public RentelRepo rentRepo;
 	@Autowired
 	public CustomerAssetsRepo assetRepo;
+	
 	@Override
 	public Rentel addRentalReq(Rentel rent) {
 		Optional<CustomerAssets> user=assetRepo.findByUserIdAndAssetId(rent.getUserId(),rent.getAssetId());
@@ -31,6 +32,7 @@ public class RentelServiceImpl implements RentelService{
 	public List<Rentel> getRentalReq(RentalDto rent) {
 		Optional<List<Rentel>> rentUser=Optional.of(rentRepo.findByAssetIdOrUserId(rent.getAssetId(), rent.getUserId()));
 		if(rentUser.isPresent()) {
+			
 			return rentUser.get();
 		}
 		return null;

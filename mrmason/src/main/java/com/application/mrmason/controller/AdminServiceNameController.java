@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.AdminServiceNameDto;
 import com.application.mrmason.dto.ResponseAdminServiceDto;
+import com.application.mrmason.dto.ResponseListAdminServiceDto;
 import com.application.mrmason.entity.AdminServiceName;
 import com.application.mrmason.service.impl.AdminServiceNameServiceImpl;
 
@@ -46,16 +47,24 @@ public class AdminServiceNameController{
 
 	@GetMapping("/getAdminService")
 	public ResponseEntity<?> getAdminServiceDetails(@RequestBody AdminServiceName service) {
+		ResponseListAdminServiceDto response=new ResponseListAdminServiceDto();
 		try {
+			
 			List<AdminServiceName> entity = adminService.getAdminServiceDetails(service);
 			if (entity.isEmpty()) {
-				return new ResponseEntity<>("Invalid User.!", HttpStatus.UNAUTHORIZED);
+				response.setMessage("Invalid User.!");
+				response.setStatus(false);
+				return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 			}
+			response.setMessage("Service data fetched successfully.!");
+			response.setStatus(true);
+			response.setData(entity);
 			return new ResponseEntity<>(entity, HttpStatus.OK);
 
 		} catch (Exception e) {
-
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+			response.setMessage(e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 
 	}
@@ -78,7 +87,9 @@ public class AdminServiceNameController{
 			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
 
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+			response.setMessage(e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 	}
 }

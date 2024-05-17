@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.application.mrmason.dto.ResponseListServiceRequestDto;
 import com.application.mrmason.dto.ResponseServiceReqDto;
 import com.application.mrmason.dto.ServiceRequestDto;
 import com.application.mrmason.entity.ServiceRequest;
@@ -19,6 +20,7 @@ import com.application.mrmason.service.ServiceRequestService;
 public class ServiceRequestController {
 	@Autowired
 	ServiceRequestService reqService;
+	ResponseListServiceRequestDto response=new ResponseListServiceRequestDto();
 	
 	@PostMapping("/addServiceRequest")
 	public ResponseEntity<?> addRequest(@RequestBody ServiceRequest request){
@@ -43,13 +45,19 @@ public class ServiceRequestController {
 	public ResponseEntity<?> getRequest(@RequestBody ServiceRequestDto request){
 		try {
 			if(reqService.getServiceReq(request).isEmpty()) {	
-				return new ResponseEntity<>("Invalid user..!",HttpStatus.BAD_REQUEST);
+				response.setMessage("Invalid User.!");
+				response.setStatus(false);
+				return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 			}
-			return new ResponseEntity<>(reqService.getServiceReq(request),HttpStatus.OK);
+			response.setData(reqService.getServiceReq(request));
+			response.setMessage("ServiceRequest data fetched successfully..");
+			response.setStatus(true);
+			return ResponseEntity.ok(response);
 			
 		}catch(Exception e) {
-			e.getMessage();
-			return 	new ResponseEntity<>("Invalid User.!",HttpStatus.NOT_FOUND);
+			response.setMessage(e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		}
 	}
 }

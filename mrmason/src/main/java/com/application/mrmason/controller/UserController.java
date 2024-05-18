@@ -18,7 +18,6 @@ import com.application.mrmason.dto.ChangeForfotdto;
 import com.application.mrmason.dto.FilterCustomerAndUser;
 import com.application.mrmason.dto.Logindto;
 import com.application.mrmason.dto.ResponseListUserDto;
-import com.application.mrmason.dto.ResponseLoginDto;
 import com.application.mrmason.dto.ResponseMessageDto;
 import com.application.mrmason.dto.ResponseSpLoginDto;
 import com.application.mrmason.dto.ResponseUserDTO;
@@ -174,6 +173,7 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response2);
 		}
 		response2.setMessage("Invalid EmailId..!");
+		response2.setStatus(false);
 		return new ResponseEntity<>(response2, HttpStatus.NOT_FOUND);
 	}
 
@@ -189,7 +189,7 @@ public class UserController {
 				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 			}
 			response.setMessage("Profile fetched successfully.");
-			response.setStatus(false);
+			response.setStatus(true);
 			response.setUserData(profile);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
@@ -257,15 +257,14 @@ public class UserController {
 
 	}
 
-//	@GetMapping("/error")
-//	@PostMapping("/error")
-//	@PutMapping("/error")
-//	@DeleteMapping("/error")
-//	public ResponseEntity<ResponseLoginDto> error() {
-//		ResponseLoginDto response = new ResponseLoginDto();
-//		response.setMessage("Access Denied");
-//		return new ResponseEntity<ResponseLoginDto>(response, HttpStatus.UNAUTHORIZED);
-//
-//	}
+	@GetMapping("/error")
+	@PostMapping("/error")
+	@PutMapping("/error")
+	@DeleteMapping("/error")
+	public ResponseEntity<ResponseMessageDto> error() {
+		response2.setMessage("Access Denied");
+		return new ResponseEntity<ResponseMessageDto>(response2,HttpStatus.UNAUTHORIZED);
+
+	}
 
 }

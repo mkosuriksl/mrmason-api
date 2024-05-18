@@ -59,7 +59,7 @@ public class AdminServiceNameController{
 			response.setMessage("Service data fetched successfully.!");
 			response.setStatus(true);
 			response.setData(entity);
-			return new ResponseEntity<>(entity, HttpStatus.OK);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());

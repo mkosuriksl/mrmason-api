@@ -263,6 +263,7 @@ public class UserController {
 	@DeleteMapping("/error")
 	public ResponseEntity<ResponseMessageDto> error() {
 		response2.setMessage("Access Denied");
+		response2.setStatus(false);
 		return new ResponseEntity<ResponseMessageDto>(response2,HttpStatus.UNAUTHORIZED);
 
 	}

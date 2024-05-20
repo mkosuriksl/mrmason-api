@@ -43,6 +43,7 @@ public class ServicePersonLoginController {
 		try {
 			if (loginService.isEmailExists(email) == null) {
 				response.setMessage("Invalid EmailId..!");
+				response.setStatus(false);
 				return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 			} else {
 				Optional<ServicePersonLogin> user = Optional.of(servicePersonDao.findByEmail(email));
@@ -53,11 +54,13 @@ public class ServicePersonLoginController {
 					response.setMessage("Otp sent to the registered EmailId.");
 					return new ResponseEntity<>(response, HttpStatus.OK);
 				}
+				response.setStatus(false);
 				response.setMessage("Email already verified.");
 				return new ResponseEntity<>(response, HttpStatus.CREATED);
 			}
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
+			response.setStatus(false);
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
 		}
 	}
@@ -72,15 +75,17 @@ public class ServicePersonLoginController {
 
 				loginService.updateEmailData(eOtp, email);
 				response.setStatus(true);
-				response.setMessage(" Email Verified successful");
+				response.setMessage("Email Verified successfully");
 				return new ResponseEntity<>(response, HttpStatus.OK);
 
 			}
+			response.setStatus(false);
 			response.setMessage("Incorrect OTP, Please enter correct Otp");
 			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
+			response.setStatus(false);
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
 		}
 	}
@@ -90,6 +95,7 @@ public class ServicePersonLoginController {
 		String mobile = login.getMobile();
 		if (servicePersonDao.findByMobile(mobile) == null) {
 			response.setMessage("Invalid mobile number..!");
+			response.setStatus(false);
 			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 		} else {
 			Optional<ServicePersonLogin> user = Optional.of(servicePersonDao.findByMobile(mobile));
@@ -101,6 +107,7 @@ public class ServicePersonLoginController {
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			response.setMessage("Mobile number already verified.");
+			response.setStatus(false);
 			return new ResponseEntity<>(response, HttpStatus.CREATED);
 		}
 	}
@@ -118,6 +125,7 @@ public class ServicePersonLoginController {
 			return new ResponseEntity<>(response, HttpStatus.OK);
 
 		}
+		response.setStatus(false);
 		response.setMessage("Incorrect OTP, Please enter correct Otp");
 		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 

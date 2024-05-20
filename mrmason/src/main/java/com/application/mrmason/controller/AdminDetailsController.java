@@ -112,8 +112,9 @@ public class AdminDetailsController {
 			response.setStatus(false);
 			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 		} catch (Exception e) {
-			
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+			response.setMessage(e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 		}
 	
 	}
@@ -194,6 +195,7 @@ public class AdminDetailsController {
 			}
 		} catch (Exception e) {
 			response2.setMessage(e.getMessage());
+			response2.setStatus(false);
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response2);
 		}
 		response2.setMessage("Invalid EmailId..!");

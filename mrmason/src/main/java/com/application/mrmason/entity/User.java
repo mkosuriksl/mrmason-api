@@ -84,7 +84,7 @@ public class User implements UserDetails {
 	private UserType userType ;
 
 	@Column(name = "STATUS")
-	private String status = "active";
+	private String status = "inactive";
 
 	@PrePersist
 	private void prePersist() {

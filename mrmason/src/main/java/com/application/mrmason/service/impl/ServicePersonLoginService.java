@@ -49,8 +49,8 @@ public class ServicePersonLoginService {
 	public ServicePersonLogin updateMobileData(String otp, String mobile) {
 		Optional<ServicePersonLogin> existedById = Optional.of(emailLoginRepo.findByMobile(mobile));
 		if (existedById.isPresent()) {
-			existedById.get().setEOtp(otp);
-			existedById.get().setEVerify("yes");
+			existedById.get().setMOtp(otp);
+			existedById.get().setMobVerify("yes");
 			userService.updateDataWithMobile(mobile);
 
 			return emailLoginRepo.save(existedById.get());

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.application.mrmason.dto.AdminDetailsDto;
 import com.application.mrmason.dto.ResponceAdminDetailsDto;
 import com.application.mrmason.entity.AdminDetails;
+import com.application.mrmason.entity.CustomerLogin;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.security.JwtService;
@@ -26,6 +27,8 @@ public class AdminDetailsServiceImpl implements AdminDetailsService {
 	
 	@Autowired
 	OtpGenerationService otpService;
+	
+	BCryptPasswordEncoder byCrypt = new BCryptPasswordEncoder();
 	@Override
 	public AdminDetails registerDetails(AdminDetails admin) {
 		BCryptPasswordEncoder byCrypt = new BCryptPasswordEncoder();
@@ -156,25 +159,32 @@ public class AdminDetailsServiceImpl implements AdminDetailsService {
 	
 	@Override
 	public String sendMail(String email) {
-		Optional<AdminDetails> userOp = Optional.of(adminRepo.findByEmail(email));
+		Optional<AdminDetails> userOp = Optional.ofNullable(adminRepo.findByEmail(email));
 		if (userOp.isPresent()) {
 			otpService.generateOtp(email);
 			return "otp";
 		}
 		return null;
 	}
-
 	@Override
-	public String forgetPassword(String email,String mobile, String otp, String newPass, String confPass) {
-		BCryptPasswordEncoder byCrypt = new BCryptPasswordEncoder();
-
-		Optional<AdminDetails> userOp = Optional.of(adminRepo.findByEmailOrMobile(email,mobile));
+	public String sendSms(String mobile) {
+		Optional<AdminDetails> userOp = Optional.ofNullable(adminRepo.findByMobile(mobile));
 		if (userOp.isPresent()) {
+			otpService.generateMobileOtp(mobile);
+			return "otp";
+		}
+		return null;
+	}
+	@Override
+	public String forgetPassword(String mobile,String email, String otp, String newPass, String confPass) {
+		Optional<AdminDetails> userEmail = Optional.ofNullable(adminRepo.findByEmail(email));
+		Optional<AdminDetails> userMobile = Optional.ofNullable(adminRepo.findByMobile(mobile));
+		if (userEmail.isPresent()) {
 			if (otpService.verifyOtp(email, otp)) {
 				if (newPass.equals(confPass)) {
 					String encryptPassword = byCrypt.encode(confPass);
-					userOp.get().setPassword(encryptPassword);
-					adminRepo.save(userOp.get());
+					userEmail.get().setPassword(encryptPassword);
+					adminRepo.save(userEmail.get());
 					return "changed";
 				} else {
 					return "notMatched";
@@ -182,6 +192,22 @@ public class AdminDetailsServiceImpl implements AdminDetailsService {
 			} else {
 				return "incorrect";
 			}
+		}else if(userMobile.isPresent()) {
+			if (otpService.verifyMobileOtp(mobile, otp)) {
+				if (newPass.equals(confPass)) {
+					String encryptPassword = byCrypt.encode(confPass);
+					userMobile.get().setPassword(encryptPassword);
+					adminRepo.save(userMobile.get());
+					return "changed";
+				} else {
+					return "notMatched";
+				}
+			} else {
+				return "incorrect";
+			}
+		}
+		else if(!userEmail.isPresent()&& userMobile.isPresent()) {
+			return "incorrectEmail";
 		}
 		return null;
 

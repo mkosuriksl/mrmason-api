@@ -12,4 +12,5 @@ public interface AdminDetailsRepo extends JpaRepository<AdminDetails,Long >{
 
 //	List<AdminDetails>  findByAdminType(String adminType);
 	AdminDetails findByEmail(String email);
+	AdminDetails findByMobile(String mobile);
 }

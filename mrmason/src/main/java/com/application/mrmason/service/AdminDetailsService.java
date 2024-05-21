@@ -17,7 +17,8 @@ public interface AdminDetailsService {
 
 	String changePassword(String usermail, String oldPass, String newPass, String confPass, String phno);
 
-	String forgetPassword(String email, String mobile, String otp, String newPass, String confPass);
+	String forgetPassword(String mobile,String email, String otp, String newPass, String confPass);
 
 	String sendMail(String email);
+	String sendSms(String mobile);
 }

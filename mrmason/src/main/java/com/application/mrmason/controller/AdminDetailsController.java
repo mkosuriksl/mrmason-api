@@ -154,16 +154,29 @@ public class AdminDetailsController {
 	
 	@PostMapping("/admin/forgetPassword/sendOtp")
 	public ResponseEntity<ResponseMessageDto> sendOtpForPasswordChange(@RequestBody Logindto login) {
+		String userMail=login.getEmail();
+		String mobile=login.getMobile();
 		try {
-			String userMail=login.getEmail();
-			if (adminService.sendMail(userMail) != null) {
-				response2.setMessage("OTP Sent to Registered EmailId.");
-				response2.setStatus(true);
-				return new ResponseEntity<>(response2, HttpStatus.OK);
+			if(userMail!=null&& mobile==null) {
+				if (adminService.sendMail(userMail) != null) {
+					response2.setMessage("OTP Sent to Registered EmailId.");
+					response2.setStatus(true);
+					return new ResponseEntity<>(response2, HttpStatus.OK);
+				}
+				response2.setMessage("Invalid EmailId..!");
+				response2.setStatus(false);
+				return new ResponseEntity<>(response2, HttpStatus.NOT_FOUND);
+			}else {
+				if (adminService.sendSms(mobile) != null) {
+					response2.setMessage("OTP Sent to Registered Mobile Number..");
+					response2.setStatus(true);
+					return new ResponseEntity<>(response2, HttpStatus.OK);
+				}
+				response2.setMessage("Invalid Mobile Number..!");
+				response2.setStatus(false);
+				return new ResponseEntity<>(response2, HttpStatus.NOT_FOUND);
 			}
-			response2.setMessage("Invalid EmailId..!");
-			response2.setStatus(false);
-			return new ResponseEntity<>(response2, HttpStatus.NOT_FOUND);
+			
 		} catch (Exception e) {
 			response2.setMessage("Invalid EmailId..!");
 			response2.setStatus(false);
@@ -180,27 +193,34 @@ public class AdminDetailsController {
 		String confPass = request.getConfPass();
 		String mobile = request.getUserMobile();
 		try {
-			if (adminService.forgetPassword(userMail, confPass, otp, newPass, confPass) == "changed") {
+			String data=adminService.forgetPassword(mobile, userMail, otp, newPass, confPass);
+			if (data == "changed") {
 				response2.setMessage("Password Changed Successfully..");
 				response2.setStatus(true);
 				return new ResponseEntity<>(response2, HttpStatus.OK);
-			} else if (adminService.forgetPassword(userMail, mobile, otp, newPass, confPass) == "notMatched") {
+			} else if (data == "notMatched") {
 				response2.setMessage("New Passwords Not Matched.!");
 				response2.setStatus(false);
 				return new ResponseEntity<>(response2, HttpStatus.BAD_REQUEST);
-			} else if (adminService.forgetPassword(userMail,mobile, otp, newPass, confPass) == "incorrect") {
+			} else if (data== "incorrect") {
 				response2.setMessage("Invalid OTP..!");
 				response2.setStatus(false);
 				return new ResponseEntity<>(response2, HttpStatus.UNAUTHORIZED);
+			}else if (data== "incorrectEmail") {
+				response2.setMessage("Invalid Email ID.!");
+				response2.setStatus(false);
+				return new ResponseEntity<>(response2, HttpStatus.UNAUTHORIZED);
+			}else {
+				response2.setMessage("Invalid Mobile Number..!");
+				response2.setStatus(false);
+				return new ResponseEntity<>(response2, HttpStatus.NOT_FOUND);
 			}
 		} catch (Exception e) {
 			response2.setMessage(e.getMessage());
 			response2.setStatus(false);
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response2);
 		}
-		response2.setMessage("Invalid EmailId..!");
-		response2.setStatus(false);
-		return new ResponseEntity<>(response2, HttpStatus.NOT_FOUND);
+		
 	}
 	
 }

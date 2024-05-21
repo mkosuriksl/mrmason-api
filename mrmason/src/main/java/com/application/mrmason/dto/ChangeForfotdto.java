@@ -8,6 +8,7 @@ import lombok.Setter;
 public class ChangeForfotdto {
 
 	String email;
+	String mobile;
 	String otp;
 	String newPassword;
 	String confirmPassword;

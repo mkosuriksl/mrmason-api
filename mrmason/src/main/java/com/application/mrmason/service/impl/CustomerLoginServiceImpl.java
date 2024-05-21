@@ -143,23 +143,33 @@ public class CustomerLoginServiceImpl implements CustomerLoginService {
 
 	@Override
 	public String sendMail(String email) {
-		Optional<CustomerLogin> userOp = Optional.of(loginRepo.findByUserEmail(email));
+		Optional<CustomerLogin> userOp = Optional.ofNullable(loginRepo.findByUserEmail(email));
 		if (userOp.isPresent()) {
 			otpService.generateOtp(email);
 			return "otp";
 		}
 		return null;
 	}
-
 	@Override
-	public String forgetPassword(String email, String otp, String newPass, String confPass) {
-		Optional<CustomerLogin> userOp = Optional.of(loginRepo.findByUserEmail(email));
+	public String sendSms(String mobile) {
+		Optional<CustomerLogin> userOp = Optional.ofNullable(loginRepo.findByUserMobile(mobile));
 		if (userOp.isPresent()) {
+			otpService.generateMobileOtp(mobile);
+			return "otp";
+		}
+		return null;
+	}
+	
+	@Override
+	public String forgetPassword(String mobile,String email, String otp, String newPass, String confPass) {
+		Optional<CustomerLogin> userEmail = Optional.ofNullable(loginRepo.findByUserEmail(email));
+		Optional<CustomerLogin> userMobile = Optional.ofNullable(loginRepo.findByUserMobile(mobile));
+		if (userEmail.isPresent()) {
 			if (otpService.verifyOtp(email, otp)) {
 				if (newPass.equals(confPass)) {
 					String encryptPassword = byCrypt.encode(confPass);
-					userOp.get().setUserPassword(encryptPassword);
-					loginRepo.save(userOp.get());
+					userEmail.get().setUserPassword(encryptPassword);
+					loginRepo.save(userEmail.get());
 					return "changed";
 				} else {
 					return "notMatched";
@@ -167,6 +177,22 @@ public class CustomerLoginServiceImpl implements CustomerLoginService {
 			} else {
 				return "incorrect";
 			}
+		}else if(userMobile.isPresent()) {
+			if (otpService.verifyMobileOtp(mobile, otp)) {
+				if (newPass.equals(confPass)) {
+					String encryptPassword = byCrypt.encode(confPass);
+					userMobile.get().setUserPassword(encryptPassword);
+					loginRepo.save(userMobile.get());
+					return "changed";
+				} else {
+					return "notMatched";
+				}
+			} else {
+				return "incorrect";
+			}
+		}
+		else if(!userEmail.isPresent()&& userMobile.isPresent()) {
+			return "incorrectEmail";
 		}
 		return null;
 

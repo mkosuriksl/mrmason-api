@@ -12,7 +12,8 @@ public interface CustomerLoginService {
 	CustomerLogin updateDataWithEmail(String email);
 	CustomerLogin updateDataWithMobile(String mobile);
 	ResponseLoginDto loginDetails(String userEmail , String phno, String userPassword);
-	String forgetPassword(String email,String otp,String newPass,String confPass);
+	String forgetPassword(String mobile,String email,String otp,String newPass,String confPass);
 	String sendMail(String email);
-	public CustomerRegistrationDto getCustomerDetails(String email,String phno);
+	String sendSms(String mobile);
+	CustomerRegistrationDto getCustomerDetails(String email,String phno);
 }

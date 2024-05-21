@@ -3,20 +3,18 @@ package com.application.mrmason.service.impl;
 import java.util.List;
 import java.util.Optional;
 
-import com.application.mrmason.dto.ResponseSpLoginDto;
-import com.application.mrmason.dto.Userdto;
-import com.application.mrmason.repository.ServicePersonLoginDAO;
-import com.application.mrmason.repository.UserDAO;
-import com.application.mrmason.security.JwtService;
-
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.application.mrmason.dto.ResponseSpLoginDto;
+import com.application.mrmason.dto.Userdto;
+import com.application.mrmason.entity.CustomerLogin;
 import com.application.mrmason.entity.ServicePersonLogin;
 import com.application.mrmason.entity.User;
-import com.application.mrmason.entity.UserType;
+import com.application.mrmason.repository.ServicePersonLoginDAO;
+import com.application.mrmason.repository.UserDAO;
+import com.application.mrmason.security.JwtService;
 
 
 @Service
@@ -138,23 +136,30 @@ public class UserService {
 	}
 
 	public String sendMail(String email) {
-		Optional<User> userOp = Optional.of(userDAO.findByEmail(email));
+		Optional<User> userOp = Optional.ofNullable(userDAO.findByEmail(email));
 		if (userOp.isPresent()) {
 			otpService.generateOtp(email);
 			return "otp";
 		}
 		return null;
 	}
-
-	public String forgetPassword(String email, String otp, String newPassword, String confirmPassword) {
-
-		Optional<User> userOp = Optional.of(userDAO.findByEmail(email));
+	public String sendSms(String mobile) {
+		Optional<User> userOp = Optional.ofNullable(userDAO.findByMobile(mobile));
 		if (userOp.isPresent()) {
+			otpService.generateMobileOtp(mobile);
+			return "otp";
+		}
+		return null;
+	}
+	public String forgetPassword(String mobile,String email, String otp, String newPass, String confPass) {
+		Optional<User> userEmail = Optional.ofNullable(userDAO.findByEmail(email));
+		Optional<User> userMobile = Optional.ofNullable(userDAO.findByMobile(mobile));
+		if (userEmail.isPresent()) {
 			if (otpService.verifyOtp(email, otp)) {
-				if (newPassword.equals(confirmPassword)) {
-					String encryptPassword = byCrypt.encode(confirmPassword);
-					userOp.get().setPassword(encryptPassword);
-					userDAO.save(userOp.get());
+				if (newPass.equals(confPass)) {
+					String encryptPassword = byCrypt.encode(confPass);
+					userEmail.get().setPassword(encryptPassword);
+					userDAO.save(userEmail.get());
 					return "changed";
 				} else {
 					return "notMatched";
@@ -162,6 +167,22 @@ public class UserService {
 			} else {
 				return "incorrect";
 			}
+		}else if(userMobile.isPresent()) {
+			if (otpService.verifyMobileOtp(mobile, otp)) {
+				if (newPass.equals(confPass)) {
+					String encryptPassword = byCrypt.encode(confPass);
+					userMobile.get().setPassword(encryptPassword);
+					userDAO.save(userMobile.get());
+					return "changed";
+				} else {
+					return "notMatched";
+				}
+			} else {
+				return "incorrect";
+			}
+		}
+		else if(!userEmail.isPresent()&& userMobile.isPresent()) {
+			return "incorrectEmail";
 		}
 		return null;
 

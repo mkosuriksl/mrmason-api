@@ -26,20 +26,35 @@ public class CustomerLoginController {
 	ResponseMessageDto response=new ResponseMessageDto();
 	@PostMapping("/forgetPassword/sendOtp")
 	public ResponseEntity<ResponseMessageDto> sendOtpForPasswordChange(@RequestBody Logindto login) {
+		String userMail=login.getEmail();
+		String mobile=login.getMobile();
 		try {
-			String userMail=login.getEmail();
-			if (loginService.sendMail(userMail) != null) {
-				response.setMessage("OTP Sent to Registered EmailId.");
-				response.setStatus(true);
-				return new ResponseEntity<>(response, HttpStatus.OK);
+			if(userMail!=null) {
+				if (loginService.sendMail(userMail) != null) {
+					response.setMessage("OTP Sent to Registered EmailId.");
+					response.setStatus(true);
+					return new ResponseEntity<>(response, HttpStatus.OK);
+				}
+				response.setMessage("Invalid Email ID.!");
+				response.setStatus(false);
+				return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			}else {
+				if (loginService.sendSms(mobile) != null) {
+					response.setMessage("OTP Sent to Registered mobile number.");
+					response.setStatus(true);
+					return new ResponseEntity<>(response, HttpStatus.OK);
+				}
+				response.setMessage("Invalid Mobile Number..!");
+				response.setStatus(false);
+				return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 			}
+			
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
+			response.setStatus(false);
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
 		}
-		response.setMessage("Invalid EmailId..!");
-		response.setStatus(false);
-		return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+		
 	}
 
 	@PostMapping("/forgetPassword/verifyOtpAndChangePassword")
@@ -48,26 +63,34 @@ public class CustomerLoginController {
 		String otp = request.getOtp();
 		String newPass = request.getNewPass();
 		String confPass = request.getConfPass();
+		String mobile=request.getUserMobile();
 		try {
-			if (loginService.forgetPassword(userMail, otp, newPass, confPass) == "changed") {
+			String data=loginService.forgetPassword(mobile,userMail, otp, newPass, confPass);
+			if (data == "changed") {
 				response.setMessage("Password Changed Successfully..");
 				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
-			} else if (loginService.forgetPassword(userMail, otp, newPass, confPass) == "notMatched") {
+			} else if (data == "notMatched") {
 				response.setMessage("New Passwords Not Matched.!");
 				response.setStatus(false);
 				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-			} else if (loginService.forgetPassword(userMail, otp, newPass, confPass) == "incorrect") {
+			} else if (data== "incorrect") {
 				response.setMessage("Invalid OTP..!");
 				response.setStatus(false);
 				return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			}else if (data == "incorrectEmail") {
+				response.setMessage("Invalid email id..!");
+				response.setStatus(false);
+				return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			}else{
+				response.setMessage("Invalid mobile number..!");
+				response.setStatus(false);
+				return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 			}
+			
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
 		}
-		response.setMessage("Invalid EmailId..!");
-		response.setStatus(false);
-		return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 	}
 }

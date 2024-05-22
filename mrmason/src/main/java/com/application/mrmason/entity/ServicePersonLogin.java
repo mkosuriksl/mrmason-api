@@ -31,13 +31,12 @@ public class ServicePersonLogin {
 	public String mOtp;
 	@Column(name = "MOB_VERIFY")
 	@Builder.Default
-	public String mobVerify ="yes";
+	public String mobVerify ="no";
 	@Column(name = "E_OTP")
 	public String eOtp;
 	@Column(name = "USER_EMAIL")
 	public String email;
 	@Column(name = "E_VERIFY")
-    
 	public String eVerify;
 	
 	

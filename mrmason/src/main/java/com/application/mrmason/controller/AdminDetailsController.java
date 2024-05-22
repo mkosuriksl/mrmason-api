@@ -43,10 +43,10 @@ public class AdminDetailsController {
 			}
 			response.setMessage("Email or Mobile already exists.!");
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
 
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.OK);
 		}
 
 	}
@@ -66,10 +66,10 @@ public class AdminDetailsController {
 			}
 			response.setMessage("Admin Not Found.");
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
 
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.OK);
 		}
 
 	}
@@ -81,7 +81,7 @@ public class AdminDetailsController {
 			if (entity == null) {
 				response.setMessage("Invalid User.!");
 				response.setStatus(false);
-				return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			response.setData(entity);
 			response.setMessage("Admin data fetched successfully..");
@@ -91,7 +91,7 @@ public class AdminDetailsController {
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
 	}
@@ -110,11 +110,11 @@ public class AdminDetailsController {
 			}
 			response.setMessage("Invalid Admin.!");
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	
 	}
@@ -135,20 +135,20 @@ public class AdminDetailsController {
 			} else if (adminService.changePassword(userMail, oldPass, newPass, confPass,userMobile) == "notMatched") {
 				response2.setMessage("New Passwords Not Matched.!");
 				response2.setStatus(false);
-				return new ResponseEntity<>(response2, HttpStatus.BAD_REQUEST);
+				return new ResponseEntity<>(response2, HttpStatus.OK);
 			} else if (adminService.changePassword(userMail, oldPass, newPass, confPass,userMobile) == "incorrect") {
 				response2.setMessage("Old Password is Incorrect");
 				response2.setStatus(false);
-				return new ResponseEntity<>(response2, HttpStatus.UNAUTHORIZED);
+				return new ResponseEntity<>(response2, HttpStatus.OK);
 			}
 		} catch (Exception e) {
 			response2.setMessage(e.getMessage());
 			response2.setStatus(false);
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response2);
+			return ResponseEntity.status(HttpStatus.OK).body(response2);
 		}
 		response2.setMessage("Invalid User.!");
 		response2.setStatus(false);
-		return new ResponseEntity<>(response2, HttpStatus.NOT_FOUND);
+		return new ResponseEntity<>(response2, HttpStatus.OK);
 
 	}
 	
@@ -165,7 +165,7 @@ public class AdminDetailsController {
 				}
 				response2.setMessage("Invalid EmailId..!");
 				response2.setStatus(false);
-				return new ResponseEntity<>(response2, HttpStatus.NOT_FOUND);
+				return new ResponseEntity<>(response2, HttpStatus.OK);
 			}else {
 				if (adminService.sendSms(mobile) != null) {
 					response2.setMessage("OTP Sent to Registered Mobile Number..");
@@ -174,13 +174,13 @@ public class AdminDetailsController {
 				}
 				response2.setMessage("Invalid Mobile Number..!");
 				response2.setStatus(false);
-				return new ResponseEntity<>(response2, HttpStatus.NOT_FOUND);
+				return new ResponseEntity<>(response2, HttpStatus.OK);
 			}
 			
 		} catch (Exception e) {
 			response2.setMessage("Invalid EmailId..!");
 			response2.setStatus(false);
-			return new ResponseEntity<>(response2, HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(response2, HttpStatus.OK);
 		}
 		
 	}
@@ -201,24 +201,24 @@ public class AdminDetailsController {
 			} else if (data == "notMatched") {
 				response2.setMessage("New Passwords Not Matched.!");
 				response2.setStatus(false);
-				return new ResponseEntity<>(response2, HttpStatus.BAD_REQUEST);
+				return new ResponseEntity<>(response2, HttpStatus.OK);
 			} else if (data== "incorrect") {
 				response2.setMessage("Invalid OTP..!");
 				response2.setStatus(false);
-				return new ResponseEntity<>(response2, HttpStatus.UNAUTHORIZED);
+				return new ResponseEntity<>(response2, HttpStatus.OK);
 			}else if (data== "incorrectEmail") {
 				response2.setMessage("Invalid Email ID.!");
 				response2.setStatus(false);
-				return new ResponseEntity<>(response2, HttpStatus.UNAUTHORIZED);
+				return new ResponseEntity<>(response2, HttpStatus.OK);
 			}else {
 				response2.setMessage("Invalid Mobile Number..!");
 				response2.setStatus(false);
-				return new ResponseEntity<>(response2, HttpStatus.NOT_FOUND);
+				return new ResponseEntity<>(response2, HttpStatus.OK);
 			}
 		} catch (Exception e) {
 			response2.setMessage(e.getMessage());
 			response2.setStatus(false);
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response2);
+			return ResponseEntity.status(HttpStatus.OK).body(response2);
 		}
 		
 	}

@@ -7,9 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.application.mrmason.dto.Logindto;
 import com.application.mrmason.dto.ResponseMessageDto;
 import com.application.mrmason.entity.CustomerMobileOtp;
@@ -17,8 +15,6 @@ import com.application.mrmason.repository.CustomerMobileOtpRepo;
 import com.application.mrmason.service.CustomerMobileOtpService;
 import com.application.mrmason.service.CustomerRegistrationService;
 import com.application.mrmason.service.OtpGenerationService;
-
-import jakarta.annotation.security.PermitAll;
 
 @RestController
 public class CustomerMobileOtpController {
@@ -36,7 +32,7 @@ public class CustomerMobileOtpController {
 		String mobile = login.getMobile();
 		if (otpRepo.findByMobileNum(mobile) == null) {
 			response.setMessage("Invalid mobile number..!");
-			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		} else {
 			Optional<CustomerMobileOtp> user = Optional.of(otpRepo.findByMobileNum(mobile));
 
@@ -47,7 +43,7 @@ public class CustomerMobileOtpController {
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			response.setMessage("Mobile number already verified.");
-			return new ResponseEntity<>(response, HttpStatus.CREATED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
 
@@ -65,7 +61,7 @@ public class CustomerMobileOtpController {
 
 		}
 		response.setMessage("Incorrect OTP, Please enter correct Otp");
-		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+		return new ResponseEntity<>(response, HttpStatus.OK);
 
 	}
 }

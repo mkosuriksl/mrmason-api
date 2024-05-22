@@ -34,9 +34,9 @@ public class AdminAmcRateController {
 			}
 			response.setMessage("Invalid User.!");
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.OK);
 		}
 	}
 	
@@ -47,7 +47,7 @@ public class AdminAmcRateController {
 			if (entity.isEmpty()) {
 				response.setMessage("Invalid User.!");
 				response.setStatus(false);
-				return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			response.setMessage("Amc details fetched successfully.");
 			response.setStatus(true);
@@ -57,7 +57,7 @@ public class AdminAmcRateController {
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
 	}
@@ -76,11 +76,11 @@ public class AdminAmcRateController {
 			}
 			response.setMessage("Invalid User.!");
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
 }

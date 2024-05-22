@@ -41,9 +41,9 @@ public class ServiceCategoryController {
 			}
 			response.setMessage("A service is already present wih this sub category.!");
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.OK);
 		}
 	}
 	@PreAuthorize("hasAuthority('Adm')")
@@ -60,12 +60,12 @@ public class ServiceCategoryController {
 			}
 			response2.setMessage("Invalid User.!");
 			response2.setStatus(false);
-			return new ResponseEntity<>(response2, HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(response2, HttpStatus.OK);
 
 		} catch (Exception e) {
 			response2.setMessage(e.getMessage());
 			response2.setStatus(false);
-			return new ResponseEntity<>(response2, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response2, HttpStatus.OK);
 		}
 
 	}
@@ -83,12 +83,12 @@ public class ServiceCategoryController {
 			}
 			response2.setMessage("Invalid User.!");
 			response2.setStatus(false);
-			return new ResponseEntity<>(response2, HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(response2, HttpStatus.OK);
 
 		} catch (Exception e) {
 			response2.setMessage(e.getMessage());
 			response2.setStatus(false);
-			return new ResponseEntity<>(response2, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response2, HttpStatus.OK);
 		}
 
 	}
@@ -106,12 +106,12 @@ public class ServiceCategoryController {
 			}
 			response2.setMessage("Invalid User.!");
 			response2.setStatus(false);
-			return new ResponseEntity<>(response2, HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(response2, HttpStatus.OK);
 
 		} catch (Exception e) {
 			response2.setMessage(e.getMessage());
 			response2.setStatus(false);
-			return new ResponseEntity<>(response2, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response2, HttpStatus.OK);
 		}
 
 	}
@@ -130,12 +130,12 @@ public class ServiceCategoryController {
 			}
 			response.setMessage("Invalid User.!");
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
 
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+			return ResponseEntity.status(HttpStatus.OK).body(response);
 		}
 	}
 }

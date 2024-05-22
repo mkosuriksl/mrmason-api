@@ -2,14 +2,11 @@ package com.application.mrmason.service.impl;
 
 import java.util.List;
 import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import com.application.mrmason.dto.ResponseSpLoginDto;
 import com.application.mrmason.dto.Userdto;
-import com.application.mrmason.entity.CustomerLogin;
 import com.application.mrmason.entity.ServicePersonLogin;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.repository.ServicePersonLoginDAO;
@@ -236,11 +233,11 @@ public class UserService {
 	
 	public ResponseSpLoginDto loginDetails(String email, String mobile, String password) {
 
-		Optional<ServicePersonLogin> loginDb = Optional.of((emailLoginRepo.findByEmailOrMobile(email, mobile)));
+		Optional<ServicePersonLogin> loginDb = Optional.ofNullable((emailLoginRepo.findByEmailOrMobile(email, mobile)));
 		ResponseSpLoginDto response=new ResponseSpLoginDto();
 		
 		if (loginDb.isPresent()) {
-			Optional<User> userEmailMobile = Optional.of(userDAO.findByEmailOrMobile(email, mobile));
+			Optional<User> userEmailMobile = Optional.ofNullable(userDAO.findByEmailOrMobile(email, mobile));
 			User user = userEmailMobile.get();
 			String status = user.getStatus();
 			
@@ -260,10 +257,12 @@ public class UserService {
 								return response;
 							} else {
 								response.setMessage("Invalid Password");
+								response.setStatus(false);
 								return response;
 							}
 						} else {
 							response.setMessage("verify Email");
+							response.setStatus(false);
 							return response;
 						}
 					} else if (email == null && mobile !=null) {
@@ -279,21 +278,29 @@ public class UserService {
 								return response;
 							} else {
 								response.setMessage("Invalid Password");
+								response.setStatus(false);
 								return response;
 							}
 						} else {
 							response.setMessage("verify Mobile");
+							response.setStatus(false);
 							return response;
 						}
 					}
 				} else {
 					response.setMessage("Inactive User");
+					response.setStatus(false);
 					return response;
 				}
-			} 
+			}  else {
+				response.setMessage("Inactive User");
+				response.setStatus(false);
+				return response;
+			}
 
 		}
 		response.setMessage("Invalid User.!");
+		response.setStatus(false);
 		return response;
 	}
 	public User getServiceDataProfile(String email) {

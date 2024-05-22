@@ -51,15 +51,15 @@ public class AddServiceController {
 				response.setMessage("Service added successfully");
 				response.setStatus(true);
 				response.setAddServicesData(addedService);
-				return ResponseEntity.status(HttpStatus.CREATED).body(response);
+				return ResponseEntity.status(HttpStatus.OK).body(response);
 			} else {
 				response.setMessage("Failed to add service");
 				response.setStatus(false);
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+				return ResponseEntity.status(HttpStatus.OK).body(response);
 			}
 		} catch (Exception e) {
             response.setMessage("Record already exists");
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+			return ResponseEntity.status(HttpStatus.OK).body(response);
 		}
 	}
 
@@ -74,7 +74,7 @@ public class AddServiceController {
 			if (upServices == null) {
 				response.setMessage("inavalid user");
 				response.setStatus(false);
-				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 
 			} else {
 				
@@ -84,7 +84,9 @@ public class AddServiceController {
 				return ResponseEntity.ok().body(response);
 			}
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+			response.setStatus(false);
+			response.setMessage(e.getMessage());
+			return ResponseEntity.status(HttpStatus.OK).body(response);
 		}
 
 	}
@@ -101,11 +103,11 @@ public class AddServiceController {
 			if (getService == null) {
 				responseGet.setMessage("No services found for the given parameters");
 				responseGet.setStatus(false);
-				return new ResponseEntity<>(responseGet, HttpStatus.NOT_FOUND);
+				return new ResponseEntity<>(responseGet, HttpStatus.OK);
 			} else if (getService.isEmpty()) {
 				responseGet.setMessage("Invalid user......!");
 				responseGet.setStatus(false);
-				return new ResponseEntity<>(responseGet, HttpStatus.BAD_REQUEST);
+				return new ResponseEntity<>(responseGet, HttpStatus.OK);
 			} else {
 				responseGet.setMessage("AddService details");
 				responseGet.setStatus(true);
@@ -113,7 +115,7 @@ public class AddServiceController {
 				return new ResponseEntity<>(responseGet, HttpStatus.OK);
 			}
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.OK).body(e.getMessage());
 		}
 	}
 
@@ -134,10 +136,10 @@ public class AddServiceController {
 			}
 			serviceReport.setMessage("Invalid user.!");
 			serviceReport.setStatus(false);
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(serviceReport);
+			return ResponseEntity.status(HttpStatus.OK).body(serviceReport);
 
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.OK).body(e.getMessage());
 		}
 
 	}

@@ -40,10 +40,10 @@ public class SPAvailabilityController {
 			}
 			response2.setMessage("Invalid user");
 			response2.setStatus(false);
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("response");
+			return ResponseEntity.status(HttpStatus.OK).body("response");
 
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.OK).body(e.getMessage());
 		}
 		
 	}
@@ -63,10 +63,10 @@ public class SPAvailabilityController {
 			} else {
 				response.setMessage("No user found for the given parameters");
 				response.setStatus(false);
-				return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.OK).body(e.getMessage());
 		}
 
 	}

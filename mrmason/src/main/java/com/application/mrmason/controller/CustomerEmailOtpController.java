@@ -36,7 +36,7 @@ public class CustomerEmailOtpController {
 		String userEmail = login.getEmail();
 		if (emailLoginService.isEmailExists(userEmail) == null) {
 			response.setMessage("Invalid EmailId..!");
-			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		} else {
 			Optional<CustomerEmailOtp> user = Optional.of(otpRepo.findByEmail(userEmail));
 
@@ -47,7 +47,7 @@ public class CustomerEmailOtpController {
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			response.setMessage("Email already verified.");
-			return new ResponseEntity<>(response, HttpStatus.CREATED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
 
@@ -65,7 +65,7 @@ public class CustomerEmailOtpController {
 
 		}
 		response.setMessage("Incorrect OTP, Please enter correct Otp");
-		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+		return new ResponseEntity<>(response, HttpStatus.OK);
 
 	}
 }

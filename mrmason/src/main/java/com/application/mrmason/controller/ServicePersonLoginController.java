@@ -44,7 +44,7 @@ public class ServicePersonLoginController {
 			if (loginService.isEmailExists(email) == null) {
 				response.setMessage("Invalid EmailId..!");
 				response.setStatus(false);
-				return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			} else {
 				Optional<ServicePersonLogin> user = Optional.of(servicePersonDao.findByEmail(email));
 
@@ -56,12 +56,12 @@ public class ServicePersonLoginController {
 				}
 				response.setStatus(false);
 				response.setMessage("Email already verified.");
-				return new ResponseEntity<>(response, HttpStatus.CREATED);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+			return ResponseEntity.status(HttpStatus.OK).body(response);
 		}
 	}
 
@@ -81,12 +81,12 @@ public class ServicePersonLoginController {
 			}
 			response.setStatus(false);
 			response.setMessage("Incorrect OTP, Please enter correct Otp");
-			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+			return ResponseEntity.status(HttpStatus.OK).body(response);
 		}
 	}
 	
@@ -96,7 +96,7 @@ public class ServicePersonLoginController {
 		if (servicePersonDao.findByMobile(mobile) == null) {
 			response.setMessage("Invalid mobile number..!");
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		} else {
 			Optional<ServicePersonLogin> user = Optional.of(servicePersonDao.findByMobile(mobile));
 
@@ -108,7 +108,7 @@ public class ServicePersonLoginController {
 			}
 			response.setMessage("Mobile number already verified.");
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.CREATED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
 
@@ -127,7 +127,7 @@ public class ServicePersonLoginController {
 		}
 		response.setStatus(false);
 		response.setMessage("Incorrect OTP, Please enter correct Otp");
-		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+		return new ResponseEntity<>(response, HttpStatus.OK);
 
 	}
 

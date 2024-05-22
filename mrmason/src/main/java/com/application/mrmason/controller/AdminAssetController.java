@@ -38,11 +38,11 @@ public class AdminAssetController {
 			}
 			response.setMessage("Invalid User.!");
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
 
@@ -53,7 +53,7 @@ public class AdminAssetController {
 			if (entity.isEmpty()) {
 				response2.setMessage("Invalid User.!");
 				response2.setStatus(false);
-				return new ResponseEntity<>(response2, HttpStatus.UNAUTHORIZED);
+				return new ResponseEntity<>(response2, HttpStatus.OK);
 			}
 			response2.setData(entity);
 			response2.setMessage("Admin asset details fetched successfully..");
@@ -63,7 +63,7 @@ public class AdminAssetController {
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return new ResponseEntity<>(response2, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response2, HttpStatus.OK);
 		}
 
 	}
@@ -81,10 +81,10 @@ public class AdminAssetController {
 			}
 			response.setMessage("Invalid User.!");
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
 
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.OK);
 		}
 	}
 }

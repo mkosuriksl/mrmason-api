@@ -34,11 +34,11 @@ public class ServiceRequestController {
 			}else {
 				response.setMessage("Invalid User.!");
 				response.setStatus(false);
-				return new ResponseEntity<>(response,HttpStatus.BAD_REQUEST);
+				return new ResponseEntity<>(response,HttpStatus.OK);
 			}
 		}catch(Exception e) {
 			e.getMessage();
-			return 	new ResponseEntity<>("Invalid User.!",HttpStatus.NOT_FOUND);
+			return 	new ResponseEntity<>("Invalid User.!",HttpStatus.OK);
 		}
 	}
 	@GetMapping("/getServiceRequest")
@@ -47,7 +47,7 @@ public class ServiceRequestController {
 			if(reqService.getServiceReq(request).isEmpty()) {	
 				response.setMessage("Invalid User.!");
 				response.setStatus(false);
-				return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			response.setData(reqService.getServiceReq(request));
 			response.setMessage("ServiceRequest data fetched successfully..");
@@ -57,7 +57,7 @@ public class ServiceRequestController {
 		}catch(Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
 }

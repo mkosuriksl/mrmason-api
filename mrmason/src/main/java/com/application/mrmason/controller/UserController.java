@@ -55,11 +55,11 @@ public class UserController {
 		try {
 			if (userService.isEmailExists(registrationDetails.getEmail())) {
 				response.setMessage("Email already exists");
-				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			if (userService.isMobileExists(registrationDetails.getMobile())) {
 				response.setMessage("Mobile already exists");
-				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			Userdto userDetails=userService.addDetails(registrationDetails);
 			response.setMessage("User added successfully");
@@ -67,7 +67,7 @@ public class UserController {
 			response.setUserData(userDetails);
 			return new ResponseEntity<>( response,HttpStatus.OK);
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.OK).body(e.getMessage());
 		}
 	}
 
@@ -82,7 +82,7 @@ public class UserController {
 			if (updatedUser == null) {
 				response.setMessage("invalid Email");
 				response.setStatus(false);
-				return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			} else {
 				userResponse.setMessage("Profile updated successfully");
 				userResponse.setStatus(true);
@@ -90,7 +90,7 @@ public class UserController {
 				return ResponseEntity.ok().body(userResponse);
 			}
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.OK).body(e.getMessage());
 		}
 	}
 
@@ -114,19 +114,20 @@ public class UserController {
 			} else if (userService.changePassword(email, oldPassword, newPassword, confirmPassword) == "notMatched") {
 				response2.setMessage("New Passwords Not Matched.!");
 				response2.setStatus(false);
-				return new ResponseEntity<>(response2, HttpStatus.BAD_REQUEST);
+				return new ResponseEntity<>(response2, HttpStatus.OK);
 			} else if (userService.changePassword(email, oldPassword, newPassword, confirmPassword) == "incorrect") {
 				response2.setMessage("Old Password is Incorrect");
 				response2.setStatus(false);
-				return new ResponseEntity<>(response2, HttpStatus.UNAUTHORIZED);
+				return new ResponseEntity<>(response2, HttpStatus.OK);
 			}
 		} catch (Exception e) {
 			response2.setMessage(e.getMessage());
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response2);
+			response2.setStatus(false);
+			return ResponseEntity.status(HttpStatus.OK).body(response2);
 		}
 		response2.setMessage("Invalid User.!");
 		response2.setStatus(false);
-		return new ResponseEntity<>(response2, HttpStatus.NOT_FOUND);
+		return new ResponseEntity<>(response2, HttpStatus.OK);
 	}
 
 	@PostMapping("/forget-pwd-send-otp")
@@ -142,7 +143,7 @@ public class UserController {
 				}
 				response2.setMessage("Invalid Email ID.!");
 				response2.setStatus(false);
-				return new ResponseEntity<>(response2, HttpStatus.UNAUTHORIZED);
+				return new ResponseEntity<>(response2, HttpStatus.OK);
 				
 			}else {
 				if(userService.sendSms(mobile)!=null) {
@@ -152,7 +153,7 @@ public class UserController {
 				}
 				response2.setMessage("Invalid Mobile number..!");
 				response2.setStatus(false);
-				return new ResponseEntity<>(response2, HttpStatus.NOT_FOUND);
+				return new ResponseEntity<>(response2, HttpStatus.OK);
 			}
 			
 		} catch (Exception e) {
@@ -181,24 +182,24 @@ public class UserController {
 			} else if (data== "notMatched") {
 				response2.setMessage("New Passwords Not Matched.!");
 				response2.setStatus(false);
-				return new ResponseEntity<>(response2, HttpStatus.BAD_REQUEST);
+				return new ResponseEntity<>(response2, HttpStatus.OK);
 			} else if (data == "incorrect") {
 				response2.setMessage("Invalid OTP..!");
 				response2.setStatus(false);
-				return new ResponseEntity<>(response2, HttpStatus.UNAUTHORIZED);
+				return new ResponseEntity<>(response2, HttpStatus.OK);
 			} else if (data == "incorrectEmail") {
 				response2.setMessage("Invalid Email ID.!");
 				response2.setStatus(false);
-				return new ResponseEntity<>(response2, HttpStatus.UNAUTHORIZED);
+				return new ResponseEntity<>(response2, HttpStatus.OK);
 			} 
 		} catch (Exception e) {
 			response2.setMessage(e.getMessage());
 			response2.setStatus(false);
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response2);
+			return ResponseEntity.status(HttpStatus.OK).body(response2);
 		}
 		response2.setMessage("Invalid Mobile Number..!");
 		response2.setStatus(false);
-		return new ResponseEntity<>(response2, HttpStatus.NOT_FOUND);
+		return new ResponseEntity<>(response2, HttpStatus.OK);
 	}
 
 	@PreAuthorize("hasAuthority('Developer')")
@@ -210,7 +211,7 @@ public class UserController {
 			if ( profile == null) {
 				response.setMessage("Invalid Email ....!");
 				response.setStatus(false);
-				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			response.setMessage("Profile fetched successfully.");
 			response.setStatus(true);
@@ -219,7 +220,7 @@ public class UserController {
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
 	}
@@ -236,9 +237,9 @@ public class UserController {
 			if (response.getJwtToken() != null) {
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
-			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.OK).body(e.getMessage());
 		}
 	}
 	@PreAuthorize("hasAuthority('Adm')")
@@ -264,13 +265,13 @@ public class UserController {
 			} else {
 				response3.setMessage("Error: Failed to fetch users. Please try again later.");
 				response3.setStatus(false);
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+				return ResponseEntity.status(HttpStatus.OK)
 						.body(response3);
 			}
 		} catch (Exception e) {
 			response3.setMessage(e.getMessage());
 			response3.setStatus(false);
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response3);
+			return ResponseEntity.status(HttpStatus.OK).body(response3);
 		}
 
 	}

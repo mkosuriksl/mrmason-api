@@ -1,16 +1,12 @@
 package com.application.mrmason.service.impl;
 
 import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import com.application.mrmason.dto.AdminDetailsDto;
 import com.application.mrmason.dto.ResponceAdminDetailsDto;
 import com.application.mrmason.entity.AdminDetails;
-import com.application.mrmason.entity.CustomerLogin;
-import com.application.mrmason.entity.UserType;
 import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.security.JwtService;
 import com.application.mrmason.service.AdminDetailsService;

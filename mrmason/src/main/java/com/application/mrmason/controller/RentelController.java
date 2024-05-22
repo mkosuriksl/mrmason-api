@@ -37,11 +37,11 @@ public class RentelController {
 			}
 			response.setMessage("Invalid User.!");
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
 	
@@ -51,7 +51,7 @@ public class RentelController {
 			if (rentService.getRentalReq(rent).isEmpty()) {
 				response.setMessage("Invalid User.!");
 				response.setStatus(false);
-				return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			response.setMessage("Rental data fetched successfully.");
 			response.setStatus(true);
@@ -61,7 +61,7 @@ public class RentelController {
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
 	
@@ -77,11 +77,11 @@ public class RentelController {
 			}
 			response.setMessage("Invalid User.!");
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
 	

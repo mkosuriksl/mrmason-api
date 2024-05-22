@@ -42,11 +42,11 @@ public class CustomerAssetsController {
 			}
 			response.setMessage("Invalid User.!");
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
 	}
@@ -64,11 +64,11 @@ public class CustomerAssetsController {
 			}
 			response.setMessage("Invalid User.!");
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
 
@@ -79,7 +79,7 @@ public class CustomerAssetsController {
 			if (entity.isEmpty()) {
 				response.setMessage("Invalid User.!");
 				response.setStatus(false);
-				return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			response.setMessage("Assets fetched successfully.");
 			response.setStatus(true);
@@ -89,7 +89,7 @@ public class CustomerAssetsController {
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
 	}

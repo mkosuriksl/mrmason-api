@@ -46,14 +46,14 @@ public class MembershipController {
 				return new ResponseEntity<>(response, HttpStatus.OK);
 
 			} else if (addedMember == "present") {
-				return new ResponseEntity<>("A Membership is in active for this asset.!!", HttpStatus.ALREADY_REPORTED);
+				return new ResponseEntity<>("A Membership is in active for this asset.!!", HttpStatus.OK);
 			}
 			response.setMessage("Failed to add membership, Invalid User");
 			response.setStatus(false);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+			return ResponseEntity.status(HttpStatus.OK)
 					.body(response);
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.OK).body(e.getMessage());
 		}
 
 	}

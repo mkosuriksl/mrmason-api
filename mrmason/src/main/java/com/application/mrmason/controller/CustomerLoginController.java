@@ -1,18 +1,13 @@
 package com.application.mrmason.controller;
 
 import com.application.mrmason.dto.Logindto;
-import jakarta.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.application.mrmason.dto.ChangePasswordDto;
-
-import com.application.mrmason.dto.ResponseLoginDto;
 import com.application.mrmason.dto.ResponseMessageDto;
 import com.application.mrmason.service.CustomerLoginService;
 import com.application.mrmason.service.CustomerRegistrationService;
@@ -37,7 +32,7 @@ public class CustomerLoginController {
 				}
 				response.setMessage("Invalid Email ID.!");
 				response.setStatus(false);
-				return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}else {
 				if (loginService.sendSms(mobile) != null) {
 					response.setMessage("OTP Sent to Registered mobile number.");
@@ -46,13 +41,13 @@ public class CustomerLoginController {
 				}
 				response.setMessage("Invalid Mobile Number..!");
 				response.setStatus(false);
-				return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+			return ResponseEntity.status(HttpStatus.OK).body(response);
 		}
 		
 	}
@@ -73,24 +68,24 @@ public class CustomerLoginController {
 			} else if (data == "notMatched") {
 				response.setMessage("New Passwords Not Matched.!");
 				response.setStatus(false);
-				return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			} else if (data== "incorrect") {
 				response.setMessage("Invalid OTP..!");
 				response.setStatus(false);
-				return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}else if (data == "incorrectEmail") {
 				response.setMessage("Invalid email id..!");
 				response.setStatus(false);
-				return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}else{
 				response.setMessage("Invalid mobile number..!");
 				response.setStatus(false);
-				return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+			return ResponseEntity.status(HttpStatus.OK).body(response);
 		}
 	}
 }

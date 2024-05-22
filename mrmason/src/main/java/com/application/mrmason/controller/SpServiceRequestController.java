@@ -38,11 +38,11 @@ public class SpServiceRequestController {
 	        }
 	        response.setMessage("Invalid ServicePersonId or RequestId.!");
 	        response.setStatus(false);
-	        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+	        return new ResponseEntity<>(response, HttpStatus.OK);
 	    } catch (Exception e) {
 	    	response.setMessage(e.getMessage());
 	    	response.setStatus(false);
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+			return ResponseEntity.status(HttpStatus.OK).body(response);
 	    }
 	}
 
@@ -54,7 +54,7 @@ public class SpServiceRequestController {
 			if (entity.isEmpty()) {
 				response.setMessage("Invalid User.!");
 				response.setStatus(false);
-				return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			response.setData(entity);
 			response.setMessage("SpServiceRequest data fetched successfully..");
@@ -64,7 +64,7 @@ public class SpServiceRequestController {
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
 	}
@@ -83,11 +83,11 @@ public class SpServiceRequestController {
 			}
 			response.setMessage("Invalid User.!");
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+			return ResponseEntity.status(HttpStatus.OK).body(response);
 		}
 	}
 }

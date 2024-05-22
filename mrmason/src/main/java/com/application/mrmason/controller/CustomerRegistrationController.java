@@ -36,7 +36,7 @@ public class CustomerRegistrationController {
 	@PostMapping("/addNewUser")
 	public ResponseEntity<?> newCustomer(@RequestBody CustomerRegistration customer) {
 		if (!service.isUserUnique(customer)) {
-			return new ResponseEntity<>("Email or Phone Number already exists.", HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>("Email or Phone Number already exists.", HttpStatus.OK);
 		}
 		
 		response.setData(service.saveData(customer));
@@ -66,13 +66,13 @@ public class CustomerRegistrationController {
 			} else {
 				response.setMessage("Error: Failed to fetch users. Please try again later.");
 				response.setStatus(false);
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+				return ResponseEntity.status(HttpStatus.OK)
 						.body(response);
 			}
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
 	}
@@ -113,11 +113,11 @@ public class CustomerRegistrationController {
 			}
 			response.setMessage("Profile Not Found.");
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 		
 	}
@@ -140,20 +140,20 @@ public class CustomerRegistrationController {
 			} else if (service.changePassword(userMail, oldPass, newPass, confPass, userMobile) == "notMatched") {
 				response2.setMessage("New Passwords Not Matched.!");
 				response2.setStatus(false);
-				return new ResponseEntity<>(response2, HttpStatus.BAD_REQUEST);
+				return new ResponseEntity<>(response2, HttpStatus.OK);
 			} else if (service.changePassword(userMail, oldPass, newPass, confPass, userMobile) == "incorrect") {
 				response2.setMessage("Old Password is Incorrect");
 				response2.setStatus(false);
-				return new ResponseEntity<>(response2, HttpStatus.UNAUTHORIZED);
+				return new ResponseEntity<>(response2, HttpStatus.OK);
 			}
 		} catch (Exception e) {
 			response2.setMessage(e.getMessage());
 			response2.setStatus(false);
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response2);
+			return ResponseEntity.status(HttpStatus.OK).body(response2);
 		}
 		response2.setMessage("Invalid User.!");
 		response2.setStatus(false);
-		return new ResponseEntity<>(response2, HttpStatus.NOT_FOUND);
+		return new ResponseEntity<>(response2, HttpStatus.OK);
 	}
 
 	@PostMapping("/login")
@@ -166,7 +166,7 @@ public class CustomerRegistrationController {
 		if (response.getJwtToken() != null) {
 			return new ResponseEntity<ResponseLoginDto>(response, HttpStatus.OK);
 		}
-		return new ResponseEntity<ResponseLoginDto>(response, HttpStatus.UNAUTHORIZED);
+		return new ResponseEntity<ResponseLoginDto>(response, HttpStatus.OK);
 
 	}
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.application.mrmason.dto.SpServiceRequestDto;
 import com.application.mrmason.entity.SpServiceRequest;
+import com.application.mrmason.repository.ServiceRequestRepo;
 import com.application.mrmason.repository.SpServiceRequestRepo;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.SpServiceRequestService;
@@ -16,18 +17,21 @@ import com.application.mrmason.service.SpServiceRequestService;
 public class SpServiceRequestServiceImpl implements SpServiceRequestService{
 	@Autowired
 	SpServiceRequestRepo requestRepo;
-
+	@Autowired
+	ServiceRequestRepo seviceRepo;
 	@Autowired
 	private UserDAO userRepo;
 	
 	@Override
 	public SpServiceRequestDto addServiceRequest(SpServiceRequest service) {
 		if (userRepo.findByBodSeqNo(service.getServicePersonId()) != null) {
-			if (requestRepo.findByServiceReqId(service.getServiceReqId()) == null) {
-				
-				requestRepo.save(service);
-				return getServiceByReqId(service.getServiceReqId());
+			if(seviceRepo.findByRequestId(service.getServiceReqId())!=null) {
+				if (requestRepo.findByServiceReqId(service.getServiceReqId()) == null) {
+					requestRepo.save(service);
+					return getServiceByReqId(service.getServiceReqId());
+				}
 			}
+		
 		}
 		return null;
 

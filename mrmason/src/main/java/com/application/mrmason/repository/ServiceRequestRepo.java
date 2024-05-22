@@ -13,5 +13,6 @@ public interface ServiceRequestRepo extends JpaRepository<ServiceRequest, Long>{
 	List<ServiceRequest> findByAssetIdOrderByReqSeqIdDesc(String assetId);
 	List<ServiceRequest> findByLocationOrderByReqSeqIdDesc(String location);
 	List<ServiceRequest> findByStatusOrderByReqSeqIdDesc(String status);
+	ServiceRequest findByRequestId(String requestId);
 	
 }

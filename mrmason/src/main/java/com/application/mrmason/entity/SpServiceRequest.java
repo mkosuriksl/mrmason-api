@@ -50,7 +50,14 @@ public class SpServiceRequest {
 
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy hh:mm a");
 		this.assignedDate= now.format(formatter);
-
+		
+		String year = String.valueOf(now.getYear());
+        String month = String.format("%02d", now.getMonthValue());
+        String day = String.format("%02d", now.getDayOfMonth());
+        String hour = String.format("%02d", now.getHour());
+        String minute = String.format("%02d", now.getMinute());
+        String second = String.format("%02d", now.getSecond());
+        this.assignId ="AS"+ year + month + day + hour + minute + second;
 	}
 }
 

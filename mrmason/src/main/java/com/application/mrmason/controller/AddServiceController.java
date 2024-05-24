@@ -40,8 +40,8 @@ public class AddServiceController {
 	@Autowired
 	SPAvailabilityServiceIml spAvailibilityImpl;
 
-	ResponseAddServiceDto response= new ResponseAddServiceDto();
-	
+	ResponseAddServiceDto response = new ResponseAddServiceDto();
+
 	@PostMapping("/add-service")
 	public ResponseEntity<?> addService(@RequestBody AddServices add) {
 		try {
@@ -58,7 +58,8 @@ public class AddServiceController {
 				return ResponseEntity.status(HttpStatus.OK).body(response);
 			}
 		} catch (Exception e) {
-            response.setMessage("Record already exists");
+			response.setMessage("Record already exists");
+			response.setStatus(false);
 			return ResponseEntity.status(HttpStatus.OK).body(response);
 		}
 	}
@@ -77,7 +78,7 @@ public class AddServiceController {
 				return new ResponseEntity<>(response, HttpStatus.OK);
 
 			} else {
-				
+
 				response.setMessage("Profile updated successfully");
 				response.setStatus(true);
 				response.setAddServicesData(upServices);
@@ -92,35 +93,33 @@ public class AddServiceController {
 	}
 
 	@GetMapping("/sp-user-services-get")
-	public ResponseEntity<?> getServices(@RequestBody AddServiceGetDto get) {
+	public ResponseEntity<ResponseAddServiceGetDto> getServices(@RequestBody AddServiceGetDto get) {
 
 		String serviceSubCategory = get.getServiceSubCategory();
 		String bodSeqNo = get.getBodSeqNo();
 		String useridServiceId = get.getUserIdServiceId();
 		List<AddServices> getService = service.getPerson(bodSeqNo, serviceSubCategory, useridServiceId);
-		ResponseAddServiceGetDto responseGet= new ResponseAddServiceGetDto();
+		ResponseAddServiceGetDto responseGet = new ResponseAddServiceGetDto();
 		try {
-			if (getService == null) {
+			if (getService.isEmpty()) {
 				responseGet.setMessage("No services found for the given parameters");
-				responseGet.setStatus(false);
-				return new ResponseEntity<>(responseGet, HttpStatus.OK);
-			} else if (getService.isEmpty()) {
-				responseGet.setMessage("Invalid user......!");
-				responseGet.setStatus(false);
+				responseGet.setStatus(true);
 				return new ResponseEntity<>(responseGet, HttpStatus.OK);
 			} else {
-				responseGet.setMessage("AddService details");
+				responseGet.setMessage("Service details fetched successfully.");
 				responseGet.setStatus(true);
 				responseGet.setGetAddServicesData(getService);
 				return new ResponseEntity<>(responseGet, HttpStatus.OK);
 			}
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.OK).body(e.getMessage());
+			responseGet.setMessage(e.getMessage());
+			responseGet.setStatus(false);
+			return new ResponseEntity<>(responseGet, HttpStatus.OK);
 		}
 	}
 
 	@GetMapping("/sp-user-report")
-	public ResponseEntity<?> getService(@RequestBody AddServiceGetDto get) {
+	public ResponseEntity<ResponseServiceReportDto> getService(@RequestBody AddServiceGetDto get) {
 
 		String bodSeqNo = get.getBodSeqNo();
 		ResponseServiceReportDto serviceReport = new ResponseServiceReportDto();
@@ -134,12 +133,14 @@ public class AddServiceController {
 				serviceReport.setAvailData(spAvailibilityImpl.getAvailability(user.get().getEmail(), bodSeqNo));
 				return new ResponseEntity<>(serviceReport, HttpStatus.OK);
 			}
-			serviceReport.setMessage("Invalid user.!");
+			serviceReport.setMessage("No services found for the given parameters");
 			serviceReport.setStatus(false);
-			return ResponseEntity.status(HttpStatus.OK).body(serviceReport);
+			return new ResponseEntity<>(serviceReport, HttpStatus.OK);
 
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.OK).body(e.getMessage());
+			serviceReport.setMessage(e.getMessage());
+			serviceReport.setStatus(false);
+			return new ResponseEntity<>(serviceReport, HttpStatus.OK);
 		}
 
 	}

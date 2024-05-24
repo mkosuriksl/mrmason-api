@@ -43,7 +43,9 @@ public class SPAvailabilityController {
 			return ResponseEntity.status(HttpStatus.OK).body("response");
 
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.OK).body(e.getMessage());
+			response2.setMessage(e.getMessage());
+			response2.setStatus(false);
+			return new ResponseEntity<>(response2, HttpStatus.OK);
 		}
 		
 	}
@@ -52,21 +54,24 @@ public class SPAvailabilityController {
 	public ResponseEntity<?> getAddress(@RequestBody UpdateAvailableDto upDto) {
 		String mobile = upDto.getMobile();
 		String email = upDto.getEmail();
-
-		List<SPAvailability> availability = spAvailableService.getAvailability(email, mobile);
+		
 		try {
-			if (!availability.isEmpty()) {
-				response.setMessage(" Availability details");
+			List<SPAvailability> availability = spAvailableService.getAvailability(email, mobile);
+			if (availability==null) {
+				response.setMessage("No data found for the given details.!");
+				response.setStatus(true);
+				return new ResponseEntity<>(response, HttpStatus.OK);
+				
+			} else {
+				response.setMessage("Availability details.");
 				response.setGetData(availability);
 				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
-			} else {
-				response.setMessage("No user found for the given parameters");
-				response.setStatus(false);
-				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.OK).body(e.getMessage());
+			response.setMessage(e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
 	}

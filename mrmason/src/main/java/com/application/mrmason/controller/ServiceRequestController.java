@@ -45,8 +45,8 @@ public class ServiceRequestController {
 	public ResponseEntity<?> getRequest(@RequestBody ServiceRequestDto request){
 		try {
 			if(reqService.getServiceReq(request).isEmpty()) {	
-				response.setMessage("Invalid User.!");
-				response.setStatus(false);
+				response.setMessage("No data found for the given details.!");
+				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			response.setData(reqService.getServiceReq(request));

@@ -51,8 +51,8 @@ public class AdminAssetController {
 		try {
 			List<AdminAsset> entity = adminService.getAssets(getDto);
 			if (entity.isEmpty()) {
-				response2.setMessage("Invalid User.!");
-				response2.setStatus(false);
+				response2.setMessage("No data found for the given details.!");
+				response2.setStatus(true);
 				return new ResponseEntity<>(response2, HttpStatus.OK);
 			}
 			response2.setData(entity);
@@ -83,8 +83,9 @@ public class AdminAssetController {
 			response.setStatus(false);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
-
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.OK);
+			response.setMessage(e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
 }

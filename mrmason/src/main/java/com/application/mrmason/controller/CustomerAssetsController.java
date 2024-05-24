@@ -76,15 +76,17 @@ public class CustomerAssetsController {
 	public ResponseEntity<ResponseListCustomerAssets> getAssetDetails(@RequestBody UpdateAssetDto getDto) {
 		try {
 			List<CustomerAssets> entity = assetService.getAssets(getDto);
-			if (entity.isEmpty()) {
-				response.setMessage("Invalid User.!");
-				response.setStatus(false);
+			if (!entity.isEmpty()) {
+				response.setMessage("Assets fetched successfully.");
+				response.setStatus(true);
+				response.setData(entity);
 				return new ResponseEntity<>(response, HttpStatus.OK);
+				
 			}
-			response.setMessage("Assets fetched successfully.");
+			response.setMessage("No data found for the given details.!");
 			response.setStatus(true);
-			response.setData(entity);
 			return new ResponseEntity<>(response, HttpStatus.OK);
+			
 
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());

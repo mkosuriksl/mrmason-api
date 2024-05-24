@@ -26,7 +26,7 @@ public class AdminServiceNameController{
 	AdminServiceNameServiceImpl adminService;
 
 	@PostMapping("/addAdminService")
-	public ResponseEntity<?> addAdminServiceNameRequest(@RequestBody AdminServiceName service) {
+	public ResponseEntity<ResponseAdminServiceDto> addAdminServiceNameRequest(@RequestBody AdminServiceName service) {
 		ResponseAdminServiceDto response = new ResponseAdminServiceDto();
 		try {
 			AdminServiceNameDto admin=adminService.addAdminServiceNameRequest(service);
@@ -41,12 +41,14 @@ public class AdminServiceNameController{
 			response.setStatus(false);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.OK);
+			response.setMessage(e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
 
 	@GetMapping("/getAdminService")
-	public ResponseEntity<?> getAdminServiceDetails(@RequestBody AdminServiceName service) {
+	public ResponseEntity<ResponseListAdminServiceDto> getAdminServiceDetails(@RequestBody AdminServiceName service) {
 		ResponseListAdminServiceDto response=new ResponseListAdminServiceDto();
 		try {
 			
@@ -70,7 +72,7 @@ public class AdminServiceNameController{
 	}
 
 	@PutMapping("/updateAdminService")
-	public ResponseEntity<?> updateAdminServiceDetails(@RequestBody AdminServiceName service) {
+	public ResponseEntity<ResponseAdminServiceDto> updateAdminServiceDetails(@RequestBody AdminServiceName service) {
 		ResponseAdminServiceDto response = new ResponseAdminServiceDto();
 		try {
 

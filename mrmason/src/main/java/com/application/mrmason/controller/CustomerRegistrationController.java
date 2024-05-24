@@ -47,7 +47,7 @@ public class CustomerRegistrationController {
 
 	@PreAuthorize("hasAuthority('Adm')")
 	@GetMapping("/filterCustomers")
-	public ResponseEntity<?> getCustomers(@RequestBody FilterCustomerAndUser customer) {
+	public ResponseEntity<ResponseListCustomerData> getCustomers(@RequestBody FilterCustomerAndUser customer) {
 		ResponseListCustomerData response=new ResponseListCustomerData();
 		
 		String userEmail = customer.getUserEmail();
@@ -64,8 +64,8 @@ public class CustomerRegistrationController {
 				response.setData(entity);
 				return ResponseEntity.ok(response);
 			} else {
-				response.setMessage("Error: Failed to fetch users. Please try again later.");
-				response.setStatus(false);
+				response.setMessage("No data found for the given details.!");
+				response.setStatus(true);
 				return ResponseEntity.status(HttpStatus.OK)
 						.body(response);
 			}

@@ -45,8 +45,8 @@ public class SpServiceDetailsController {
 				
 				return new ResponseEntity<>(entity, HttpStatus.OK);
 			}
-			response2.setMessage("Invalid Details.!");
-			response2.setStatus(false);
+			response2.setMessage("No services found for the given details.!");
+			response2.setStatus(true);
 			return ResponseEntity.ok(response2);
 
 		} catch (Exception e) {

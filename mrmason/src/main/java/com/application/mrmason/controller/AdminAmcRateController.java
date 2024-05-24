@@ -23,7 +23,7 @@ public class AdminAmcRateController {
 	public AdminAmcRateService adminService;
 	ResponseListAdminAmcRate response=new ResponseListAdminAmcRate();
 	@PostMapping("/addAdminAmc")
-	public ResponseEntity<?> addRentRequest(@RequestBody AdminAmcRate amc) {
+	public ResponseEntity<ResponseAdminAmcDto> addRentRequest(@RequestBody AdminAmcRate amc) {
 		ResponseAdminAmcDto response=new ResponseAdminAmcDto();
 		try {
 			if (adminService.addAdminamc(amc) != null) {
@@ -36,17 +36,19 @@ public class AdminAmcRateController {
 			response.setStatus(false);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.OK);
+			response.setMessage(e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
 	
 	@GetMapping("/getAdminAmcRates")
-	public ResponseEntity<?> getAssetDetails(@RequestBody AdminAmcRate getAmc) {
+	public ResponseEntity<ResponseListAdminAmcRate> getAssetDetails(@RequestBody AdminAmcRate getAmc) {
 		try {
 			List<AdminAmcRate> entity = adminService.getAmcRates(getAmc);
 			if (entity.isEmpty()) {
-				response.setMessage("Invalid User.!");
-				response.setStatus(false);
+				response.setMessage("No data found for the given details.!");
+				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			response.setMessage("Amc details fetched successfully.");

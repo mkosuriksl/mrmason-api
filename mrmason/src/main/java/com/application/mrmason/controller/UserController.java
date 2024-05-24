@@ -263,8 +263,8 @@ public class UserController {
 				response3.setData(entity);
 				return ResponseEntity.ok(response3);
 			} else {
-				response3.setMessage("Error: Failed to fetch users. Please try again later.");
-				response3.setStatus(false);
+				response3.setMessage("No data found for the given details.!");
+				response3.setStatus(true);
 				return ResponseEntity.status(HttpStatus.OK)
 						.body(response3);
 			}

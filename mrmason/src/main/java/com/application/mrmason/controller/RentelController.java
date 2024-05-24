@@ -49,8 +49,8 @@ public class RentelController {
 	public ResponseEntity<?> getRentRequest(@RequestBody RentalDto rent) {
 		try {
 			if (rentService.getRentalReq(rent).isEmpty()) {
-				response.setMessage("Invalid User.!");
-				response.setStatus(false);
+				response.setMessage("No data found for the given details.!");
+				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			response.setMessage("Rental data fetched successfully.");

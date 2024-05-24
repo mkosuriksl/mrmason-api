@@ -52,8 +52,8 @@ public class SpServiceRequestController {
 		try {
 			List<SpServiceRequest> entity = adminService.getServiceRequest(service);
 			if (entity.isEmpty()) {
-				response.setMessage("Invalid User.!");
-				response.setStatus(false);
+				response.setMessage("No data found for the given details.!");
+				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			response.setData(entity);

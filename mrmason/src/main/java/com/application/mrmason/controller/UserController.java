@@ -282,15 +282,15 @@ public class UserController {
 
 	}
 
-	@GetMapping("/error")
-	@PostMapping("/error")
-	@PutMapping("/error")
-	@DeleteMapping("/error")
-	public ResponseEntity<ResponseMessageDto> error() {
-		response2.setMessage("Access Denied");
-		response2.setStatus(false);
-		return new ResponseEntity<ResponseMessageDto>(response2,HttpStatus.UNAUTHORIZED);
-
-	}
+//	@GetMapping("/error")
+//	@PostMapping("/error")
+//	@PutMapping("/error")
+//	@DeleteMapping("/error")
+//	public ResponseEntity<ResponseMessageDto> error() {
+//		response2.setMessage("Access Denied");
+//		response2.setStatus(false);
+//		return new ResponseEntity<ResponseMessageDto>(response2,HttpStatus.UNAUTHORIZED);
+//
+//	}
 
 }

@@ -13,18 +13,20 @@ import com.application.mrmason.dto.ResponseSpServiceDetailsDto;
 import com.application.mrmason.dto.ResponseSpServiceGetDto;
 import com.application.mrmason.entity.SpServiceDetails;
 import com.application.mrmason.service.SpServiceDetailsService;
+
 @RestController
 @PreAuthorize("hasAuthority('Developer')")
 public class SpServiceDetailsController {
 	@Autowired
 	SpServiceDetailsService spService;
 	ResponseSpServiceDetailsDto response = new ResponseSpServiceDetailsDto();
-	ResponseSpServiceGetDto response2=new ResponseSpServiceGetDto();
+	ResponseSpServiceGetDto response2 = new ResponseSpServiceGetDto();
+
 	@PostMapping("/addSpService")
 	public ResponseEntity<ResponseSpServiceDetailsDto> newAdminAsset(@RequestBody SpServiceDetails sevice) {
 		try {
-			ResponseSpServiceDetailsDto data=spService.addServiceRequest(sevice);
-			if ( data!= null) {
+			ResponseSpServiceDetailsDto data = spService.addServiceRequest(sevice);
+			if (data != null) {
 				return ResponseEntity.ok(data);
 			}
 			response.setMessage("Invalid details.!");
@@ -41,13 +43,7 @@ public class SpServiceDetailsController {
 	public ResponseEntity<ResponseSpServiceGetDto> getAssetDetails(@RequestBody SpServiceDetails getDto) {
 		try {
 			ResponseSpServiceGetDto entity = spService.getServiceRequest(getDto);
-			if (entity!=null) {
-				
-				return new ResponseEntity<>(entity, HttpStatus.OK);
-			}
-			response2.setMessage("No services found for the given details.!");
-			response2.setStatus(true);
-			return ResponseEntity.ok(response2);
+			return new ResponseEntity<>(entity, HttpStatus.OK);
 
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
@@ -60,9 +56,9 @@ public class SpServiceDetailsController {
 	@PutMapping("/updateSpService")
 	public ResponseEntity<ResponseSpServiceDetailsDto> updateAssetDetails(@RequestBody SpServiceDetails service) {
 		try {
-			ResponseSpServiceDetailsDto data=spService.updateServiceRequest(service);
+			ResponseSpServiceDetailsDto data = spService.updateServiceRequest(service);
 			if (data != null) {
-				
+
 				return new ResponseEntity<>(data, HttpStatus.OK);
 			}
 			response.setMessage("Invalid User.!");

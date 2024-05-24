@@ -53,6 +53,7 @@ public class AdminAssetController {
 			if (entity.isEmpty()) {
 				response2.setMessage("No data found for the given details.!");
 				response2.setStatus(true);
+				response2.setData(entity);
 				return new ResponseEntity<>(response2, HttpStatus.OK);
 			}
 			response2.setData(entity);

@@ -74,6 +74,7 @@ public class SpWorkersController {
 			}else {
 				response2.setMessage("No data found for details provided.!");
 				response2.setStatus(true);
+				response2.setWorkersData(entity);
 				return new ResponseEntity<>(response2, HttpStatus.OK);
 			}
 			

@@ -46,6 +46,7 @@ public class ServiceRequestController {
 		try {
 			if(reqService.getServiceReq(request).isEmpty()) {	
 				response.setMessage("No data found for the given details.!");
+				response.setData(reqService.getServiceReq(request));
 				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}

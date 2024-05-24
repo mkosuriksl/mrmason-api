@@ -54,6 +54,7 @@ public class SpServiceRequestController {
 			if (entity.isEmpty()) {
 				response.setMessage("No data found for the given details.!");
 				response.setStatus(true);
+				response.setData(entity);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			response.setData(entity);

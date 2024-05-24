@@ -60,6 +60,7 @@ public class SPAvailabilityController {
 			if (availability==null) {
 				response.setMessage("No data found for the given details.!");
 				response.setStatus(true);
+				response.setGetData(availability);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 				
 			} else {

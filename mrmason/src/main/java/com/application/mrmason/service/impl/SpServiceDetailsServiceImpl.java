@@ -49,7 +49,10 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService{
 		    response2.setData(data);
 			return response2;
 	    }
-	    return null;
+	    response2.setMessage("No services found for the given details.!");
+	    response2.setStatus(true);
+	    response2.setData(data);
+		return response2;
 	}
 
 	@Override

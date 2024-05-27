@@ -102,6 +102,7 @@ public class AddServiceController {
 			if (getService.isEmpty()) {
 				responseGet.setMessage("No services found for the given parameters");
 				responseGet.setStatus(true);
+				responseGet.setGetAddServicesData(getService);
 				return new ResponseEntity<>(responseGet, HttpStatus.OK);
 			} else {
 				responseGet.setMessage("Service details fetched successfully.");

@@ -31,7 +31,7 @@ public class CustomerRegistrationController {
 	@Autowired
 	public CustomerRegistrationService service;
 	ResponseMessageDto response2 = new ResponseMessageDto();
-	
+	ResponseLoginDto response3=new ResponseLoginDto();
 	ResponseCustomerRegDto response = new ResponseCustomerRegDto();
 	@PostMapping("/addNewUser")
 	public ResponseEntity<?> newCustomer(@RequestBody CustomerRegistration customer) {
@@ -161,12 +161,18 @@ public class CustomerRegistrationController {
 		String userEmail = requestDto.getEmail();
 		String phno = requestDto.getMobile();
 		String userPassword = requestDto.getPassword();
-
-		ResponseLoginDto response = service.loginDetails(userEmail, phno, userPassword);
-		if (response.getJwtToken() != null) {
+		
+		try {
+			ResponseLoginDto response = service.loginDetails(userEmail, phno, userPassword);
+			if (response.getJwtToken() != null) {
+				return new ResponseEntity<ResponseLoginDto>(response, HttpStatus.OK);
+			}
 			return new ResponseEntity<ResponseLoginDto>(response, HttpStatus.OK);
+		}catch(Exception e) {
+			response3.setMessage(e.getMessage());
+			return new ResponseEntity<ResponseLoginDto>(response3, HttpStatus.OK);
 		}
-		return new ResponseEntity<ResponseLoginDto>(response, HttpStatus.OK);
+		
 
 	}
 }

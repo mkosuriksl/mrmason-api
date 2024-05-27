@@ -7,7 +7,7 @@ import com.application.mrmason.entity.ServiceCategory;
 
 public interface ServiceCategoryService {
 	ServiceCategoryDto addServiceCategory(ServiceCategory service);
-	List<ServiceCategory> getServiceCategory(String id ,String category);
+	List<ServiceCategory> getServiceCategory(String id ,String category,String subCat);
 	ServiceCategoryDto updateServiceCategory(ServiceCategory service);
 	ServiceCategoryDto getServiceById(String id);
 	List<ServiceCategory> getServiceCategoryCivil(String category);

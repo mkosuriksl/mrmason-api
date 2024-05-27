@@ -51,9 +51,9 @@ public class ServiceCategoryController {
 
 	@PreAuthorize("hasAuthority('Adm')")
 	@GetMapping("/getServiceCategory")
-	public ResponseEntity<ResponseListServiceCatDto> getServiceCategory(@RequestParam(required = false)String id ,@RequestParam(required = false)String category) {
+	public ResponseEntity<ResponseListServiceCatDto> getServiceCategory(@RequestParam(required = false)String id ,@RequestParam(required = false)String serviceCategory,@RequestParam(required = false)String serviceSubCategory) {
 		try {
-			List<ServiceCategory> entity = categoryService.getServiceCategory(id, category);
+			List<ServiceCategory> entity = categoryService.getServiceCategory(id, serviceCategory, serviceSubCategory);
 
 			if (!entity.isEmpty()) {
 				response2.setMessage("Service data fetched successfully.!");

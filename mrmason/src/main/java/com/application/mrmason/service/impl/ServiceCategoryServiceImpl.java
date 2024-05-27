@@ -31,13 +31,13 @@ public class ServiceCategoryServiceImpl implements ServiceCategoryService {
 	}
 
 	@Override
-	public List<ServiceCategory> getServiceCategory(String id ,String category) {
+	public List<ServiceCategory> getServiceCategory(String id ,String category,String subCat) {
 
-		if (id != null && category == null) {
-			Optional<List<ServiceCategory>> user = Optional.of((serviceRepo.findByIdOrderByCreateDateDesc(id)));
+		if (id != null) {
+			Optional<List<ServiceCategory>> user = Optional.ofNullable((serviceRepo.findByIdOrderByCreateDateDesc(id)));
 			return user.get();
 		} else {
-			List<ServiceCategory> user = (serviceRepo.findByServiceCategoryOrderByCreateDateDesc(category));
+			List<ServiceCategory> user = (serviceRepo.findByServiceCategoryOrServiceSubCategory(category,subCat));
 			return user;
 		}
 	}

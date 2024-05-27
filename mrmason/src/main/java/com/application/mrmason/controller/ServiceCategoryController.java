@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ResponceServiceDto;
@@ -50,9 +51,9 @@ public class ServiceCategoryController {
 
 	@PreAuthorize("hasAuthority('Adm')")
 	@GetMapping("/getServiceCategory")
-	public ResponseEntity<ResponseListServiceCatDto> getServiceCategory(@RequestBody ServiceCategory service) {
+	public ResponseEntity<ResponseListServiceCatDto> getServiceCategory(@RequestParam(required = false)String id ,@RequestParam(required = false)String category) {
 		try {
-			List<ServiceCategory> entity = categoryService.getServiceCategory(service);
+			List<ServiceCategory> entity = categoryService.getServiceCategory(id, category);
 
 			if (!entity.isEmpty()) {
 				response2.setMessage("Service data fetched successfully.!");

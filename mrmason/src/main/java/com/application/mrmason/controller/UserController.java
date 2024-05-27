@@ -204,8 +204,8 @@ public class UserController {
 
 	@PreAuthorize("hasAuthority('Developer')")
 	@GetMapping("/sp-get-profile")
-	public ResponseEntity<?> getProfile(@RequestBody ChangeForfotdto cfPwd) {
-		String email = cfPwd.getEmail();
+	public ResponseEntity<?> getProfile(@RequestParam(required = false)String email) {
+		
 		Userdto profile=userService.getServiceProfile(email);
 		try {
 			if ( profile == null) {
@@ -282,15 +282,15 @@ public class UserController {
 
 	}
 
-//	@GetMapping("/error")
-//	@PostMapping("/error")
-//	@PutMapping("/error")
-//	@DeleteMapping("/error")
-//	public ResponseEntity<ResponseMessageDto> error() {
-//		response2.setMessage("Access Denied");
-//		response2.setStatus(false);
-//		return new ResponseEntity<ResponseMessageDto>(response2,HttpStatus.UNAUTHORIZED);
-//
-//	}
+	@GetMapping("/error")
+	@PostMapping("/error")
+	@PutMapping("/error")
+	@DeleteMapping("/error")
+	public ResponseEntity<ResponseMessageDto> error() {
+		response2.setMessage("Access Denied");
+		response2.setStatus(false);
+		return new ResponseEntity<ResponseMessageDto>(response2,HttpStatus.UNAUTHORIZED);
+
+	}
 
 }

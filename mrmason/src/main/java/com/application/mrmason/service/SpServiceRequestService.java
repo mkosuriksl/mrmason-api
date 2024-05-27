@@ -7,6 +7,6 @@ import com.application.mrmason.entity.SpServiceRequest;
 
 public interface SpServiceRequestService {
 	SpServiceRequestDto addServiceRequest(SpServiceRequest service);
-	List<SpServiceRequest> getServiceRequest(SpServiceRequest service);
+	List<SpServiceRequest> getServiceRequest(String serviceReqId,String servicePersonId);
 	SpServiceRequestDto updateServiceRequest(SpServiceRequest service);
 }

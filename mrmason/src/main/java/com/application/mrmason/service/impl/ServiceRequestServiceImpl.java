@@ -36,13 +36,8 @@ public class ServiceRequestServiceImpl implements ServiceRequestService{
 	
 
 	@Override
-	public List<ServiceRequest>  getServiceReq(ServiceRequestDto request) {
-		String userId=request.getRequestedBy();
-		String assetId=request.getAssetId();
-		String location=request.getLocation();
-		String serviceName=request.getServiceName();
-		String email=request.getEmail();
-		String status=request.getStatus();
+	public List<ServiceRequest>  getServiceReq(String userId,String assetId,String location,String serviceName,String email,String status) {
+		
 		if(userId!=null && assetId==null && location==null && serviceName==null && email==null && status==null) {
 			Optional<List<ServiceRequest>> user=Optional.of((requestRepo.findByRequestedByOrderByReqSeqIdDesc(userId)));
 			return user.get();

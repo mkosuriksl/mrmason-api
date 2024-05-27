@@ -9,7 +9,7 @@ public interface AdminDetailsService {
 
 	AdminDetailsDto getDetails(String email, String phno);
 
-	AdminDetailsDto getAdminDetails(AdminDetailsDto admin);
+	AdminDetailsDto getAdminDetails(String email,String mobile);
 
 	String updateAdminData(AdminDetails admin);
 

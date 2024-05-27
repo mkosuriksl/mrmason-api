@@ -5,8 +5,6 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import com.application.mrmason.dto.RentalDto;
 import com.application.mrmason.entity.CustomerAssets;
 import com.application.mrmason.entity.Rentel;
 import com.application.mrmason.repository.CustomerAssetsRepo;
@@ -29,8 +27,8 @@ public class RentelServiceImpl implements RentelService{
 		return null;
 	}
 	@Override
-	public List<Rentel> getRentalReq(RentalDto rent) {
-		Optional<List<Rentel>> rentUser=Optional.of(rentRepo.findByAssetIdOrUserId(rent.getAssetId(), rent.getUserId()));
+	public List<Rentel> getRentalReq(String assetId,String userId) {
+		Optional<List<Rentel>> rentUser=Optional.of(rentRepo.findByAssetIdOrUserId(assetId, userId));
 		if(rentUser.isPresent()) {
 			
 			return rentUser.get();

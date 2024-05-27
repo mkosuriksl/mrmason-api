@@ -22,12 +22,8 @@ public class AdminAmcRateServiceImpl implements AdminAmcRateService{
 	}
 
 	@Override
-	public List<AdminAmcRate> getAmcRates(AdminAmcRate amc) {
-		String amcId=amc.getAmcId();
-		String planId=amc.getPlanId();
-		String assetSubCat=amc.getAssetSubCat();
-		String assetModel=amc.getAssetModel();
-		String assetBrand=amc.getAssetBrand();
+	public List<AdminAmcRate> getAmcRates(String amcId,String planId,String assetSubCat,String assetModel,String assetBrand) {
+	
         if( amcId!=null && planId==null && assetSubCat==null && assetModel==null && assetBrand==null) {
 			Optional<List<AdminAmcRate>> user=Optional.of((amcRepo.findByAmcIdOrderByAddedDateDesc(amcId)));
 			return user.get();

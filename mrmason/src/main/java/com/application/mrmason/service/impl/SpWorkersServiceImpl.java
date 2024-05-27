@@ -67,12 +67,7 @@ public class SpWorkersServiceImpl implements SpWorkersService {
 	}
 
 	@Override
-	public List<SpWorkersDto> getWorkers(SpWorkers worker) {
-        String spId = worker.getServicePersonId();
-        String workerId = worker.getWorkerId();
-        String phno = worker.getWorkPhoneNum();
-        String location = worker.getWorkerLocation();
-        String workerAvail = worker.getWorkerAvail();
+	public List<SpWorkersDto> getWorkers(String spId,String workerId,String phno,String location,String workerAvail) {
 
         List<SpWorkers> workers = workerRepo.findByServicePersonIdOrWorkerIdOrWorkPhoneNumOrWorkerLocationOrWorkerAvail(
                                         spId, workerId, phno, location, workerAvail);

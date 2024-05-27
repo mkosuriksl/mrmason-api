@@ -26,10 +26,8 @@ public class AdminServiceNameServiceImpl implements AdminServiceNameService{
 
 	}
 	@Override
-	public List<AdminServiceName> getAdminServiceDetails(AdminServiceName service) {
-		String serviceId = service.getServiceId();
-		String serviceName = service.getServiceName();
-		String serviceSubCat = service.getServiceSubCategory();
+	public List<AdminServiceName> getAdminServiceDetails(String serviceId,String serviceName,String serviceSubCat) {
+
 		if (serviceId != null || serviceName != null || serviceSubCat != null) {
 			return serviceRepo.findByServiceIdOrServiceNameOrServiceSubCategoryOrderByAddedDateDesc(serviceId, serviceName, serviceSubCat);
 		} else {

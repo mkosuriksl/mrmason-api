@@ -7,6 +7,6 @@ import com.application.mrmason.entity.ServiceRequest;
 
 public interface ServiceRequestService {
 	ServiceRequest addRequest(ServiceRequest request);
-	List<ServiceRequest> getServiceReq(ServiceRequestDto request);
+	List<ServiceRequest> getServiceReq(String userId,String assetId,String location,String serviceName,String email,String status);
 
 }

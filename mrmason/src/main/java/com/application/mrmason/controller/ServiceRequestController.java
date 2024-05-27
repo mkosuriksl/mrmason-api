@@ -1,5 +1,7 @@
 package com.application.mrmason.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -7,11 +9,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ResponseListServiceRequestDto;
 import com.application.mrmason.dto.ResponseServiceReqDto;
-import com.application.mrmason.dto.ServiceRequestDto;
 import com.application.mrmason.entity.ServiceRequest;
 import com.application.mrmason.service.ServiceRequestService;
 
@@ -42,15 +44,16 @@ public class ServiceRequestController {
 		}
 	}
 	@GetMapping("/getServiceRequest")
-	public ResponseEntity<?> getRequest(@RequestBody ServiceRequestDto request){
+	public ResponseEntity<?> getRequest(@RequestParam(required = false)String userId,@RequestParam(required = false)String assetId,@RequestParam(required = false)String location,@RequestParam(required = false)String serviceName,@RequestParam(required = false)String email,@RequestParam(required = false)String status){
 		try {
-			if(reqService.getServiceReq(request).isEmpty()) {	
+			List<ServiceRequest> serviceReq =reqService.getServiceReq(userId, assetId, location, serviceName, email, status);
+			if(serviceReq.isEmpty()) {	
 				response.setMessage("No data found for the given details.!");
-				response.setData(reqService.getServiceReq(request));
+				response.setData(serviceReq);
 				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
-			response.setData(reqService.getServiceReq(request));
+			response.setData(serviceReq);
 			response.setMessage("ServiceRequest data fetched successfully..");
 			response.setStatus(true);
 			return ResponseEntity.ok(response);

@@ -56,14 +56,8 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 
 
 @Override
-	public List<CustomerAssets> getAssets(UpdateAssetDto updateDto) {
-		String userId=updateDto.getUserId();
-		String assetId=updateDto.getAssetId();
-		String location=updateDto.getLocation();
-		String assetCat=updateDto.getAssetCat();
-		String assetSubCat=updateDto.getAssetSubCat();
-		String assetModel=updateDto.getAssetModel();
-		String assetBrand=updateDto.getAssetBrand();
+	public List<CustomerAssets> getAssets(String userId,String assetId,String location,String assetCat,String assetSubCat,String assetModel,String assetBrand) {
+
 		if(userId!=null && assetId==null && location==null && assetCat==null && assetSubCat==null && assetModel==null && assetBrand==null) {
 			Optional<List<CustomerAssets>> user=Optional.of((assetRepo.findByUserIdOrderByIdDesc(userId)));
 			return user.get();

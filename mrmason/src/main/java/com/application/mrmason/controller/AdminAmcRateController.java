@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ResponseAdminAmcDto;
@@ -43,9 +44,9 @@ public class AdminAmcRateController {
 	}
 	
 	@GetMapping("/getAdminAmcRates")
-	public ResponseEntity<ResponseListAdminAmcRate> getAssetDetails(@RequestBody AdminAmcRate getAmc) {
+	public ResponseEntity<ResponseListAdminAmcRate> getAssetDetails(@RequestParam(required = false) String amcId,@RequestParam(required = false)String planId,@RequestParam(required = false)String assetSubCat,@RequestParam(required = false)String assetModel,@RequestParam(required = false)String assetBrand) {
 		try {
-			List<AdminAmcRate> entity = adminService.getAmcRates(getAmc);
+			List<AdminAmcRate> entity = adminService.getAmcRates(amcId, planId, assetSubCat, assetModel, assetBrand);
 			if (entity.isEmpty()) {
 				response.setMessage("No data found for the given details.!");
 				response.setStatus(true);

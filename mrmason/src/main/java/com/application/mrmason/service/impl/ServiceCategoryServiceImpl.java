@@ -31,9 +31,7 @@ public class ServiceCategoryServiceImpl implements ServiceCategoryService {
 	}
 
 	@Override
-	public List<ServiceCategory> getServiceCategory(ServiceCategory service) {
-		String id = service.getId();
-		String category = service.getServiceCategory();
+	public List<ServiceCategory> getServiceCategory(String id ,String category) {
 
 		if (id != null && category == null) {
 			Optional<List<ServiceCategory>> user = Optional.of((serviceRepo.findByIdOrderByCreateDateDesc(id)));

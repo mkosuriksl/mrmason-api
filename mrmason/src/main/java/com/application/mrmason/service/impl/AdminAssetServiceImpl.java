@@ -24,13 +24,8 @@ public class AdminAssetServiceImpl implements AdminAssetService {
 	}
 
 	@Override
-	public List<AdminAsset> getAssets(UpdateAssetDto updateDto) {
+	public List<AdminAsset> getAssets(String assetId,String assetCat,String assetSubCat,String assetModel,String assetBrand) {
 		
-		String assetId=updateDto.getAssetId();
-		String assetCat=updateDto.getAssetCat();
-		String assetSubCat=updateDto.getAssetSubCat();
-		String assetModel=updateDto.getAssetModel();
-		String assetBrand=updateDto.getAssetBrand();
         if( assetId!=null && assetCat==null && assetSubCat==null && assetModel==null && assetBrand==null) {
 			Optional<List<AdminAsset>> user=Optional.of((adminAssetRepo.findByAssetIdOrderByAddedDateDesc(assetId)));
 			return user.get();

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.AdminDetailsDto;
@@ -75,9 +76,9 @@ public class AdminDetailsController {
 	}
 	@PreAuthorize("hasAuthority('Adm')")
 	@GetMapping("/getAdminDetails")
-	public ResponseEntity<?> getAdminDetails(@RequestBody AdminDetailsDto admin) {
+	public ResponseEntity<?> getAdminDetails(@RequestParam(required = false)String email,@RequestParam(required = false) String mobile) {
 		try {
-			AdminDetailsDto entity = adminService.getAdminDetails(admin);
+			AdminDetailsDto entity = adminService.getAdminDetails(email, mobile);
 			if (entity == null) {
 				response.setMessage("Invalid User.!");
 				response.setStatus(false);

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.CustomerAssetDto;
@@ -73,9 +74,9 @@ public class CustomerAssetsController {
 	}
 
 	@GetMapping("/getAssets")
-	public ResponseEntity<ResponseListCustomerAssets> getAssetDetails(@RequestBody UpdateAssetDto getDto) {
+	public ResponseEntity<ResponseListCustomerAssets> getAssetDetails(@RequestParam(required = false)String userId,@RequestParam(required = false)String assetId,@RequestParam(required = false)String location,@RequestParam(required = false)String assetCat,@RequestParam(required = false)String assetSubCat,@RequestParam(required = false)String assetModel,@RequestParam(required = false)String assetBrand) {
 		try {
-			List<CustomerAssets> entity = assetService.getAssets(getDto);
+			List<CustomerAssets> entity = assetService.getAssets(userId, assetId, location, assetCat, assetSubCat, assetModel, assetBrand);
 			if (!entity.isEmpty()) {
 				response.setMessage("Assets fetched successfully.");
 				response.setStatus(true);
@@ -85,6 +86,7 @@ public class CustomerAssetsController {
 			}
 			response.setMessage("No data found for the given details.!");
 			response.setStatus(true);
+			response.setData(entity);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 			
 

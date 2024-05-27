@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ResponseGetWorkerDto;
@@ -60,15 +61,15 @@ public class SpWorkersController {
 		}
 	}
 	@GetMapping("/getWorkerDetails")
-	public ResponseEntity<ResponseGetWorkerDto> getAssetDetails(@RequestBody SpWorkers worker) {
+	public ResponseEntity<ResponseGetWorkerDto> getAssetDetails(@RequestParam(required = false)String spId,@RequestParam(required = false)String workerId,@RequestParam(required = false)String phno,@RequestParam(required = false)String location,@RequestParam(required = false)String workerAvail) {
 		
 		try {
-			List<SpWorkersDto> entity = service.getWorkers(worker);
+			List<SpWorkersDto> entity = service.getWorkers(spId, workerId, phno, location, workerAvail);
 			if(!entity.isEmpty()) {
 				response2.setMessage("Worker details retrived successfully..");
 				response2.setWorkersData(entity);
 				response2.setStatus(true);
-				User data=userRepo.findByBodSeqNo(worker.getServicePersonId());
+				User data=userRepo.findByBodSeqNo(spId);
 				response2.setUserData(userService.getServiceProfile(data.getEmail()));
 				return new ResponseEntity<>(response2, HttpStatus.OK);
 			}else {

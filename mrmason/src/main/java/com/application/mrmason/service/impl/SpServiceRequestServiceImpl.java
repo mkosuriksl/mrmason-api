@@ -38,10 +38,8 @@ public class SpServiceRequestServiceImpl implements SpServiceRequestService{
 	}
 
 	@Override
-	public List<SpServiceRequest> getServiceRequest(SpServiceRequest service) {
-		String serviceReqId = service.getServiceReqId();
-		String servicePersonId = service.getServicePersonId();
-
+	public List<SpServiceRequest> getServiceRequest(String serviceReqId,String servicePersonId) {
+	
 		return requestRepo.findByServiceReqIdOrServicePersonId(serviceReqId, servicePersonId);
 	}
 

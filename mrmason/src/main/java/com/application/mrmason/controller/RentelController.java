@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.RentalDto;
@@ -46,16 +47,16 @@ public class RentelController {
 	}
 	
 	@GetMapping("/getRentalData")
-	public ResponseEntity<?> getRentRequest(@RequestBody RentalDto rent) {
+	public ResponseEntity<?> getRentRequest(@RequestParam(required = false) String assetId,@RequestParam(required = false)String userId) {
 		try {
-			if (rentService.getRentalReq(rent).isEmpty()) {
+			if (rentService.getRentalReq(assetId, userId).isEmpty()) {
 				response.setMessage("No data found for the given details.!");
 				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			response.setMessage("Rental data fetched successfully.");
 			response.setStatus(true);
-			response.setData(rentService.getRentalReq(rent));
+			response.setData(rentService.getRentalReq(assetId, userId));
 			return new ResponseEntity<>(response, HttpStatus.OK);
 			
 		} catch (Exception e) {

@@ -1,6 +1,8 @@
 package com.application.mrmason.service.impl;
 
 import java.util.Optional;
+
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,8 @@ public class AdminDetailsServiceImpl implements AdminDetailsService {
 	@Autowired
 	public AdminDetailsRepo adminRepo;
 	
+	@Autowired
+	ModelMapper model;
 	@Autowired
 	JwtService jwtService;
 	
@@ -60,19 +64,21 @@ public class AdminDetailsServiceImpl implements AdminDetailsService {
 	}
 
 	@Override
-	public AdminDetailsDto getAdminDetails(AdminDetailsDto admin) {
+	public AdminDetailsDto getAdminDetails(String email,String mobile) {
 
 		Optional<AdminDetails> user = Optional
-				.ofNullable(adminRepo.findByEmailOrMobile(admin.getEmail(), admin.getMobile()));
+				.ofNullable(adminRepo.findByEmailOrMobile(email, mobile));
 		AdminDetails adminDetails = user.get();
 		if (user.isPresent()) {
-			admin.setId(adminDetails.getId());
-			admin.setAdminName(adminDetails.getAdminName());
-			admin.setAdminType(String.valueOf(adminDetails.getUserType()));
-			admin.setEmail(adminDetails.getEmail());
-			admin.setMobile(adminDetails.getMobile());
-			admin.setStatus(adminDetails.getStatus());
-			admin.setRegDate(adminDetails.getRegDate());
+			AdminDetailsDto adminDto = new AdminDetailsDto();
+//			admin.setId(adminDetails.getId());
+//			admin.setAdminName(adminDetails.getAdminName());
+//			admin.setAdminType(String.valueOf(adminDetails.getUserType()));
+//			admin.setEmail(adminDetails.getEmail());
+//			admin.setMobile(adminDetails.getMobile());
+//			admin.setStatus(adminDetails.getStatus());
+//			admin.setRegDate(adminDetails.getRegDate());
+			AdminDetailsDto admin=model.map(adminDetails, adminDto.getClass());
 			return admin;
 		}
 

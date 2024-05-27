@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.AdminServiceNameDto;
@@ -48,11 +49,11 @@ public class AdminServiceNameController{
 	}
 
 	@GetMapping("/getAdminService")
-	public ResponseEntity<ResponseListAdminServiceDto> getAdminServiceDetails(@RequestBody AdminServiceName service) {
+	public ResponseEntity<ResponseListAdminServiceDto> getAdminServiceDetails(@RequestParam(required = false) String serviceId ,@RequestParam(required = false) String serviceName,@RequestParam(required = false) String serviceSubCat) {
 		ResponseListAdminServiceDto response=new ResponseListAdminServiceDto();
 		try {
 			
-			List<AdminServiceName> entity = adminService.getAdminServiceDetails(service);
+			List<AdminServiceName> entity = adminService.getAdminServiceDetails(serviceId, serviceName, serviceSubCat);
 			if (entity.isEmpty()) {
 				response.setMessage("Invalid User.!");
 				response.setStatus(false);

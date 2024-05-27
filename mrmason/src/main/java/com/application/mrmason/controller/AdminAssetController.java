@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ResponseAdminAssets;
@@ -47,9 +48,9 @@ public class AdminAssetController {
 	}
 
 	@GetMapping("/getAdminAssets")
-	public ResponseEntity<?> getAssetDetails(@RequestBody UpdateAssetDto getDto) {
+	public ResponseEntity<?> getAssetDetails(@RequestParam(required = false)String assetId,@RequestParam(required = false)String assetCat,@RequestParam(required = false)String assetSubCat,@RequestParam(required = false)String assetModel,@RequestParam(required = false)String assetBrand) {
 		try {
-			List<AdminAsset> entity = adminService.getAssets(getDto);
+			List<AdminAsset> entity = adminService.getAssets(assetId, assetCat, assetSubCat, assetModel, assetBrand);
 			if (entity.isEmpty()) {
 				response2.setMessage("No data found for the given details.!");
 				response2.setStatus(true);

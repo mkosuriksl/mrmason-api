@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ResponseListSpServiceRequestDto;
@@ -48,9 +49,9 @@ public class SpServiceRequestController {
 
 
 	@GetMapping("/getSpServiceRequest")
-	public ResponseEntity<?> getAssetDetails(@RequestBody SpServiceRequest service) {
+	public ResponseEntity<?> getAssetDetails(@RequestParam(required = false) String serviceReqId,@RequestParam(required = false)String servicePersonId) {
 		try {
-			List<SpServiceRequest> entity = adminService.getServiceRequest(service);
+			List<SpServiceRequest> entity = adminService.getServiceRequest(serviceReqId, servicePersonId);
 			if (entity.isEmpty()) {
 				response.setMessage("No data found for the given details.!");
 				response.setStatus(true);

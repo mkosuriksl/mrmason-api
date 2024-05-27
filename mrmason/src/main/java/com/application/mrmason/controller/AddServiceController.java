@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.AddServiceGetDto;
@@ -93,11 +94,8 @@ public class AddServiceController {
 	}
 
 	@GetMapping("/sp-user-services-get")
-	public ResponseEntity<ResponseAddServiceGetDto> getServices(@RequestBody AddServiceGetDto get) {
+	public ResponseEntity<ResponseAddServiceGetDto> getServices(@RequestParam(required = false) String bodSeqNo,@RequestParam(required = false)String serviceSubCategory,@RequestParam(required = false)String useridServiceId) {
 
-		String serviceSubCategory = get.getServiceSubCategory();
-		String bodSeqNo = get.getBodSeqNo();
-		String useridServiceId = get.getUserIdServiceId();
 		List<AddServices> getService = service.getPerson(bodSeqNo, serviceSubCategory, useridServiceId);
 		ResponseAddServiceGetDto responseGet = new ResponseAddServiceGetDto();
 		try {
@@ -119,11 +117,10 @@ public class AddServiceController {
 	}
 
 	@GetMapping("/sp-user-report")
-	public ResponseEntity<ResponseServiceReportDto> getService(@RequestBody AddServiceGetDto get) {
+	public ResponseEntity<ResponseServiceReportDto> getService(@RequestParam(required = false) String bodSeqNo) {
 
-		String bodSeqNo = get.getBodSeqNo();
 		ResponseServiceReportDto serviceReport = new ResponseServiceReportDto();
-		Optional<User> user = Optional.of(userDAO.findByBodSeqNo(bodSeqNo));
+		Optional<User> user = Optional.ofNullable(userDAO.findByBodSeqNo(bodSeqNo));
 		try {
 			if (userService.getServiceProfile(user.get().getEmail()) != null) {
 				serviceReport.setRegData(userService.getServiceProfile(user.get().getEmail()));

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.application.mrmason.dto.ResponseSpServiceDetailsDto;
 import com.application.mrmason.dto.ResponseSpServiceGetDto;
@@ -40,9 +41,9 @@ public class SpServiceDetailsController {
 	}
 
 	@GetMapping("/getSpService")
-	public ResponseEntity<ResponseSpServiceGetDto> getAssetDetails(@RequestBody SpServiceDetails getDto) {
+	public ResponseEntity<ResponseSpServiceGetDto> getAssetDetails(@RequestParam(required = false)String userId,@RequestParam(required = false) String serviceType,@RequestParam(required = false) String servicesId) {
 		try {
-			ResponseSpServiceGetDto entity = spService.getServiceRequest(getDto);
+			ResponseSpServiceGetDto entity = spService.getServiceRequest(userId, serviceType, servicesId);
 			return new ResponseEntity<>(entity, HttpStatus.OK);
 
 		} catch (Exception e) {

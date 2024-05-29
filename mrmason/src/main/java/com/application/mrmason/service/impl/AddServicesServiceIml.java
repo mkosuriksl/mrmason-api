@@ -28,7 +28,6 @@ public class AddServicesServiceIml {
 	public AddServices addServicePerson(AddServices add, String bodSeqNo) throws Exception {
 		Optional<User> optionalUser = userDAO.findById(bodSeqNo);
 		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
 			return repo.save(add);
 		} else {
 
@@ -61,7 +60,10 @@ public class AddServicesServiceIml {
 			List<AddServices> user = repo.findByBodSeqNo(bodSeqNo);
 			return user;
 		} else if (bodSeqNo == null && serviceSubCategory == null && useridServiceId != null) {
-			List<AddServices> user = repo.getUserIdServiceIdDetails(useridServiceId);
+			List<AddServices> user = repo.findByUserIdServiceIdOrderByUpdateDateFormatDesc(useridServiceId);
+			return user;
+		}else if(bodSeqNo != null && serviceSubCategory != null && useridServiceId == null) {
+			List<AddServices> user = repo.findByServiceSubCategoryAndBodSeqNo(serviceSubCategory, bodSeqNo);
 			return user;
 		}
 		return null;

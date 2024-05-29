@@ -41,7 +41,7 @@ public class ServiceRequest {
 
     @CreationTimestamp
     @Column(name = "SERVICE_REQUEST_DATE")
-    private LocalDateTime serviceRequestDate;
+    private String serviceRequestDate;
 
     @Column(name = "REQUESTED_BY")
     private String requestedBy;
@@ -78,10 +78,9 @@ public class ServiceRequest {
 
         DateTimeFormatter formatterExp = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-        this.serviceRequestDate = now;
         if (this.serviceRequestDate != null) {
-            this.serviceDate = this.serviceRequestDate.toLocalDate();
-            this.serviceDateDb = this.serviceDate.format(formatterExp);
+        	
+            this.serviceDateDb = now.format(formatterExp);
         }
     }
 }

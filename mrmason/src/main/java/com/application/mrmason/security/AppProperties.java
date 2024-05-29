@@ -1,12 +1,22 @@
 package com.application.mrmason.security;
 
-import lombok.Getter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+
+import com.application.mrmason.entity.AdminMail;
+import com.application.mrmason.repository.AdminMailRepo;
+
+import lombok.Getter;
 
 @Getter
 @Configuration
 public class AppProperties {
+//	@Autowired
+//	AdminMailRepo mailRepo;
+//	
+//	AdminMail admin=mailRepo.findByEmailid("Mrmason.in@kosuriers.com");
+	
     @Value("${spring.mail.host}")
     private String mailHost;
 

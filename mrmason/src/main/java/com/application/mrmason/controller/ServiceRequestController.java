@@ -44,9 +44,9 @@ public class ServiceRequestController {
 		}
 	}
 	@GetMapping("/getServiceRequest")
-	public ResponseEntity<?> getRequest(@RequestParam(required = false)String userId,@RequestParam(required = false)String assetId,@RequestParam(required = false)String location,@RequestParam(required = false)String serviceName,@RequestParam(required = false)String email,@RequestParam(required = false)String status){
+	public ResponseEntity<?> getRequest(@RequestParam(required = false)String userId,@RequestParam(required = false)String assetId,@RequestParam(required = false)String location,@RequestParam(required = false)String serviceName,@RequestParam(required = false)String email,@RequestParam(required = false)String status,@RequestParam(required = false)String mobile,@RequestParam(required = false)String fromDate,@RequestParam(required = false)String toDate){
 		try {
-			List<ServiceRequest> serviceReq =reqService.getServiceReq(userId, assetId, location, serviceName, email, status);
+			List<ServiceRequest> serviceReq =reqService.getServiceReq(userId, assetId, location, serviceName, email, mobile, status, fromDate, toDate);
 			if(serviceReq.isEmpty()) {	
 				response.setMessage("No data found for the given details.!");
 				response.setData(serviceReq);

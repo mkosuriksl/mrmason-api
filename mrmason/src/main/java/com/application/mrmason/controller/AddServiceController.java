@@ -74,7 +74,7 @@ public class AddServiceController {
 			AddServices upServices = service.updateAddServiceDetails(update, userIdServiceId, serviceSubCategory,
 					bodSeqNo);
 			if (upServices == null) {
-				response.setMessage("inavalid user");
+				response.setMessage("Inavalid user");
 				response.setStatus(false);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 
@@ -87,7 +87,7 @@ public class AddServiceController {
 			}
 		} catch (Exception e) {
 			response.setStatus(false);
-			response.setMessage(e.getMessage());
+			response.setMessage("Invalid UserIdServiceId.!");
 			return ResponseEntity.status(HttpStatus.OK).body(response);
 		}
 

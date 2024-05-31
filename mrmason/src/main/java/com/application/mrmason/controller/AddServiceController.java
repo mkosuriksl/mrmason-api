@@ -74,13 +74,13 @@ public class AddServiceController {
 			AddServices upServices = service.updateAddServiceDetails(update, userIdServiceId, serviceSubCategory,
 					bodSeqNo);
 			if (upServices == null) {
-				response.setMessage("Inavalid user");
+				response.setMessage("Inavalid UserIdServiceId.!");
 				response.setStatus(false);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 
 			} else {
 
-				response.setMessage("Profile updated successfully");
+				response.setMessage("Services updated successfully");
 				response.setStatus(true);
 				response.setAddServicesData(upServices);
 				return ResponseEntity.ok().body(response);

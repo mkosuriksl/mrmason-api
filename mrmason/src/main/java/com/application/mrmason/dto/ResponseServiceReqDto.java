@@ -8,5 +8,5 @@ import lombok.Data;
 public class ResponseServiceReqDto {
 	private String message;
 	private boolean status;
-	private ServiceRequest addService;
+	private ServiceRequest ServiceData;
 }

@@ -30,8 +30,8 @@ public class ServiceRequest {
 	@Column(name = "REQ_SEQ_ID")
 	private long reqSeqId;
 
-	@Column(name = "SERVICE_NAME")
-	private String serviceName;
+	@Column(name = "service_sub_category")
+	private String serviceSubCategory;
 
 	@Column(name = "REQUEST_ID")
 	private String requestId;

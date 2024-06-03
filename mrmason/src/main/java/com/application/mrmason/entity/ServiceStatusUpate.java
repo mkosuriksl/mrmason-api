@@ -32,4 +32,6 @@ public class ServiceStatusUpate {
 	@UpdateTimestamp
 	private String updatedDate;
 	private String comment;
+
+
 }

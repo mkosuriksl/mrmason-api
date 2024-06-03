@@ -1,5 +1,6 @@
 package com.application.mrmason.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,8 +15,8 @@ public interface ServiceRequestRepo extends JpaRepository<ServiceRequest, Long>{
 	List<ServiceRequest> findByLocationOrderByServiceRequestDateDesc(String location);
 	List<ServiceRequest> findByStatusOrderByServiceRequestDateDesc(String status);
 	ServiceRequest findByRequestId(String requestId);
-	@Query("SELECT cr FROM ServiceRequest cr WHERE cr.serviceRequestDate BETWEEN :startDate AND :endDate")
+
 	List<ServiceRequest> findByServiceRequestDateBetween(String startDate, String endDate);
-	ServiceRequest findByRequestedByAndAssetId(String requestedBy, String assetId);
+
 	
 }

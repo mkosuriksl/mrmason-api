@@ -1,5 +1,6 @@
 package com.application.mrmason.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,7 @@ import com.application.mrmason.entity.ServiceRequest;
 import com.application.mrmason.service.ServiceRequestService;
 
 @RestController
-@PreAuthorize("hasAuthority('EC')")
+//@PreAuthorize("hasAuthority('EC')")
 public class ServiceRequestController {
 	@Autowired
 	ServiceRequestService reqService;
@@ -47,10 +48,19 @@ public class ServiceRequestController {
 		}
 	}
 	@GetMapping("/getServiceRequest")
-	public ResponseEntity<ResponseListServiceRequestDto> getRequest(@RequestParam(required = false)String userId,@RequestParam(required = false)String assetId,@RequestParam(required = false)String location,@RequestParam(required = false)String serviceSubCategory,@RequestParam(required = false)String email,@RequestParam(required = false)String status,@RequestParam(required = false)String mobile,@RequestParam(required = false)String fromDate,@RequestParam(required = false)String toDate){
+	public ResponseEntity<ResponseListServiceRequestDto> getRequest(@RequestParam(required = false)String userId,
+																	@RequestParam(required = false)String assetId,
+																	@RequestParam(required = false)String location,
+																	@RequestParam(required = false)String serviceSubCategory,
+																	@RequestParam(required = false)String email,
+																	@RequestParam(required = false)String status,
+																	@RequestParam(required = false)String mobile,
+																	@RequestParam(required = false)String fromDate,
+																	@RequestParam(required = false)String toDate){
 		try {
+
 			List<ServiceRequest> serviceReq =reqService.getServiceReq(userId, assetId, location, serviceSubCategory, email, mobile, status, fromDate, toDate);
-			if(serviceReq.isEmpty()) {	
+			if(serviceReq.isEmpty()) {
 				response.setMessage("No data found for the given details.!");
 				response.setData(serviceReq);
 				response.setStatus(true);
@@ -60,7 +70,7 @@ public class ServiceRequestController {
 			response.setMessage("ServiceRequest data fetched successfully..");
 			response.setStatus(true);
 			return ResponseEntity.ok(response);
-			
+
 		}catch(Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);

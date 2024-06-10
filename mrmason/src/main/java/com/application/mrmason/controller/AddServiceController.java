@@ -94,7 +94,8 @@ public class AddServiceController {
 	}
 
 	@GetMapping("/sp-user-services-get")
-	public ResponseEntity<ResponseAddServiceGetDto> getServices(@RequestParam(required = false) String bodSeqNo,@RequestParam(required = false)String serviceSubCategory,@RequestParam(required = false)String useridServiceId) {
+	public ResponseEntity<ResponseAddServiceGetDto> getServices(@RequestParam(required = false) String bodSeqNo,
+																@RequestParam(required = false)String serviceSubCategory,@RequestParam(required = false)String useridServiceId) {
 
 		List<AddServices> getService = service.getPerson(bodSeqNo, serviceSubCategory, useridServiceId);
 		ResponseAddServiceGetDto responseGet = new ResponseAddServiceGetDto();

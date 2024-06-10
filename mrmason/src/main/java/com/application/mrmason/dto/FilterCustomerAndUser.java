@@ -13,6 +13,7 @@ public class FilterCustomerAndUser {
 	private String toDate;
 	private String status;
 	public String serviceCategory;
+
 	
 	
 }

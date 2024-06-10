@@ -98,7 +98,6 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 		} else {
 			return repo.findByRegDateBetween(fromDate, toDate);
 		}
-
 	}
 
 	@Override

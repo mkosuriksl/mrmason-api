@@ -7,11 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.application.mrmason.dto.ChangePasswordDto;
 import com.application.mrmason.dto.FilterCustomerAndUser;
@@ -47,35 +43,67 @@ public class CustomerRegistrationController {
 
 	@PreAuthorize("hasAuthority('Adm')")
 	@GetMapping("/filterCustomers")
-	public ResponseEntity<ResponseListCustomerData> getCustomers(@RequestBody FilterCustomerAndUser customer) {
-		ResponseListCustomerData response=new ResponseListCustomerData();
-		
-		String userEmail = customer.getUserEmail();
-		String userMobile = customer.getUserMobile();
-		String userState = customer.getUserState();
-		String fromDate = customer.getFromDate();
-		String toDate = customer.getToDate();
+	public ResponseEntity<ResponseListCustomerData> getCustomers(
+			@RequestParam(value = "email", required = false) String email,
+			@RequestParam(value = "phNo", required = false) String phNo,
+			@RequestParam(value = "userState", required = false) String userState,
+			@RequestParam(value = "fromDate", required = false) String fromDate,
+			@RequestParam(value = "toDate", required = false) String toDate) {
+
+		ResponseListCustomerData response = new ResponseListCustomerData();
 		try {
-			List<CustomerRegistration> entity = service.getCustomerData(userEmail, userMobile, userState, fromDate,
-					toDate);
+			List<CustomerRegistration> entity = service.getCustomerData(email, phNo, userState, fromDate, toDate);
 			if (!entity.isEmpty()) {
 				response.setMessage("Fetched users successfully.");
 				response.setStatus(true);
 				response.setData(entity);
 				return ResponseEntity.ok(response);
 			} else {
-				response.setMessage("No data found for the given details.!");
+				response.setMessage("No data found for the given details!");
 				response.setStatus(true);
-				return ResponseEntity.status(HttpStatus.OK)
-						.body(response);
+				return ResponseEntity.status(HttpStatus.OK).body(response);
 			}
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.OK);
+			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-
 	}
+
+
+
+
+
+
+//	public ResponseEntity<ResponseListCustomerData> getCustomers(@RequestBody FilterCustomerAndUser customer) {
+//		ResponseListCustomerData response=new ResponseListCustomerData();
+//
+//		String userEmail = customer.getUserEmail();
+//		String userMobile = customer.getUserMobile();
+//		String userState = customer.getUserState();
+//		String fromDate = customer.getFromDate();
+//		String toDate = customer.getToDate();
+//		try {
+//			List<CustomerRegistration> entity = service.getCustomerData(userEmail, userMobile, userState, fromDate,
+//					toDate);
+//			if (!entity.isEmpty()) {
+//				response.setMessage("Fetched users successfully.");
+//				response.setStatus(true);
+//				response.setData(entity);
+//				return ResponseEntity.ok(response);
+//			} else {
+//				response.setMessage("No data found for the given details.!");
+//				response.setStatus(true);
+//				return ResponseEntity.status(HttpStatus.OK)
+//						.body(response);
+//			}
+//		} catch (Exception e) {
+//			response.setMessage(e.getMessage());
+//			response.setStatus(false);
+//			return new ResponseEntity<>(response, HttpStatus.OK);
+//		}
+//
+//	}
 
 	@GetMapping("/getProfile")
 	public ResponseEntity<?> getProfile(Authentication authentication) {

@@ -8,4 +8,6 @@ public interface AdminMailService {
 	ResponseAdminMailDto addApiRequest(AdminMail admin);
 	ResponseAdminMailDto getApiRequest(String email);
 	ResponseAdminMailDto updateApiRequest(AdminMail admin);
+
+
 }

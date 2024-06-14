@@ -11,5 +11,6 @@ import com.application.mrmason.entity.AdminServiceName;
 public interface AdminServiceNameRepo extends JpaRepository<AdminServiceName, String>{
 	 List<AdminServiceName> findByServiceIdOrServiceNameOrServiceSubCategoryOrderByAddedDateDesc(String serviceId, String serviceName, String serviceSubCat);
 	 AdminServiceName findByServiceId(String serviceId);
+	List<AdminServiceName> findByServiceIdIn(List<String> serviceIds);
 }
 

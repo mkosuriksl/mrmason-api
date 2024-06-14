@@ -22,4 +22,7 @@ public interface AddServiceRepo extends JpaRepository<AddServices, String> {
 	@Query("SELECT a FROM AddServices a WHERE a.userIdServiceId = :userIdServiceId")
 	List<AddServices> getUserIdServiceIdDetails(String userIdServiceId);
 
+	List<AddServices> findByBodSeqNoOrServiceSubCategoryOrUserIdServiceId(String bodSeqNo,
+			String serviceSubCategory, String useridServiceId);
+
 }

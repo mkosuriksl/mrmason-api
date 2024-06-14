@@ -2,7 +2,6 @@ package com.application.mrmason.controller;
 
 import java.util.List;
 import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,8 +12,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.application.mrmason.dto.AddServiceGetDto;
+import com.application.mrmason.dto.AdminServiceNameDto;
 import com.application.mrmason.dto.ResponseAddServiceDto;
 import com.application.mrmason.dto.ResponseAddServiceGetDto;
 import com.application.mrmason.dto.ResponseServiceReportDto;
@@ -94,29 +93,36 @@ public class AddServiceController {
 	}
 
 	@GetMapping("/sp-user-services-get")
-	public ResponseEntity<ResponseAddServiceGetDto> getServices(@RequestParam(required = false) String bodSeqNo,@RequestParam(required = false)String serviceSubCategory,@RequestParam(required = false)String useridServiceId) {
+	public ResponseEntity<ResponseAddServiceGetDto> getServices(
+	    @RequestParam(required = false) String bodSeqNo,
+	    @RequestParam(required = false) String serviceSubCategory,
+	    @RequestParam(required = false) String useridServiceId) {
 
-		List<AddServices> getService = service.getPerson(bodSeqNo, serviceSubCategory, useridServiceId);
-		ResponseAddServiceGetDto responseGet = new ResponseAddServiceGetDto();
-		try {
-			if (getService.isEmpty()) {
-				responseGet.setMessage("No services found for the given parameters");
-				responseGet.setStatus(true);
-				responseGet.setGetAddServicesData(getService);
-				return new ResponseEntity<>(responseGet, HttpStatus.OK);
-			} else {
-				responseGet.setMessage("Service details fetched successfully.");
-				responseGet.setStatus(true);
-				responseGet.setGetAddServicesData(getService);
-				return new ResponseEntity<>(responseGet, HttpStatus.OK);
-			}
-		} catch (Exception e) {
-			responseGet.setMessage(e.getMessage());
-			responseGet.setStatus(false);
-			return new ResponseEntity<>(responseGet, HttpStatus.OK);
-		}
+	    ResponseAddServiceGetDto responseGet = new ResponseAddServiceGetDto();
+	    
+	    try {
+	        List<AddServices> getService = service.getPerson(bodSeqNo, serviceSubCategory, useridServiceId);
+	        List<AdminServiceNameDto> serviceIdList = service.getServiceById(bodSeqNo, serviceSubCategory, useridServiceId);
+	        
+	        if (!getService.isEmpty()) {
+	            responseGet.setMessage("Service details fetched successfully.");
+	        } else {
+	            responseGet.setMessage("No services found for the given parameters.");
+	        }
+
+	        responseGet.setStatus(true);
+	        responseGet.setGetAddServicesData(getService);
+	        responseGet.setGetServiceId(serviceIdList);
+	        return new ResponseEntity<>(responseGet, HttpStatus.OK);
+	        
+	    } catch (Exception e) {
+	        responseGet.setMessage(e.getMessage());
+	        responseGet.setStatus(false);
+	        return new ResponseEntity<>(responseGet, HttpStatus.INTERNAL_SERVER_ERROR);
+	    }
 	}
 
+	
 	@GetMapping("/sp-user-report")
 	public ResponseEntity<ResponseServiceReportDto> getService(@RequestParam(required = false) String bodSeqNo) {
 

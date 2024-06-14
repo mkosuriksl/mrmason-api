@@ -36,7 +36,6 @@ public class AddServicesServiceIml {
 	public AddServices addServicePerson(AddServices add, String bodSeqNo) throws Exception {
 		Optional<User> optionalUser = userDAO.findById(bodSeqNo);
 		if (optionalUser.isPresent()) {
-			User user = optionalUser.get();
 			return repo.save(add);
 		} else {
 
@@ -60,6 +59,7 @@ public class AddServicesServiceIml {
 	
 	
 	public List<AddServices> getPerson(String bodSeqNo, String serviceSubCategory, String useridServiceId) {
+
 	    if (bodSeqNo == null && serviceSubCategory != null && useridServiceId == null) {
 	        return repo.findByServiceSubCategory(serviceSubCategory);
 	    } else if (bodSeqNo != null && serviceSubCategory == null && useridServiceId == null) {
@@ -68,6 +68,7 @@ public class AddServicesServiceIml {
 	        return repo.getUserIdServiceIdDetails(useridServiceId);
 	    }
 	    return Collections.emptyList(); 
+
 	}
 
 	public List<AdminServiceNameDto> getServiceById(String bodSeqNo, String serviceSubCategory, String useridServiceId) {

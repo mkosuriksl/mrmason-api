@@ -13,12 +13,12 @@ import jakarta.mail.internet.MimeMessage;
 
 @Service
 public class EmailServiceImpl implements EmailService {
-	
+
 	@Autowired
 	private JavaMailSender mailsender;
 	
-	public void sendMail(String toMail, String otp){
-
+	@Override
+	public void sendEmail(String toMail, String otp){
 		SimpleMailMessage mail=new SimpleMailMessage();
 		mail.setTo(toMail);
 		mail.setSubject("YOUR OTP FOR VERIFICATION.");
@@ -39,4 +39,5 @@ public class EmailServiceImpl implements EmailService {
             // Handle exception
         }
 	}
+
 }

@@ -244,16 +244,16 @@ public class UserController {
 	}
 	@PreAuthorize("hasAuthority('Adm')")
 	@GetMapping("/filterServicePerson")
-	public ResponseEntity<?> getCustomers(@RequestBody FilterCustomerAndUser user) {
+	public ResponseEntity<ResponseListUserDto> getCustomers(
+			@RequestParam(value = "email", required = false) String userEmail,
+			@RequestParam(value = "phNo", required = false) String userMobile,
+			@RequestParam(value = "userState", required = false) String userState,
+			@RequestParam(value = "status", required = false) String status,
+			@RequestParam(value = "category", required = false) String category,
+			@RequestParam(value = "fromDate", required = false) String fromDate,
+			@RequestParam(value = "toDate", required = false) String toDate) {
 		ResponseListUserDto response3=new ResponseListUserDto();
-		
-		String userEmail = user.getUserEmail();
-		String userMobile = user.getUserMobile();
-		String userState = user.getUserState();
-		String fromDate = user.getFromDate();
-		String toDate = user.getToDate();
-		String status = user.getStatus();
-		String category = user.getServiceCategory();
+
 		try {
 			List<User> entity = userService.getServicePersonData(userEmail, userMobile, userState, status, category,
 					fromDate, toDate);

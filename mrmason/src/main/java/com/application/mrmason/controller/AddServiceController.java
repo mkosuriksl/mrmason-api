@@ -73,30 +73,32 @@ public class AddServiceController {
 			AddServices upServices = service.updateAddServiceDetails(update, userIdServiceId, serviceSubCategory,
 					bodSeqNo);
 			if (upServices == null) {
-				response.setMessage("inavalid user");
+				response.setMessage("Inavalid UserIdServiceId.!");
 				response.setStatus(false);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 
 			} else {
 
-				response.setMessage("Profile updated successfully");
+				response.setMessage("Services updated successfully");
 				response.setStatus(true);
 				response.setAddServicesData(upServices);
 				return ResponseEntity.ok().body(response);
 			}
 		} catch (Exception e) {
 			response.setStatus(false);
-			response.setMessage(e.getMessage());
+			response.setMessage("Invalid UserIdServiceId.!");
 			return ResponseEntity.status(HttpStatus.OK).body(response);
 		}
 
 	}
 
 	@GetMapping("/sp-user-services-get")
+
 	public ResponseEntity<ResponseAddServiceGetDto> getServices(
 	    @RequestParam(required = false) String bodSeqNo,
 	    @RequestParam(required = false) String serviceSubCategory,
 	    @RequestParam(required = false) String useridServiceId) {
+
 
 	    ResponseAddServiceGetDto responseGet = new ResponseAddServiceGetDto();
 	    

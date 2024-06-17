@@ -56,7 +56,7 @@ public class CustomerMobileOtpController {
 
 			mobileService.updateData(otp, mobile);
 			response.setStatus(true);
-			response.setMessage(" Email Verified successful");
+			response.setMessage(" Mobile number Verified successful");
 			return new ResponseEntity<>(response, HttpStatus.OK);
 
 		}

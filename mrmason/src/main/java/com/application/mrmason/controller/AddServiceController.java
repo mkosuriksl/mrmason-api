@@ -1,5 +1,7 @@
 package com.application.mrmason.controller;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,14 +15,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.application.mrmason.dto.AddServiceGetDto;
+import com.application.mrmason.dto.AddServicesDto;
 import com.application.mrmason.dto.AdminServiceNameDto;
 import com.application.mrmason.dto.ResponseAddServiceDto;
 import com.application.mrmason.dto.ResponseAddServiceGetDto;
 import com.application.mrmason.dto.ResponseServiceReportDto;
 import com.application.mrmason.entity.AddServices;
 import com.application.mrmason.entity.User;
+import com.application.mrmason.repository.AddServiceRepo;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.impl.AddServicesServiceIml;
+import com.application.mrmason.service.impl.AdminServiceNameServiceImpl;
 import com.application.mrmason.service.impl.SPAvailabilityServiceIml;
 import com.application.mrmason.service.impl.UserService;
 
@@ -39,6 +44,13 @@ public class AddServiceController {
 
 	@Autowired
 	SPAvailabilityServiceIml spAvailibilityImpl;
+	
+	@Autowired
+	AdminServiceNameServiceImpl adminService;
+	
+	@Autowired
+	AddServiceRepo repo;
+
 
 	ResponseAddServiceDto response = new ResponseAddServiceDto();
 
@@ -103,8 +115,15 @@ public class AddServiceController {
 	    ResponseAddServiceGetDto responseGet = new ResponseAddServiceGetDto();
 	    
 	    try {
-	        List<AddServices> getService = service.getPerson(bodSeqNo, serviceSubCategory, useridServiceId);
-	        List<AdminServiceNameDto> serviceIdList = service.getServiceById(bodSeqNo, serviceSubCategory, useridServiceId);
+	        List<AddServicesDto> getService = service.getAddServicesWithServiceNames(bodSeqNo, serviceSubCategory, useridServiceId);
+	        List<String> serviceIds = new ArrayList<>();
+            for (AddServicesDto addServiceDto : getService) {
+                if (addServiceDto.getServiceId() != null) {
+                    String[] ids = addServiceDto.getServiceId().split(",");
+                    Collections.addAll(serviceIds, ids);
+                }
+            }
+	        List<AdminServiceNameDto> serviceIdList = service.getServiceNamesByIds(serviceIds);
 	        
 	        if (!getService.isEmpty()) {
 	            responseGet.setMessage("Service details fetched successfully.");
@@ -124,7 +143,7 @@ public class AddServiceController {
 	    }
 	}
 
-	
+		
 	@GetMapping("/sp-user-report")
 	public ResponseEntity<ResponseServiceReportDto> getService(@RequestParam(required = false) String bodSeqNo) {
 

@@ -11,6 +11,6 @@ public class ResponseAddServiceGetDto {
 	private String message;
 	private boolean status;
 	private List<AdminServiceNameDto> getServiceId;
-	private List<AddServices> GetAddServicesData;
+	private List<AddServicesDto> GetAddServicesData;
 	
 }

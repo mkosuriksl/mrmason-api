@@ -40,7 +40,6 @@ public class AddServices {
 	@Column(name = "userid_serviceid")
 	public String userIdServiceId;
 	
-	
 	@Column(name = "service_id")
 	public String serviceId;
 
@@ -63,6 +62,7 @@ public class AddServices {
    @Column(name = "updated_date")
    public String updateDateFormat;
     
+   private List<String> serviceNameList;
 
 	@PrePersist
 	private void prePersist() {

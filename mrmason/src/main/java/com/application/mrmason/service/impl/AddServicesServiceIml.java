@@ -75,14 +75,14 @@ public class AddServicesServiceIml {
 
 	
 	
-	public List<AddServices> getPerson(String bodSeqNo, String serviceSubCategory, String useridServiceId) {
+	public List<AddServices> getPerson(String bodSeqNo, String serviceSubCategory, String userIdServiceId) {
 
-	    if (bodSeqNo == null && serviceSubCategory != null && useridServiceId == null) {
+	    if (bodSeqNo == null && serviceSubCategory != null && userIdServiceId == null) {
 	        return repo.findByServiceSubCategory(serviceSubCategory);
-	    } else if (bodSeqNo != null && serviceSubCategory == null && useridServiceId == null) {
+	    } else if (bodSeqNo != null && serviceSubCategory == null && userIdServiceId == null) {
 	        return repo.findByBodSeqNo(bodSeqNo);
-	    } else if (bodSeqNo == null && serviceSubCategory == null && useridServiceId != null) {
-	        return repo.getUserIdServiceIdDetails(useridServiceId);
+	    } else if (bodSeqNo == null && serviceSubCategory == null && userIdServiceId != null) {
+	        return repo.getUserIdServiceIdDetails(userIdServiceId);
 	    }
 	    return Collections.emptyList(); 
 

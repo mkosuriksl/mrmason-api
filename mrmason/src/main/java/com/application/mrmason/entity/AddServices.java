@@ -84,4 +84,19 @@ public class AddServices {
     public List<String> getServiceIdList() {
         return Arrays.asList(this.serviceId.split(","));
     }
+    
+    @Override
+    public String toString() {
+        return "AddServices{" +
+               "userIdServiceId='" + userIdServiceId + '\'' +
+               ", serviceId='" + serviceId + '\'' +
+               ", serviceSubCategory='" + serviceSubCategory + '\'' +
+               ", status='" + status + '\'' +
+               ", bodSeqNo='" + bodSeqNo + '\'' +
+               ", updatedBy='" + updatedBy + '\'' +
+               ", updatedDate=" + updatedDate +
+               ", updateDateFormat='" + updateDateFormat + '\'' +
+               '}';
+    }
+
 }

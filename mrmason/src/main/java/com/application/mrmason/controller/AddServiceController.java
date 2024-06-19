@@ -104,40 +104,43 @@ public class AddServiceController {
 
 	}
 
-	@GetMapping("/sp-user-services-get")
 
+	@GetMapping("/sp-user-services-get")
 	public ResponseEntity<ResponseAddServiceGetDto> getServices(
 	    @RequestParam(required = false) String bodSeqNo,
 	    @RequestParam(required = false) String serviceSubCategory,
-	    @RequestParam(required = false) String useridServiceId) {
-
+	    @RequestParam(required = false) String userIdServiceId) {
 
 	    ResponseAddServiceGetDto responseGet = new ResponseAddServiceGetDto();
-	    
+
 	    try {
-	        List<AddServicesDto> getService = service.getAddServicesWithServiceNames(bodSeqNo, serviceSubCategory, useridServiceId);
-	        List<String> serviceIds = new ArrayList<>();
-            for (AddServicesDto addServiceDto : getService) {
-                if (addServiceDto.getServiceId() != null) {
-                    String[] ids = addServiceDto.getServiceId().split(",");
-                    Collections.addAll(serviceIds, ids);
-                }
-            }
-	        List<AdminServiceNameDto> serviceIdList = service.getServiceNamesByIds(serviceIds);
+	        List<AddServicesDto> getService = service.getAddServicesWithServiceNames(bodSeqNo, serviceSubCategory, userIdServiceId);
 	        
 	        if (!getService.isEmpty()) {
+	            List<String> serviceIds = new ArrayList<>();
+	            for (AddServicesDto addServiceDto : getService) {
+	                if (addServiceDto.getServiceId() != null) {
+	                    String[] ids = addServiceDto.getServiceId().split(",");
+	                    Collections.addAll(serviceIds, ids);
+	                }
+	            }
+	            
+	            List<AdminServiceNameDto> serviceIdList = service.getServiceNamesByIds(serviceIds);
+	            
 	            responseGet.setMessage("Service details fetched successfully.");
+	            responseGet.setStatus(true);
+	            responseGet.setGetAddServicesData(getService);
+	            responseGet.setGetServiceId(serviceIdList);
+	            return new ResponseEntity<>(responseGet, HttpStatus.OK);
 	        } else {
 	            responseGet.setMessage("No services found for the given parameters.");
+	            responseGet.setStatus(false);
+	            return new ResponseEntity<>(responseGet, HttpStatus.OK);
 	        }
-
-	        responseGet.setStatus(true);
-	        responseGet.setGetAddServicesData(getService);
-	        responseGet.setGetServiceId(serviceIdList);
-	        return new ResponseEntity<>(responseGet, HttpStatus.OK);
 	        
 	    } catch (Exception e) {
-	        responseGet.setMessage(e.getMessage());
+	        e.printStackTrace();  
+	        responseGet.setMessage("Error: " + e.getMessage());
 	        responseGet.setStatus(false);
 	        return new ResponseEntity<>(responseGet, HttpStatus.INTERNAL_SERVER_ERROR);
 	    }

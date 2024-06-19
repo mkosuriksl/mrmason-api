@@ -10,6 +10,18 @@ public class AdminServiceNameDto {
 	private String serviceName;
 	private String addedBy;
 	private String addedDate;
-	private String ServiceSubCat;
+	private String serviceSubCategory;
+	
+	@Override
+	public String toString() {
+	    return "AdminServiceNameDto{" +
+	           "serviceId='" + serviceId + '\'' +
+	           ", serviceSubCat='" + serviceSubCategory + '\'' +
+	           ", addedBy='" + addedBy + '\'' +
+	           ", addedDate=" + addedDate +
+	           ", serviceName='" + serviceName + '\'' +
+	           '}';
+	}
+
 }
 

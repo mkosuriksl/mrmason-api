@@ -2,6 +2,7 @@ package com.application.mrmason.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import lombok.Data;
 
@@ -15,6 +16,14 @@ public class AddServicesDto {
     private String updatedBy;
     private LocalDateTime updatedDate;
     private String updateDateFormat;
-    private List<String> serviceIdList;
-    private List<String> serviceNameList;
+    private List<String> serviceIdList;  
+    private String serviceIdServiceName;
+    public String getServiceIdServiceName() {
+        return serviceIdServiceName;
+    }
+    public void setServiceIdServiceName(String serviceIdServiceName) {
+        this.serviceIdServiceName = serviceIdServiceName;
+    }
+    
+    
 }

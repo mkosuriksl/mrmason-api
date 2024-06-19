@@ -33,7 +33,7 @@ public class AdminAssetController {
 			if (adminService.addAdminAssets(asset) != null) {
 
 				response.setAddAsset(adminService.addAdminAssets(asset));
-				response.setMessage("Asset added successfully..");
+				response.setMessage("Asset Category added");
 				response.setStatus(true);
 				return ResponseEntity.ok(response);
 			}
@@ -41,7 +41,7 @@ public class AdminAssetController {
 			response.setStatus(false);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
-			response.setMessage(e.getMessage());
+			response.setMessage("Record alredy exists");
 			response.setStatus(false);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}

@@ -61,7 +61,7 @@ public class AdminServiceNameServiceImpl implements AdminServiceNameService{
 			AdminServiceNameDto serviceDto = new AdminServiceNameDto();
 
 			serviceDto.setServiceId(serviceCatData.getServiceId());
-			serviceDto.setServiceSubCat(serviceCatData.getServiceSubCategory());
+			serviceDto.setServiceSubCategory(serviceCatData.getServiceSubCategory());
 			serviceDto.setAddedBy(serviceCatData.getAddedBy());
 			serviceDto.setAddedDate(serviceCatData.getAddedDate());
 			serviceDto.setServiceName(serviceCatData.getServiceName());

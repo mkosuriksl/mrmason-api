@@ -44,15 +44,15 @@ public class CustomerRegistrationController {
 	@PreAuthorize("hasAuthority('Adm')")
 	@GetMapping("/filterCustomers")
 	public ResponseEntity<ResponseListCustomerData> getCustomers(
-			@RequestParam(value = "email", required = false) String email,
-			@RequestParam(value = "phNo", required = false) String phNo,
+			@RequestParam(value = "userEmail", required = false) String userEmail,
+			@RequestParam(value = "userMobile", required = false) String userMobile,
 			@RequestParam(value = "userState", required = false) String userState,
 			@RequestParam(value = "fromDate", required = false) String fromDate,
 			@RequestParam(value = "toDate", required = false) String toDate) {
 
 		ResponseListCustomerData response = new ResponseListCustomerData();
 		try {
-			List<CustomerRegistration> entity = service.getCustomerData(email, phNo, userState, fromDate, toDate);
+			List<CustomerRegistration> entity = service.getCustomerData(userEmail, userMobile,userState, fromDate, toDate);
 			if (!entity.isEmpty()) {
 				response.setMessage("Fetched users successfully.");
 				response.setStatus(true);
@@ -153,11 +153,11 @@ public class CustomerRegistrationController {
 	@PreAuthorize("hasAuthority('EC')")
 	@PostMapping("/changePassword")
 	public ResponseEntity<?> changeCustomerPassword(@RequestBody ChangePasswordDto request) {
-		String userMail = request.getUserMail();
+		String userMail = request.getEmail();
 		String oldPass = request.getOldPass();
 		String newPass = request.getNewPass();
 		String confPass = request.getConfPass();
-		String userMobile = request.getUserMobile();
+		String userMobile = request.getMobile();
 
 		try {
 			if (service.changePassword(userMail, oldPass, newPass, confPass, userMobile) == "changed") {

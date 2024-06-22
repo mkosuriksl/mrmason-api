@@ -13,4 +13,6 @@ public interface ServiceCategoryService {
 	List<ServiceCategory> getServiceCategoryCivil(String category);
 	List<ServiceCategory> getServiceCategoryNonCivil(String category);
 	
+	ServiceCategory deleteRecord(String id);
+	
 }

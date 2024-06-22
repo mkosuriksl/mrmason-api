@@ -32,12 +32,12 @@ public class AdminDetailsController {
 	@PostMapping("/addAdminDetails")
 	public ResponseEntity<?> saveAdminDetails(@RequestBody AdminDetails admin) {
 		ResponceAdminDetailsDto response = new ResponceAdminDetailsDto();
-		String userEmail = admin.getEmail();
-		String userMobile = admin.getMobile();
+		String email = admin.getEmail();
+		String mobile = admin.getMobile();
 		try {
 			if (adminService.registerDetails(admin) != null) {
 
-				response.setData(adminService.getDetails(userEmail, userMobile));
+				response.setData(adminService.getDetails(email, mobile));
 				response.setMessage("Admin details added successfully..");
 				response.setStatus(true);
 				return ResponseEntity.ok(response);
@@ -122,11 +122,11 @@ public class AdminDetailsController {
 	@PreAuthorize("hasAuthority('Adm')")
 	@PostMapping("/changeAdminPassword")
 	public ResponseEntity<ResponseMessageDto> changeCustomerPassword(@RequestBody ChangePasswordDto request) {
-		String userMail = request.getUserMail();
+		String userMail = request.getEmail();
 		String oldPass = request.getOldPass();
 		String newPass = request.getNewPass();
 		String confPass = request.getConfPass();
-		String userMobile=request.getUserMobile();
+		String userMobile=request.getMobile();
 		
 		try {
 			if (adminService.changePassword(userMail, oldPass, newPass, confPass,userMobile) == "changed") {
@@ -155,11 +155,11 @@ public class AdminDetailsController {
 	
 	@PostMapping("/admin/forgetPassword/sendOtp")
 	public ResponseEntity<ResponseMessageDto> sendOtpForPasswordChange(@RequestBody Logindto login) {
-		String userMail=login.getEmail();
+		String email=login.getEmail();
 		String mobile=login.getMobile();
 		try {
-			if(userMail!=null&& mobile==null) {
-				if (adminService.sendMail(userMail) != null) {
+			if(email!=null&& mobile==null) {
+				if (adminService.sendMail(email) != null) {
 					response2.setMessage("OTP Sent to Registered EmailId.");
 					response2.setStatus(true);
 					return new ResponseEntity<>(response2, HttpStatus.OK);
@@ -188,24 +188,24 @@ public class AdminDetailsController {
 	
 	@PostMapping("/admin/forgetPassword/verifyOtpAndChangePassword")
 	public ResponseEntity<ResponseMessageDto> verifyOtpForPasswordChange(@RequestBody ChangePasswordDto request) {
-		String userMail = request.getUserMail();
+		String email = request.getEmail();
 		String otp = request.getOtp();
 		String newPass = request.getNewPass();
 		String confPass = request.getConfPass();
-		String mobile = request.getUserMobile();
+		String mobile = request.getMobile();
 		try {
-			String data=adminService.forgetPassword(mobile, userMail, otp, newPass, confPass);
+			String data=adminService.forgetPassword(mobile, email, otp, newPass, confPass);
 			if (data == "changed") {
 				response2.setMessage("Password Changed Successfully..");
 				response2.setStatus(true);
 				return new ResponseEntity<>(response2, HttpStatus.OK);
 			} else if (data == "notMatched") {
 				response2.setMessage("New Passwords Not Matched.!");
-				response2.setStatus(false);
+				response2.setStatus(true);
 				return new ResponseEntity<>(response2, HttpStatus.OK);
 			} else if (data== "incorrect") {
 				response2.setMessage("Invalid OTP..!");
-				response2.setStatus(false);
+				response2.setStatus(true);
 				return new ResponseEntity<>(response2, HttpStatus.OK);
 			}else if (data== "incorrectEmail") {
 				response2.setMessage("Invalid Email ID.!");

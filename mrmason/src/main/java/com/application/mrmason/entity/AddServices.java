@@ -71,8 +71,8 @@ public class AddServices {
 		this.updatedDate = now;
 		this. updateDateFormat= now.format(formatter);
 
-		String subString = serviceSubCategory.substring(0, Math.min(4, serviceSubCategory.length()));
-		this.userIdServiceId = bodSeqNo + "_" + subString;
+//		String subString = serviceSubCategory.substring(0, Math.min(4, serviceSubCategory.length()));
+//		this.userIdServiceId = bodSeqNo + "_" + subString;
 	}
 
 	

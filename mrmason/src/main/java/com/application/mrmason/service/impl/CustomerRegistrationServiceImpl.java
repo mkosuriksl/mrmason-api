@@ -91,10 +91,10 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 	}
 
 	@Override
-	public List<CustomerRegistration> getCustomerData(String email, String phNo, String userState, String fromDate,
+	public List<CustomerRegistration> getCustomerData(String userEmail, String userMobile, String userState, String fromDate,
 			String toDate) {
-		if (fromDate == null && toDate == null && email != null || phNo != null || userState != null) {
-			return repo.findAllByUserEmailOrUserMobileOrUserState(email, phNo, userState);
+		if (fromDate == null && toDate == null && userEmail != null || userMobile != null || userState != null) {
+			return repo.findAllByUserEmailOrUserMobileOrUserState(userEmail, userMobile, userState);
 		} else {
 			return repo.findByRegDateBetween(fromDate, toDate);
 		}

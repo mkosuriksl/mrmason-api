@@ -27,39 +27,44 @@ import lombok.Setter;
 public class ServiceRequest {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "REQ_SEQ_ID")
+	@Column(name = "req_seq_id")
 	private long reqSeqId;
 
 	@Column(name = "service_sub_category")
 	private String serviceSubCategory;
 
-	@Column(name = "REQUEST_ID")
+	@Column(name="service_name")
+	private String serviceName;
+	
+	@Column(name = "request_id")
 	private String requestId;
 
 	@CreationTimestamp
-	@Column(name = "SERVICE_REQUEST_DATE")
+	@Column(name = "service_request_date")
 	private String serviceRequestDate;
 
-	@Column(name = "REQUESTED_BY")
+	@Column(name = "requested_by")
 	private String requestedBy;
 
-	@Column(name = "REQ_PINCODE")
+	@Column(name = "req_pincode")
 	private String location;
 
-	@Column(name = "DESCRIPTION") // Corrected the column name
+	@Column(name = "description") // Corrected the column name
 	private String description;
+	
+	
 
 	@Builder.Default
-	@Column(name = "STATUS")
+	@Column(name = "status")
 	private String status = "NEW";
 
 //    @Transient
 //    private LocalDate serviceDate;
 
-	@Column(name = "SERVICE_DATE")
+	@Column(name = "service_date")
 	private String serviceDateDb;
 
-	@Column(name = "ASSETID")
+	@Column(name = "assetid")
 	private String assetId;
 
 	@PrePersist
@@ -71,7 +76,7 @@ public class ServiceRequest {
 		String hour = String.format("%02d", now.getHour());
 		String minute = String.format("%02d", now.getMinute());
 		String second = String.format("%02d", now.getSecond());
-		this.requestId = year + month + day + hour + minute + second;
+		this.requestId = "RE"+year + month + day + hour + minute + second;
 
 		DateTimeFormatter formatterExp = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 

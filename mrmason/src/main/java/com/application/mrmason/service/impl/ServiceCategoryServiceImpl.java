@@ -31,13 +31,13 @@ public class ServiceCategoryServiceImpl implements ServiceCategoryService {
 	}
 
 	@Override
-	public List<ServiceCategory> getServiceCategory(String id ,String category,String subCat) {
+	public List<ServiceCategory> getServiceCategory(String id, String category, String subCat) {
 
 		if (id != null) {
 			Optional<List<ServiceCategory>> user = Optional.ofNullable((serviceRepo.findByIdOrderByCreateDateDesc(id)));
 			return user.get();
 		} else {
-			List<ServiceCategory> user = (serviceRepo.findByServiceCategoryOrServiceSubCategory(category,subCat));
+			List<ServiceCategory> user = (serviceRepo.findByServiceCategoryOrServiceSubCategory(category, subCat));
 			return user;
 		}
 	}
@@ -97,4 +97,17 @@ public class ServiceCategoryServiceImpl implements ServiceCategoryService {
 		return user;
 	}
 
+	@Override
+	public ServiceCategory deleteRecord(String id) {
+		Optional<ServiceCategory> delete = Optional.empty();
+		if (id != null) {
+			delete = serviceRepo.findById(id);
+		} 
+
+		if (delete.isPresent()) {
+			serviceRepo.delete(delete.get());
+			return delete.get();
+		}
+		return null;
+	}
 }

@@ -21,11 +21,11 @@ public class CustomerLoginController {
 	ResponseMessageDto response=new ResponseMessageDto();
 	@PostMapping("/forgetPassword/sendOtp")
 	public ResponseEntity<ResponseMessageDto> sendOtpForPasswordChange(@RequestBody Logindto login) {
-		String userMail=login.getEmail();
+		String email=login.getEmail();
 		String mobile=login.getMobile();
 		try {
-			if(userMail!=null) {
-				if (loginService.sendMail(userMail) != null) {
+			if(email!=null) {
+				if (loginService.sendMail(email) != null) {
 					response.setMessage("OTP Sent to Registered EmailId.");
 					response.setStatus(true);
 					return new ResponseEntity<>(response, HttpStatus.OK);
@@ -54,24 +54,24 @@ public class CustomerLoginController {
 
 	@PostMapping("/forgetPassword/verifyOtpAndChangePassword")
 	public ResponseEntity<ResponseMessageDto> verifyOtpForPasswordChange(@RequestBody ChangePasswordDto request) {
-		String userMail = request.getUserMail();
+		String email = request.getEmail();
 		String otp = request.getOtp();
 		String newPass = request.getNewPass();
 		String confPass = request.getConfPass();
-		String mobile=request.getUserMobile();
+		String mobile=request.getMobile();
 		try {
-			String data=loginService.forgetPassword(mobile,userMail, otp, newPass, confPass);
+			String data=loginService.forgetPassword(mobile,email, otp, newPass, confPass);
 			if (data == "changed") {
 				response.setMessage("Password Changed Successfully..");
 				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			} else if (data == "notMatched") {
 				response.setMessage("New Passwords Not Matched.!");
-				response.setStatus(false);
+				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			} else if (data== "incorrect") {
 				response.setMessage("Invalid OTP..!");
-				response.setStatus(false);
+				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}else if (data == "incorrectEmail") {
 				response.setMessage("Invalid email id..!");

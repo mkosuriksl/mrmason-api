@@ -26,4 +26,6 @@ public class AddServicesDto {
     }
     
     
+    private String userServicesId;
+    
 }

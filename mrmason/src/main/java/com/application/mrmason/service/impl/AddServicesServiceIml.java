@@ -3,7 +3,6 @@ package com.application.mrmason.service.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -16,12 +15,14 @@ import org.springframework.stereotype.Service;
 
 import com.application.mrmason.dto.AddServiceGetDto;
 import com.application.mrmason.dto.AddServicesDto;
+import com.application.mrmason.dto.AddServicesDto1;
 import com.application.mrmason.dto.AdminServiceNameDto;
 import com.application.mrmason.entity.AddServices;
 import com.application.mrmason.entity.AdminServiceName;
-import com.application.mrmason.entity.User;
+import com.application.mrmason.entity.SpServiceDetails;
 import com.application.mrmason.repository.AddServiceRepo;
 import com.application.mrmason.repository.AdminServiceNameRepo;
+import com.application.mrmason.repository.SpServiceDetailsRepo;
 import com.application.mrmason.repository.UserDAO;
 
 import jakarta.persistence.EntityManager;
@@ -47,18 +48,46 @@ public class AddServicesServiceIml {
 	@Autowired
 	AdminServiceNameRepo serviceRepo;
 	
+	@Autowired
+	SpServiceDetailsRepo spService;
+	
 	@PersistenceContext
 	private EntityManager entityManager;
+
 	
-	public AddServices addServicePerson(AddServices add, String bodSeqNo) throws Exception {
-		Optional<User> optionalUser = userDAO.findById(bodSeqNo);
-		if (optionalUser.isPresent()) {
-			return repo.save(add);
-		} else {
+	public AddServicesDto1 addServices(AddServices service) {
+	    System.out.println("Received userIdServiceId: " + service.getUserIdServiceId());
+	    
+	    Optional<SpServiceDetails> userIdServiceIdExists = Optional.ofNullable(spService.findByUserServicesId(service.getUserIdServiceId()));
 
-			throw new Exception("User not found for bodSeqNo: " + bodSeqNo);
-		}
+	    if (userIdServiceIdExists.isPresent()) {
+	        System.out.println("UserServiceId exists. Details: " + userIdServiceIdExists.get());
 
+	        service.setBodSeqNo(userIdServiceIdExists.get().getUserId());
+	        service.setUpdatedBy(userIdServiceIdExists.get().getUserId());
+	        service.setStatus(userIdServiceIdExists.get().getStatus());
+	        service.setUserIdServiceId(userIdServiceIdExists.get().getUserServicesId());
+
+	        AddServices saved = repo.save(service);
+
+	        AddServicesDto1 addSerices = new AddServicesDto1();
+	        addSerices.setUserIdServiceId(saved.getUserIdServiceId());
+	        addSerices.setBodSeqNo(saved.getBodSeqNo());
+	        addSerices.setServiceId(saved.getServiceId());
+	        addSerices.setServiceIdList(saved.getServiceIdList());
+	        addSerices.setServiceSubCategory(saved.getServiceSubCategory());
+	        addSerices.setStatus(saved.getStatus());
+	        addSerices.setUpdateDateFormat(saved.getUpdateDateFormat());
+	        addSerices.setUpdatedBy(saved.getUpdatedBy());
+	        addSerices.setUpdatedDate(saved.getUpdatedDate());
+	        addSerices.setUserServicesId(saved.getUserIdServiceId());
+
+	        return addSerices;
+	    } else {
+	        System.out.println("UserServiceId does not exist.");
+	    }
+
+	    return null;
 	}
 
 
@@ -91,6 +120,7 @@ public class AddServicesServiceIml {
 
 
 	
+
 	
 	public List<AddServicesDto> getAddServicesWithServiceNames(String bodSeqNo, String serviceSubCategory, String userIdServiceId) {
 	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -140,17 +170,20 @@ public class AddServicesServiceIml {
 	            dto.setUpdateDateFormat(service.getUpdateDateFormat());
 
 	            if (service.getServiceId() != null) {
-	                dto.setServiceIdList(Arrays.asList(service.getServiceId().split(",")));
-	                dto.setServiceIdServiceName(Arrays.stream(service.getServiceId().split(","))
-	                    .map(id -> {
-	                        String name = serviceIdToNameMap.get(id);
-	                        if (name == null) {
-	                            System.err.println("Service ID not found in map: " + id);
-	                            return id + ":null";
-	                        }
-	                        return id + ":" + name;
-	                    })
-	                    .collect(Collectors.joining(", ")));
+	                List<String> serviceIdList = Arrays.asList(service.getServiceId().split(","));
+	                dto.setServiceIdList(serviceIdList);
+
+	                // Filter out any service ID that does not have a corresponding name
+	                List<String> validEntries = serviceIdList.stream()
+	                    .filter(id -> serviceIdToNameMap.containsKey(id) && serviceIdToNameMap.get(id) != null)
+	                    .map(id -> id + ":" + serviceIdToNameMap.get(id))
+	                    .collect(Collectors.toList());
+
+	                if (validEntries.isEmpty()) {
+	                    dto.setServiceIdServiceName(""); // Case 1: All names are null
+	                } else {
+	                    dto.setServiceIdServiceName(String.join(", ", validEntries)); // Case 2 & 3: Some or all names are present
+	                }
 	            } else {
 	                dto.setServiceIdList(Collections.emptyList());
 	                dto.setServiceIdServiceName("");
@@ -182,7 +215,6 @@ public class AddServicesServiceIml {
 	        return serviceDto;
 	    }).collect(Collectors.toList());
 	}
-
 
 	
 }

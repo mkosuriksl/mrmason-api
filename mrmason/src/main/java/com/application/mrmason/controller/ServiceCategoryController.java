@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.application.mrmason.dto.ResponceServiceDto;
 import com.application.mrmason.dto.ResponseListServiceCatDto;
 import com.application.mrmason.dto.ServiceCategoryDto;
+import com.application.mrmason.dto.ServiceCategoryDto1;
 import com.application.mrmason.entity.ServiceCategory;
 import com.application.mrmason.service.ServiceCategoryService;
 
@@ -133,4 +135,27 @@ public class ServiceCategoryController {
 			return ResponseEntity.status(HttpStatus.OK).body(response);
 		}
 	}
+
+	 @DeleteMapping("/delete")
+	    public ResponseEntity<?> deleteServiceCatRecord(@RequestParam(required = false) String id) {
+
+	        ServiceCategoryDto1 response = new ServiceCategoryDto1();
+	        try {
+	            
+	            ServiceCategory deleteRecord = categoryService.deleteRecord(id);
+	            if (deleteRecord != null) {
+	                response.setMessage("Deleted successfully");
+	                response.setStatus(true);
+	                return new ResponseEntity<>(response, HttpStatus.OK);
+	            } else {
+	                response.setMessage("Failed to delete");
+	                response.setStatus(false);
+	                return new ResponseEntity<>(response, HttpStatus.OK);
+	            }
+	        } catch (Exception e) {
+	            response.setMessage("Error: " + e.getMessage());
+	            response.setStatus(false);
+	            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+	        }
+	    }
 }

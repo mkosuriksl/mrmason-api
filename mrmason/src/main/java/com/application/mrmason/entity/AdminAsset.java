@@ -42,6 +42,6 @@ public class AdminAsset {
 	@PrePersist
 	@PreUpdate
 	private void prePersist() {
-		this.assetId = assetBrand + "_" + assetSubCat;
+		this.assetId = assetCat + "_" + assetSubCat+"_"+assetBrand+"_"+assetModel;
 	}
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,8 +15,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 import com.application.mrmason.dto.AddServiceGetDto;
 import com.application.mrmason.dto.AddServicesDto;
+import com.application.mrmason.dto.AddServicesDto1;
 import com.application.mrmason.dto.AdminServiceNameDto;
 import com.application.mrmason.dto.ResponseAddServiceDto;
 import com.application.mrmason.dto.ResponseAddServiceGetDto;
@@ -57,15 +60,15 @@ public class AddServiceController {
 	@PostMapping("/add-service")
 	public ResponseEntity<?> addService(@RequestBody AddServices add) {
 		try {
-			String bodSeqNo = add.getBodSeqNo();
-			AddServices addedService = service.addServicePerson(add, bodSeqNo);
+			
+			AddServicesDto1 addedService = service.addServices(add);
 			if (addedService != null) {
 				response.setMessage("Service added successfully");
 				response.setStatus(true);
 				response.setAddServicesData(addedService);
 				return ResponseEntity.status(HttpStatus.OK).body(response);
 			} else {
-				response.setMessage("Failed to add service");
+				response.setMessage("Failed to add services/userserviceid not present");
 				response.setStatus(false);
 				return ResponseEntity.status(HttpStatus.OK).body(response);
 			}
@@ -73,7 +76,9 @@ public class AddServiceController {
 			response.setMessage("Record already exists");
 			response.setStatus(false);
 			return ResponseEntity.status(HttpStatus.OK).body(response);
+			
 		}
+
 	}
 
 	@PutMapping("/sp-add-services-update")
@@ -93,7 +98,7 @@ public class AddServiceController {
 
 				response.setMessage("Services updated successfully");
 				response.setStatus(true);
-				response.setAddServicesData(upServices);
+//				response.setAddServicesData(upServices);
 				return ResponseEntity.ok().body(response);
 			}
 		} catch (Exception e) {
@@ -134,7 +139,7 @@ public class AddServiceController {
 	            return new ResponseEntity<>(responseGet, HttpStatus.OK);
 	        } else {
 	            responseGet.setMessage("No services found for the given parameters.");
-	            responseGet.setStatus(false);
+	            responseGet.setStatus(true);
 	            return new ResponseEntity<>(responseGet, HttpStatus.OK);
 	        }
 	        
@@ -142,7 +147,7 @@ public class AddServiceController {
 	        e.printStackTrace();  
 	        responseGet.setMessage("Error: " + e.getMessage());
 	        responseGet.setStatus(false);
-	        return new ResponseEntity<>(responseGet, HttpStatus.INTERNAL_SERVER_ERROR);
+	        return new ResponseEntity<>(responseGet, HttpStatus.OK);
 	    }
 	}
 

@@ -1,6 +1,7 @@
 package com.application.mrmason.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -14,5 +15,8 @@ public interface ServiceCategoryRepo extends JpaRepository<ServiceCategory,Strin
 	
 	List<ServiceCategory>  findByServiceCategoryNotOrderByCreateDateDesc(String category);
 	List<ServiceCategory> findByServiceCategoryOrderByCreateDateDesc(String category);
+	
+	Optional<ServiceCategory> findById(String id);
+    Optional<ServiceCategory> findByServiceSubCategory(String serviceSubCategory);
 	
 }

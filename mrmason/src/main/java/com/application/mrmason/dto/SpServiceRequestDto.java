@@ -15,4 +15,5 @@ public class SpServiceRequestDto {
 	private String userFeedback;
 	private String assignedDate;
 	private String assignedBy;
+	
 }

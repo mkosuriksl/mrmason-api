@@ -38,6 +38,7 @@ public class AdminDetailsServiceImpl implements AdminDetailsService {
 		if (!user.isPresent()) {
 			String encryptPassword = byCrypt.encode(admin.getPassword());
 			admin.setPassword(encryptPassword);
+		
 			return adminRepo.save(admin);
 		}
 		return null;

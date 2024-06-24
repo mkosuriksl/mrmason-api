@@ -68,7 +68,7 @@ public class AddServiceController {
 				response.setAddServicesData(addedService);
 				return ResponseEntity.status(HttpStatus.OK).body(response);
 			} else {
-				response.setMessage("Failed to add services/userserviceid not present");
+				response.setMessage("Failed to add services");
 				response.setStatus(false);
 				return ResponseEntity.status(HttpStatus.OK).body(response);
 			}
@@ -77,7 +77,9 @@ public class AddServiceController {
 			response.setStatus(false);
 			return ResponseEntity.status(HttpStatus.OK).body(response);
 			
+			
 		}
+		
 
 	}
 

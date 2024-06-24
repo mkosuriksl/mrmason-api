@@ -55,19 +55,50 @@ public class AddServicesServiceIml {
 	private EntityManager entityManager;
 
 	
+//	public AddServicesDto1 addServices(AddServices service) {
+//	    System.out.println("Received userIdServiceId: " + service.getUserIdServiceId());
+//	    
+//	    Optional<SpServiceDetails> userIdServiceIdExists = Optional.ofNullable(spService.findByUserServicesId(service.getUserIdServiceId()));
+//
+//	    if (userIdServiceIdExists.isPresent()) {
+//	        System.out.println("UserServiceId exists. Details: " + userIdServiceIdExists.get());
+//
+//	        service.setBodSeqNo(userIdServiceIdExists.get().getUserId());
+//	        service.setUpdatedBy(userIdServiceIdExists.get().getUserId());
+//	        service.setStatus(userIdServiceIdExists.get().getStatus());
+//	        service.setUserIdServiceId(userIdServiceIdExists.get().getUserServicesId());
+//
+//	        AddServices saved = repo.save(service);
+//
+//	        AddServicesDto1 addSerices = new AddServicesDto1();
+//	        addSerices.setUserIdServiceId(saved.getUserIdServiceId());
+//	        addSerices.setBodSeqNo(saved.getBodSeqNo());
+//	        addSerices.setServiceId(saved.getServiceId());
+//	        addSerices.setServiceIdList(saved.getServiceIdList());
+//	        addSerices.setServiceSubCategory(saved.getServiceSubCategory());
+//	        addSerices.setStatus(saved.getStatus());
+//	        addSerices.setUpdateDateFormat(saved.getUpdateDateFormat());
+//	        addSerices.setUpdatedBy(saved.getUpdatedBy());
+//	        addSerices.setUpdatedDate(saved.getUpdatedDate());
+//	        addSerices.setUserServicesId(saved.getUserIdServiceId());
+//
+//	        return addSerices;
+//	    } else {
+//	        System.out.println("UserServiceId does not exist.");
+//	    }
+//
+//	    return null;
+//	}
+
+	
 	public AddServicesDto1 addServices(AddServices service) {
-	    System.out.println("Received userIdServiceId: " + service.getUserIdServiceId());
+
 	    
-	    Optional<SpServiceDetails> userIdServiceIdExists = Optional.ofNullable(spService.findByUserServicesId(service.getUserIdServiceId()));
+	    Optional<AddServices> userIdServiceIdExists = Optional.ofNullable(repo.findByUserIdServiceId(service.getUserIdServiceId()));
 
-	    if (userIdServiceIdExists.isPresent()) {
-	        System.out.println("UserServiceId exists. Details: " + userIdServiceIdExists.get());
+	    if (!userIdServiceIdExists.isPresent()) {
 
-	        service.setBodSeqNo(userIdServiceIdExists.get().getUserId());
-	        service.setUpdatedBy(userIdServiceIdExists.get().getUserId());
-	        service.setStatus(userIdServiceIdExists.get().getStatus());
-	        service.setUserIdServiceId(userIdServiceIdExists.get().getUserServicesId());
-
+	      
 	        AddServices saved = repo.save(service);
 
 	        AddServicesDto1 addSerices = new AddServicesDto1();
@@ -83,13 +114,10 @@ public class AddServicesServiceIml {
 	        addSerices.setUserServicesId(saved.getUserIdServiceId());
 
 	        return addSerices;
-	    } else {
-	        System.out.println("UserServiceId does not exist.");
-	    }
+	    } 
 
 	    return null;
 	}
-
 
 	public AddServices updateAddServiceDetails(AddServiceGetDto services, String userIdServiceId, String serviceSubCategory, String bodSeqNo) {
 		Optional<AddServices> optionalAdd = Optional.of(repo.findByUserIdServiceId(userIdServiceId));

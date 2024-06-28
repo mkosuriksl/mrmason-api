@@ -9,4 +9,6 @@ public interface ServiceRequestService {
 	ServiceRequest updateRequest(ServiceRequest requestData);
 	ServiceRequest updateStatusRequest(ServiceRequest requestData);
 
+	
+	public ServiceRequest requestedDetails(String requestId);
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.application.mrmason.dto.UpdateAssetDto;
 import com.application.mrmason.entity.AdminAsset;
+import com.application.mrmason.entity.AdminAssetCategory;
 import com.application.mrmason.repository.AdminAssetRepo;
 import com.application.mrmason.service.AdminAssetService;
 
@@ -23,27 +24,46 @@ public class AdminAssetServiceImpl implements AdminAssetService {
 		return adminAssetRepo.save(asset);
 	}
 
+
 	@Override
-	public List<AdminAsset> getAssets(String assetId,String assetCat,String assetSubCat,String assetModel,String assetBrand) {
-		
-        if( assetId!=null && assetCat==null && assetSubCat==null && assetModel==null && assetBrand==null) {
-			Optional<List<AdminAsset>> user=Optional.of((adminAssetRepo.findByAssetIdOrderByAddedDateDesc(assetId)));
-			return user.get();
-		}else if(assetId==null && assetCat!=null && assetSubCat==null && assetModel==null && assetBrand==null) {
-			Optional<List<AdminAsset>> user=Optional.of((adminAssetRepo.findByAssetCatOrderByAddedDateDesc(assetCat)));
-			return user.get();
-		}else if(assetId==null && assetCat==null && assetSubCat!=null && assetModel==null && assetBrand==null) {
-			Optional<List<AdminAsset>> user=Optional.of((adminAssetRepo.findByAssetSubCatOrderByAddedDateDesc(assetSubCat)));
-			return user.get();
-		}else if( assetId==null && assetCat==null && assetSubCat==null && assetModel!=null && assetBrand==null) {
-			Optional<List<AdminAsset>> user=Optional.of((adminAssetRepo.findByAssetModelOrderByAddedDateDesc(assetModel)));
-			return user.get();
-		}else if(assetId==null && assetCat==null && assetSubCat==null && assetModel==null && assetBrand!=null) {
-			Optional<List<AdminAsset>> user=Optional.of((adminAssetRepo.findByAssetBrandOrderByAddedDateDesc(assetBrand)));
-			return user.get();
-		}
-		return null;
+	public List<AdminAsset> getAssets(String assetId, String assetCat, String assetSubCat, String assetModel, String assetBrand) {
+	    if (assetId != null) {
+	        return adminAssetRepo.findByAssetIdOrderByAddedDateDesc(assetId);
+	    } else if (assetCat != null) {
+	        return adminAssetRepo.findByAssetCatOrderByAddedDateDesc(assetCat);
+	    } else if (assetSubCat != null) {
+	        return adminAssetRepo.findByAssetSubCatOrderByAddedDateDesc(assetSubCat);
+	    } else if (assetModel != null) {
+	        return adminAssetRepo.findByAssetModelOrderByAddedDateDesc(assetModel);
+	    } else if (assetBrand != null) {
+	        return adminAssetRepo.findByAssetBrandOrderByAddedDateDesc(assetBrand);
+	    }
+		return null; 
 	}
+	
+	
+	@Override
+	public List<AdminAsset> getAssetCivil(String assetCat) {
+
+		if ("CIVIL".equalsIgnoreCase(assetCat)) {
+            return adminAssetRepo.findByAssetCat(assetCat);
+        } else {
+            return List.of(); 
+        }
+
+
+	}
+
+	@Override
+	public List<AdminAsset> getAssetNonCivil(String assetCat) {
+
+		if (!"CIVIL".equalsIgnoreCase(assetCat)) {
+            return adminAssetRepo.findByAssetCat(assetCat);
+        } else {
+            return List.of(); 
+        }
+	}
+
 
 	@Override
 	public AdminAsset updateAssets(UpdateAssetDto asset) {
@@ -65,4 +85,5 @@ public class AdminAssetServiceImpl implements AdminAssetService {
 		return null;
 	}
 
+	
 }

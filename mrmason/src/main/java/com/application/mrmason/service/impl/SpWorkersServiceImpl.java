@@ -42,7 +42,7 @@ public class SpWorkersServiceImpl implements SpWorkersService {
 				user.setMobile(worker.getWorkPhoneNum());
 				user.setName(worker.getWorkerName());
 				user.setVerified("yes");
-				user.setPincodeNo(worker.getWorkerLocation());
+				user.setLocation(worker.getWorkerLocation());
 				user.setEmail("none");
 				user.setStatus("active");
 				UserType userType = UserType.fromString("Worker");

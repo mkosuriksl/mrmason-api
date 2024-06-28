@@ -60,7 +60,7 @@ public class User implements UserDetails {
 	public String state;
 
 	@Column(name = "PINCODE_NO")
-	public String pincodeNo;
+	public String location;
 
 
 	@Transient

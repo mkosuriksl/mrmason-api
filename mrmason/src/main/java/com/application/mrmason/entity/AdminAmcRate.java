@@ -3,7 +3,6 @@ package com.application.mrmason.entity;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -12,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,13 +23,14 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name="admin_amc_rates")
+//@Table(name="admin_amc_rates")
+@Table(name = "admin_amc_rates", uniqueConstraints = {@UniqueConstraint(columnNames = "amcId")})
 public class AdminAmcRate {
 	@Id
 	@Column(name = "id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
-	@Column(name = "amc_id")
+	@Column(name = "amc_id",nullable = false, unique = true) 
 	private String amcId;
 	@Column(name = "location")
 	private String location;
@@ -56,7 +57,6 @@ public class AdminAmcRate {
 	@PrePersist
 	@PreUpdate
 	private void prePersist() {
-		this.amcId = assetSubCat + "_" + planId;
 		
 		LocalDateTime now = LocalDateTime.now();
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy hh:mm a");

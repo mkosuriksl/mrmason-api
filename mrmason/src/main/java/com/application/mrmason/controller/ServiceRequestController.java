@@ -1,12 +1,10 @@
 package com.application.mrmason.controller;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -15,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ResponseListServiceRequestDto;
+import com.application.mrmason.dto.ResponseListServiceRequestDto1;
 import com.application.mrmason.dto.ResponseServiceReqDto;
 import com.application.mrmason.entity.ServiceRequest;
 import com.application.mrmason.service.ServiceRequestService;
@@ -119,6 +118,32 @@ public class ServiceRequestController {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
 			return 	new ResponseEntity<>(response,HttpStatus.OK);
+		}
+	}
+	
+	
+	
+	@GetMapping("/getRequestId")
+	public ResponseEntity<?> getRequestId(@RequestParam(required = false)String requestId){
+		ResponseListServiceRequestDto1 response = new ResponseListServiceRequestDto1();
+		ServiceRequest serviceReq = reqService.requestedDetails(requestId);
+		try {
+
+			if(serviceReq ==null) {
+				response.setMessage("No data found for the given details.!");
+				response.setData(serviceReq);
+				response.setStatus(true);
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			}
+			response.setData(serviceReq);
+			response.setMessage("ServiceRequest data fetched successfully..");
+			response.setStatus(true);
+			return ResponseEntity.ok(response);
+
+		}catch(Exception e) {
+			response.setMessage(e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
 }

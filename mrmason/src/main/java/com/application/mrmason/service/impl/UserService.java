@@ -2,9 +2,11 @@ package com.application.mrmason.service.impl;
 
 import java.util.List;
 import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
 import com.application.mrmason.dto.ResponseSpLoginDto;
 import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.ServicePersonLogin;
@@ -62,7 +64,7 @@ public class UserService {
 		dto.setCity(user.getCity());
 		dto.setDistrict(user.getDistrict());
 		dto.setState(user.getState());
-		dto.setPincodeNo(user.getPincodeNo());
+		dto.setLocation(user.getLocation());;
 		dto.setVerified(user.getVerified());
 		dto.setUserType(String.valueOf(data.getUserType()));
 		dto.setStatus(user.getStatus());
@@ -100,7 +102,7 @@ public class UserService {
 		if (existedByEmail.isPresent()) {
 
 			existedByEmail.get().setName(registrationDetails.getName());
-			existedByEmail.get().setPincodeNo(registrationDetails.getPincodeNo());
+			existedByEmail.get().setLocation(registrationDetails.getLocation());
 			existedByEmail.get().setState(registrationDetails.getState());
 			existedByEmail.get().setDistrict(registrationDetails.getDistrict());
 			existedByEmail.get().setAddress(registrationDetails.getAddress());
@@ -200,7 +202,8 @@ public class UserService {
 			dto.setCity(userdb.getCity());
 			dto.setDistrict(userdb.getDistrict());
 			dto.setState(userdb.getState());
-			dto.setPincodeNo(userdb.getPincodeNo());
+			dto.setLocation(userdb.getLocation());
+//			dto.setPincodeNo(userdb.getPincodeNo());
 			dto.setVerified(userdb.getVerified());
 			dto.setUserType(String.valueOf(userdb.getUserType()));
 			dto.setStatus(userdb.getStatus());
@@ -215,13 +218,13 @@ public class UserService {
 		return null;
 
 	}
-	public List<User> getServicePersonData(String email,String phNo,String location,String status,String category,String fromDate,String toDate) {
-		if(fromDate==null && toDate==null&& location==null  && category==null && status!=null|| email!=null || phNo!=null) {
-			return userDAO.findByEmailOrMobileOrStatusOrderByRegisteredDateDesc(email, phNo, status);
+	public List<User> getServicePersonData(String email,String mobile,String location,String status,String category,String fromDate,String toDate) {
+		if(fromDate==null && toDate==null&& location==null  && category==null && status!=null|| email!=null || mobile!=null) {
+			return userDAO.findByEmailOrMobileOrStatusOrderByRegisteredDateDesc(email, mobile, status);
 		}else if(category!=null){
 			return userDAO.findByServiceCategory(category);
 		}else if(location!=null) {
-			return userDAO.findByState(location);
+			return userDAO.findByLocation(location);
 		}
 		else {
 			return userDAO.findByRegisteredDateBetween(fromDate, toDate);
@@ -229,7 +232,7 @@ public class UserService {
 
 	}
 	
-	
+
 	
 	public ResponseSpLoginDto loginDetails(String email, String mobile, String password) {
 

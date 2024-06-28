@@ -9,9 +9,16 @@ public interface AdminAssetRepo extends JpaRepository<AdminAsset, String>{
 	
 	List<AdminAsset> findByAssetIdOrderByAddedDateDesc(String assetid);
 	List<AdminAsset> findByAssetModelOrderByAddedDateDesc(String assetModel);
+	
 	List<AdminAsset> findByAssetCatOrderByAddedDateDesc(String assetCat);
+	List<AdminAsset> findByAssetCatNotOrderByAddedDateDesc(String assetCat);
+	
 	List<AdminAsset> findByAssetSubCatOrderByAddedDateDesc(String assetSubCat);
+	
 	List<AdminAsset> findByAssetBrandOrderByAddedDateDesc(String assetBrand);
 	AdminAsset findByAssetId(String assetId);
+//	List<AdminAsset> findByAssetCatOrderByCreateDateDesc(String assetCat);
+//	List<AdminAsset> findByAssetCatNotOrderByCreateDateDesc(String assetCat);
 	
+	 List<AdminAsset> findByAssetCat(String assetCat);
 }

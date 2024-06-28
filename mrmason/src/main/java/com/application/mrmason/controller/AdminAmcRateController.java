@@ -17,37 +17,46 @@ import com.application.mrmason.dto.ResponseAdminAmcDto;
 import com.application.mrmason.dto.ResponseListAdminAmcRate;
 import com.application.mrmason.entity.AdminAmcRate;
 import com.application.mrmason.service.AdminAmcRateService;
+
 @RestController
 @PreAuthorize("hasAuthority('Adm')")
 public class AdminAmcRateController {
 	@Autowired
-	public AdminAmcRateService adminService;
-	ResponseListAdminAmcRate response=new ResponseListAdminAmcRate();
+	AdminAmcRateService adminService;
+	ResponseListAdminAmcRate response = new ResponseListAdminAmcRate();
+
 	@PostMapping("/addAdminAmc")
 	public ResponseEntity<ResponseAdminAmcDto> addRentRequest(@RequestBody AdminAmcRate amc) {
-		ResponseAdminAmcDto response=new ResponseAdminAmcDto();
+		ResponseAdminAmcDto response = new ResponseAdminAmcDto();
 		try {
-			if (adminService.addAdminamc(amc) != null) {
-				response.setAdminAmcRates(adminService.addAdminamc(amc));
-				response.setMessage("AMC added successfully..");
+			AdminAmcRate amcRates = adminService.addAdminamc(amc);
+			if (amcRates != null) {
+				response.setAdminAmcRates(amcRates);
+				response.setMessage("AMC added successfully.");
 				response.setStatus(true);
 				return ResponseEntity.ok(response);
+			} else {
+				response.setMessage("Record already exists.");
+				response.setStatus(false);
+				return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
 			}
-			response.setMessage("Invalid User.!");
-			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
-			response.setMessage(e.getMessage());
+			e.printStackTrace();
+			response.setMessage("An error occurred while adding the record.");
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.OK);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
+
 	}
-	
+
 	@GetMapping("/getAdminAmcRates")
-	public ResponseEntity<ResponseListAdminAmcRate> getAssetDetails(@RequestParam(required = false) String amcId,@RequestParam(required = false)String planId,@RequestParam(required = false)String assetSubCat,@RequestParam(required = false)String assetModel,@RequestParam(required = false)String assetBrand) {
+	public ResponseEntity<ResponseListAdminAmcRate> getAssetDetails(@RequestParam(required = false) String amcId,
+			@RequestParam(required = false) String planId, @RequestParam(required = false) String assetSubCat,
+			@RequestParam(required = false) String assetModel, @RequestParam(required = false) String assetBrand) {
+		ResponseListAdminAmcRate response = new ResponseListAdminAmcRate();
 		try {
 			List<AdminAmcRate> entity = adminService.getAmcRates(amcId, planId, assetSubCat, assetModel, assetBrand);
-			if (entity.isEmpty()) {
+			if (entity == null || entity.isEmpty()) {
 				response.setMessage("No data found for the given details.!");
 				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
@@ -56,30 +65,31 @@ public class AdminAmcRateController {
 			response.setStatus(true);
 			response.setData(entity);
 			return new ResponseEntity<>(response, HttpStatus.OK);
-
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
 			return new ResponseEntity<>(response, HttpStatus.OK);
+
 		}
 
 	}
 
 	@PutMapping("/updateAdminAmcRates")
 	public ResponseEntity<ResponseAdminAmcDto> updateAssetDetails(@RequestBody AdminAmcRate updateAmc) {
-		ResponseAdminAmcDto response=new ResponseAdminAmcDto();
+		ResponseAdminAmcDto response = new ResponseAdminAmcDto();
+		AdminAmcRate amc = adminService.updateAmcRates(updateAmc);
 		try {
 
-			if (adminService.updateAmcRates(updateAmc) != null) {
-				
-				response.setAdminAmcRates(adminService.updateAmcRates(updateAmc));
+			if (amc != null) {
+				response.setAdminAmcRates(amc);
 				response.setMessage("Admin Amc Rates updated successfully..");
 				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
+			} else {
+				response.setMessage("failed to update/amcId not present");
+				response.setStatus(false);
+				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
-			response.setMessage("Invalid User.!");
-			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);

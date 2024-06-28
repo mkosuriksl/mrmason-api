@@ -242,20 +242,22 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.OK).body(e.getMessage());
 		}
 	}
-	@PreAuthorize("hasAuthority('Adm')")
+//	@PreAuthorize("hasAuthority('Adm')")
 	@GetMapping("/filterServicePerson")
 	public ResponseEntity<ResponseListUserDto> getCustomers(
-			@RequestParam(value = "email", required = false) String userEmail,
-			@RequestParam(value = "phNo", required = false) String userMobile,
-			@RequestParam(value = "userState", required = false) String userState,
+			@RequestParam(value = "email", required = false) String email,
+			@RequestParam(value = "mobile", required = false) String mobile,
+			@RequestParam(value = "location", required = false) String location,
 			@RequestParam(value = "status", required = false) String status,
 			@RequestParam(value = "category", required = false) String category,
 			@RequestParam(value = "fromDate", required = false) String fromDate,
-			@RequestParam(value = "toDate", required = false) String toDate) {
+			@RequestParam(value = "toDate", required = false) String toDate,
+			@RequestParam(value = "state", required = false) String state,
+			@RequestParam(value = "city", required = false) String city) {
 		ResponseListUserDto response3=new ResponseListUserDto();
 
 		try {
-			List<User> entity = userService.getServicePersonData(userEmail, userMobile, userState, status, category,
+			List<User> entity = userService.getServicePersonData(email, mobile,location, status, category,
 					fromDate, toDate);
 			if (!entity.isEmpty()) {
 				response3.setMessage("Service person details fetched successfully.!");

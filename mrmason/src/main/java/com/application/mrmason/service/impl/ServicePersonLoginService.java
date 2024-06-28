@@ -71,7 +71,8 @@ public class ServicePersonLoginService {
 		dto.setCity(userdb.getCity());
 		dto.setDistrict(userdb.getDistrict());
 		dto.setState(userdb.getState());
-		dto.setPincodeNo(userdb.getPincodeNo());
+		dto.setLocation(userdb.getLocation());
+//		dto.setPincodeNo(userdb.getPincodeNo());
 		dto.setVerified(userdb.getVerified());
 		dto.setUserType(String.valueOf(userdb.getUserType()));
 		dto.setStatus(userdb.getStatus());

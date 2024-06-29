@@ -36,4 +36,9 @@ public interface UserDAO extends JpaRepository<User, String> {
 
 	List<User> findByLocation(String location);
 
+//	List<User> findByBodSeqNoIn(List<String> userIds);
+	List<User> findByBodSeqNoIn(List<String> bodSeqNo);
+	
+	
+
 }

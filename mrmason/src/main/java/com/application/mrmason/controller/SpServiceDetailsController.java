@@ -1,5 +1,7 @@
 package com.application.mrmason.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,9 +12,12 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 import com.application.mrmason.dto.ResponseSpServiceDetailsDto;
 import com.application.mrmason.dto.ResponseSpServiceGetDto;
+import com.application.mrmason.dto.ResponseUserUserServicesDto;
 import com.application.mrmason.entity.SpServiceDetails;
+import com.application.mrmason.entity.User;
 import com.application.mrmason.service.SpServiceDetailsService;
 
 @RestController
@@ -41,7 +46,8 @@ public class SpServiceDetailsController {
 	}
 
 	@GetMapping("/getSpService")
-	public ResponseEntity<ResponseSpServiceGetDto> getAssetDetails(@RequestParam(required = false)String userId,@RequestParam(required = false) String serviceType,@RequestParam(required = false) String servicesId) {
+	public ResponseEntity<ResponseSpServiceGetDto> getAssetDetails(@RequestParam(required = false) String userId,
+			@RequestParam(required = false) String serviceType, @RequestParam(required = false) String servicesId) {
 		try {
 			ResponseSpServiceGetDto entity = spService.getServiceRequest(userId, serviceType, servicesId);
 			return new ResponseEntity<>(entity, HttpStatus.OK);
@@ -68,6 +74,38 @@ public class SpServiceDetailsController {
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+	}
+
+
+	@GetMapping("/getServicePersonDetails")
+	public ResponseEntity<ResponseUserUserServicesDto> getServicePerson(
+			@RequestParam(required = false) String serviceType) {
+
+		List<User> users = spService.getServicePersonDetails(serviceType);
+		List<SpServiceDetails> userServices = spService.getUserService(serviceType);
+
+		ResponseUserUserServicesDto response = new ResponseUserUserServicesDto();
+		try {
+			if (!users.isEmpty()) {
+				response.setMessage("Received user details");
+				response.setStatus(true);
+				response.setUserServicesData(userServices);
+				response.setUserData(users);
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			} else {
+				response.setMessage("No details found. Check your serviceType");
+				response.setStatus(false);
+				response.setUserServicesData(userServices);
+				response.setUserData(users);
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			}
+		} catch (Exception e) {
+			response.setMessage("No details found. Check your serviceType");
+			response.setStatus(false);
+			response.setUserServicesData(userServices);
+			response.setUserData(users);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}

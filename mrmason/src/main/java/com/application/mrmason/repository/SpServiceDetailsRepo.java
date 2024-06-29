@@ -12,4 +12,6 @@ public interface SpServiceDetailsRepo extends JpaRepository<SpServiceDetails, St
 	List<SpServiceDetails> findByUserIdOrServiceTypeOrUserServicesId(String userId, String serviceType, String userServiceId);
 	SpServiceDetails findByUserServicesId(String userServiceId);
 //	AddServicesDto save(AddServicesDto dto);
+	List<SpServiceDetails> findByServiceType(String serviceType);
+	
 }

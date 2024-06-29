@@ -11,4 +11,6 @@ public interface ServiceRequestService {
 
 	
 	public ServiceRequest requestedDetails(String requestId);
+	
+	public void sendEmail(String toMail, ServiceRequest serivce);
 }

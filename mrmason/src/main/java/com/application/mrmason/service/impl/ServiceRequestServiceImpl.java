@@ -6,6 +6,8 @@ import java.util.Optional;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.entity.CustomerAssets;
@@ -19,26 +21,29 @@ import com.application.mrmason.repository.ServiceStatusUpateRepo;
 import com.application.mrmason.service.ServiceRequestService;
 
 @Service
-public class ServiceRequestServiceImpl implements ServiceRequestService{
-    @Autowired
+public class ServiceRequestServiceImpl implements ServiceRequestService {
+	@Autowired
 	public ServiceRequestRepo requestRepo;
-    @Autowired
-    public CustomerAssetsRepo assetRepo;
-    @Autowired
+	@Autowired
+	public CustomerAssetsRepo assetRepo;
+	@Autowired
 	public CustomerRegistrationRepo repo;
-    @Autowired
-    ServiceStatusUpateRepo statusRepo;
-	
-    ServiceStatusUpate statusUpdate=new ServiceStatusUpate();
-    @Autowired
-    ModelMapper model;
+	@Autowired
+	ServiceStatusUpateRepo statusRepo;
 
+	ServiceStatusUpate statusUpdate = new ServiceStatusUpate();
+	@Autowired
+	ModelMapper model;
+
+	@Autowired
+	private JavaMailSender mailsender;
 
 	@Override
 	public ServiceRequest addRequest(ServiceRequest requestData) {
-		Optional<CustomerAssets> serviceRequestData=assetRepo.findByUserIdAndAssetId(requestData.getRequestedBy(), requestData.getAssetId());
-		if(serviceRequestData.isPresent()) {
-			ServiceRequest service= requestRepo.save(requestData);
+		Optional<CustomerAssets> serviceRequestData = assetRepo.findByUserIdAndAssetId(requestData.getRequestedBy(),
+				requestData.getAssetId());
+		if (serviceRequestData.isPresent()) {
+			ServiceRequest service = requestRepo.save(requestData);
 			statusUpdate.setServiceRequestId(service.getRequestId());
 			statusUpdate.setUpdatedBy(service.getRequestedBy());
 			statusRepo.save(statusUpdate);
@@ -78,10 +83,9 @@ public class ServiceRequestServiceImpl implements ServiceRequestService{
 //		return null;
 //	}
 
-
-
 	@Override
-	public List<ServiceRequest> getServiceReq(String userId, String assetId, String location, String serviceName, String email, String mobile, String status, String fromDate, String toDate) {
+	public List<ServiceRequest> getServiceReq(String userId, String assetId, String location, String serviceName,
+			String email, String mobile, String status, String fromDate, String toDate) {
 		if (userId != null) {
 			return requestRepo.findByRequestedByOrderByServiceRequestDateDesc(userId);
 		} else if (assetId != null) {
@@ -103,16 +107,10 @@ public class ServiceRequestServiceImpl implements ServiceRequestService{
 		return Collections.emptyList();
 	}
 
-
-
-
-
-
-
 	@Override
 	public ServiceRequest updateRequest(ServiceRequest requestData) {
-		ServiceRequest serviceRequestData=requestRepo.findByRequestId(requestData.getRequestId());
-		if(serviceRequestData!=null) {
+		ServiceRequest serviceRequestData = requestRepo.findByRequestId(requestData.getRequestId());
+		if (serviceRequestData != null) {
 //			ServiceRequest service= model.map(serviceRequestData, ServiceRequest.class);
 			serviceRequestData.setDescription(requestData.getDescription());
 			serviceRequestData.setLocation(requestData.getLocation());
@@ -121,31 +119,46 @@ public class ServiceRequestServiceImpl implements ServiceRequestService{
 		}
 		return null;
 	}
+
 	@Override
 	public ServiceRequest updateStatusRequest(ServiceRequest requestData) {
-		ServiceRequest serviceRequestData=requestRepo.findByRequestId(requestData.getRequestId());
-		if(serviceRequestData!=null) {
-			ServiceStatusUpate update=statusRepo.findByServiceRequestId(requestData.getRequestId());
-			if(update!=null) {
+		ServiceRequest serviceRequestData = requestRepo.findByRequestId(requestData.getRequestId());
+		if (serviceRequestData != null) {
+			ServiceStatusUpate update = statusRepo.findByServiceRequestId(requestData.getRequestId());
+			if (update != null) {
 				serviceRequestData.setStatus(requestData.getStatus());
-				ServiceRequest service= requestRepo.save(serviceRequestData);
-				
+				ServiceRequest service = requestRepo.save(serviceRequestData);
+
 				update.setStatus(requestData.getStatus());
 				statusRepo.save(update);
 				return service;
 			}
-			
+
 		}
 		return null;
 	}
-	
-	
+
 	@Override
 	public ServiceRequest requestedDetails(String requestId) {
-		
+
 		return requestRepo.findByRequestId(requestId);
-		
+
 	}
-	
+
+	@Override
+	public void sendEmail(String toMail, ServiceRequest service){
+		
+	Optional<ServiceRequest> request = Optional.ofNullable(requestRepo.findByRequestId(service.getRequestId()));
+	if(request.isPresent()) {
+		
+		SimpleMailMessage mail=new SimpleMailMessage();
+		mail.setTo(toMail);
+		mail.setSubject("Your request Details.");
+		String body="ReqSeqId "+service.getReqSeqId()+"\n"+"AssetId "+service.getAssetId()+"\n"+"RequestId "+service.getRequestId()+"\n"+"serviceName"+service.getServiceName()+"\n"+"Service sub category "+service.getServiceSubCategory()+"\n"+"RequestedBy "+service.getRequestedBy()+"\n"+"status "+service.getStatus()+"\n"+"ServiceDate"+service.getServiceDateDb()+"/n"+"description "+service.getDescription()+"\n"+"location"+service.getLocation() ;
+		mail.setText(body);
+		mailsender.send(mail);
+	}
+	}
+
 	
 }

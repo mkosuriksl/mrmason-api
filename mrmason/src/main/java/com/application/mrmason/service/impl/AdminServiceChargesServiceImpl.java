@@ -60,13 +60,13 @@ public class AdminServiceChargesServiceImpl implements AdminServiceChargesServic
 			predicates.add(cb.equal(root.get("serviceId"), serviceId));
 		}
 		if (location != null) {
-			predicates.add(cb.equal(root.get("String location"), location));
+			predicates.add(cb.equal(root.get("location"), location));
 		}
 		if (brand != null) {
-			predicates.add(cb.equal(root.get("String brand"), brand));
+			predicates.add(cb.equal(root.get("brand"), brand));
 		}
 		if (model != null) {
-			predicates.add(cb.equal(root.get("String model"), model));
+			predicates.add(cb.equal(root.get("model"), model));
 		}
 
 		query.where(predicates.toArray(new Predicate[0]));

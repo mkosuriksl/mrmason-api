@@ -116,23 +116,7 @@ public class AdminAssetController {
 
 	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+		
 	@PutMapping("/updateAdminAssets")
 	public ResponseEntity<?> updateAssetDetails(@RequestBody UpdateAssetDto updateAsset) {
 		try {

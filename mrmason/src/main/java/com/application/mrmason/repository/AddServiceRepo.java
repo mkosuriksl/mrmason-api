@@ -23,4 +23,6 @@ public interface AddServiceRepo extends JpaRepository<AddServices, String> {
 	List<AddServices> findByBodSeqNoOrServiceSubCategoryOrUserIdServiceId(String bodSeqNo,
 			String serviceSubCategory, String useridServiceId);
 
+	List<AddServices> findByBodSeqNoIn(List<String> userIds);
+
 }

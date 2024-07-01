@@ -8,11 +8,16 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.application.mrmason.dto.AdminServiceNameDto;
 import com.application.mrmason.dto.ResponseSpServiceDetailsDto;
 import com.application.mrmason.dto.ResponseSpServiceGetDto;
 import com.application.mrmason.dto.SpServiceDetailsDto;
+import com.application.mrmason.entity.AddServices;
+import com.application.mrmason.entity.AdminServiceName;
 import com.application.mrmason.entity.SpServiceDetails;
 import com.application.mrmason.entity.User;
+import com.application.mrmason.repository.AddServiceRepo;
+import com.application.mrmason.repository.AdminServiceNameRepo;
 import com.application.mrmason.repository.SpServiceDetailsRepo;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.SpServiceDetailsService;
@@ -26,6 +31,12 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 
 	@Autowired
 	UserDAO userDAO;
+
+	@Autowired
+	AddServiceRepo addServiceRepo;
+	
+	@Autowired
+	AdminServiceNameRepo serviceNameRepo;
 
 	ResponseSpServiceDetailsDto response = new ResponseSpServiceDetailsDto();
 	ResponseSpServiceGetDto response2 = new ResponseSpServiceGetDto();
@@ -69,7 +80,8 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 		if (data != null) {
 			data.setAvailableWithinRange(service.getAvailableWithinRange());
 			data.setCharge(service.getCharge());
-			data.setPincode(service.getPincode());
+//			data.setPincode(service.getPincode());
+			data.setLocation(service.getLocation());
 			data.setCity(service.getCity());
 			data.setExperience(service.getExperience());
 			data.setQualification(service.getQualification());
@@ -91,13 +103,24 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 		return serviceDto;
 	}
 
+
 	@Override
-	public List<User> getServicePersonDetails(String serviceType) {
-		List<SpServiceDetails> serviceDetails = serviceRepo.findByServiceType(serviceType);
+	public List<User> getServicePersonDetails(String serviceType, String location) {
+		List<SpServiceDetails> serviceDetails;
+
+		if (serviceType != null && location != null) {
+			serviceDetails = serviceRepo.findByServiceTypeAndLocation(serviceType, location);
+		} else if (serviceType != null) {
+			serviceDetails = serviceRepo.findByServiceType(serviceType);
+		} else if (location != null) {
+			serviceDetails = serviceRepo.findByLocation(location);
+		} else {
+			return Collections.emptyList();
+		}
+
 		if (!serviceDetails.isEmpty()) {
 			List<String> userIds = serviceDetails.stream().map(SpServiceDetails::getUserId)
 					.collect(Collectors.toList());
-
 			List<User> users = userDAO.findByBodSeqNoIn(userIds);
 			return users;
 		}
@@ -105,8 +128,74 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 	}
 
 	@Override
-	public List<SpServiceDetails> getUserService(String serviceType) {
-		return serviceRepo.findByServiceType(serviceType);
+	public List<SpServiceDetails> getUserService(String serviceType, String location) {
+		if (serviceType != null && location != null) {
+			return serviceRepo.findByServiceTypeAndLocation(serviceType, location);
+		} else if (serviceType != null) {
+			return serviceRepo.findByServiceType(serviceType);
+		} else if (location != null) {
+			return serviceRepo.findByLocation(location);
+		} else {
+			return Collections.emptyList();
+		}
 	}
+
+	@Override
+	public List<AddServices> getUserInDetails(String serviceType, String location) {
+
+		List<SpServiceDetails> serviceDetails;
+
+		if (serviceType != null && location != null) {
+			serviceDetails = serviceRepo.findByServiceTypeAndLocation(serviceType, location);
+		} else if (serviceType != null) {
+			serviceDetails = serviceRepo.findByServiceType(serviceType);
+		} else if (location != null) {
+			serviceDetails = serviceRepo.findByLocation(location);
+		} else {
+			return Collections.emptyList();
+		}
+
+		if (!serviceDetails.isEmpty()) {
+			List<String> userIds = serviceDetails.stream().map(SpServiceDetails::getUserId)
+					.collect(Collectors.toList());
+			List<AddServices> services = addServiceRepo.findByBodSeqNoIn(userIds);
+			return services;
+		}
+		return Collections.emptyList();
+
+	}
+
+	
+	
+	@Override
+	public List<AdminServiceName> getServiceNames(String serviceType, String location) {
+	    List<SpServiceDetails> serviceDetails;
+
+	    if (serviceType != null && location != null) {
+	        serviceDetails = serviceRepo.findByServiceTypeAndLocation(serviceType, location);
+	    } else if (serviceType != null) {
+	        serviceDetails = serviceRepo.findByServiceType(serviceType);
+	    } else if (location != null) {
+	        serviceDetails = serviceRepo.findByLocation(location);
+	    } else {
+	        return Collections.emptyList();
+	    }
+
+	    if (serviceDetails.isEmpty()) {
+	        return Collections.emptyList();
+	    }
+
+	    List<String> userIds = serviceDetails.stream()
+	            .map(SpServiceDetails::getUserId)
+	            .collect(Collectors.toList());
+
+	    List<AddServices> services = addServiceRepo.findByBodSeqNoIn(userIds);
+	    List<String> serviceIds = services.stream()
+	            .map(AddServices::getServiceId)
+	            .collect(Collectors.toList());
+
+	    return serviceNameRepo.findByServiceIdIn(serviceIds);
+	}
+
 
 }

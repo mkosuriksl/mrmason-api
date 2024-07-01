@@ -2,6 +2,8 @@ package com.application.mrmason.dto;
 
 import java.util.List;
 
+import com.application.mrmason.entity.AddServices;
+import com.application.mrmason.entity.AdminServiceName;
 import com.application.mrmason.entity.SpServiceDetails;
 import com.application.mrmason.entity.User;
 
@@ -13,5 +15,7 @@ public class ResponseUserUserServicesDto {
 	private String message;
 	private boolean status;
 	private List<User>  userData;
-	List<SpServiceDetails> userServicesData;
+	private List<SpServiceDetails> userServicesData;
+	private List<AddServices> userServiceInDetail;
+	private List<AdminServiceName> serviceNames;
 }

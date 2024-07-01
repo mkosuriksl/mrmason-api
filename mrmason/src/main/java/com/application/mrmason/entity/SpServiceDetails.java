@@ -1,5 +1,6 @@
 package com.application.mrmason.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
@@ -30,7 +31,8 @@ public class SpServiceDetails {
 	@Builder.Default
 	private String status="active";
 	private String availableWithinRange;
-	private String pincode;
+	@Column(name="pincode")
+	private String location;
 	private String city;
 	
 	@PrePersist

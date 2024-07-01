@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.application.mrmason.dto.ResponseSpServiceDetailsDto;
 import com.application.mrmason.dto.ResponseSpServiceGetDto;
 import com.application.mrmason.dto.ResponseUserUserServicesDto;
+import com.application.mrmason.entity.AddServices;
+import com.application.mrmason.entity.AdminServiceName;
 import com.application.mrmason.entity.SpServiceDetails;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.service.SpServiceDetailsService;
@@ -81,31 +83,39 @@ public class SpServiceDetailsController {
 
 	@GetMapping("/getServicePersonDetails")
 	public ResponseEntity<ResponseUserUserServicesDto> getServicePerson(
-			@RequestParam(required = false) String serviceType) {
+			@RequestParam(required = false) String serviceType,@RequestParam(required = false) String location) {
 
-		List<User> users = spService.getServicePersonDetails(serviceType);
-		List<SpServiceDetails> userServices = spService.getUserService(serviceType);
+		List<User> users = spService.getServicePersonDetails(serviceType,location);
+		List<SpServiceDetails> userServices = spService.getUserService(serviceType,location);
+		List<AddServices> userIndetail= spService.getUserInDetails(serviceType, location);
+		List<AdminServiceName> serviceNames= spService.getServiceNames(serviceType, location);
 
 		ResponseUserUserServicesDto response = new ResponseUserUserServicesDto();
 		try {
 			if (!users.isEmpty()) {
-				response.setMessage("Received user details");
+				response.setMessage("Received service person details");
 				response.setStatus(true);
 				response.setUserServicesData(userServices);
 				response.setUserData(users);
+				response.setUserServiceInDetail(userIndetail);
+				response.setServiceNames(serviceNames);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			} else {
-				response.setMessage("No details found. Check your serviceType");
+				response.setMessage("No details found. Check your serviceType/location");
 				response.setStatus(false);
 				response.setUserServicesData(userServices);
 				response.setUserData(users);
+				response.setUserServiceInDetail(userIndetail);
+				response.setServiceNames(serviceNames);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 		} catch (Exception e) {
-			response.setMessage("No details found. Check your serviceType");
+			response.setMessage(e.getMessage());
 			response.setStatus(false);
 			response.setUserServicesData(userServices);
 			response.setUserData(users);
+			response.setUserServiceInDetail(userIndetail);
+			response.setServiceNames(serviceNames);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}

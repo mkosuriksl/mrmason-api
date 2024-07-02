@@ -24,26 +24,27 @@ public class AdminServiceChargesServiceImpl implements AdminServiceChargesServic
 	@PersistenceContext
 	private EntityManager entityManager;
 
+
 	@Override
-	public AdminServiceCharges addCharges(AdminServiceCharges charges) {
+    public List<AdminServiceCharges> addCharges(List<AdminServiceCharges> chargesList) {
+        List<AdminServiceCharges> savedCharges = new ArrayList<>();
+        for (AdminServiceCharges charges : chargesList) {
+            charges.setServiceChargeKey(generateServiceChargeKey(charges.getServiceId(), charges.getLocation(), charges.getBrand(), charges.getModel()));
+            Optional<AdminServiceCharges> existingCharges = repo.findById(charges.getServiceChargeKey());
 
-		charges.setServiceChargeKey(generateServiceChargeKey(charges.getServiceId(), charges.getLocation(),
-				charges.getBrand(), charges.getModel()));
-
-		Optional<AdminServiceCharges> existingCharges = repo.findById(charges.getServiceChargeKey());
-
-		if (!existingCharges.isPresent()) {
-			repo.save(charges);
-			return charges;
-		}
-
-		return null;
-	}
+            if (!existingCharges.isPresent()) {
+                repo.save(charges);
+                savedCharges.add(charges);
+            }
+        }
+        return savedCharges;
+    }
+	
 
 	private String generateServiceChargeKey(String serviceId, String location, String brand, String model) {
-		String subString = location.substring(0, Math.min(4, location.length()));
-		return serviceId + "_" + brand + "_" + model + "_" + subString;
-	}
+        String subString = location.substring(0, Math.min(4, location.length()));
+        return serviceId + "_" + brand + "_" + model + "_" + subString;
+    }
 
 	@Override
 	public List<AdminServiceCharges> getAdminServiceCharges(String serviceChargeKey, String serviceId, String location,

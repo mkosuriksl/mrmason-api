@@ -1,6 +1,7 @@
 package com.application.mrmason.repository;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -12,5 +13,8 @@ public interface AdminServiceNameRepo extends JpaRepository<AdminServiceName, St
 	 List<AdminServiceName> findByServiceIdOrServiceNameOrServiceSubCategoryOrderByAddedDateDesc(String serviceId, String serviceName, String serviceSubCat);
 	 AdminServiceName findByServiceId(String serviceId);
 	List<AdminServiceName> findByServiceIdIn(List<String> serviceIds);
+	
+	
 }
+
 

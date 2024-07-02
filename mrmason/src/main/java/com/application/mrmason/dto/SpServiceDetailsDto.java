@@ -14,6 +14,6 @@ public class SpServiceDetailsDto {
 	private String charge;
 	private String status;
 	private String availableWithinRange;
-	private String pincode;
+	private String location;
 	private String city;
 }

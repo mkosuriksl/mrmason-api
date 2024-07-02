@@ -14,7 +14,7 @@ public class ResponseUserUserServicesDto {
 
 	private String message;
 	private boolean status;
-	private List<User>  userData;
+	private List<Userdto>  userData;
 	private List<SpServiceDetails> userServicesData;
 	private List<AddServices> userServiceInDetail;
 	private List<AdminServiceName> serviceNames;

@@ -26,30 +26,55 @@ public class AdminServiceChargesController {
 	@Autowired
 	AdminServiceChargesService service;
 
-	@PostMapping("/adding_AdminServiceCharges")
-	public ResponseEntity<?> adminServiceCharges(@RequestBody AdminServiceCharges charges) {
-		ResponseAdminServiceChargesDto response = new ResponseAdminServiceChargesDto();
-		AdminServiceCharges admincharges = service.addCharges(charges);
+//	@PostMapping("/adding_AdminServiceCharges")
+//	public ResponseEntity<?> adminServiceCharges(@RequestBody AdminServiceCharges charges) {
+//		ResponseAdminServiceChargesDto response = new ResponseAdminServiceChargesDto();
+//		AdminServiceCharges admincharges = service.addCharges(charges);
+//
+//		try {
+//			if (admincharges != null) {
+//				response.setMessage("added service charges");
+//				response.setStatus(true);
+//				response.setServiceChargeData(admincharges);
+//				return new ResponseEntity<>(response, HttpStatus.OK);
+//			}
+//			response.setMessage("Record alredy exists");
+//			response.setStatus(false);
+//			response.setServiceChargeData(admincharges);
+//			return new ResponseEntity<>(response, HttpStatus.OK);
+//		} catch (Exception e) {
+//			response.setMessage(e.getMessage());
+//			response.setStatus(false);
+//			response.setServiceChargeData(admincharges);
+//			return new ResponseEntity<>(response, HttpStatus.OK);
+//		}
+//
+//	}
+	
+	
+	 @PostMapping("/adding_AdminServiceCharges")
+	    public ResponseEntity<ResponseAdminServiceChargesDto> adminServiceCharges(@RequestBody List<AdminServiceCharges> chargesList) {
+	        ResponseAdminServiceChargesDto response = new ResponseAdminServiceChargesDto();
+	        List<AdminServiceCharges> savedCharges = service.addCharges(chargesList);
 
-		try {
-			if (admincharges != null) {
-				response.setMessage("added service charges");
-				response.setStatus(true);
-				response.setServiceChargeData(admincharges);
-				return new ResponseEntity<>(response, HttpStatus.OK);
-			}
-			response.setMessage("Record alredy exists");
-			response.setStatus(false);
-			response.setServiceChargeData(admincharges);
-			return new ResponseEntity<>(response, HttpStatus.OK);
-		} catch (Exception e) {
-			response.setMessage(e.getMessage());
-			response.setStatus(false);
-			response.setServiceChargeData(admincharges);
-			return new ResponseEntity<>(response, HttpStatus.OK);
-		}
-
-	}
+	        try {
+	            if (!savedCharges.isEmpty()) {
+	                response.setMessage("Added service charges");
+	                response.setStatus(true);
+	                response.setServiceChargeData(savedCharges);
+	                return new ResponseEntity<>(response, HttpStatus.OK);
+	            }
+	            response.setMessage("No new charges were added. Records might already exist.");
+	            response.setStatus(false);
+	            response.setServiceChargeData(savedCharges);
+	            return new ResponseEntity<>(response, HttpStatus.OK);
+	        } catch (Exception e) {
+	            response.setMessage(e.getMessage());
+	            response.setStatus(false);
+	            response.setServiceChargeData(savedCharges);
+	            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+	        }
+	    }
 
 	@GetMapping("/adminServiceCharegs")
 	public ResponseEntity<?> getAdminCharges(@RequestParam(required = false) String serviceChargeKey,

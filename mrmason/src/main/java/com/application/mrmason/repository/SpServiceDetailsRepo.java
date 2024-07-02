@@ -19,4 +19,5 @@ public interface SpServiceDetailsRepo extends JpaRepository<SpServiceDetails, St
 	List<SpServiceDetails> findByLocation(String location);
 	
 	
+	
 }

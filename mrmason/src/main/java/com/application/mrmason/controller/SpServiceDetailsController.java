@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.application.mrmason.dto.ResponseSpServiceDetailsDto;
 import com.application.mrmason.dto.ResponseSpServiceGetDto;
 import com.application.mrmason.dto.ResponseUserUserServicesDto;
+import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.AddServices;
 import com.application.mrmason.entity.AdminServiceName;
 import com.application.mrmason.entity.SpServiceDetails;
-import com.application.mrmason.entity.User;
 import com.application.mrmason.service.SpServiceDetailsService;
 
 @RestController
@@ -85,7 +85,7 @@ public class SpServiceDetailsController {
 	public ResponseEntity<ResponseUserUserServicesDto> getServicePerson(
 			@RequestParam(required = false) String serviceType,@RequestParam(required = false) String location) {
 
-		List<User> users = spService.getServicePersonDetails(serviceType,location);
+		List<Userdto> users = spService.getServicePersonDetails(serviceType,location);
 		List<SpServiceDetails> userServices = spService.getUserService(serviceType,location);
 		List<AddServices> userIndetail= spService.getUserInDetails(serviceType, location);
 		List<AdminServiceName> serviceNames= spService.getServiceNames(serviceType, location);

@@ -7,7 +7,10 @@ import org.hibernate.annotations.UpdateTimestamp;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -39,6 +42,13 @@ public class AdminServiceCharges {
 	private String brand;
 	@Column(name="model")
 	private String model;
+	@Column(name="subcategory")
+	private String subcategory;
 	
+	
+	@Transient
+	private String bodSeqNo;
+	
+
 
 }

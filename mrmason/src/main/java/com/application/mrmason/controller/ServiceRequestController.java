@@ -45,7 +45,8 @@ public class ServiceRequestController {
 			response.setStatus(false);
 			return 	new ResponseEntity<>(response,HttpStatus.OK);
 		}
-	}
+	} 
+	
 	@GetMapping("/getServiceRequest")
 	public ResponseEntity<ResponseListServiceRequestDto> getRequest(@RequestParam(required = false)String userId,
 																	@RequestParam(required = false)String assetId,
@@ -121,29 +122,4 @@ public class ServiceRequestController {
 		}
 	}
 	
-	
-	
-	@GetMapping("/getRequestId")
-	public ResponseEntity<?> getRequestId(@RequestParam(required = false)String requestId){
-		ResponseListServiceRequestDto1 response = new ResponseListServiceRequestDto1();
-		ServiceRequest serviceReq = reqService.requestedDetails(requestId);
-		try {
-
-			if(serviceReq ==null) {
-				response.setMessage("No data found for the given details.!");
-				response.setData(serviceReq);
-				response.setStatus(true);
-				return new ResponseEntity<>(response, HttpStatus.OK);
-			}
-			response.setData(serviceReq);
-			response.setMessage("ServiceRequest data fetched successfully..");
-			response.setStatus(true);
-			return ResponseEntity.ok(response);
-
-		}catch(Exception e) {
-			response.setMessage(e.getMessage());
-			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.OK);
-		}
-	}
 }

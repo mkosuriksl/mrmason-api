@@ -3,6 +3,7 @@ package com.application.mrmason.service.impl;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,7 @@ import com.application.mrmason.service.ServiceRequestService;
 @Service
 public class ServiceRequestServiceImpl implements ServiceRequestService {
 	@Autowired
-	public ServiceRequestRepo requestRepo;
+	ServiceRequestRepo requestRepo;
 	@Autowired
 	public CustomerAssetsRepo assetRepo;
 	@Autowired
@@ -36,8 +37,13 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
 	ModelMapper model;
 
 	@Autowired
+	CustomerRegistrationRepo Customerrepo;
+
+	@Autowired
 	private JavaMailSender mailsender;
 
+
+	
 	@Override
 	public ServiceRequest addRequest(ServiceRequest requestData) {
 		Optional<CustomerAssets> serviceRequestData = assetRepo.findByUserIdAndAssetId(requestData.getRequestedBy(),
@@ -51,37 +57,6 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
 		}
 		return null;
 	}
-
-//	@Override
-//	public List<ServiceRequest>  getServiceReq(String userId,String assetId,String location,String serviceName,String email,String mobile,String status,String fromDate,String toDate) {
-//
-//		if(userId!=null && assetId==null && location==null && serviceName==null && email==null && status==null&& mobile==null) {
-//			List<ServiceRequest> user=requestRepo.findByRequestedByOrderByServiceRequestDateDesc(userId);
-//			return user;
-//		}else if(userId==null && assetId!=null && location==null && serviceName==null && email==null && status==null&& mobile==null) {
-//			Optional<List<ServiceRequest>> user=Optional.of((requestRepo.findByAssetIdOrderByServiceRequestDateDesc(assetId)));
-//			return user.get();
-//		}else if(userId==null && assetId==null && location!=null && serviceName==null &&  email==null && status==null&& mobile==null) {
-//			Optional<List<ServiceRequest>> user=Optional.of((requestRepo.findByLocationOrderByServiceRequestDateDesc(location)));
-//			return user.get();
-//		}else if(userId==null && assetId==null && location==null && serviceName!=null &&  email==null && status==null&& mobile==null) {
-//			Optional<List<ServiceRequest>> user=Optional.of((requestRepo.findByServiceSubCategoryOrderByServiceRequestDateDesc(serviceName)));
-//			return user.get();
-//		}else if(userId==null && assetId==null && location==null && serviceName==null &&  email!=null || mobile!=null && status==null ) {
-//			Optional<CustomerRegistration> existedById = Optional.ofNullable(repo.findByUserEmailOrUserMobile(email, mobile));
-//			if(existedById.isPresent()) {
-//				Optional<List<ServiceRequest>> user=Optional.of((requestRepo.findByRequestedByOrderByServiceRequestDateDesc(existedById.get().getUserid())));
-//				return user.get();
-//			}
-//		}else if(userId==null && assetId==null && location==null && serviceName==null &&  email==null && status!=null&& mobile==null) {
-//			Optional<List<ServiceRequest>> user=Optional.of((requestRepo.findByStatusOrderByServiceRequestDateDesc(status)));
-//			return user.get();
-//		}else if(userId==null && assetId==null && location==null && serviceName==null &&  email==null && status==null&& mobile==null&&fromDate!=null&& toDate!=null) {
-//			Optional<List<ServiceRequest>> user=Optional.of((requestRepo.findByServiceRequestDateBetween(fromDate, toDate)));
-//			return user.get();
-//		}
-//		return null;
-//	}
 
 	@Override
 	public List<ServiceRequest> getServiceReq(String userId, String assetId, String location, String serviceName,
@@ -138,27 +113,30 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
 		return null;
 	}
 
-	@Override
-	public ServiceRequest requestedDetails(String requestId) {
+//	@Override
+//	public boolean sendEmail(String requestedBy, ServiceRequest service) {
+//		Optional<ServiceRequest> request = Optional.ofNullable(requestRepo.findByRequestId(service.getRequestId()));
+//		if (request.isPresent()) {
+//			String requestedByEmail = request.get().getRequestedBy();
+//			CustomerRegistration customer = Customerrepo.findByUserEmailCustomQuery(requestedByEmail);
+//			if (customer == null || customer.getUserEmail() == null) {
+//				return false;
+//			}
+//
+//			String email = customer.getUserEmail();
+//			SimpleMailMessage mail = new SimpleMailMessage();
+//			mail.setTo(email);
+//			mail.setSubject("Your request details.");
+//			String body = String.format(
+//					"ReqSeqId: %s\nAssetId: %s\nRequestId: %s\nServiceName: %s\nService sub category: %s\nRequestedBy: %s\nStatus: %s\nServiceDate: %s\nDescription: %s\nLocation: %s",
+//					service.getReqSeqId(), service.getAssetId(), service.getRequestId(), service.getServiceName(),
+//					service.getServiceSubCategory(), service.getRequestedBy(), service.getStatus(),
+//					service.getServiceDateDb(), service.getDescription(), service.getLocation());
+//			mail.setText(body);
+//			mailsender.send(mail);
+//			return true;
+//		}
+//		return false;
+//	}
 
-		return requestRepo.findByRequestId(requestId);
-
-	}
-
-	@Override
-	public void sendEmail(String toMail, ServiceRequest service){
-		
-	Optional<ServiceRequest> request = Optional.ofNullable(requestRepo.findByRequestId(service.getRequestId()));
-	if(request.isPresent()) {
-		
-		SimpleMailMessage mail=new SimpleMailMessage();
-		mail.setTo(toMail);
-		mail.setSubject("Your request Details.");
-		String body="ReqSeqId "+service.getReqSeqId()+"\n"+"AssetId "+service.getAssetId()+"\n"+"RequestId "+service.getRequestId()+"\n"+"serviceName"+service.getServiceName()+"\n"+"Service sub category "+service.getServiceSubCategory()+"\n"+"RequestedBy "+service.getRequestedBy()+"\n"+"status "+service.getStatus()+"\n"+"ServiceDate"+service.getServiceDateDb()+"/n"+"description "+service.getDescription()+"\n"+"location"+service.getLocation() ;
-		mail.setText(body);
-		mailsender.send(mail);
-	}
-	}
-
-	
 }

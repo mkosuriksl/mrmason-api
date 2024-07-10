@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import com.application.mrmason.entity.CustomerAssets;
 @Repository
 public interface CustomerAssetsRepo extends JpaRepository<CustomerAssets, Long>{
-	Optional<CustomerAssets>  findByUserIdAndAssetId(String userid,String assetId);
+//	Optional<CustomerAssets>  findByUserIdAndAssetId(String userid,String assetId);
 	List<CustomerAssets> findByLocationOrderByIdDesc(String location);
 	List<CustomerAssets>  findByUserIdOrderByIdDesc(String userid);
 	List<CustomerAssets> findByAssetIdOrderByIdDesc(String assetid);
@@ -19,4 +19,5 @@ public interface CustomerAssetsRepo extends JpaRepository<CustomerAssets, Long>{
 	List<CustomerAssets> findByAssetBrandOrderByIdDesc(String assetBrand);
 	
 	Optional<CustomerAssets> findAllByAssetId(String asssetid);
+	Optional<CustomerAssets> findByUserIdAndAssetId(String userId, String assetId);
 }

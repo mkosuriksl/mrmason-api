@@ -3,17 +3,13 @@ package com.application.mrmason.service.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import com.application.mrmason.entity.AdminServiceCharges;
 import com.application.mrmason.entity.User;
-import com.application.mrmason.repository.AdminDetailsRepo;
-import com.application.mrmason.repository.AdminServiceChargesRepo;
+import com.application.mrmason.entity.UserServiceCharges;
 import com.application.mrmason.repository.UserDAO;
-import com.application.mrmason.service.AdminServiceChargesService;
-
+import com.application.mrmason.repository.UserServiceChargesRepo;
+import com.application.mrmason.service.UserServiceChargesService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -22,67 +18,32 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 @Service
-public class AdminServiceChargesServiceImpl implements AdminServiceChargesService {
-
+public class UserServiceChargesServiceImpl implements UserServiceChargesService{
+	
 	@Autowired
-	AdminServiceChargesRepo repo;
+	UserServiceChargesRepo repo;
 
 	@PersistenceContext
 	private EntityManager entityManager;
-
-//	@Autowired
-//	public AdminDetailsRepo adminRepo;
 	
 	@Autowired
 	UserDAO userDAO;
-//	@Override
-//    public List<AdminServiceCharges> addCharges(List<AdminServiceCharges> chargesList) {
-//        List<AdminServiceCharges> savedCharges = new ArrayList<>();
-//        
-//       
-//        for (AdminServiceCharges charges : chargesList) {
-//            charges.setServiceChargeKey(generateServiceChargeKey(charges.getServiceId(), charges.getLocation(), charges.getBrand(), charges.getModel()));
-//            
-//            Optional<AdminDetails> user = Optional
-//    				.ofNullable(adminRepo.findByEmail(charges.getEmail()));
-//    	if(user.isPresent()) {
-//    		 charges.setUpdatedBy(charges.getEmail());
-//            Optional<AdminServiceCharges> existingCharges = repo.findById(charges.getServiceChargeKey());
-//            if (!existingCharges.isPresent()) {
-//                repo.save(charges);
-//                repo.flush();  // Flush the changes to the database
-////                savedCharges.add(charges);
-//                savedCharges.add(charges);
-//            }
-//        }
-//       }	
-//        return savedCharges;
-//    }
-//	
-//
-//	private String generateServiceChargeKey(String serviceId, String location, String brand, String model) {
-//        String subString = location.substring(0, Math.min(4, location.length()));
-//        return serviceId + "_" + brand + "_" + model + "_" + subString;
-//    }
-
 	
-	
-//	@Transactional
 	@Override
-    public List<AdminServiceCharges> addCharges(List<AdminServiceCharges> chargesList) {
-        List<AdminServiceCharges> savedCharges = new ArrayList<>();
+    public List<UserServiceCharges> addCharges(List<UserServiceCharges> chargesList) {
+        List<UserServiceCharges> savedCharges = new ArrayList<>();
 
-        for (AdminServiceCharges charges : chargesList) {
+        for (UserServiceCharges charges : chargesList) {
             charges.setServiceChargeKey(generateServiceChargeKey(charges.getServiceId(), charges.getLocation(), charges.getBrand(), charges.getModel()));
             Optional<User> user = userDAO.findById(charges.getBodSeqNo());
 
             if (user.isPresent()) {
                 charges.setUpdatedBy(charges.getBodSeqNo());
-                Optional<AdminServiceCharges> existingCharges = repo.findById(charges.getServiceChargeKey());
+                Optional<UserServiceCharges> existingCharges = repo.findById(charges.getServiceChargeKey());
 
                 if (!existingCharges.isPresent()) {
                     repo.save(charges);
-                    repo.flush();  // Flush the changes to the database
+                    repo.flush();  
                     savedCharges.add(charges);
                 }
             }
@@ -97,11 +58,11 @@ public class AdminServiceChargesServiceImpl implements AdminServiceChargesServic
 
 	
 	@Override
-	public List<AdminServiceCharges> getAdminServiceCharges(String serviceChargeKey, String serviceId, String location,
+	public List<UserServiceCharges> getUserServiceCharges(String serviceChargeKey, String serviceId, String location,
 			String brand, String model,String updatedBy,String subcategory) {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		CriteriaQuery<AdminServiceCharges> query = cb.createQuery(AdminServiceCharges.class);
-		Root<AdminServiceCharges> root = query.from(AdminServiceCharges.class);
+		CriteriaQuery<UserServiceCharges> query = cb.createQuery(UserServiceCharges.class);
+		Root<UserServiceCharges> root = query.from(UserServiceCharges.class);
 		List<Predicate> predicates = new ArrayList<>();
 
 		if (serviceChargeKey != null) {
@@ -131,9 +92,9 @@ public class AdminServiceChargesServiceImpl implements AdminServiceChargesServic
 	}
 
 	@Override
-	public AdminServiceCharges updateCharges(AdminServiceCharges charges) {
+	public UserServiceCharges updateCharges(UserServiceCharges charges) {
 
-		Optional<AdminServiceCharges> serviceChargeKeyExists = repo.findById(charges.getServiceChargeKey());
+		Optional<UserServiceCharges> serviceChargeKeyExists = repo.findById(charges.getServiceChargeKey());
 		if (serviceChargeKeyExists.isPresent()) {
 			serviceChargeKeyExists.get().setServiceCharge(charges.getServiceCharge());
 			return repo.save(serviceChargeKeyExists.get());

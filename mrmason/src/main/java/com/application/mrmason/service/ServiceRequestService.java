@@ -10,7 +10,9 @@ public interface ServiceRequestService {
 	ServiceRequest updateStatusRequest(ServiceRequest requestData);
 
 	
-	public ServiceRequest requestedDetails(String requestId);
+//	public ServiceRequest requestedDetails(String requestId);
 	
-	public void sendEmail(String toMail, ServiceRequest serivce);
+//	public void sendEmail(String toMail, ServiceRequest serivce);
+	
+//	public boolean sendEmail(String requestedBy, ServiceRequest service);
 }

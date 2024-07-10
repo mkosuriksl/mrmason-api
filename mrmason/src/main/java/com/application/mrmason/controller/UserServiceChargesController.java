@@ -13,55 +13,54 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.application.mrmason.dto.ResponseAdminServiceChargesDto;
-import com.application.mrmason.dto.ResponseAdminServiceChargesDto1;
-import com.application.mrmason.dto.ResponseAdminServiceChargesDto2;
-import com.application.mrmason.entity.AdminServiceCharges;
-import com.application.mrmason.service.AdminServiceChargesService;
+import com.application.mrmason.dto.ResponseUserServiceChargesDto;
+import com.application.mrmason.dto.ResponseUserServiceChargesDto1;
+import com.application.mrmason.dto.ResponseUserServiceChargesDto2;
+import com.application.mrmason.entity.UserServiceCharges;
+import com.application.mrmason.service.UserServiceChargesService;
 
 @RestController
 @PreAuthorize("hasAuthority('Adm')")
-public class AdminServiceChargesController {
-
+public class UserServiceChargesController {
+	
 	@Autowired
-	AdminServiceChargesService service;
-
-
-	@PostMapping("/adding_AdminServiceCharges")
-	public ResponseEntity<ResponseAdminServiceChargesDto> adminServiceCharges(
-			@RequestBody List<AdminServiceCharges> chargesList) {
-		ResponseAdminServiceChargesDto response = new ResponseAdminServiceChargesDto();
-		List<AdminServiceCharges> savedCharges = service.addCharges(chargesList);
+	UserServiceChargesService service;
+	
+	@PostMapping("/adding-UserServiceCharges")
+	public ResponseEntity<ResponseUserServiceChargesDto> userServiceCharges(
+			@RequestBody List<UserServiceCharges> chargesList) {
+		ResponseUserServiceChargesDto response = new ResponseUserServiceChargesDto();
+		List<UserServiceCharges> savedCharges = service.addCharges(chargesList);
 
 		try {
 			if (!savedCharges.isEmpty()) {
 				response.setMessage("Added service charges");
 				response.setStatus(true);
-				response.setServiceChargeData(savedCharges);
+				response.setServiceChargesData(savedCharges);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			} else{
 				response.setMessage("No new charges were added/failed to add charges");
 				response.setStatus(false);
-				response.setServiceChargeData(savedCharges);
+				response.setServiceChargesData(savedCharges);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			} 
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			response.setServiceChargeData(savedCharges);
+			response.setServiceChargesData(savedCharges);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
 
-	@GetMapping("/adminServiceCharegs")
-	public ResponseEntity<?> getAdminCharges(@RequestParam(required = false) String serviceChargeKey,
+	@GetMapping("/getUserServiceCharegs")
+	public ResponseEntity<?> getUserCharges(@RequestParam(required = false) String serviceChargeKey,
 			@RequestParam(required = false) String serviceId, @RequestParam(required = false) String location,
 			@RequestParam(required = false) String brand, @RequestParam(required = false) String model,@RequestParam(required = false) String updatedBy,@RequestParam(required = false) String subcategory) {
 
-		ResponseAdminServiceChargesDto1 response = new ResponseAdminServiceChargesDto1();
+		ResponseUserServiceChargesDto1 response = new ResponseUserServiceChargesDto1();
 		try {
 
-			List<AdminServiceCharges> serviceCharges = service.getAdminServiceCharges(serviceChargeKey, serviceId,
+			List<UserServiceCharges> serviceCharges = service.getUserServiceCharges(serviceChargeKey, serviceId,
 					location, brand, model,updatedBy,subcategory);
 			if (serviceCharges != null && !serviceCharges.isEmpty()) {
 				response.setMessage("User service charges details");
@@ -80,10 +79,10 @@ public class AdminServiceChargesController {
 
 	}
 
-	@PutMapping("/updatingAdminServiceCharges")
-	public ResponseEntity<?> updateAdminServiceCharges(@RequestBody AdminServiceCharges serviceCharge) {
-		ResponseAdminServiceChargesDto2 response = new ResponseAdminServiceChargesDto2();
-		AdminServiceCharges services = service.updateCharges(serviceCharge);
+	@PutMapping("/update-UserServiceCharges")
+	public ResponseEntity<?> updateUserServiceCharges(@RequestBody UserServiceCharges serviceCharge) {
+		ResponseUserServiceChargesDto2 response = new ResponseUserServiceChargesDto2();
+		UserServiceCharges services = service.updateCharges(serviceCharge);
 		try {
 			if (services != null) {
 				response.setMessage("service charges updated successfully");
@@ -101,5 +100,6 @@ public class AdminServiceChargesController {
 		}
 
 	}
+
 
 }

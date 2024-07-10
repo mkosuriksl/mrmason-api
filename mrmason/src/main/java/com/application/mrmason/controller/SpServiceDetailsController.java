@@ -92,7 +92,7 @@ public class SpServiceDetailsController {
 
 		ResponseUserUserServicesDto response = new ResponseUserUserServicesDto();
 		try {
-			if (!users.isEmpty()) {
+			if (!userServices.isEmpty()) {
 				response.setMessage("Received service person details");
 				response.setStatus(true);
 				response.setUserServicesData(userServices);

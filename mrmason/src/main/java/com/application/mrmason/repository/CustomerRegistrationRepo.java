@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.application.mrmason.entity.CustomerRegistration;
@@ -16,4 +17,7 @@ public interface CustomerRegistrationRepo extends JpaRepository<CustomerRegistra
 	
 	@Query("SELECT cr FROM CustomerRegistration cr WHERE cr.regDate BETWEEN :startDate AND :endDate")
 	List<CustomerRegistration> findByRegDateBetween(String startDate, String endDate);
+	
+	@Query("SELECT c FROM CustomerRegistration c WHERE c.userEmail = :userEmail")
+    CustomerRegistration findByUserEmailCustomQuery(@Param("userEmail") String userEmail);
 }

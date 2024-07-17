@@ -5,6 +5,6 @@ import org.springframework.stereotype.Repository;
 import com.application.mrmason.entity.AdminMail;
 
 @Repository
-public interface AdminMailRepo extends JpaRepository<AdminMail, String> {
+public interface AdminMailRepo extends JpaRepository<AdminMail, Long> {
 	AdminMail findByEmailid(String emailid);
 }

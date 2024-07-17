@@ -51,7 +51,7 @@ public class SpServiceDetailsController {
 	public ResponseEntity<ResponseSpServiceGetDto> getAssetDetails(@RequestParam(required = false) String userId,
 			@RequestParam(required = false) String serviceType, @RequestParam(required = false) String servicesId) {
 		try {
-			ResponseSpServiceGetDto entity = spService.getServiceRequest(userId, serviceType, servicesId);
+			ResponseSpServiceGetDto entity = spService.getServices(userId, serviceType, servicesId);
 			return new ResponseEntity<>(entity, HttpStatus.OK);
 
 		} catch (Exception e) {
@@ -80,15 +80,14 @@ public class SpServiceDetailsController {
 		}
 	}
 
-
 	@GetMapping("/getServicePersonDetails")
 	public ResponseEntity<ResponseUserUserServicesDto> getServicePerson(
-			@RequestParam(required = false) String serviceType,@RequestParam(required = false) String location) {
+			@RequestParam(required = false) String serviceType, @RequestParam(required = false) String location) {
 
-		List<Userdto> users = spService.getServicePersonDetails(serviceType,location);
-		List<SpServiceDetails> userServices = spService.getUserService(serviceType,location);
-		List<AddServices> userIndetail= spService.getUserInDetails(serviceType, location);
-		List<AdminServiceName> serviceNames= spService.getServiceNames(serviceType, location);
+		List<Userdto> users = spService.getServicePersonDetails(serviceType, location);
+		List<SpServiceDetails> userServices = spService.getUserService(serviceType, location);
+		List<AddServices> userIndetail = spService.getUserInDetails(serviceType, location);
+		List<AdminServiceName> serviceNames = spService.getServiceNames(serviceType, location);
 
 		ResponseUserUserServicesDto response = new ResponseUserUserServicesDto();
 		try {

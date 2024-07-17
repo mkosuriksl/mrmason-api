@@ -78,6 +78,22 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 	}
 
 	@Override
+	public ResponseSpServiceGetDto getServices(String userId, String serviceType, String serviceId) {
+		List<SpServiceDetails> data = serviceRepo.findByUserIdAndServiceTypeAndUserServicesId(userId, serviceType,
+				serviceId);
+		if (!data.isEmpty()) {
+			response2.setMessage("SpServiceDetails fetched successfully..");
+			response2.setStatus(true);
+			response2.setData(data);
+			return response2;
+		}
+		response2.setMessage("No services found for the given details.!");
+		response2.setStatus(true);
+		response2.setData(data);
+		return response2;
+	}
+
+	@Override
 	public ResponseSpServiceDetailsDto updateServiceRequest(SpServiceDetails service) {
 		SpServiceDetails data = serviceRepo.findByUserServicesId(service.getUserServicesId());
 		if (data != null) {
@@ -112,9 +128,9 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 
 		if (serviceType != null && location != null) {
 			serviceDetails = serviceRepo.findByServiceTypeAndLocation(serviceType, location);
-		} else if (serviceType != null) {
+		} else if (serviceType != null && location == null) {
 			serviceDetails = serviceRepo.findByServiceType(serviceType);
-		} else if (location != null) {
+		} else if (location != null && serviceType == null) {
 			serviceDetails = serviceRepo.findByLocation(location);
 		} else {
 			return Collections.emptyList();
@@ -155,9 +171,9 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 	public List<SpServiceDetails> getUserService(String serviceType, String location) {
 		if (serviceType != null && location != null) {
 			return serviceRepo.findByServiceTypeAndLocation(serviceType, location);
-		} else if (serviceType != null) {
+		} else if (serviceType != null && location == null) {
 			return serviceRepo.findByServiceType(serviceType);
-		} else if (location != null) {
+		} else if (location != null && serviceType == null) {
 			return serviceRepo.findByLocation(location);
 		} else {
 			return Collections.emptyList();
@@ -170,9 +186,9 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 
 		if (serviceType != null && location != null) {
 			serviceDetails = serviceRepo.findByServiceTypeAndLocation(serviceType, location);
-		} else if (serviceType != null) {
+		} else if (serviceType != null && location == null) {
 			serviceDetails = serviceRepo.findByServiceType(serviceType);
-		} else if (location != null) {
+		} else if (location != null && serviceType == null) {
 			serviceDetails = serviceRepo.findByLocation(location);
 		} else {
 			System.out.println("Both serviceType and location are null.");
@@ -200,9 +216,9 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 
 		if (serviceType != null && location != null) {
 			serviceDetails = serviceRepo.findByServiceTypeAndLocation(serviceType, location);
-		} else if (serviceType != null) {
+		} else if (serviceType != null && location == null) {
 			serviceDetails = serviceRepo.findByServiceType(serviceType);
-		} else if (location != null) {
+		} else if (location != null && serviceType == null) {
 			serviceDetails = serviceRepo.findByLocation(location);
 		} else {
 			return Collections.emptyList();

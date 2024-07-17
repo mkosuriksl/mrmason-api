@@ -13,6 +13,8 @@ public interface SpServiceDetailsService {
 	ResponseSpServiceDetailsDto addServiceRequest(SpServiceDetails service);
 
 	ResponseSpServiceGetDto getServiceRequest(String userId, String serviceType, String serviceId);
+	
+	ResponseSpServiceGetDto getServices(String userId, String serviceType, String serviceId);
 
 	ResponseSpServiceDetailsDto updateServiceRequest(SpServiceDetails service);
 
@@ -25,6 +27,7 @@ public interface SpServiceDetailsService {
 	List<AddServices> getUserInDetails(String serviceType, String location);
 	
 	List<AdminServiceName> getServiceNames(String serviceType, String location);
+
 	
 	
 }

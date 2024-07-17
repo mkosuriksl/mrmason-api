@@ -11,6 +11,7 @@ import com.application.mrmason.entity.SpServiceDetails;
 @Repository
 public interface SpServiceDetailsRepo extends JpaRepository<SpServiceDetails, String>{
 	List<SpServiceDetails> findByUserIdOrServiceTypeOrUserServicesId(String userId, String serviceType, String userServiceId);
+	List<SpServiceDetails> findByUserIdAndServiceTypeAndUserServicesId(String userId, String serviceType, String userServiceId);
 	SpServiceDetails findByUserServicesId(String userServiceId);
 //	AddServicesDto save(AddServicesDto dto);
 	List<SpServiceDetails> findByServiceType(String serviceType);

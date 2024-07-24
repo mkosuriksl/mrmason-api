@@ -10,30 +10,36 @@ import org.springframework.stereotype.Service;
 import com.application.mrmason.dto.ResponseSpLoginDto;
 import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.ServicePersonLogin;
+import com.application.mrmason.entity.SpServiceDetails;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.repository.ServicePersonLoginDAO;
+import com.application.mrmason.repository.SpServiceDetailsRepo;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.JwtService;
 
-
 @Service
 public class UserService {
+	
 	@Autowired
 	OtpGenerationServiceImpl otpService;
-	
+
 	@Autowired
 	ServicePersonLoginDAO emailLoginRepo;
 
 	@Autowired
 	UserDAO userDAO;
-	
+
 	@Autowired
 	JwtService jwtService;
-	
+
 	@Autowired
 	ServicePersonLoginDAO serviceLoginRepo;
+	
 	@Autowired
 	BCryptPasswordEncoder byCrypt;
+
+	@Autowired
+	private SpServiceDetailsRepo detailsRepo;
 
 	public boolean isEmailExists(String email) {
 		return userDAO.existsByEmail(email);
@@ -46,7 +52,7 @@ public class UserService {
 	public Userdto addDetails(User user) {
 		String encryptPassword = byCrypt.encode(user.getPassword());
 		user.setPassword(encryptPassword);
-		User data= userDAO.save(user);
+		User data = userDAO.save(user);
 
 		ServicePersonLogin service = new ServicePersonLogin();
 		service.setEmail(user.getEmail());
@@ -64,7 +70,7 @@ public class UserService {
 		dto.setCity(user.getCity());
 		dto.setDistrict(user.getDistrict());
 		dto.setState(user.getState());
-		dto.setLocation(user.getLocation());;
+		dto.setLocation(user.getLocation());
 		dto.setVerified(user.getVerified());
 		dto.setUserType(String.valueOf(data.getUserType()));
 		dto.setStatus(user.getStatus());
@@ -87,6 +93,7 @@ public class UserService {
 		}
 		return null;
 	}
+
 	public User updateDataWithMobile(String mobile) {
 		Optional<User> existedByMobile = Optional.of(userDAO.findByEmailOrMobile(mobile, mobile));
 		if (existedByMobile.isPresent()) {
@@ -142,6 +149,7 @@ public class UserService {
 		}
 		return null;
 	}
+
 	public String sendSms(String mobile) {
 		Optional<User> userOp = Optional.ofNullable(userDAO.findByMobile(mobile));
 		if (userOp.isPresent()) {
@@ -150,7 +158,8 @@ public class UserService {
 		}
 		return null;
 	}
-	public String forgetPassword(String mobile,String email, String otp, String newPass, String confPass) {
+
+	public String forgetPassword(String mobile, String email, String otp, String newPass, String confPass) {
 		Optional<User> userEmail = Optional.ofNullable(userDAO.findByEmail(email));
 		Optional<User> userMobile = Optional.ofNullable(userDAO.findByMobile(mobile));
 		if (userEmail.isPresent()) {
@@ -166,7 +175,7 @@ public class UserService {
 			} else {
 				return "incorrect";
 			}
-		}else if(userMobile.isPresent()) {
+		} else if (userMobile.isPresent()) {
 			if (otpService.verifyMobileOtp(mobile, otp)) {
 				if (newPass.equals(confPass)) {
 					String encryptPassword = byCrypt.encode(confPass);
@@ -179,8 +188,7 @@ public class UserService {
 			} else {
 				return "incorrect";
 			}
-		}
-		else if(!userEmail.isPresent()&& userMobile.isPresent()) {
+		} else if (!userEmail.isPresent() && userMobile.isPresent()) {
 			return "incorrectEmail";
 		}
 		return null;
@@ -190,6 +198,7 @@ public class UserService {
 	public Userdto getServiceProfile(String email) {
 
 		Optional<User> user = Optional.ofNullable(userDAO.findByEmail(email));
+		List<SpServiceDetails> serviceDetails = detailsRepo.findByUserId(user.get().getBodSeqNo());
 
 		if (user.isPresent()) {
 			User userdb = user.get();
@@ -203,6 +212,11 @@ public class UserService {
 			dto.setDistrict(userdb.getDistrict());
 			dto.setState(userdb.getState());
 			dto.setLocation(userdb.getLocation());
+			if (!serviceDetails.isEmpty()) {
+				SpServiceDetails sd = serviceDetails.get(0);
+				dto.setAvailableLocation(sd.getCity());
+			}
+
 //			dto.setPincodeNo(userdb.getPincodeNo());
 			dto.setVerified(userdb.getVerified());
 			dto.setUserType(String.valueOf(userdb.getUserType()));
@@ -218,37 +232,35 @@ public class UserService {
 		return null;
 
 	}
-	public List<User> getServicePersonData(String email,String mobile,String location,String status,String category,String fromDate,String toDate) {
-		if(fromDate==null && toDate==null&& location==null  && category==null && status!=null|| email!=null || mobile!=null) {
+
+	public List<User> getServicePersonData(String email, String mobile, String location, String status, String category,
+			String fromDate, String toDate) {
+		if (fromDate == null && toDate == null && location == null && category == null && status != null
+				|| email != null || mobile != null) {
 			return userDAO.findByEmailOrMobileOrStatusOrderByRegisteredDateDesc(email, mobile, status);
-		}else if(category!=null){
+		} else if (category != null) {
 			return userDAO.findByServiceCategory(category);
-		}else if(location!=null) {
+		} else if (location != null) {
 			return userDAO.findByLocation(location);
-		}
-		else {
+		} else {
 			return userDAO.findByRegisteredDateBetween(fromDate, toDate);
 		}
 
 	}
-	
 
-	
 	public ResponseSpLoginDto loginDetails(String email, String mobile, String password) {
 
 		Optional<ServicePersonLogin> loginDb = Optional.ofNullable((emailLoginRepo.findByEmailOrMobile(email, mobile)));
-		ResponseSpLoginDto response=new ResponseSpLoginDto();
-		
+		ResponseSpLoginDto response = new ResponseSpLoginDto();
+
 		if (loginDb.isPresent()) {
 			Optional<User> userEmailMobile = Optional.ofNullable(userDAO.findByEmailOrMobile(email, mobile));
 			User user = userEmailMobile.get();
 			String status = user.getStatus();
-			
-			
-			
+
 			if (userEmailMobile.isPresent()) {
 				if (status != null && status.equalsIgnoreCase("active")) {
-					if (email != null && mobile==null) {
+					if (email != null && mobile == null) {
 						if (loginDb.get().getEVerify().equalsIgnoreCase("yes")) {
 
 							if (byCrypt.matches(password, user.getPassword())) {
@@ -268,9 +280,8 @@ public class UserService {
 							response.setStatus(false);
 							return response;
 						}
-					} else if (email == null && mobile !=null) {
+					} else if (email == null && mobile != null) {
 						if (loginDb.get().getMobVerify().equalsIgnoreCase("yes")) {
-							
 
 							if (byCrypt.matches(password, user.getPassword())) {
 								String jwtToken = jwtService.generateToken(userEmailMobile.get());
@@ -295,7 +306,7 @@ public class UserService {
 					response.setStatus(false);
 					return response;
 				}
-			}  else {
+			} else {
 				response.setMessage("Inactive User");
 				response.setStatus(false);
 				return response;
@@ -306,6 +317,7 @@ public class UserService {
 		response.setStatus(false);
 		return response;
 	}
+
 	public User getServiceDataProfile(String email) {
 
 		Optional<User> user = Optional.ofNullable(userDAO.findByEmail(email));

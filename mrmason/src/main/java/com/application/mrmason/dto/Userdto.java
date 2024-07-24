@@ -18,6 +18,7 @@ public class Userdto {
 	public String district;
 	public String state;
 	public String location;
+	public String availableLocation;
     public String updatedDate;
 	public String registeredDate;
     public String verified;

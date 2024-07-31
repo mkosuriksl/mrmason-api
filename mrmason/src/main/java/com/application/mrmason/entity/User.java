@@ -86,6 +86,9 @@ public class User implements UserDetails {
 	@Column(name = "STATUS")
 	private String status = "inactive";
 
+	@Column(name = "reg_source")
+	private String reg_source = "mrmason";
+
 	@PrePersist
 	private void prePersist() {
 		LocalDateTime now = LocalDateTime.now();

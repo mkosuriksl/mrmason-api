@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ChangeForfotdto;
-import com.application.mrmason.dto.FilterCustomerAndUser;
 import com.application.mrmason.dto.Logindto;
 import com.application.mrmason.dto.ResponseListUserDto;
 import com.application.mrmason.dto.ResponseMessageDto;
@@ -62,7 +61,7 @@ public class UserController {
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 			Userdto userDetails=userService.addDetails(registrationDetails);
-			response.setMessage("User added successfully");
+			response.setMessage("Thanks for  registering with us. please verify your registered email and mobile");
 			response.setStatus(true);
 			response.setUserData(userDetails);
 			return new ResponseEntity<>( response,HttpStatus.OK);

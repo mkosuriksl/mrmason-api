@@ -25,5 +25,5 @@ public class Userdto {
     public String serviceCategory;
     private String userType;
 	private String status;
-	private String reg_source;
+	private String regSource;
 }

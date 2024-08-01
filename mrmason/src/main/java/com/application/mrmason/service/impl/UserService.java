@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +21,7 @@ import com.application.mrmason.security.JwtService;
 
 @Service
 public class UserService {
-	
+
 	@Autowired
 	OtpGenerationServiceImpl otpService;
 
@@ -34,12 +36,18 @@ public class UserService {
 
 	@Autowired
 	ServicePersonLoginDAO serviceLoginRepo;
-	
+
 	@Autowired
 	BCryptPasswordEncoder byCrypt;
 
 	@Autowired
 	private SpServiceDetailsRepo detailsRepo;
+
+	@Autowired
+	private JavaMailSender mailsender;
+
+	@Autowired
+	private SmsService smsService;
 
 	public boolean isEmailExists(String email) {
 		return userDAO.existsByEmail(email);
@@ -52,6 +60,12 @@ public class UserService {
 	public Userdto addDetails(User user) {
 		String encryptPassword = byCrypt.encode(user.getPassword());
 		user.setPassword(encryptPassword);
+		
+		// Email sending
+		sendEmail(user.getEmail());
+		// Mobile sms sending
+//		String message = "Thanks for  registering with us. please verify your registered email and mobile.";
+//		smsService.sendSMSMessage(user.getMobile(), message);
 		User data = userDAO.save(user);
 
 		ServicePersonLogin service = new ServicePersonLogin();
@@ -79,7 +93,7 @@ public class UserService {
 		dto.setRegisteredDate(user.getRegisteredDate());
 		dto.setUpdatedDate(user.getUpdatedDate());
 		dto.setServiceCategory(user.getServiceCategory());
-		dto.setReg_source(user.getReg_source());
+		dto.setRegSource(user.getRegSource());
 
 		return dto;
 
@@ -213,7 +227,7 @@ public class UserService {
 			dto.setDistrict(userdb.getDistrict());
 			dto.setState(userdb.getState());
 			dto.setLocation(userdb.getLocation());
-			dto.setReg_source(userdb.getReg_source());
+			dto.setRegSource(userdb.getRegSource());
 			if (!serviceDetails.isEmpty()) {
 				SpServiceDetails sd = serviceDetails.get(0);
 				dto.setAvailableLocation(sd.getCity());
@@ -324,5 +338,14 @@ public class UserService {
 
 		Optional<User> user = Optional.ofNullable(userDAO.findByEmail(email));
 		return user.get();
+	}
+
+	public void sendEmail(String toMail) {
+		SimpleMailMessage mail = new SimpleMailMessage();
+		mail.setTo(toMail);
+		mail.setSubject("Verify Your Email and Mobile Number");
+		String body = "Thanks for  registering with us. please verify your registered email and mobile.";
+		mail.setText(body);
+		mailsender.send(mail);
 	}
 }

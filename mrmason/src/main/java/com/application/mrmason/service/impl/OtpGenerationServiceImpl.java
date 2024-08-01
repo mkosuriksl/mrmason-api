@@ -44,7 +44,9 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 		int randomNum = (int) (Math.random() * 900000) + 100000;
 		String otp = String.valueOf(randomNum);
 		otpStorage.put(mobile, otp);
-		smsService.sendSMSMessage(mobile, otp);
+		 String message = "Thanks for registering with us. Your OTP to verify your mobile number is " + otp + " - www.mrmason.in";
+		smsService.sendSMSMessage(mobile, message);
+		
 		return otp;
 	}
 

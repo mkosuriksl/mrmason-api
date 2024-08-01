@@ -89,6 +89,7 @@ public class User implements UserDetails {
 	@Column(name = "reg_source")
 	private String regSource; //Mekanik enhancement
 
+
 	@PrePersist
 	private void prePersist() {
 		LocalDateTime now = LocalDateTime.now();

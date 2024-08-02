@@ -23,12 +23,10 @@ public class SmsService implements SmsSender {
 
     private final AppProperties appProperties;
 
-
     @Override
-    public boolean sendSMSMessage(String phoneNumber, String otp) {
+    public boolean sendSMSMessage(String phoneNumber,  String message) {
         try {
             // Construct message content with OTP
-            String message = "Thanks for registering with us. Your OTP to verify your mobile number is " + otp + " - www.mrmason.in";
 
             // Encode message content and other parameters
             String apiKey = URLEncoder.encode(appProperties.getApiKey(), StandardCharsets.UTF_8.toString());

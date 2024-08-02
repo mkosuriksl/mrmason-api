@@ -87,8 +87,7 @@ public class User implements UserDetails {
 	private String status = "inactive";
 
 	@Column(name = "reg_source")
-	private String regSource; //Mekanik enhancement
-
+	private String regSource;
 
 	@PrePersist
 	private void prePersist() {

@@ -79,7 +79,7 @@ public class UserService {
 		dto.setRegisteredDate(user.getRegisteredDate());
 		dto.setUpdatedDate(user.getUpdatedDate());
 		dto.setServiceCategory(user.getServiceCategory());
-		dto.setRegSource(user.getRegSource()); //Mekanik enhancement
+		dto.setRegSource(user.getRegSource());
 
 		return dto;
 
@@ -213,7 +213,7 @@ public class UserService {
 			dto.setDistrict(userdb.getDistrict());
 			dto.setState(userdb.getState());
 			dto.setLocation(userdb.getLocation());
-			dto.setRegSource(userdb.getRegSource()); //Mekanik enhancement
+			dto.setRegSource(userdb.getRegSource());
 			if (!serviceDetails.isEmpty()) {
 				SpServiceDetails sd = serviceDetails.get(0);
 				dto.setAvailableLocation(sd.getCity());

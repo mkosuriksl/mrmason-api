@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.application.mrmason.entity.SpServiceDetails;
@@ -14,6 +15,10 @@ public interface SpServiceDetailsRepo extends JpaRepository<SpServiceDetails, St
 			String userServiceId);
 
 	List<SpServiceDetails> findByUserIdAndServiceTypeAndUserServicesId(String userId, String serviceType,
+			String userServiceId);
+
+	@Query("SELECT s FROM SpServiceDetails s WHERE s.userId = :userId OR s.serviceType = :serviceType OR s.userServicesId = :userServiceId")
+	List<SpServiceDetails> findByUserIdORServiceTypeORUserServiceId(String userId, String serviceType,
 			String userServiceId);
 
 	SpServiceDetails findByUserServicesId(String userServiceId);

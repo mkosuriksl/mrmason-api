@@ -79,7 +79,7 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 
 	@Override
 	public ResponseSpServiceGetDto getServices(String userId, String serviceType, String serviceId) {
-		List<SpServiceDetails> data = serviceRepo.findByUserIdAndServiceTypeAndUserServicesId(userId, serviceType,
+		List<SpServiceDetails> data = serviceRepo.findByUserIdORServiceTypeORUserServiceId(userId, serviceType,
 				serviceId);
 		if (!data.isEmpty()) {
 			response2.setMessage("SpServiceDetails fetched successfully..");

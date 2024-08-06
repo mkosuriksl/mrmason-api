@@ -78,18 +78,20 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 	}
 
 	@Override
-	public ResponseSpServiceGetDto getServices(String userId, String serviceType, String serviceId) {
-		List<SpServiceDetails> data = serviceRepo.findByUserIdORServiceTypeORUserServiceId(userId, serviceType,
+	public ResponseSpServiceGetDto getServices(String userId, List<String> serviceTypes, String serviceId) {
+		List<SpServiceDetails> resp = new ArrayList<>();
+		List<SpServiceDetails> data = serviceRepo.findByUserIdAndServiceTypesAndUserServiceId(userId, serviceTypes,
 				serviceId);
-		if (!data.isEmpty()) {
+		resp.addAll(data);
+		if (!resp.isEmpty()) {
 			response2.setMessage("SpServiceDetails fetched successfully..");
 			response2.setStatus(true);
-			response2.setData(data);
+			response2.setData(resp);
 			return response2;
 		}
 		response2.setMessage("No services found for the given details.!");
 		response2.setStatus(true);
-		response2.setData(data);
+		response2.setData(resp);
 		return response2;
 	}
 

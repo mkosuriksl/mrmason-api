@@ -14,7 +14,7 @@ public interface SpServiceDetailsService {
 
 	ResponseSpServiceGetDto getServiceRequest(String userId, String serviceType, String serviceId);
 	
-	ResponseSpServiceGetDto getServices(String userId, String serviceType, String serviceId);
+	ResponseSpServiceGetDto getServices(String userId, List<String> serviceType, String serviceId);
 
 	ResponseSpServiceDetailsDto updateServiceRequest(SpServiceDetails service);
 

@@ -49,9 +49,9 @@ public class SpServiceDetailsController {
 
 	@GetMapping("/getSpService")
 	public ResponseEntity<ResponseSpServiceGetDto> getAssetDetails(@RequestParam(required = false) String userId,
-			@RequestParam(required = false) String serviceType, @RequestParam(required = false) String servicesId) {
+			@RequestParam(required = false) List<String> serviceTypes, @RequestParam(required = false) String servicesId) {
 		try {
-			ResponseSpServiceGetDto entity = spService.getServices(userId, serviceType, servicesId);
+			ResponseSpServiceGetDto entity = spService.getServices(userId, serviceTypes, servicesId);
 			return new ResponseEntity<>(entity, HttpStatus.OK);
 
 		} catch (Exception e) {

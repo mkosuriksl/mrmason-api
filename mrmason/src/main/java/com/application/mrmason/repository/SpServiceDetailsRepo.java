@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.application.mrmason.entity.SpServiceDetails;
@@ -34,5 +33,11 @@ public interface SpServiceDetailsRepo extends JpaRepository<SpServiceDetails, St
 	List<SpServiceDetails> findByUserId(String userId);
 
 	List<SpServiceDetails> findByLocation(String location);
+	
+	@Query("SELECT s FROM SpServiceDetails s WHERE " + "(:userId IS NULL OR s.userId = :userId) AND "
+			+ "(:serviceTypes IS NULL OR s.serviceType IN :serviceTypes) AND "
+			+ "(:serviceId IS NULL OR s.userServicesId = :serviceId)")
+	List<SpServiceDetails> findByUserIdAndServiceTypesAndUserServiceId(String userId, List<String> serviceTypes,
+			String serviceId);
 
 }

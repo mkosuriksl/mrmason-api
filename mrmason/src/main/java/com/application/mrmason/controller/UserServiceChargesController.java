@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.application.mrmason.dto.ResponseUserServiceChargesDto;
 import com.application.mrmason.dto.ResponseUserServiceChargesDto1;
 import com.application.mrmason.dto.ResponseUserServiceChargesDto2;
+import com.application.mrmason.dto.UserServiceChargeRequest;
 import com.application.mrmason.entity.UserServiceCharges;
 import com.application.mrmason.service.UserServiceChargesService;
 
@@ -28,9 +29,9 @@ public class UserServiceChargesController {
 	
 	@PostMapping("/adding-UserServiceCharges")
 	public ResponseEntity<ResponseUserServiceChargesDto> userServiceCharges(
-			@RequestBody List<UserServiceCharges> chargesList) {
+			@RequestBody UserServiceChargeRequest serviceChargeRequest) {
 		ResponseUserServiceChargesDto response = new ResponseUserServiceChargesDto();
-		List<UserServiceCharges> savedCharges = service.addCharges(chargesList);
+		List<UserServiceCharges> savedCharges = service.addCharges(serviceChargeRequest);
 
 		try {
 			if (!savedCharges.isEmpty()) {

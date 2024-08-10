@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.application.mrmason.dto.UserServiceChargeRequest;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserServiceCharges;
 import com.application.mrmason.repository.UserDAO;
@@ -18,48 +20,49 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 @Service
-public class UserServiceChargesServiceImpl implements UserServiceChargesService{
-	
+public class UserServiceChargesServiceImpl implements UserServiceChargesService {
+
 	@Autowired
 	UserServiceChargesRepo repo;
 
 	@PersistenceContext
 	private EntityManager entityManager;
-	
+
 	@Autowired
 	UserDAO userDAO;
-	
+
 	@Override
-    public List<UserServiceCharges> addCharges(List<UserServiceCharges> chargesList) {
-        List<UserServiceCharges> savedCharges = new ArrayList<>();
+	public List<UserServiceCharges> addCharges(UserServiceChargeRequest serviceChargeRequest) {
+		List<UserServiceCharges> savedCharges = new ArrayList<>();
 
-        for (UserServiceCharges charges : chargesList) {
-            charges.setServiceChargeKey(generateServiceChargeKey(charges.getServiceId(), charges.getLocation(), charges.getBrand(), charges.getModel()));
-            Optional<User> user = userDAO.findById(charges.getBodSeqNo());
+		for (UserServiceCharges charges : serviceChargeRequest.getChargesList()) {
+			charges.setServiceChargeKey(generateServiceChargeKey(charges.getServiceId(), charges.getLocation(),
+					charges.getBrand(), charges.getModel()));
+			charges.setSubcategory(serviceChargeRequest.getSubCategory());
+			Optional<User> user = userDAO.findById(charges.getBodSeqNo());
 
-            if (user.isPresent()) {
-                charges.setUpdatedBy(charges.getBodSeqNo());
-                Optional<UserServiceCharges> existingCharges = repo.findById(charges.getServiceChargeKey());
+			if (user.isPresent()) {
+				charges.setUpdatedBy(charges.getBodSeqNo());
+				Optional<UserServiceCharges> existingCharges = repo.findById(charges.getServiceChargeKey());
 
-                if (!existingCharges.isPresent()) {
-                    repo.save(charges);
-                    repo.flush();  
-                    savedCharges.add(charges);
-                }
-            }
-        }
-        return savedCharges;
-    }
+				if (!existingCharges.isPresent()) {
+					repo.save(charges);
+					repo.flush();
+					savedCharges.add(charges);
+				}
+			}
+		}
+		return savedCharges;
+	}
 
-    private String generateServiceChargeKey(String serviceId, String location, String brand, String model) {
-        String subString = location.substring(0, Math.min(4, location.length()));
-        return serviceId + "_" + brand + "_" + model + "_" + subString;
-    }
+	private String generateServiceChargeKey(String serviceId, String location, String brand, String model) {
+		String subString = location.substring(0, Math.min(4, location.length()));
+		return serviceId + "_" + brand + "_" + model + "_" + subString;
+	}
 
-	
 	@Override
 	public List<UserServiceCharges> getUserServiceCharges(String serviceChargeKey, String serviceId, String location,
-			String brand, String model,String updatedBy,String subcategory) {
+			String brand, String model, String updatedBy, String subcategory) {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<UserServiceCharges> query = cb.createQuery(UserServiceCharges.class);
 		Root<UserServiceCharges> root = query.from(UserServiceCharges.class);

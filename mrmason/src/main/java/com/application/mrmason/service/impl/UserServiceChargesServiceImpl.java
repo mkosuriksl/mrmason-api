@@ -1,5 +1,6 @@
 package com.application.mrmason.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -39,6 +40,7 @@ public class UserServiceChargesServiceImpl implements UserServiceChargesService 
 			charges.setServiceChargeKey(generateServiceChargeKey(charges.getServiceId(), charges.getLocation(),
 					charges.getBrand(), charges.getModel()));
 			charges.setSubcategory(serviceChargeRequest.getSubCategory());
+			charges.setUpdatedDate(LocalDateTime.now().toString());
 			Optional<User> user = userDAO.findById(charges.getBodSeqNo());
 
 			if (user.isPresent()) {

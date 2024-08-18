@@ -1,6 +1,7 @@
 package com.application.mrmason.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -43,31 +44,35 @@ public class UserController {
 
 	@Autowired
 	SPAvailabilityRepo availabilityReo;
-	
-	ResponseUserDTO response =  new ResponseUserDTO();
+
+	ResponseUserDTO response = new ResponseUserDTO();
 	ResponseUserUpdateDto userResponse = new ResponseUserUpdateDto();
 
-	ResponseMessageDto response2=new ResponseMessageDto();
+	ResponseMessageDto response2 = new ResponseMessageDto();
 
 	@PostMapping("/sp-register")
-	public ResponseEntity<?> create(@RequestBody User registrationDetails) {
-		try {
-			if (userService.isEmailExists(registrationDetails.getEmail())) {
-				response.setMessage("Email already exists");
-				return new ResponseEntity<>(response, HttpStatus.OK);
+	public ResponseEntity<?> create(@RequestBody User request) {
+		ResponseUserDTO rs = new ResponseUserDTO();
+		Optional<User> user = userService.checkExistingUser(request.getEmail(), request.getMobile(),
+				request.getRegSource());
+		if (user.isPresent()) {
+			if (user.get().getEmail().equals(request.getEmail())
+					&& user.get().getRegSource().equals(request.getRegSource())) {
+				rs.setMessage("Email already exists");
+				return new ResponseEntity<>(rs, HttpStatus.OK);
 			}
-			if (userService.isMobileExists(registrationDetails.getMobile())) {
-				response.setMessage("Mobile already exists");
-				return new ResponseEntity<>(response, HttpStatus.OK);
+			if (user.get().getMobile().equals(request.getMobile())
+					&& user.get().getRegSource().equals(request.getRegSource())) {
+				rs.setMessage("Mobile already exists");
+				return new ResponseEntity<>(rs, HttpStatus.OK);
 			}
-			Userdto userDetails=userService.addDetails(registrationDetails);
-			response.setMessage("Thanks for  registering with us. please verify your registered email and mobile");
-			response.setStatus(true);
-			response.setUserData(userDetails);
-			return new ResponseEntity<>( response,HttpStatus.OK);
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.OK).body(e.getMessage());
 		}
+
+		Userdto userDetails = userService.addDetails(request);
+		response.setMessage("Thanks for  registering with us. please verify your registered email and mobile");
+		response.setStatus(true);
+		response.setUserData(userDetails);
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@PreAuthorize("hasAuthority('Developer')")
@@ -95,9 +100,8 @@ public class UserController {
 
 	@PreAuthorize("hasAuthority('Developer')")
 	@PostMapping("/change-password")
-	
-	public ResponseEntity<ResponseMessageDto> changeCustomerPassword(@RequestBody ChangeForfotdto cfPwd) {
 
+	public ResponseEntity<ResponseMessageDto> changeCustomerPassword(@RequestBody ChangeForfotdto cfPwd) {
 
 		String email = cfPwd.getEmail();
 		String oldPassword = cfPwd.getOldPassword();
@@ -109,7 +113,7 @@ public class UserController {
 				response2.setMessage("Password Changed Successfully..");
 				response2.setStatus(true);
 				return new ResponseEntity<>(response2, HttpStatus.OK);
-				
+
 			} else if (userService.changePassword(email, oldPassword, newPassword, confirmPassword) == "notMatched") {
 				response2.setMessage("New Passwords Not Matched.!");
 				response2.setStatus(false);
@@ -131,10 +135,10 @@ public class UserController {
 
 	@PostMapping("/forget-pwd-send-otp")
 	public ResponseEntity<ResponseMessageDto> sendOtpForPasswordChange(@RequestBody Logindto login) {
-		String userMail=login.getEmail();
-		String mobile=login.getMobile();
+		String userMail = login.getEmail();
+		String mobile = login.getMobile();
 		try {
-			if(userMail!=null) {
+			if (userMail != null) {
 				if (userService.sendMail(userMail) != null) {
 					response2.setMessage("OTP Sent to Registered EmailId.");
 					response2.setStatus(true);
@@ -143,9 +147,9 @@ public class UserController {
 				response2.setMessage("Invalid Email ID.!");
 				response2.setStatus(false);
 				return new ResponseEntity<>(response2, HttpStatus.OK);
-				
-			}else {
-				if(userService.sendSms(mobile)!=null) {
+
+			} else {
+				if (userService.sendSms(mobile) != null) {
 					response2.setMessage("OTP Sent to Registered Mobile Number.");
 					response2.setStatus(true);
 					return new ResponseEntity<>(response2, HttpStatus.OK);
@@ -154,13 +158,13 @@ public class UserController {
 				response2.setStatus(false);
 				return new ResponseEntity<>(response2, HttpStatus.OK);
 			}
-			
+
 		} catch (Exception e) {
 			response2.setMessage(e.getMessage());
 			response2.setStatus(false);
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response2);
 		}
-		
+
 	}
 
 	@PostMapping("/forget-pwd-change")
@@ -169,16 +173,16 @@ public class UserController {
 		String email = cfPwd.getEmail();
 		String otp = cfPwd.getOtp();
 		String newPassword = cfPwd.getNewPassword();
-		String mobile=cfPwd.getMobile();
+		String mobile = cfPwd.getMobile();
 		String confirmPassword = cfPwd.getConfirmPassword();
 
 		try {
-			String data=userService.forgetPassword(mobile, email, otp, newPassword, confirmPassword);
-			if (data== "changed") {
+			String data = userService.forgetPassword(mobile, email, otp, newPassword, confirmPassword);
+			if (data == "changed") {
 				response2.setMessage("Password Changed Successfully..");
 				response2.setStatus(true);
 				return new ResponseEntity<>(response2, HttpStatus.OK);
-			} else if (data== "notMatched") {
+			} else if (data == "notMatched") {
 				response2.setMessage("New Passwords Not Matched.!");
 				response2.setStatus(false);
 				return new ResponseEntity<>(response2, HttpStatus.OK);
@@ -190,7 +194,7 @@ public class UserController {
 				response2.setMessage("Invalid Email ID.!");
 				response2.setStatus(false);
 				return new ResponseEntity<>(response2, HttpStatus.OK);
-			} 
+			}
 		} catch (Exception e) {
 			response2.setMessage(e.getMessage());
 			response2.setStatus(false);
@@ -203,11 +207,11 @@ public class UserController {
 
 	@PreAuthorize("hasAuthority('Developer')")
 	@GetMapping("/sp-get-profile")
-	public ResponseEntity<?> getProfile(@RequestParam(required = false)String email) {
-		
-		Userdto profile=userService.getServiceProfile(email);
+	public ResponseEntity<?> getProfile(@RequestParam(required = false) String email) {
+
+		Userdto profile = userService.getServiceProfile(email);
 		try {
-			if ( profile == null) {
+			if (profile == null) {
 				response.setMessage("Invalid Email ....!");
 				response.setStatus(false);
 				return new ResponseEntity<>(response, HttpStatus.OK);
@@ -224,7 +228,6 @@ public class UserController {
 
 	}
 
-	
 	@PostMapping("/sp-login")
 	public ResponseEntity<?> login(@RequestBody Logindto login) {
 		String email = login.getEmail();
@@ -241,6 +244,7 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.OK).body(e.getMessage());
 		}
 	}
+
 //	@PreAuthorize("hasAuthority('Adm')")
 	@GetMapping("/filterServicePerson")
 	public ResponseEntity<ResponseListUserDto> getCustomers(
@@ -253,11 +257,11 @@ public class UserController {
 			@RequestParam(value = "toDate", required = false) String toDate,
 			@RequestParam(value = "state", required = false) String state,
 			@RequestParam(value = "city", required = false) String city) {
-		ResponseListUserDto response3=new ResponseListUserDto();
+		ResponseListUserDto response3 = new ResponseListUserDto();
 
 		try {
-			List<User> entity = userService.getServicePersonData(email, mobile,location, status, category,
-					fromDate, toDate);
+			List<User> entity = userService.getServicePersonData(email, mobile, location, status, category, fromDate,
+					toDate);
 			if (!entity.isEmpty()) {
 				response3.setMessage("Service person details fetched successfully.!");
 				response3.setStatus(true);
@@ -266,8 +270,7 @@ public class UserController {
 			} else {
 				response3.setMessage("No data found for the given details.!");
 				response3.setStatus(true);
-				return ResponseEntity.status(HttpStatus.OK)
-						.body(response3);
+				return ResponseEntity.status(HttpStatus.OK).body(response3);
 			}
 		} catch (Exception e) {
 			response3.setMessage(e.getMessage());
@@ -276,6 +279,7 @@ public class UserController {
 		}
 
 	}
+
 	@GetMapping("/getData")
 	public ResponseEntity<User> get(@RequestParam(name = "email") String email) {
 
@@ -290,7 +294,7 @@ public class UserController {
 	public ResponseEntity<ResponseMessageDto> error() {
 		response2.setMessage("Access Denied");
 		response2.setStatus(false);
-		return new ResponseEntity<ResponseMessageDto>(response2,HttpStatus.UNAUTHORIZED);
+		return new ResponseEntity<ResponseMessageDto>(response2, HttpStatus.UNAUTHORIZED);
 
 	}
 

@@ -5,29 +5,36 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Collections;
 
-import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
-
-import lombok.AllArgsConstructor;
-
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.application.mrmason.enums.RegSource;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name ="users")
+@Table(name = "users")
 public class User implements UserDetails {
 
 //	private static final long serialVersionUID = 5342327L;
-	
+
 	@Id
 	@Column(name = "BOD_SEQ_NO")
 	public String bodSeqNo;
@@ -62,10 +69,9 @@ public class User implements UserDetails {
 	@Column(name = "PINCODE_NO")
 	public String location;
 
-
 	@Transient
 	public LocalDateTime update;
-	
+
 	@Column(name = "UPDATE_DATETIME")
 	public String updatedDate;
 
@@ -74,41 +80,38 @@ public class User implements UserDetails {
 	public String registeredDate;
 
 	@Column(name = "VERIFIED")
-	public String verified ="no";
+	public String verified = "no";
 
 	@Column(name = "SERVICE_CATEGORY")
 	public String serviceCategory;
 
 	@Column(name = "USER_TYPE")
 	@Enumerated(EnumType.STRING)
-	private UserType userType ;
+	private UserType userType;
 
 	@Column(name = "STATUS")
 	private String status = "inactive";
 
-	@Column(name = "reg_source")
-	private String regSource;
+	@Enumerated(EnumType.STRING)
+	private RegSource regSource;
 
 	@PrePersist
 	private void prePersist() {
 		LocalDateTime now = LocalDateTime.now();
 		String year = String.valueOf(now.getYear());
-		String month = String.format("%02d", now.getMonthValue()); 
-		String day = String.format("%02d", now.getDayOfMonth()); 
-		String hour = String.format("%02d", now.getHour()); 
-		String minute = String.format("%02d", now.getMinute()); 
-		String second = String.format("%02d", now.getSecond()); 
+		String month = String.format("%02d", now.getMonthValue());
+		String day = String.format("%02d", now.getDayOfMonth());
+		String hour = String.format("%02d", now.getHour());
+		String minute = String.format("%02d", now.getMinute());
+		String second = String.format("%02d", now.getSecond());
 		String millis = String.format("%03d", now.getNano() / 1000000).substring(0, 2);
-		this.bodSeqNo = "SP" + year + month + day + hour + minute + second+millis;
-		
-		
-		
+		this.bodSeqNo = "SP" + year + month + day + hour + minute + second + millis;
+
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy hh:mm a");
 		this.update = now;
-		this.updatedDate= now.format(formatter);
+		this.updatedDate = now.format(formatter);
 
 	}
-
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {

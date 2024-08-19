@@ -8,12 +8,14 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.application.mrmason.dto.ResponseSpLoginDto;
 import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.ServicePersonLogin;
 import com.application.mrmason.entity.SpServiceDetails;
 import com.application.mrmason.entity.User;
+import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.repository.ServicePersonLoginDAO;
 import com.application.mrmason.repository.SpServiceDetailsRepo;
 import com.application.mrmason.repository.UserDAO;
@@ -49,6 +51,11 @@ public class UserService {
 	@Autowired
 	private SmsService smsService;
 
+	public Optional<User> checkExistingUser(String email, String phone, RegSource regSource) {
+		List<User> users = userDAO.findByEmailANDMobile(email, phone);
+		return users.stream().filter(user -> user.getRegSource().equals(regSource)).findFirst();
+	}
+
 	public boolean isEmailExists(String email) {
 		return userDAO.existsByEmail(email);
 	}
@@ -57,12 +64,13 @@ public class UserService {
 		return userDAO.existsByMobile(mobile);
 	}
 
+	@Transactional
 	public Userdto addDetails(User user) {
 		String encryptPassword = byCrypt.encode(user.getPassword());
 		user.setPassword(encryptPassword);
-		
+
 		// Email sending
-		sendEmail(user.getEmail());
+		 sendEmail(user.getEmail());
 		// Mobile sms sending
 //		String message = "Thanks for  registering with us. please verify your registered email and mobile.";
 //		smsService.sendSMSMessage(user.getMobile(), message);
@@ -93,7 +101,7 @@ public class UserService {
 		dto.setRegisteredDate(user.getRegisteredDate());
 		dto.setUpdatedDate(user.getUpdatedDate());
 		dto.setServiceCategory(user.getServiceCategory());
-		dto.setRegSource(user.getRegSource());
+		dto.setRegSource(user.getRegSource().toString());
 
 		return dto;
 
@@ -227,7 +235,7 @@ public class UserService {
 			dto.setDistrict(userdb.getDistrict());
 			dto.setState(userdb.getState());
 			dto.setLocation(userdb.getLocation());
-			dto.setRegSource(userdb.getRegSource());
+			dto.setRegSource(userdb.getRegSource().toString());
 			if (!serviceDetails.isEmpty()) {
 				SpServiceDetails sd = serviceDetails.get(0);
 				dto.setAvailableLocation(sd.getCity());

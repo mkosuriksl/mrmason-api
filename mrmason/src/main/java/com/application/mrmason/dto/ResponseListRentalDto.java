@@ -2,12 +2,12 @@ package com.application.mrmason.dto;
 
 import java.util.List;
 
-import com.application.mrmason.entity.Rentel;
+import com.application.mrmason.entity.Rental;
 
 import lombok.Data;
 @Data
-public class ResponseListRentelDto {
+public class ResponseListRentalDto {
 	private String message;
 	private boolean status;
-	private List<Rentel> data;
+	private List<Rental> data;
 }

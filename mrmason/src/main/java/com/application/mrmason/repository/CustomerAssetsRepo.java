@@ -20,4 +20,7 @@ public interface CustomerAssetsRepo extends JpaRepository<CustomerAssets, Long>{
 	
 	Optional<CustomerAssets> findAllByAssetId(String asssetid);
 	Optional<CustomerAssets> findByUserIdAndAssetId(String userId, String assetId);
+
+	List<CustomerAssets> findByAssetCatAndAssetSubCatAndAssetBrandAndAssetModelAndUserId(String assetCat, String assetSubCat,
+			String assetBrand, String assetModel, String userId);
 }

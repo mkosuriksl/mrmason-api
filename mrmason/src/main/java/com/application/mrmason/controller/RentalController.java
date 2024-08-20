@@ -1,6 +1,8 @@
 package com.application.mrmason.controller;
 
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,21 +14,22 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.application.mrmason.dto.RentalDto;
-import com.application.mrmason.dto.ResponseListRentelDto;
+//import com.application.mrmason.dto.RentalDto;
+import com.application.mrmason.dto.ResponseListRentalDto;
 import com.application.mrmason.dto.ResponseRentalDto;
-import com.application.mrmason.entity.Rentel;
-import com.application.mrmason.service.RentelService;
+import com.application.mrmason.dto.UpdateRentalChargeDto;
+import com.application.mrmason.entity.Rental;
+import com.application.mrmason.service.RentalService;
 
 @RestController
 @PreAuthorize("hasAuthority('EC')")
-public class RentelController {
+public class RentalController {
 	@Autowired
-	public RentelService rentService;
-	ResponseListRentelDto response=new ResponseListRentelDto();
+	public RentalService rentService;
+	ResponseListRentalDto response=new ResponseListRentalDto();
 
 	@PostMapping("/addRentalData")
-	public ResponseEntity<ResponseRentalDto> addRentRequest(@RequestBody Rentel rent) {
+	public ResponseEntity<ResponseRentalDto> addRentRequest(@RequestBody Rental rent) {
 		ResponseRentalDto response=new ResponseRentalDto();
 		try {
 			if (rentService.addRentalReq(rent) != null) {
@@ -67,7 +70,7 @@ public class RentelController {
 	}
 	
 	@PutMapping("/updateRentalData")
-	public ResponseEntity<?> updateRentRequest(@RequestBody Rentel rent) {
+	public ResponseEntity<?> updateRentRequest(@RequestBody Rental rent) {
 		try {
 			ResponseRentalDto response=new ResponseRentalDto();
 			if (rentService.updateRentalReq(rent) != null) {
@@ -85,5 +88,55 @@ public class RentelController {
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
+	@GetMapping("/getRentalAssets")
+    public ResponseEntity<ResponseRentalDto> getRentalAssets(
+            @RequestParam String assetCat,
+            @RequestParam String assetSubCat,
+            @RequestParam String assetBrand,
+            @RequestParam String assetModel,
+			@RequestParam String userId) {
+        
+        List<Rental> rentalAssets = rentService.getRentalAssets(assetCat, assetSubCat, assetBrand, assetModel, userId);
+
+        ResponseRentalDto response = new ResponseRentalDto();
+
+        if (rentalAssets.isEmpty()) {
+            response.setMessage("No assets found for the given criteria.");
+            response.setStatus(false);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+
+        response.setMessage("Rental AssetIds retrieved successfully.");
+        response.setStatus(true);
+		response.setRentalData(rentalAssets);  // Set the list of Rental objects
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PutMapping("/updateAssetRentalCharge")
+    public ResponseEntity<ResponseRentalDto> updateAssetRentalCharge(
+            @RequestBody UpdateRentalChargeDto updateRequest) {
+
+				Rental updatedRental = rentService.updateRentalAssetCharge(
+                updateRequest.getAssetId(),
+				updateRequest.getUserId(),
+				updateRequest.getIsAvailRent(),
+                updateRequest.getAmountPerDay(),
+				updateRequest.getAmountper30days(),
+                updateRequest.getPickup(),
+				updateRequest.getAvailableLocation(),
+				updateRequest.getDelivery());
+
+        ResponseRentalDto response = new ResponseRentalDto();
+        if (updatedRental == null) {
+            response.setMessage("Asset not found or update failed.");
+            response.setStatus(false);
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        response.setMessage(" Updated Rental Asset Charge successfully.");
+        response.setStatus(true);
+        response.setAddRental(updatedRental);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 	
 }

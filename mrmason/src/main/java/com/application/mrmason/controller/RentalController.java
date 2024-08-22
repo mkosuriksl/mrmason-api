@@ -1,6 +1,5 @@
 package com.application.mrmason.controller;
 
-
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,14 +25,14 @@ import com.application.mrmason.service.RentalService;
 public class RentalController {
 	@Autowired
 	public RentalService rentService;
-	ResponseListRentalDto response=new ResponseListRentalDto();
+	ResponseListRentalDto response = new ResponseListRentalDto();
 
 	@PostMapping("/addRentalData")
 	public ResponseEntity<ResponseRentalDto> addRentRequest(@RequestBody Rental rent) {
-		ResponseRentalDto response=new ResponseRentalDto();
+		ResponseRentalDto response = new ResponseRentalDto();
 		try {
 			if (rentService.addRentalReq(rent) != null) {
-				
+
 				response.setAddRental(rentService.addRentalReq(rent));
 				response.setMessage("Rental asset added successfully..");
 				response.setStatus(true);
@@ -48,9 +47,10 @@ public class RentalController {
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
-	
+
 	@GetMapping("/getRentalData")
-	public ResponseEntity<?> getRentRequest(@RequestParam(required = false) String assetId,@RequestParam(required = false)String userId) {
+	public ResponseEntity<?> getRentRequest(@RequestParam(required = false) String assetId,
+			@RequestParam(required = false) String userId) {
 		try {
 			if (rentService.getRentalReq(assetId, userId).isEmpty()) {
 				response.setMessage("No data found for the given details.!");
@@ -61,18 +61,18 @@ public class RentalController {
 			response.setStatus(true);
 			response.setData(rentService.getRentalReq(assetId, userId));
 			return new ResponseEntity<>(response, HttpStatus.OK);
-			
+
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
-	
+
 	@PutMapping("/updateRentalData")
 	public ResponseEntity<?> updateRentRequest(@RequestBody Rental rent) {
 		try {
-			ResponseRentalDto response=new ResponseRentalDto();
+			ResponseRentalDto response = new ResponseRentalDto();
 			if (rentService.updateRentalReq(rent) != null) {
 				response.setAddRental(rentService.updateRentalReq(rent));
 				response.setMessage("Rental asset updated successfully..");
@@ -88,55 +88,56 @@ public class RentalController {
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
+
 	@GetMapping("/getRentalAssets")
-    public ResponseEntity<ResponseRentalDto> getRentalAssets(
-            @RequestParam String assetCat,
-            @RequestParam String assetSubCat,
-            @RequestParam String assetBrand,
-            @RequestParam String assetModel,
+	public ResponseEntity<ResponseRentalDto> getRentalAssets(
+			@RequestParam String assetCat,
+			@RequestParam String assetSubCat,
+			@RequestParam(required = false) String assetBrand,
+			@RequestParam(required = false) String assetModel,
 			@RequestParam String userId) {
-        
-        List<Rental> rentalAssets = rentService.getRentalAssets(assetCat, assetSubCat, assetBrand, assetModel, userId);
 
-        ResponseRentalDto response = new ResponseRentalDto();
+		List<Rental> rentalAssets = rentService.getRentalAssets(assetCat, assetSubCat, assetBrand, assetModel, userId);
 
-        if (rentalAssets.isEmpty()) {
-            response.setMessage("No assets found for the given criteria.");
-            response.setStatus(false);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }
+		ResponseRentalDto response = new ResponseRentalDto();
 
-        response.setMessage("Rental AssetIds retrieved successfully.");
-        response.setStatus(true);
-		response.setRentalData(rentalAssets);  // Set the list of Rental objects
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
+		if (rentalAssets.isEmpty()) {
+			response.setMessage("No assets found for the given criteria.");
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
 
-    @PutMapping("/updateAssetRentalCharge")
-    public ResponseEntity<ResponseRentalDto> updateAssetRentalCharge(
-            @RequestBody UpdateRentalChargeDto updateRequest) {
+		response.setMessage("Rental AssetIds retrieved successfully.");
+		response.setStatus(true);
+		response.setRentalData(rentalAssets);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 
-				Rental updatedRental = rentService.updateRentalAssetCharge(
-                updateRequest.getAssetId(),
+	@PutMapping("/updateAssetRentalCharge")
+	public ResponseEntity<ResponseRentalDto> updateAssetRentalCharge(
+			@RequestBody UpdateRentalChargeDto updateRequest) {
+
+		Rental updatedRental = rentService.updateRentalAssetCharge(
+				updateRequest.getAssetId(),
 				updateRequest.getUserId(),
 				updateRequest.getIsAvailRent(),
-                updateRequest.getAmountPerDay(),
+				updateRequest.getAmountPerDay(),
 				updateRequest.getAmountper30days(),
-                updateRequest.getPickup(),
+				updateRequest.getPickup(),
 				updateRequest.getAvailableLocation(),
 				updateRequest.getDelivery());
 
-        ResponseRentalDto response = new ResponseRentalDto();
-        if (updatedRental == null) {
-            response.setMessage("Asset not found or update failed.");
-            response.setStatus(false);
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }
+		ResponseRentalDto response = new ResponseRentalDto();
+		if (updatedRental == null) {
+			response.setMessage("Asset not found or update failed.");
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+		}
 
-        response.setMessage(" Updated Rental Asset Charge successfully.");
-        response.setStatus(true);
-        response.setAddRental(updatedRental);
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-	
+		response.setMessage(" Updated Rental Asset Charge successfully.");
+		response.setStatus(true);
+		response.setAddRental(updatedRental);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
 }

@@ -18,7 +18,7 @@ public class MailConfig {
 
     @Bean
     public JavaMailSender getJavaMailSender() {
-    	AdminMail smtpConfig = mailRepo.findByEmailid("Mrmason.in@kosuriers.com");
+    	AdminMail smtpConfig = mailRepo.findByEmailid("info@kosuriers.com");
 
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost(smtpConfig.getMailHost());

@@ -72,8 +72,8 @@ public class UserService {
 		// Email sending
 		 sendEmail(user.getEmail());
 		// Mobile sms sending
-//		String message = "Thanks for  registering with us. please verify your registered email and mobile.";
-//		smsService.sendSMSMessage(user.getMobile(), message);
+		String message = "Thanks for  registering with us. please verify your registered email and mobile.";
+		smsService.sendSMSMessage(user.getMobile(), message);
 		User data = userDAO.save(user);
 
 		ServicePersonLogin service = new ServicePersonLogin();

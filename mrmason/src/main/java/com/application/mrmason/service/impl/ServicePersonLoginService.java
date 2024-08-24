@@ -2,11 +2,10 @@ package com.application.mrmason.service.impl;
 
 import java.util.Optional;
 
-import com.application.mrmason.dto.Userdto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.application.mrmason.entity.ServicePersonLogin;
+import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.repository.ServicePersonLoginDAO;
 import com.application.mrmason.repository.UserDAO;
@@ -31,29 +30,6 @@ public class ServicePersonLoginService {
 			return email;
 		} else {
 
-		}
-		return null;
-	}
-
-	public ServicePersonLogin updateEmailData(String otp, String email) {
-		Optional<ServicePersonLogin> existedById = Optional.of(emailLoginRepo.findByEmail(email));
-		if (existedById.isPresent()) {
-			existedById.get().setEOtp(otp);
-			existedById.get().setEVerify("yes");
-			userService.updateDataWithEmail(email);
-
-			return emailLoginRepo.save(existedById.get());
-		}
-		return null;
-	}
-	public ServicePersonLogin updateMobileData(String otp, String mobile) {
-		Optional<ServicePersonLogin> existedById = Optional.of(emailLoginRepo.findByMobile(mobile));
-		if (existedById.isPresent()) {
-			existedById.get().setMOtp(otp);
-			existedById.get().setMobVerify("yes");
-			userService.updateDataWithMobile(mobile);
-
-			return emailLoginRepo.save(existedById.get());
 		}
 		return null;
 	}
@@ -84,7 +60,5 @@ public class ServicePersonLoginService {
 		return dto;
 
 	}
-
-	
 
 }

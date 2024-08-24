@@ -69,7 +69,7 @@ public class UserController {
 		}
 
 		Userdto userDetails = userService.addDetails(request);
-		response.setMessage("Thanks for  registering with us. please verify your registered email and mobile");
+		response.setMessage("Thanks for registering with us. please verify your registered email and mobile");
 		response.setStatus(true);
 		response.setUserData(userDetails);
 		return new ResponseEntity<>(response, HttpStatus.OK);

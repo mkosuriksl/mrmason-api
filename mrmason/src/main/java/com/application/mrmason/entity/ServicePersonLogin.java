@@ -1,7 +1,11 @@
 package com.application.mrmason.entity;
 
+import com.application.mrmason.enums.RegSource;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -25,19 +29,29 @@ public class ServicePersonLogin {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "OTP_SEQ_NO")
 	public long otpSeqNo;
+	
 	@Column(name = "USER_MOBILE")
 	public String mobile;
+	
 	@Column(name = "OTP")
 	public String mOtp;
+	
 	@Column(name = "MOB_VERIFY")
 	@Builder.Default
 	public String mobVerify ="no";
+	
 	@Column(name = "E_OTP")
 	public String eOtp;
+	
 	@Column(name = "USER_EMAIL")
 	public String email;
+	
 	@Column(name = "E_VERIFY")
 	public String eVerify;
+	
+	@Column(name = "REG_SOURCE",nullable = false)
+	@Enumerated(EnumType.STRING)
+	private RegSource regSource;
 	
 	
 }

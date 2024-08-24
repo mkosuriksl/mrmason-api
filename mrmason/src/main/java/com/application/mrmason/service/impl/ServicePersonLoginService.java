@@ -35,29 +35,6 @@ public class ServicePersonLoginService {
 		return null;
 	}
 
-	public ServicePersonLogin updateEmailData(String otp, String email) {
-		Optional<ServicePersonLogin> existedById = Optional.of(emailLoginRepo.findByEmail(email));
-		if (existedById.isPresent()) {
-			existedById.get().setEOtp(otp);
-			existedById.get().setEVerify("yes");
-			userService.updateDataWithEmail(email);
-
-			return emailLoginRepo.save(existedById.get());
-		}
-		return null;
-	}
-	public ServicePersonLogin updateMobileData(String otp, String mobile) {
-		Optional<ServicePersonLogin> existedById = Optional.of(emailLoginRepo.findByMobile(mobile));
-		if (existedById.isPresent()) {
-			existedById.get().setMOtp(otp);
-			existedById.get().setMobVerify("yes");
-			userService.updateDataWithMobile(mobile);
-
-			return emailLoginRepo.save(existedById.get());
-		}
-		return null;
-	}
-
 	public Userdto getUserDto(String email, String mobile) {
 		Optional<User> user = Optional.of(userDAO.findByEmailOrMobile(email, mobile));
 		User userdb = user.get();
@@ -84,7 +61,5 @@ public class ServicePersonLoginService {
 		return dto;
 
 	}
-
-	
 
 }

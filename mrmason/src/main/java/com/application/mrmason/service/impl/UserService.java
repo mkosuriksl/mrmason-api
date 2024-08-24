@@ -81,7 +81,7 @@ public class UserService {
 		service.setMobile(user.getMobile());
 		service.setMobVerify("no");
 		service.setEVerify("no");
-
+		service.setRegSource(user.getRegSource());
 		serviceLoginRepo.save(service);
 
 		Userdto dto = new Userdto();
@@ -352,7 +352,7 @@ public class UserService {
 		SimpleMailMessage mail = new SimpleMailMessage();
 		mail.setTo(toMail);
 		mail.setSubject("Verify Your Email and Mobile Number");
-		String body = "Thanks for  registering with us. please verify your registered email and mobile.";
+		String body = "Thanks for registering with us. please verify your registered email and mobile.";
 		mail.setText(body);
 		mailsender.send(mail);
 	}

@@ -11,8 +11,10 @@ import com.application.mrmason.dto.OtpSendRequest;
 import com.application.mrmason.dto.OtpVerificationRequest;
 import com.application.mrmason.dto.ResponseMessageDto;
 import com.application.mrmason.entity.ServicePersonLogin;
+import com.application.mrmason.entity.User;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.ServicePersonLoginDAO;
+import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.impl.OtpGenerationServiceImpl;
 import com.application.mrmason.service.impl.ServicePersonLoginService;
 import com.application.mrmason.service.impl.UserService;
@@ -29,6 +31,9 @@ public class ServicePersonLoginController {
 
 	@Autowired
 	UserService userService;
+
+	@Autowired
+	UserDAO userDAO;
 
 	@Autowired
 	ServicePersonLoginDAO servicePersonDao;
@@ -75,6 +80,10 @@ public class ServicePersonLoginController {
 				response.setStatus(true);
 				servicePersonDao.save(optVerify);
 				response.setMessage("Email Verified successfully");
+				User user = userDAO.findByEmailAndRegSource(login.getContactDetail(), login.getRegSource()).orElseThrow(
+						() -> new ResourceNotFoundException("User Not Found By : " + login.getContactDetail()));
+				user.setStatus("active");
+				userDAO.save(user);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 		} catch (Exception e) {
@@ -99,6 +108,10 @@ public class ServicePersonLoginController {
 			servicePersonDao.save(user);
 			response.setStatus(true);
 			response.setMessage("Otp sent to the registered mobile number.");
+			User userStatus = userDAO.findByEmailAndRegSource(login.getContactDetail(), login.getRegSource()).orElseThrow(
+					() -> new ResourceNotFoundException("User Not Found By : " + login.getContactDetail()));
+			userStatus.setStatus("active");
+			userDAO.save(userStatus);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}

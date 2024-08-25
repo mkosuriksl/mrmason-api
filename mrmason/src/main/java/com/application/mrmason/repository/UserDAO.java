@@ -18,10 +18,15 @@ public interface UserDAO extends JpaRepository<User, String> {
 	boolean existsByMobile(String mobile);
 
 	User findByEmail(String email);
+	
+	Optional<User> findByEmailAndRegSource(String email, RegSource regSource);
 
 	User findByMobile(String mobile);
 
 	User findByEmailOrMobile(String email, String mobile);
+
+	@Query("SELECT u FROM User u WHERE (u.email = :email OR u.mobile = :mobile) AND u.regSource = :regSource")
+	Optional<User> findByEmailOrMobileAndRegSource(String email, String mobile, RegSource regSource);
 
 	@Query("SELECT u FROM User u WHERE (u.email = :email AND u.mobile = :mobile) OR u.email = :email OR u.mobile = :mobile")
 	List<User> findByEmailANDMobile(String email, String mobile);

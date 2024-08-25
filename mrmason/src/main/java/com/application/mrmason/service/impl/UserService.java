@@ -10,6 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.application.mrmason.dto.LoginRequest;
 import com.application.mrmason.dto.ResponseSpLoginDto;
 import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.ServicePersonLogin;
@@ -70,7 +71,7 @@ public class UserService {
 		user.setPassword(encryptPassword);
 
 		// Email sending
-		 sendEmail(user.getEmail());
+		sendEmail(user.getEmail());
 		// Mobile sms sending
 		String message = "Thanks for registering with us. please verify your registered email and mobile before login. - mekanik.in";
 		smsService.sendSMSMessage(user.getMobile(), message);
@@ -256,6 +257,45 @@ public class UserService {
 		return null;
 
 	}
+	
+	public Userdto getServiceProfile(String email,RegSource regSource) {
+
+		Optional<User> user = userDAO.findByEmailAndRegSource(email,regSource);
+		List<SpServiceDetails> serviceDetails = detailsRepo.findByUserId(user.get().getBodSeqNo());
+
+		if (user.isPresent()) {
+			User userdb = user.get();
+
+			Userdto dto = new Userdto();
+			dto.setName(userdb.getName());
+			dto.setMobile(userdb.getMobile());
+			dto.setEmail(userdb.getEmail());
+			dto.setAddress(userdb.getAddress());
+			dto.setCity(userdb.getCity());
+			dto.setDistrict(userdb.getDistrict());
+			dto.setState(userdb.getState());
+			dto.setLocation(userdb.getLocation());
+			dto.setRegSource(userdb.getRegSource().toString());
+			if (!serviceDetails.isEmpty()) {
+				SpServiceDetails sd = serviceDetails.get(0);
+				dto.setAvailableLocation(sd.getCity());
+			}
+
+//			dto.setPincodeNo(userdb.getPincodeNo());
+			dto.setVerified(userdb.getVerified());
+			dto.setUserType(String.valueOf(userdb.getUserType()));
+			dto.setStatus(userdb.getStatus());
+			dto.setBusinessName(userdb.getBusinessName());
+			dto.setBodSeqNo(userdb.getBodSeqNo());
+			dto.setRegisteredDate(userdb.getRegisteredDate());
+			dto.setUpdatedDate(userdb.getUpdatedDate());
+			dto.setServiceCategory(userdb.getServiceCategory());
+			return dto;
+		}
+
+		return null;
+
+	}
 
 	public List<User> getServicePersonData(String email, String mobile, String location, String status, String category,
 			String fromDate, String toDate) {
@@ -272,27 +312,29 @@ public class UserService {
 
 	}
 
-	public ResponseSpLoginDto loginDetails(String email, String mobile, String password) {
+	public ResponseSpLoginDto loginDetails(LoginRequest login) {
 
-		Optional<ServicePersonLogin> loginDb = Optional.ofNullable((emailLoginRepo.findByEmailOrMobile(email, mobile)));
+		Optional<ServicePersonLogin> loginDb = emailLoginRepo.findByEmailOrMobileAndRegSource(login.getEmail(),
+				login.getMobile(), login.getRegSource());
 		ResponseSpLoginDto response = new ResponseSpLoginDto();
 
 		if (loginDb.isPresent()) {
-			Optional<User> userEmailMobile = Optional.ofNullable(userDAO.findByEmailOrMobile(email, mobile));
+			Optional<User> userEmailMobile = userDAO.findByEmailOrMobileAndRegSource(login.getEmail(),
+					login.getMobile(), login.getRegSource());
 			User user = userEmailMobile.get();
 			String status = user.getStatus();
 
 			if (userEmailMobile.isPresent()) {
 				if (status != null && status.equalsIgnoreCase("active")) {
-					if (email != null && mobile == null) {
+					if (login.getEmail() != null && login.getMobile() == null) {
 						if (loginDb.get().getEVerify().equalsIgnoreCase("yes")) {
 
-							if (byCrypt.matches(password, user.getPassword())) {
+							if (byCrypt.matches(login.getPassword(), user.getPassword())) {
 								String jwtToken = jwtService.generateToken(userEmailMobile.get());
 								response.setJwtToken(jwtToken);
 								response.setMessage("Login Successful.");
 								response.setStatus(true);
-								response.setLoginDetails(getServiceProfile(email));
+								response.setLoginDetails(getServiceProfile(login.getEmail(),login.getRegSource()));
 								return response;
 							} else {
 								response.setMessage("Invalid Password");
@@ -304,15 +346,15 @@ public class UserService {
 							response.setStatus(false);
 							return response;
 						}
-					} else if (email == null && mobile != null) {
+					} else if (login.getEmail() == null && login.getMobile() != null) {
 						if (loginDb.get().getMobVerify().equalsIgnoreCase("yes")) {
 
-							if (byCrypt.matches(password, user.getPassword())) {
+							if (byCrypt.matches(login.getPassword(), user.getPassword())) {
 								String jwtToken = jwtService.generateToken(userEmailMobile.get());
 								response.setJwtToken(jwtToken);
 								response.setMessage("Login Successful.");
 								response.setStatus(true);
-								response.setLoginDetails(getServiceProfile(loginDb.get().getEmail()));
+								response.setLoginDetails(getServiceProfile(loginDb.get().getEmail(),login.getRegSource()));
 								return response;
 							} else {
 								response.setMessage("Invalid Password");

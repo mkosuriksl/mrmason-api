@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ChangeForfotdto;
+import com.application.mrmason.dto.LoginRequest;
 import com.application.mrmason.dto.Logindto;
 import com.application.mrmason.dto.ResponseListUserDto;
 import com.application.mrmason.dto.ResponseMessageDto;
@@ -229,13 +230,9 @@ public class UserController {
 	}
 
 	@PostMapping("/sp-login")
-	public ResponseEntity<?> login(@RequestBody Logindto login) {
-		String email = login.getEmail();
-		String mobile = login.getMobile();
-		String password = login.getPassword();
-
+	public ResponseEntity<?> login(@RequestBody LoginRequest login) {
 		try {
-			ResponseSpLoginDto response = userService.loginDetails(email, mobile, password);
+			ResponseSpLoginDto response = userService.loginDetails(login);
 			if (response.getJwtToken() != null) {
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}

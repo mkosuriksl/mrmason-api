@@ -1,11 +1,8 @@
 package com.application.mrmason.service;
+
 import java.util.List;
 
-//import org.hibernate.mapping.List;
-
-
 import com.application.mrmason.dto.ServicePersonAssetsDTO;
-
 import com.application.mrmason.entity.ServicePersonAssetsEntity;
 
 public interface ServicePersonAssetsService {

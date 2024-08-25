@@ -12,7 +12,6 @@ import com.application.mrmason.entity.User;
 
 @Repository
 public interface UserDAO extends JpaRepository<User, String> {
-		
 
 	boolean existsByEmail(String email);
 
@@ -42,11 +41,11 @@ public interface UserDAO extends JpaRepository<User, String> {
 
 	List<User> findByCity(String city);
 
-//	List<User> findByPincodeNo(String pincodeNo);
+	// List<User> findByPincodeNo(String pincodeNo);
 
 	List<User> findByLocation(String location);
 
-//	List<User> findByBodSeqNoIn(List<String> userIds);
+	// List<User> findByBodSeqNoIn(List<String> userIds);
 	List<User> findByBodSeqNoIn(List<String> bodSeqNo);
 
 }

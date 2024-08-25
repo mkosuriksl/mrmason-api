@@ -6,7 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ServicePersonAssetsDTO {
-    private String userId;
+	private String userId;
 	private String assetId;
 	private String assetCat;
 	private String assetSubCat;
@@ -22,6 +22,5 @@ public class ServicePersonAssetsDTO {
 	private String regDate;
 	private String membershipExp;
 	private String planId;
-	
 
 }

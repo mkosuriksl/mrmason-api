@@ -89,10 +89,10 @@ public class ServicePersonAssetsEntity {
 	private LocalDate membershipExp;
 
 	@Column(name = "register_date")
-	private String regDateFormatted; // Formatted registration date
+	private String regDateFormatted;
 
 	@Column(name = "update_date")
-	private String updateDateFormatted; // Formatted update date
+	private String updateDateFormatted;
 
 	@Column(name = "membership_expiry_date")
 	private String membershipExpDb;
@@ -122,6 +122,7 @@ public class ServicePersonAssetsEntity {
 		this.updateDate = now;
 		this.updateDateFormatted = now.format(formatter);
 		DateTimeFormatter formatterExp = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+		
 		// Calculate membership expiration date
 		if (this.regDate != null) {
 

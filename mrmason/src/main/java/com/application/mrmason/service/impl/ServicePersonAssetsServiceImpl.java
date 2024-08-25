@@ -15,7 +15,6 @@ import com.application.mrmason.repository.ServicePersonAssetsRepo;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.ServicePersonAssetsService;
 
-
 @Service
 
 public class ServicePersonAssetsServiceImpl implements ServicePersonAssetsService {
@@ -23,7 +22,6 @@ public class ServicePersonAssetsServiceImpl implements ServicePersonAssetsServic
     ServicePersonAssetsRepo assetRepo;
     @Autowired
     UserDAO regiRepo;
-  
 
     @Override
     public ServicePersonAssetsEntity saveAssets(ServicePersonAssetsEntity asset) {
@@ -60,9 +58,9 @@ public class ServicePersonAssetsServiceImpl implements ServicePersonAssetsServic
     @Override
     public List<ServicePersonAssetsEntity> getAssets(String userId, String assetId, String location, String assetCat,
             String assetSubCat, String assetModel, String assetBrand) {
-    
+
         List<ServicePersonAssetsEntity> result = Collections.emptyList();
-    
+
         if (userId != null) {
             if (assetCat != null && assetSubCat != null) {
                 result = assetRepo.findByUserIdAndAssetCatAndAssetSubCat(userId, assetCat, assetSubCat);
@@ -71,7 +69,8 @@ public class ServicePersonAssetsServiceImpl implements ServicePersonAssetsServic
             } else if (location != null) {
                 result = assetRepo.findByUserIdAndLocation(userId, location);
             } else if (assetId != null) {
-                result = assetRepo.findByUserIdAndAssetId(userId, assetId).map(Collections::singletonList).orElse(Collections.emptyList());
+                result = assetRepo.findByUserIdAndAssetId(userId, assetId).map(Collections::singletonList)
+                        .orElse(Collections.emptyList());
             } else if (assetCat != null) {
                 result = assetRepo.findByAssetCatAndUserId(assetCat, userId);
             } else if (assetSubCat != null) {
@@ -96,12 +95,9 @@ public class ServicePersonAssetsServiceImpl implements ServicePersonAssetsServic
         } else if (assetBrand != null) {
             result = assetRepo.findByAssetBrandOrderByIdDesc(assetBrand);
         }
-    
+
         return result != null ? result : Collections.emptyList();
     }
-    
-    
-
 
     @Override
     public ServicePersonAssetsDTO getAssetByAssetId(String assetId) {

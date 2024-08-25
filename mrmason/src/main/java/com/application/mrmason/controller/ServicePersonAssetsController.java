@@ -40,8 +40,8 @@ public class ServicePersonAssetsController {
 				response.setStatus(true);
 				return ResponseEntity.ok(response);
 			}
-			//response.setMessage("Invalid User.!");
-			//response.setStatus(false);
+			// response.setMessage("Invalid User.!");
+			// response.setStatus(false);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
@@ -78,8 +78,7 @@ public class ServicePersonAssetsController {
 			@RequestParam(required = false) String location, @RequestParam(required = false) String assetCat,
 			@RequestParam(required = false) String assetSubCat, @RequestParam(required = false) String assetModel,
 			@RequestParam(required = false) String assetBrand) {
-				
-	
+
 		try {
 			List<ServicePersonAssetsEntity> entity = assetService.getAssets(userId, assetId, location, assetCat,
 					assetSubCat, assetModel, assetBrand);

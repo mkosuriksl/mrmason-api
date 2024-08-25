@@ -8,8 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.application.mrmason.entity.ServicePersonAssetsEntity;
 
 public interface ServicePersonAssetsRepo extends JpaRepository<ServicePersonAssetsEntity, Long> {
-	// Optional<CustomerAssets> findByUserIdAndAssetId(String userid,String
-	// assetId);
+
 	List<ServicePersonAssetsEntity> findByLocationOrderByIdDesc(String location);
 
 	List<ServicePersonAssetsEntity> findByUserIdOrderByIdDesc(String userid);
@@ -43,15 +42,21 @@ public interface ServicePersonAssetsRepo extends JpaRepository<ServicePersonAsse
 	List<ServicePersonAssetsEntity> findByAssetCatAndAssetSubCatAndUserId(String assetCat, String assetSubCat,
 			String userId);
 
-			List<ServicePersonAssetsEntity> findByAssetCatAndUserId(String assetCat, String userId);
-			List<ServicePersonAssetsEntity> findByAssetSubCatAndUserId(String assetSubCat, String userId);
-			List<ServicePersonAssetsEntity> findByLocationAndUserId(String location, String userId);
-			List<ServicePersonAssetsEntity> findByAssetModelAndUserId(String assetModel, String userId);
-			List<ServicePersonAssetsEntity> findByAssetBrandAndUserId(String assetBrand, String userId);
-			List<ServicePersonAssetsEntity> findByUserIdAndAssetCatAndAssetSubCat(String userId, String assetCat, String assetSubCat);
-			List<ServicePersonAssetsEntity> findByUserIdAndLocation(String userId, String location);
-			List<ServicePersonAssetsEntity> findByUserIdAndAssetIdAndLocation(String userId, String assetId, String location);
+	List<ServicePersonAssetsEntity> findByAssetCatAndUserId(String assetCat, String userId);
 
-		
+	List<ServicePersonAssetsEntity> findByAssetSubCatAndUserId(String assetSubCat, String userId);
+
+	List<ServicePersonAssetsEntity> findByLocationAndUserId(String location, String userId);
+
+	List<ServicePersonAssetsEntity> findByAssetModelAndUserId(String assetModel, String userId);
+
+	List<ServicePersonAssetsEntity> findByAssetBrandAndUserId(String assetBrand, String userId);
+
+	List<ServicePersonAssetsEntity> findByUserIdAndAssetCatAndAssetSubCat(String userId, String assetCat,
+			String assetSubCat);
+
+	List<ServicePersonAssetsEntity> findByUserIdAndLocation(String userId, String location);
+
+	List<ServicePersonAssetsEntity> findByUserIdAndAssetIdAndLocation(String userId, String assetId, String location);
 
 }

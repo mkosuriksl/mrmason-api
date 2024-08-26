@@ -20,7 +20,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Entity
 @Table(name = "rent_assets")
-public class Rentel {
+public class Rental {
     @Id
     @Column(name = "Asset_model_id")
     private String assetId;

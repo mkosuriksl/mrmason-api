@@ -1,14 +1,14 @@
 package com.application.mrmason.repository;
 
 import java.util.List;
-//import java.util.Optional;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.application.mrmason.entity.User;
-//import com.application.mrmason.enums.RegSource;
+import com.application.mrmason.enums.RegSource;
 
 @Repository
 public interface UserDAO extends JpaRepository<User, String> {
@@ -18,7 +18,7 @@ public interface UserDAO extends JpaRepository<User, String> {
 	boolean existsByMobile(String mobile);
 
 	User findByEmail(String email);
-	
+
 	Optional<User> findByEmailAndRegSource(String email, RegSource regSource);
 
 	User findByMobile(String mobile);

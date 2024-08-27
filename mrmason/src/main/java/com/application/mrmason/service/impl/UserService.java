@@ -144,8 +144,9 @@ public class UserService {
 		return null;
 	}
 
-	public String changePassword(String email, String oldPassword, String newPassword, String confirmPassword) {
-		Optional<User> user = Optional.of(userDAO.findByEmail(email));
+	public String changePassword(String email, String oldPassword, String newPassword, String confirmPassword,
+			RegSource regSource) {
+		Optional<User> user = userDAO.findByEmailAndRegSource(email, regSource);
 		if (user.isPresent()) {
 			if (byCrypt.matches(oldPassword, user.get().getPassword())) {
 				if (newPassword.equals(confirmPassword)) {
@@ -165,8 +166,8 @@ public class UserService {
 
 	}
 
-	public String sendMail(String email) {
-		Optional<User> userOp = Optional.ofNullable(userDAO.findByEmail(email));
+	public String sendMail(String email, RegSource regSource) {
+		Optional<User> userOp = userDAO.findByEmailAndRegSource(email, regSource);
 		if (userOp.isPresent()) {
 			otpService.generateOtp(email);
 			return "otp";
@@ -174,8 +175,8 @@ public class UserService {
 		return null;
 	}
 
-	public String sendSms(String mobile) {
-		Optional<User> userOp = Optional.ofNullable(userDAO.findByMobile(mobile));
+	public String sendSms(String mobile, RegSource regSource) {
+		Optional<User> userOp = userDAO.findByMobileAndRegSource(mobile, regSource);
 		if (userOp.isPresent()) {
 			otpService.generateMobileOtp(mobile);
 			return "otp";
@@ -183,9 +184,10 @@ public class UserService {
 		return null;
 	}
 
-	public String forgetPassword(String mobile, String email, String otp, String newPass, String confPass) {
-		Optional<User> userEmail = Optional.ofNullable(userDAO.findByEmail(email));
-		Optional<User> userMobile = Optional.ofNullable(userDAO.findByMobile(mobile));
+	public String forgetPassword(String mobile, String email, String otp, String newPass, String confPass,
+			RegSource regSource) {
+		Optional<User> userEmail = userDAO.findByEmailAndRegSource(email, regSource);
+		Optional<User> userMobile = userDAO.findByMobileAndRegSource(mobile, regSource);
 		if (userEmail.isPresent()) {
 			if (otpService.verifyOtp(email, otp)) {
 				if (newPass.equals(confPass)) {
@@ -257,10 +259,10 @@ public class UserService {
 		return null;
 
 	}
-	
-	public Userdto getServiceProfile(String email,RegSource regSource) {
 
-		Optional<User> user = userDAO.findByEmailAndRegSource(email,regSource);
+	public Userdto getServiceProfile(String email, RegSource regSource) {
+
+		Optional<User> user = userDAO.findByEmailAndRegSource(email, regSource);
 		List<SpServiceDetails> serviceDetails = detailsRepo.findByUserId(user.get().getBodSeqNo());
 
 		if (user.isPresent()) {
@@ -334,7 +336,7 @@ public class UserService {
 								response.setJwtToken(jwtToken);
 								response.setMessage("Login Successful.");
 								response.setStatus(true);
-								response.setLoginDetails(getServiceProfile(login.getEmail(),login.getRegSource()));
+								response.setLoginDetails(getServiceProfile(login.getEmail(), login.getRegSource()));
 								return response;
 							} else {
 								response.setMessage("Invalid Password");
@@ -354,7 +356,8 @@ public class UserService {
 								response.setJwtToken(jwtToken);
 								response.setMessage("Login Successful.");
 								response.setStatus(true);
-								response.setLoginDetails(getServiceProfile(loginDb.get().getEmail(),login.getRegSource()));
+								response.setLoginDetails(
+										getServiceProfile(loginDb.get().getEmail(), login.getRegSource()));
 								return response;
 							} else {
 								response.setMessage("Invalid Password");

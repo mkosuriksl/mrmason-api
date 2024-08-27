@@ -6,7 +6,6 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,13 +24,13 @@ import com.application.mrmason.dto.ResponseUserDTO;
 import com.application.mrmason.dto.ResponseUserUpdateDto;
 import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.User;
+import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.repository.SPAvailabilityRepo;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.impl.ServicePersonLoginService;
 import com.application.mrmason.service.impl.UserService;
 
 @RestController
-
 public class UserController {
 
 	@Autowired
@@ -47,6 +46,7 @@ public class UserController {
 	SPAvailabilityRepo availabilityReo;
 
 	ResponseUserDTO response = new ResponseUserDTO();
+	
 	ResponseUserUpdateDto userResponse = new ResponseUserUpdateDto();
 
 	ResponseMessageDto response2 = new ResponseMessageDto();
@@ -76,7 +76,6 @@ public class UserController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@PreAuthorize("hasAuthority('Developer')")
 	@PutMapping("/sp-update-profile")
 	public ResponseEntity<?> updateServiceProfile(@RequestBody User registrationDetails) {
 
@@ -99,9 +98,7 @@ public class UserController {
 		}
 	}
 
-	@PreAuthorize("hasAuthority('Developer')")
 	@PostMapping("/change-password")
-
 	public ResponseEntity<ResponseMessageDto> changeCustomerPassword(@RequestBody ChangeForfotdto cfPwd) {
 
 		String email = cfPwd.getEmail();
@@ -110,16 +107,19 @@ public class UserController {
 		String confirmPassword = cfPwd.getConfirmPassword();
 
 		try {
-			if (userService.changePassword(email, oldPassword, newPassword, confirmPassword) == "changed") {
+			if (userService.changePassword(email, oldPassword, newPassword, confirmPassword,
+					cfPwd.getRegSource()) == "changed") {
 				response2.setMessage("Password Changed Successfully..");
 				response2.setStatus(true);
 				return new ResponseEntity<>(response2, HttpStatus.OK);
 
-			} else if (userService.changePassword(email, oldPassword, newPassword, confirmPassword) == "notMatched") {
+			} else if (userService.changePassword(email, oldPassword, newPassword, confirmPassword,
+					cfPwd.getRegSource()) == "notMatched") {
 				response2.setMessage("New Passwords Not Matched.!");
 				response2.setStatus(false);
 				return new ResponseEntity<>(response2, HttpStatus.OK);
-			} else if (userService.changePassword(email, oldPassword, newPassword, confirmPassword) == "incorrect") {
+			} else if (userService.changePassword(email, oldPassword, newPassword, confirmPassword,
+					cfPwd.getRegSource()) == "incorrect") {
 				response2.setMessage("Old Password is Incorrect");
 				response2.setStatus(false);
 				return new ResponseEntity<>(response2, HttpStatus.OK);
@@ -140,7 +140,7 @@ public class UserController {
 		String mobile = login.getMobile();
 		try {
 			if (userMail != null) {
-				if (userService.sendMail(userMail) != null) {
+				if (userService.sendMail(userMail, login.getRegSource()) != null) {
 					response2.setMessage("OTP Sent to Registered EmailId.");
 					response2.setStatus(true);
 					return new ResponseEntity<>(response2, HttpStatus.OK);
@@ -150,7 +150,7 @@ public class UserController {
 				return new ResponseEntity<>(response2, HttpStatus.OK);
 
 			} else {
-				if (userService.sendSms(mobile) != null) {
+				if (userService.sendSms(mobile, login.getRegSource()) != null) {
 					response2.setMessage("OTP Sent to Registered Mobile Number.");
 					response2.setStatus(true);
 					return new ResponseEntity<>(response2, HttpStatus.OK);
@@ -178,7 +178,8 @@ public class UserController {
 		String confirmPassword = cfPwd.getConfirmPassword();
 
 		try {
-			String data = userService.forgetPassword(mobile, email, otp, newPassword, confirmPassword);
+			String data = userService.forgetPassword(mobile, email, otp, newPassword, confirmPassword,
+					cfPwd.getRegSource());
 			if (data == "changed") {
 				response2.setMessage("Password Changed Successfully..");
 				response2.setStatus(true);
@@ -206,11 +207,11 @@ public class UserController {
 		return new ResponseEntity<>(response2, HttpStatus.OK);
 	}
 
-	@PreAuthorize("hasAuthority('Developer')")
 	@GetMapping("/sp-get-profile")
-	public ResponseEntity<?> getProfile(@RequestParam(required = false) String email) {
+	public ResponseEntity<?> getProfile(@RequestParam(required = false) String email,
+			@RequestParam(required = false) RegSource regSource) {
 
-		Userdto profile = userService.getServiceProfile(email);
+		Userdto profile = userService.getServiceProfile(email, regSource);
 		try {
 			if (profile == null) {
 				response.setMessage("Invalid Email ....!");
@@ -292,7 +293,6 @@ public class UserController {
 		response2.setMessage("Access Denied");
 		response2.setStatus(false);
 		return new ResponseEntity<ResponseMessageDto>(response2, HttpStatus.UNAUTHORIZED);
-
 	}
 
 }

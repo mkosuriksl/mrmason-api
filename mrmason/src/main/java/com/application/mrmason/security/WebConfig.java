@@ -43,13 +43,17 @@ public class WebConfig {
 		http.cors(AbstractHttpConfigurer::disable).csrf(AbstractHttpConfigurer::disable)
 				.exceptionHandling((exception) -> exception.authenticationEntryPoint(new JwtAuthEntryPoint()))
 				.sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-				.authorizeHttpRequests(auth -> auth.requestMatchers("/login", "/error", "/addAdminDetails", "/adminLoginWithPass",
-						"/addNewUser", "/sendOtp", "/verifyOtp", "/sendSmsOtp", "/verifySmsOtp", "/sp-register",
-						"/sp-login", "/sp-send-email-otp", "/sp-verify-email-otp", "/sp-send-mobile-otp",
-						"/sp-verify-mobile-otp", "/forgetPassword/sendOtp",
+				.authorizeHttpRequests(auth -> auth.requestMatchers("/login", "/error", "/addAdminDetails",
+						"/adminLoginWithPass", "/addNewUser", "/sendOtp", "/verifyOtp", "/sendSmsOtp", "/verifySmsOtp",
+						"/sp-register", "/sp-login", "/sp-send-email-otp", "/sp-verify-email-otp",
+						"/sp-send-mobile-otp", "/sp-verify-mobile-otp", "/forgetPassword/sendOtp",
 						"/forgetPassword/verifyOtpAndChangePassword", "/forget-pwd-send-otp", "/forget-pwd-change",
-						"/admin/forgetPassword/sendOtp", "/admin/forgetPassword/verifyOtpAndChangePassword","/getData","/getServiceCategory/civil/{serviceCategory}","/getAssetCategory/civil/{assetCategory}","/getServiceCategory/nonCivil/{serviceCategory}","/getServiceRequest","/getAssetCategory/nonCivil/{assetCategory}","/getAdminAsset/civil/{assetCat}","/getAdminAsset/nonCivil/{assetCat}","/filterServicePerson","/getServicePersonDetails","/paint-master/**").permitAll()
-						.anyRequest().authenticated());
+						"/admin/forgetPassword/sendOtp", "/admin/forgetPassword/verifyOtpAndChangePassword", "/getData",
+						"/getServiceCategory/civil/{serviceCategory}", "/getAssetCategory/civil/{assetCategory}",
+						"/getServiceCategory/nonCivil/{serviceCategory}", "/getServiceRequest",
+						"/getAssetCategory/nonCivil/{assetCategory}", "/getAdminAsset/civil/{assetCat}",
+						"/getAdminAsset/nonCivil/{assetCat}", "/filterServicePerson", "/getServicePersonDetails",
+						"/paint-master/**").permitAll().anyRequest().authenticated());
 
 		http.authenticationProvider(customDaoAuthenticationProvider());
 		http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);

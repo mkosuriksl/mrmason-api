@@ -45,7 +45,7 @@ public class WebConfig {
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		http.cors().and().csrf(AbstractHttpConfigurer::disable)
+		http.cors(AbstractHttpConfigurer::disable).csrf(AbstractHttpConfigurer::disable)
 				.exceptionHandling((exception) -> exception.authenticationEntryPoint(new JwtAuthEntryPoint()))
 				.sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth.requestMatchers("/login", "/error", "/addAdminDetails",
@@ -55,7 +55,7 @@ public class WebConfig {
 						"/forgetPassword/verifyOtpAndChangePassword", "/forget-pwd-send-otp", "/forget-pwd-change",
 						"/admin/forgetPassword/sendOtp", "/admin/forgetPassword/verifyOtpAndChangePassword", "/getData",
 						"/getServiceCategory/civil/{serviceCategory}", "/getAssetCategory/civil/{assetCategory}",
-						"/getServiceCategory/nonCivil/{serviceCategory}", "/getServiceRequest",
+						"/getServiceCategory/nonCivil/{serviceCategory}", "/getServiceCategory","/getServiceRequest",
 						"/getAssetCategory/nonCivil/{assetCategory}", "/getAdminAsset/civil/{assetCat}",
 						"/getAdminAsset/nonCivil/{assetCat}", "/filterServicePerson", "/getServicePersonDetails",
 						"/paint-master/**").permitAll().anyRequest().authenticated());
@@ -65,16 +65,4 @@ public class WebConfig {
 		return http.build();
 	}
 	
-	@Bean
-	public CorsConfigurationSource corsConfigurationSource() {
-	    CorsConfiguration configuration = new CorsConfiguration();
-	    configuration.setAllowedOrigins(Arrays.asList("*")); // Adjust this to specific origins as needed
-	    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH"));
-	    configuration.setAllowedHeaders(Arrays.asList("*"));
-	    configuration.setAllowCredentials(true);
-
-	    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-	    source.registerCorsConfiguration("/**", configuration);
-	    return source;
-	}
 }

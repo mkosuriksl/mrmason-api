@@ -14,4 +14,10 @@ public class MvnWebConfig implements WebMvcConfigurer {
 //				.maxAge(3600);
 //	}
 
+	@Override
+	public void addCorsMappings(CorsRegistry registry) {
+		registry.addMapping("/**").allowedOrigins("*").allowedMethods("GET", "POST", "PUT", "DELETE")
+				.allowedHeaders("*");
+	}
+
 }

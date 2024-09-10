@@ -52,10 +52,10 @@ public class SPAvailabilityController {
 	}
 
 	@GetMapping("/sp-get-update-availability")
-	public ResponseEntity<?> getAddress(@RequestParam(required = false)String mobile,@RequestParam(required = false)String email) {
+	public ResponseEntity<?> getAddress(@RequestParam String bodSeqNo) {
 		
 		try {
-			List<SPAvailability> availability = spAvailableService.getAvailability(email, mobile);
+			List<SPAvailability> availability = spAvailableService.getAvailability(bodSeqNo);
 			if (availability==null) {
 				response.setMessage("No data found for the given details.!");
 				response.setStatus(true);

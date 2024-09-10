@@ -53,7 +53,9 @@ public class ServiceCategoryController {
 
 	@PreAuthorize("hasAuthority('Adm')")
 	@GetMapping("/getServiceCategory")
-	public ResponseEntity<ResponseListServiceCatDto> getServiceCategory(@RequestParam(required = false)String id ,@RequestParam(required = false)String serviceCategory,@RequestParam(required = false)String serviceSubCategory) {
+	public ResponseEntity<ResponseListServiceCatDto> getServiceCategory(@RequestParam(required = false) String id,
+			@RequestParam(required = false) String serviceCategory,
+			@RequestParam(required = false) String serviceSubCategory) {
 		try {
 			List<ServiceCategory> entity = categoryService.getServiceCategory(id, serviceCategory, serviceSubCategory);
 
@@ -136,26 +138,26 @@ public class ServiceCategoryController {
 		}
 	}
 
-	 @DeleteMapping("/delete")
-	    public ResponseEntity<?> deleteServiceCatRecord(@RequestParam(required = false) String id) {
+	@DeleteMapping("/delete")
+	public ResponseEntity<?> deleteServiceCatRecord(@RequestParam(required = false) String id) {
 
-	        ServiceCategoryDto1 response = new ServiceCategoryDto1();
-	        try {
-	            
-	            ServiceCategory deleteRecord = categoryService.deleteRecord(id);
-	            if (deleteRecord != null) {
-	                response.setMessage("Deleted successfully");
-	                response.setStatus(true);
-	                return new ResponseEntity<>(response, HttpStatus.OK);
-	            } else {
-	                response.setMessage("Failed to delete");
-	                response.setStatus(false);
-	                return new ResponseEntity<>(response, HttpStatus.OK);
-	            }
-	        } catch (Exception e) {
-	            response.setMessage("Error: " + e.getMessage());
-	            response.setStatus(false);
-	            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-	        }
-	    }
+		ServiceCategoryDto1 response = new ServiceCategoryDto1();
+		try {
+
+			ServiceCategory deleteRecord = categoryService.deleteRecord(id);
+			if (deleteRecord != null) {
+				response.setMessage("Deleted successfully");
+				response.setStatus(true);
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			} else {
+				response.setMessage("Failed to delete");
+				response.setStatus(false);
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			}
+		} catch (Exception e) {
+			response.setMessage("Error: " + e.getMessage());
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
 }

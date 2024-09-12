@@ -160,7 +160,7 @@ public class AddServiceController {
 				serviceReport.setMessage("success");
 				serviceReport.setStatus(true);
 				serviceReport.setServData(service.getPerson(bodSeqNo, null, null));
-				serviceReport.setAvailData(spAvailibilityImpl.getAvailability(bodSeqNo));
+				serviceReport.setAvailData(spAvailibilityImpl.getAvailability(bodSeqNo,"yes"));
 				return new ResponseEntity<>(serviceReport, HttpStatus.OK);
 			}
 			serviceReport.setMessage("No services found for the given parameters");

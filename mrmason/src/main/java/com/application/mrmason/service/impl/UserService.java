@@ -319,7 +319,16 @@ public class UserService {
 		Optional<ServicePersonLogin> loginDb = emailLoginRepo.findByEmailOrMobileAndRegSource(login.getEmail(),
 				login.getMobile(), login.getRegSource());
 		ResponseSpLoginDto response = new ResponseSpLoginDto();
+		if (loginDb.get().getEVerify().equals("no")) {
+			response.setMessage("verify Email");
+			response.setStatus(false);
+			return response;
 
+		} else if (loginDb.get().getMobVerify().equals("no")) {
+			response.setMessage("verify Mobile");
+			response.setStatus(false);
+			return response;
+		}
 		if (loginDb.isPresent()) {
 			Optional<User> userEmailMobile = userDAO.findByEmailOrMobileAndRegSource(login.getEmail(),
 					login.getMobile(), login.getRegSource());

@@ -34,12 +34,11 @@ public class SPAvailabilityServiceIml {
 
 	}
 
-	public List<SPAvailability> getAvailability(String bodSeqNo) {
+	public List<SPAvailability> getAvailability(String bodSeqNo,String availability) {
 		Optional<User> userExists = userDAO.findById(bodSeqNo);
-
 		if (userExists.isPresent()) {
 			Optional<List<SPAvailability>> bodSeqNoExists = Optional
-					.ofNullable(availabilityReo.findByBodSeqNo(userExists.get().getBodSeqNo()));
+					.ofNullable(availabilityReo.findByBodSeqNo(userExists.get().getBodSeqNo(),availability));
 			if (!bodSeqNoExists.get().isEmpty()) {
 				return bodSeqNoExists.get();
 			} else {

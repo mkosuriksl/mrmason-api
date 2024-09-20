@@ -59,4 +59,43 @@ public interface ServicePersonAssetsRepo extends JpaRepository<ServicePersonAsse
 
 	List<ServicePersonAssetsEntity> findByUserIdAndAssetIdAndLocation(String userId, String assetId, String location);
 
+	List<ServicePersonAssetsEntity> findByUserId(String userId);
+
+	List<ServicePersonAssetsEntity> findByAssetId(String assetId);
+
+	List<ServicePersonAssetsEntity> findByUserIdAndAssetCatAndAssetSubCatAndAssetBrandAndAssetModel(
+			String userId, String assetCat, String assetSubCat, String assetBrand, String assetModel);
+
+	List<ServicePersonAssetsEntity> findByUserIdAndAssetCatAndAssetSubCatAndAssetBrand(String userId, String assetCat,
+			String assetSubCat, String assetBrand);
+
+	List<ServicePersonAssetsEntity> findByUserIdAndAssetCat(String userId, String assetCat);
+
+	List<ServicePersonAssetsEntity> findByUserIdAndAssetSubCat(String userId, String assetSubCat);
+
+	List<ServicePersonAssetsEntity> findByUserIdAndAssetBrand(String userId, String assetBrand);
+
+	List<ServicePersonAssetsEntity> findByUserIdAndAssetModel(String userId, String assetModel);
+
+	List<ServicePersonAssetsEntity> findByAssetCatAndAssetSubCatAndAssetBrandAndAssetModel(String assetCat,
+			String assetSubCat, String assetBrand, String assetModel);
+
+	List<ServicePersonAssetsEntity> findByAssetCatAndAssetSubCatAndAssetBrand(String assetCat, String assetSubCat,
+			String assetBrand);
+
+	List<ServicePersonAssetsEntity> findByAssetCatAndAssetSubCat(String assetCat, String assetSubCat);
+
+	List<ServicePersonAssetsEntity> findByAssetCat(String assetCat);
+
+	List<ServicePersonAssetsEntity> findByAssetSubCat(String assetSubCat);
+
+	List<ServicePersonAssetsEntity> findByAssetBrand(String assetBrand);
+
+	List<ServicePersonAssetsEntity> findByAssetModel(String assetModel);
+
+	List<ServicePersonAssetsEntity> findByUserIdOrAssetId(String userId, String assetId);
+
+	List<ServicePersonAssetsEntity> findByUserIdAndAssetBrandAndAssetModel(String userId, String assetBrand,
+			String assetModel);
+
 }

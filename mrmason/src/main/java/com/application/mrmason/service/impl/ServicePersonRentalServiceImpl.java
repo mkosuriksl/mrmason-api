@@ -2,7 +2,6 @@ package com.application.mrmason.service.impl;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
@@ -16,11 +15,15 @@ import com.application.mrmason.repository.ServicePersonAssetsRepo;
 import com.application.mrmason.repository.ServicePersonRentalRepo;
 import com.application.mrmason.service.ServicePersonRentalService;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class ServicePersonRentalServiceImpl implements ServicePersonRentalService {
 
 	@Autowired
 	public ServicePersonRentalRepo spRentRepo;
+
 	@Autowired
 	public ServicePersonAssetsRepo spAssetRepo;
 
@@ -38,164 +41,92 @@ public class ServicePersonRentalServiceImpl implements ServicePersonRentalServic
 	public List<RentalAssetResponseDTO> getRentalReq(String assetCat, String assetSubCat, String assetBrand,
 			String assetModel, String userId, String assetId, String availableLocation) {
 
-		List<ServicePersonAssetsEntity> assets = Collections.emptyList();
+		log.info(">>Service Logger getRentalReq()");
 
-		if (userId != null) {
-			assets = fetchAssets(userId, assetCat, assetSubCat, assetBrand, assetModel, assetId);
+		List<ServicePersonAssetsEntity> assets = fetchAssets(userId, assetCat, assetSubCat, assetBrand, assetModel,
+				assetId);
+
+		if (assets.isEmpty()) {
+			log.info("No assets found for the given criteria.");
+			return Collections.emptyList();
 		}
-
-		List<ServicePersonRentalEntity> rentals = new ArrayList<>();
 
 		List<String> assetIds = assets.stream()
 				.map(ServicePersonAssetsEntity::getAssetId)
 				.collect(Collectors.toList());
 
-		if (userId != null && availableLocation != null) {
-			rentals = spRentRepo.findByUserIdAndAvailableLocation(userId, availableLocation);
-		}
+		List<ServicePersonRentalEntity> rentals = spRentRepo.searchRentals(userId, assetId, availableLocation,
+				assetIds);
 
-		else if (availableLocation != null) {
-			rentals = spRentRepo.findByAvailableLocation(availableLocation);
-		}
+		return rentals.stream()
+				.map(rental -> {
+					ServicePersonAssetsEntity asset = assets.stream()
+							.filter(a -> a.getAssetId().equals(rental.getAssetId()))
+							.findFirst()
+							.orElseThrow(
+									() -> new RuntimeException("Asset not found for rental: " + rental.getAssetId()));
 
-		else if (!assetIds.isEmpty()) {
-			rentals = spRentRepo.findByAssetIdIn(assetIds);
-		}
-
-		List<RentalAssetResponseDTO> responseDTOs = new ArrayList<>();
-
-		for (ServicePersonRentalEntity rental : rentals) {
-
-			ServicePersonAssetsEntity asset = assets.stream()
-					.filter(a -> a.getAssetId().equals(rental.getAssetId()))
-					.findFirst()
-					.orElse(null);
-
-			RentalAssetResponseDTO dto = new RentalAssetResponseDTO();
-			dto.setAssetId(rental.getAssetId());
-			dto.setUserId(rental.getUserId());
-			dto.setIsAvailRent(rental.getIsAvailRent());
-			dto.setAmountPerDay(rental.getAmountPerDay());
-			dto.setAmountPer30days(rental.getAmountper30days());
-			dto.setPickup(rental.getPickup());
-			dto.setAvailableLocation(rental.getAvailableLocation());
-			dto.setDelivery(rental.getDelivery());
-			dto.setUpdateDate(rental.getUpdateDate());
-
-			if (asset != null) {
-				dto.setAssetCat(asset.getAssetCat());
-				dto.setAssetSubCat(asset.getAssetSubCat());
-				dto.setAssetBrand(asset.getAssetBrand());
-				dto.setAssetModel(asset.getAssetModel());
-			}
-
-			responseDTOs.add(dto);
-		}
-
-		return responseDTOs;
-	}
-
-	private List<ServicePersonAssetsEntity> fetchAssets(String userId, String assetCat, String assetSubCat,
-			String assetBrand, String assetModel, String assetId) {
-
-		if (assetId != null) {
-			return spAssetRepo.findByAssetId(assetId);
-		} else if (assetCat != null && assetSubCat != null && assetBrand != null && assetModel != null) {
-			return spAssetRepo.findByUserIdAndAssetCatAndAssetSubCatAndAssetBrandAndAssetModel(userId, assetCat,
-					assetSubCat, assetBrand, assetModel);
-		} else if (assetCat != null && assetSubCat != null) {
-			return spAssetRepo.findByUserIdAndAssetCatAndAssetSubCat(userId, assetCat, assetSubCat);
-		} else if (assetBrand != null && assetModel != null) {
-			return spAssetRepo.findByUserIdAndAssetBrandAndAssetModel(userId, assetBrand, assetModel);
-		} else if (assetCat != null) {
-			return spAssetRepo.findByUserIdAndAssetCat(userId, assetCat);
-		} else if (assetSubCat != null) {
-			return spAssetRepo.findByUserIdAndAssetSubCat(userId, assetSubCat);
-		} else if (assetBrand != null) {
-			return spAssetRepo.findByUserIdAndAssetBrand(userId, assetBrand);
-		} else if (assetModel != null) {
-			return spAssetRepo.findByUserIdAndAssetModel(userId, assetModel);
-		} else {
-			return spAssetRepo.findByUserId(userId);
-		}
+					return buildRentalAssetResponseDTO(rental, asset);
+				})
+				.collect(Collectors.toList());
 	}
 
 	@Override
 	public List<RentalAssetResponseDTO> getRentalAssets(String assetCat, String assetSubCat, String assetBrand,
-			String assetModel,
-			String userId, String assetId) {
+			String assetModel, String userId, String assetId) {
 
-		List<ServicePersonAssetsEntity> assets = Collections.emptyList();
+		log.info(">>Service Logger getRentalAssets()");
 
-		if (userId != null) {
-			if (assetId != null) {
-				assets = spAssetRepo.findByAssetId(assetId);
-			} else if (assetCat != null && assetSubCat != null && assetBrand != null && assetModel != null) {
-				assets = spAssetRepo.findByUserIdAndAssetCatAndAssetSubCatAndAssetBrandAndAssetModel(userId, assetCat,
-						assetSubCat, assetBrand, assetModel);
-			} else if (assetCat != null && assetSubCat != null) {
-				assets = spAssetRepo.findByUserIdAndAssetCatAndAssetSubCat(userId, assetCat, assetSubCat);
-			} else if (assetBrand != null && assetModel != null) {
-				assets = spAssetRepo.findByUserIdAndAssetBrandAndAssetModel(userId, assetBrand, assetModel);
-			} else if (assetCat != null) {
-				assets = spAssetRepo.findByUserIdAndAssetCat(userId, assetCat);
-			} else if (assetSubCat != null) {
-				assets = spAssetRepo.findByUserIdAndAssetSubCat(userId, assetSubCat);
-			} else if (assetBrand != null) {
-				assets = spAssetRepo.findByUserIdAndAssetBrand(userId, assetBrand);
-			} else if (assetModel != null) {
-				assets = spAssetRepo.findByUserIdAndAssetModel(userId, assetModel);
-			}
+		List<ServicePersonAssetsEntity> assets = spAssetRepo.searchAssets(userId, assetId, assetCat, assetSubCat,
+				assetBrand, assetModel);
 
-			else {
-				assets = spAssetRepo.findByUserId(userId);
-			}
+		if (assets.isEmpty()) {
+			log.info("No assets found for the given criteria.");
+			return Collections.emptyList();
 		}
 
 		List<String> assetIds = assets.stream()
 				.map(ServicePersonAssetsEntity::getAssetId)
-				.toList();
+				.collect(Collectors.toList());
 
-		List<ServicePersonRentalEntity> rentals = spRentRepo.findByAssetIdIn(assetIds);
+		return spRentRepo.searchRentals(userId, assetId, null, assetIds).stream()
+				.map(rental -> {
+					ServicePersonAssetsEntity asset = assets.stream()
+							.filter(a -> a.getAssetId().equals(rental.getAssetId()))
+							.findFirst()
+							.orElseThrow(
+									() -> new RuntimeException("Asset not found for rental: " + rental.getAssetId()));
 
-		List<RentalAssetResponseDTO> responseDTOs = new ArrayList<>();
+					return buildRentalAssetResponseDTO(rental, asset);
+				})
+				.collect(Collectors.toList());
+	}
 
-		for (ServicePersonRentalEntity rental : rentals) {
-
-			ServicePersonAssetsEntity asset = assets.stream()
-					.filter(a -> a.getAssetId().equals(rental.getAssetId()))
-					.findFirst()
-					.orElse(null);
-
-			if (asset != null) {
-
-				RentalAssetResponseDTO dto = new RentalAssetResponseDTO();
-				dto.setAssetId(rental.getAssetId());
-				dto.setUserId(rental.getUserId());
-				dto.setIsAvailRent(rental.getIsAvailRent());
-				dto.setAmountPerDay(rental.getAmountPerDay());
-				dto.setAmountPer30days(rental.getAmountper30days());
-				dto.setPickup(rental.getPickup());
-				dto.setAvailableLocation(rental.getAvailableLocation());
-				dto.setDelivery(rental.getDelivery());
-				dto.setUpdateDate(rental.getUpdateDate());
-
-				dto.setAssetCat(asset.getAssetCat());
-				dto.setAssetSubCat(asset.getAssetSubCat());
-				dto.setAssetBrand(asset.getAssetBrand());
-				dto.setAssetModel(asset.getAssetModel());
-
-				responseDTOs.add(dto);
-			}
-		}
-
-		return responseDTOs;
+	private RentalAssetResponseDTO buildRentalAssetResponseDTO(ServicePersonRentalEntity rental,
+			ServicePersonAssetsEntity asset) {
+		RentalAssetResponseDTO dto = new RentalAssetResponseDTO();
+		dto.setAssetId(rental.getAssetId());
+		dto.setUserId(rental.getUserId());
+		dto.setIsAvailRent(rental.getIsAvailRent());
+		dto.setAmountPerDay(rental.getAmountPerDay());
+		dto.setAmountPer30days(rental.getAmountper30days());
+		dto.setPickup(rental.getPickup());
+		dto.setAvailableLocation(rental.getAvailableLocation());
+		dto.setDelivery(rental.getDelivery());
+		dto.setUpdateDate(rental.getUpdateDate());
+		dto.setAssetCat(asset.getAssetCat());
+		dto.setAssetSubCat(asset.getAssetSubCat());
+		dto.setAssetBrand(asset.getAssetBrand());
+		dto.setAssetModel(asset.getAssetModel());
+		return dto;
 	}
 
 	@Override
 	public ServicePersonRentalEntity updateRentalAssetCharge(ServicePersonRentalEntity rent) {
-		Optional<ServicePersonRentalEntity> user = Optional
-				.of(spRentRepo.findByAssetIdAndUserId(rent.getAssetId(), rent.getUserId()));
+
+		Optional<ServicePersonRentalEntity> user = spRentRepo.findByAssetIdAndUserId(rent.getAssetId(),
+				rent.getUserId());
+
 		if (user.isPresent()) {
 			ServicePersonRentalEntity rentUser = user.get();
 			rentUser.setAmountper30days(rent.getAmountper30days());
@@ -207,7 +138,13 @@ public class ServicePersonRentalServiceImpl implements ServicePersonRentalServic
 
 			return spRentRepo.save(rentUser);
 		}
+
 		return null;
+	}
+
+	private List<ServicePersonAssetsEntity> fetchAssets(String userId, String assetCat, String assetSubCat,
+			String assetBrand, String assetModel, String assetId) {
+		return spAssetRepo.searchAssets(userId, assetId, assetCat, assetSubCat, assetBrand, assetModel);
 	}
 
 }

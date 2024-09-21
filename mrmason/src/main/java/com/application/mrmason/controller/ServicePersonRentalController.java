@@ -20,6 +20,9 @@ import com.application.mrmason.dto.ResponseSPRentalDTO;
 import com.application.mrmason.entity.ServicePersonRentalEntity;
 import com.application.mrmason.service.ServicePersonRentalService;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RestController
 @PreAuthorize("hasAuthority('Developer')")
 
@@ -59,15 +62,6 @@ public class ServicePersonRentalController {
 			@RequestParam(required = false) String userId,
 			@RequestParam(required = false) String assetId,
 			@RequestParam(required = false) String availableLocation) {
-
-		assetCat = (assetCat != null && assetCat.trim().isEmpty()) ? null : assetCat;
-		assetSubCat = (assetSubCat != null && assetSubCat.trim().isEmpty()) ? null : assetSubCat;
-		assetBrand = (assetBrand != null && assetBrand.trim().isEmpty()) ? null : assetBrand;
-		assetModel = (assetModel != null && assetModel.trim().isEmpty()) ? null : assetModel;
-		userId = (userId != null && userId.trim().isEmpty()) ? null : userId;
-		assetId = (assetId != null && assetId.trim().isEmpty()) ? null : assetId;
-		availableLocation = (availableLocation != null && availableLocation.trim().isEmpty()) ? null
-				: availableLocation;
 
 		List<RentalAssetResponseDTO> rentalAssets = spRentService.getRentalReq(assetCat, assetSubCat, assetBrand,
 				assetModel, userId, assetId, availableLocation);
@@ -114,13 +108,6 @@ public class ServicePersonRentalController {
 			@RequestParam(required = false) String assetModel,
 			@RequestParam(required = false) String userId,
 			@RequestParam(required = false) String assetId) {
-
-		assetCat = (assetCat != null && assetCat.trim().isEmpty()) ? null : assetCat;
-		assetSubCat = (assetSubCat != null && assetSubCat.trim().isEmpty()) ? null : assetSubCat;
-		assetBrand = (assetBrand != null && assetBrand.trim().isEmpty()) ? null : assetBrand;
-		assetModel = (assetModel != null && assetModel.trim().isEmpty()) ? null : assetModel;
-		userId = (userId != null && userId.trim().isEmpty()) ? null : userId;
-		assetId = (assetId != null && assetId.trim().isEmpty()) ? null : assetId;
 
 		List<RentalAssetResponseDTO> rentalAssets = spRentService.getRentalAssets(assetCat, assetSubCat, assetBrand,
 				assetModel, userId, assetId);

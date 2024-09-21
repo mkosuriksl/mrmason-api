@@ -1,7 +1,6 @@
 package com.application.mrmason.controller;
 
 import java.util.List;
-//import org.hibernate.mapping.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +11,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import lombok.extern.slf4j.Slf4j;
 
 import com.application.mrmason.dto.ResponseListServicePersonAssets;
 import com.application.mrmason.dto.ResponseSPAssetDTO;
@@ -21,7 +21,7 @@ import com.application.mrmason.service.ServicePersonAssetsService;
 
 @RestController
 @PreAuthorize("hasAuthority('Developer')")
-
+@Slf4j
 public class ServicePersonAssetsController {
 	@Autowired
 	ServicePersonAssetsService assetService;
@@ -32,40 +32,37 @@ public class ServicePersonAssetsController {
 	public ResponseEntity<ResponseSPAssetDTO> newServicePerson(@RequestBody ServicePersonAssetsEntity asset) {
 		ResponseSPAssetDTO response = new ResponseSPAssetDTO();
 		try {
-
-			if (assetService.saveAssets(asset) != null) {
-				assetService.saveAssets(asset);
-				response.setAddSPAsset(assetService.getAssetByAssetId(asset.getAssetId()));
+			ServicePersonAssetsEntity savedAsset = assetService.saveAssets(asset);
+			if (savedAsset != null) {
+				response.setAddSPAsset(assetService.getAssetByAssetId(savedAsset.getAssetId()));
 				response.setMessage("Asset added successfully..");
 				response.setStatus(true);
+				log.info("Asset added: {}", savedAsset.getAssetId());
 				return ResponseEntity.ok(response);
 			}
-			// response.setMessage("Invalid User.!");
-			// response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.OK);
+			response.setMessage("Failed to add asset. Invalid user.");
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 		} catch (Exception e) {
+			log.error("Error adding asset: {}", e.getMessage());
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.OK);
+			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-
 	}
 
 	@PutMapping("/updateSPAsset")
 	public ResponseEntity<?> updateSPAsset(@RequestBody ServicePersonAssetsDTO updateSPAsset) {
+		ResponseSPAssetDTO response = new ResponseSPAssetDTO();
 		try {
-			ResponseSPAssetDTO response = new ResponseSPAssetDTO();
-			if (assetService.updateAssets(updateSPAsset) != null) {
-				assetService.updateAssets(updateSPAsset);
-				response.setAddSPAsset(assetService.getAssetByAssetId(updateSPAsset.getAssetId()));
-				response.setMessage("Asset updated successfully..");
-				response.setStatus(true);
-				return new ResponseEntity<>(response, HttpStatus.OK);
-			}
-			response.setMessage("Invalid User.!");
-			response.setStatus(false);
+			assetService.updateAssets(updateSPAsset);
+			response.setAddSPAsset(assetService.getAssetByAssetId(updateSPAsset.getAssetId()));
+			response.setMessage("Asset updated successfully..");
+			response.setStatus(true);
+			log.info("Asset updated: {}", updateSPAsset.getAssetId());
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
+			log.error("Error updating asset: {}", e.getMessage());
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
 			return new ResponseEntity<>(response, HttpStatus.OK);
@@ -74,9 +71,12 @@ public class ServicePersonAssetsController {
 
 	@GetMapping("/getSPAssets")
 	public ResponseEntity<ResponseListServicePersonAssets> getAssetDetails(
-			@RequestParam(required = false) String userId, @RequestParam(required = false) String assetId,
-			@RequestParam(required = false) String location, @RequestParam(required = false) String assetCat,
-			@RequestParam(required = false) String assetSubCat, @RequestParam(required = false) String assetModel,
+			@RequestParam(required = false) String userId,
+			@RequestParam(required = false) String assetId,
+			@RequestParam(required = false) String location,
+			@RequestParam(required = false) String assetCat,
+			@RequestParam(required = false) String assetSubCat,
+			@RequestParam(required = false) String assetModel,
 			@RequestParam(required = false) String assetBrand) {
 
 		try {
@@ -86,20 +86,18 @@ public class ServicePersonAssetsController {
 				response.setMessage("Assets fetched successfully.");
 				response.setStatus(true);
 				response.setData(entity);
+				log.info("Fetched {} assets for userId: {}", entity.size(), userId);
 				return new ResponseEntity<>(response, HttpStatus.OK);
-
 			}
 			response.setMessage("No data found for the given details.!");
 			response.setStatus(true);
 			response.setData(entity);
 			return new ResponseEntity<>(response, HttpStatus.OK);
-
 		} catch (Exception e) {
+			log.error("Error fetching assets: {}", e.getMessage());
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
-
 	}
-
 }

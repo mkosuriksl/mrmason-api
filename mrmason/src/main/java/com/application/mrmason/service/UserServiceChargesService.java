@@ -10,5 +10,5 @@ public interface UserServiceChargesService {
 	public List<UserServiceCharges> addCharges(UserServiceChargeRequest serviceChargeRequest);
 	public UserServiceCharges updateCharges(UserServiceCharges charges);
 	public List<UserServiceCharges> getUserServiceCharges(String serviceChargeKey, String serviceId, String location,
-			String brand, String model,String updatedBy,String subcategory) ;
+			String brand, String model,String userId,String subcategory) ;
 }

@@ -39,6 +39,15 @@ public class ServicePersonAssetsServiceImpl implements ServicePersonAssetsServic
 						"Service PersonAssets Details not found by : " + asset.getUserId() + " " + asset.getAssetId()));
 		assetDb.setAssetCat(asset.getAssetCat());
 		assetDb.setAssetSubCat(asset.getAssetSubCat());
+		assetDb.setLocation(asset.getLocation());
+		assetDb.setStreet(asset.getStreet());
+		assetDb.setDoorNo(asset.getDoorNo());
+		assetDb.setTown(asset.getTown());
+		assetDb.setDistrict(asset.getDistrict());
+		assetDb.setState(asset.getState());
+		assetDb.setPinCode(asset.getPinCode());
+		assetDb.setAssetBrand(asset.getAssetBrand());
+		assetDb.setAssetModel(asset.getAssetModel());
 		// ... (set other fields)
 		log.info("Updating asset: {}", asset.getAssetId());
 		return assetRepo.save(assetDb);

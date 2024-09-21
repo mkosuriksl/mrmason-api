@@ -17,6 +17,7 @@ import com.application.mrmason.dto.ResponseListServicePersonAssets;
 import com.application.mrmason.dto.ResponseSPAssetDTO;
 import com.application.mrmason.dto.ServicePersonAssetsDTO;
 import com.application.mrmason.entity.ServicePersonAssetsEntity;
+import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.service.ServicePersonAssetsService;
 
 @RestController
@@ -70,11 +71,14 @@ public class ServicePersonAssetsController {
 	}
 
 	@GetMapping("/getSPAssets")
-	public ResponseEntity<ResponseListServicePersonAssets> getAssetDetails(
-			@RequestParam(required = false) String userId, @RequestParam(required = false) String assetId,
-			@RequestParam(required = false) String location, @RequestParam(required = false) String assetCat,
-			@RequestParam(required = false) String assetSubCat, @RequestParam(required = false) String assetModel,
-			@RequestParam(required = false) String assetBrand) {
+	public ResponseEntity<ResponseListServicePersonAssets> getAssetDetails(@RequestParam String userId,
+			@RequestParam(required = false) String assetId, @RequestParam(required = false) String location,
+			@RequestParam(required = false) String assetCat, @RequestParam(required = false) String assetSubCat,
+			@RequestParam(required = false) String assetModel, @RequestParam(required = false) String assetBrand) {
+
+		if (userId == null || userId.isBlank() || userId.isEmpty()) {
+			throw new ResourceNotFoundException("User Id is required.");
+		}
 		try {
 			List<ServicePersonAssetsEntity> entity = assetService.getAssets(userId, assetId, location, assetCat,
 					assetSubCat, assetModel, assetBrand);

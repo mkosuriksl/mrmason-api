@@ -11,7 +11,7 @@ import com.application.mrmason.entity.ServicePersonAssetsEntity;
 
 public interface ServicePersonAssetsRepo extends JpaRepository<ServicePersonAssetsEntity, Long> {
 
-	@Query("SELECT a FROM ServicePersonAssetsEntity a WHERE " + "(:userId IS NULL OR a.userId = :userId) AND "
+	@Query("SELECT a FROM ServicePersonAssetsEntity a WHERE a.userId = :userId AND "
 			+ "(:assetId IS NULL OR a.assetId = :assetId) AND " + "(:assetCat IS NULL OR a.assetCat = :assetCat) AND "
 			+ "(:assetSubCat IS NULL OR a.assetSubCat = :assetSubCat) AND "
 			+ "(:assetBrand IS NULL OR a.assetBrand = :assetBrand) AND "

@@ -1,7 +1,6 @@
 package com.application.mrmason.service.impl;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -56,27 +55,25 @@ public class ServicePersonAssetsServiceImpl implements ServicePersonAssetsServic
 	@Override
 	public ServicePersonAssetsDTO getAssetByAssetId(String assetId) {
 		log.info("Fetched asset details for assetId({})", assetId);
-		Optional<ServicePersonAssetsEntity> assetDb = assetRepo.findAllByAssetId(assetId);
-		if (assetDb.isEmpty()) {
-			return null;
-		}
+		ServicePersonAssetsEntity assetDb = assetRepo.findAllByAssetId(assetId).orElseThrow(
+				() -> new ResourceNotFoundException("Service PersonAssets Details not found by : " + assetId));
 		ServicePersonAssetsDTO assetDto = new ServicePersonAssetsDTO();
-		assetDto.setUserId(assetDb.get().getUserId());
-		assetDto.setAssetId(assetDb.get().getAssetId());
-		assetDto.setAssetCat(assetDb.get().getAssetCat());
-		assetDto.setAssetSubCat(assetDb.get().getAssetSubCat());
-		assetDto.setLocation(assetDb.get().getLocation());
-		assetDto.setStreet(assetDb.get().getStreet());
-		assetDto.setDoorNo(assetDb.get().getDoorNo());
-		assetDto.setTown(assetDb.get().getTown());
-		assetDto.setDistrict(assetDb.get().getDistrict());
-		assetDto.setState(assetDb.get().getState());
-		assetDto.setPinCode(assetDb.get().getPinCode());
-		assetDto.setAssetBrand(assetDb.get().getAssetBrand());
-		assetDto.setAssetModel(assetDb.get().getAssetModel());
-		assetDto.setRegDate(assetDb.get().getRegDateFormatted());
-		assetDto.setPlanId(assetDb.get().getPlanId());
-		assetDto.setMembershipExp(assetDb.get().getMembershipExpDb());
+		assetDto.setUserId(assetDb.getUserId());
+		assetDto.setAssetId(assetDb.getAssetId());
+		assetDto.setAssetCat(assetDb.getAssetCat());
+		assetDto.setAssetSubCat(assetDb.getAssetSubCat());
+		assetDto.setLocation(assetDb.getLocation());
+		assetDto.setStreet(assetDb.getStreet());
+		assetDto.setDoorNo(assetDb.getDoorNo());
+		assetDto.setTown(assetDb.getTown());
+		assetDto.setDistrict(assetDb.getDistrict());
+		assetDto.setState(assetDb.getState());
+		assetDto.setPinCode(assetDb.getPinCode());
+		assetDto.setAssetBrand(assetDb.getAssetBrand());
+		assetDto.setAssetModel(assetDb.getAssetModel());
+		assetDto.setRegDate(assetDb.getRegDateFormatted());
+		assetDto.setPlanId(assetDb.getPlanId());
+		assetDto.setMembershipExp(assetDb.getMembershipExpDb());
 		return assetDto;
 	}
 

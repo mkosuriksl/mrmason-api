@@ -2,97 +2,82 @@ package com.application.mrmason.service.impl;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Collections;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import lombok.extern.slf4j.Slf4j;
 
 import com.application.mrmason.dto.ServicePersonAssetsDTO;
 import com.application.mrmason.entity.ServicePersonAssetsEntity;
+import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.ServicePersonAssetsRepo;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.ServicePersonAssetsService;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
 @Slf4j
 public class ServicePersonAssetsServiceImpl implements ServicePersonAssetsService {
-    @Autowired
-    ServicePersonAssetsRepo assetRepo;
-    @Autowired
-    UserDAO regiRepo;
+	@Autowired
+	ServicePersonAssetsRepo assetRepo;
+	@Autowired
+	UserDAO regiRepo;
 
-    @Override
-    public ServicePersonAssetsEntity saveAssets(ServicePersonAssetsEntity asset) {
-        if (regiRepo.findByBodSeqNo(asset.getUserId()) != null) {
-            log.info("Saving asset: {}", asset.getAssetId());
-            return assetRepo.save(asset);
-        }
-        log.warn("User not found for asset: {}", asset.getAssetId());
-        return null;
-    }
+	@Override
+	public ServicePersonAssetsEntity saveAssets(ServicePersonAssetsEntity asset) {
+		if (regiRepo.findByBodSeqNo(asset.getUserId()) != null) {
+			log.info("Saving asset: {}", asset.getAssetId());
+			return assetRepo.save(asset);
+		}
+		log.warn("User not found for asset: {}", asset.getAssetId());
+		return null;
+	}
 
-    @Override
-    public ServicePersonAssetsEntity updateAssets(ServicePersonAssetsDTO asset) {
-        Optional<ServicePersonAssetsEntity> assetDb = assetRepo.findByUserIdAndAssetId(asset.getUserId(),
-                asset.getAssetId());
-        if (assetDb.isPresent()) {
-            ServicePersonAssetsEntity user = assetDb.get();
-            user.setAssetCat(asset.getAssetCat());
-            user.setAssetSubCat(asset.getAssetSubCat());
-            // ... (set other fields)
-            log.info("Updating asset: {}", asset.getAssetId());
-            return assetRepo.save(user);
-        }
-        log.warn("Asset not found for update: {}", asset.getAssetId());
-        return null;
-    }
+	@Override
+	public ServicePersonAssetsEntity updateAssets(ServicePersonAssetsDTO asset) {
+		ServicePersonAssetsEntity assetDb = assetRepo.findByUserIdAndAssetId(asset.getUserId(), asset.getAssetId())
+				.orElseThrow(() -> new ResourceNotFoundException(
+						"Service PersonAssets Details not found by : " + asset.getUserId() + " " + asset.getAssetId()));
+		assetDb.setAssetCat(asset.getAssetCat());
+		assetDb.setAssetSubCat(asset.getAssetSubCat());
+		// ... (set other fields)
+		log.info("Updating asset: {}", asset.getAssetId());
+		return assetRepo.save(assetDb);
+	}
 
-    @Override
-    public List<ServicePersonAssetsEntity> getAssets(String userId, String assetId, String location, String assetCat,
-            String assetSubCat, String assetModel, String assetBrand) {
+	@Override
+	public List<ServicePersonAssetsEntity> getAssets(String userId, String assetId, String location, String assetCat,
+			String assetSubCat, String assetModel, String assetBrand) {
+		log.info("getAssets({}, {}, {}, {}, {}, {})", userId, assetId, assetCat, assetSubCat, assetBrand, assetModel);
+		return assetRepo.searchAssets(userId, assetId, assetCat, assetSubCat, assetBrand, assetModel);
 
-        log.info(
-                "Fetching assets with filters: userId={}, assetId={}, assetCat={}, assetSubCat={}, assetBrand={}, assetModel={}",
-                userId, assetId, assetCat, assetSubCat, assetBrand, assetModel);
+	}
 
-        List<ServicePersonAssetsEntity> result = assetRepo.searchAssets(userId, assetId, assetCat, assetSubCat,
-                assetBrand, assetModel);
-
-        log.info("Number of assets found: {}", result.size());
-
-        return result != null ? result : Collections.emptyList();
-    }
-
-    @Override
-    public ServicePersonAssetsDTO getAssetByAssetId(String assetId) {
-        Optional<ServicePersonAssetsEntity> assetDb = assetRepo.findAllByAssetId(assetId);
-        if (assetDb.isPresent()) {
-            ServicePersonAssetsEntity assetData = assetDb.get();
-            ServicePersonAssetsDTO assetDto = new ServicePersonAssetsDTO();
-
-            assetDto.setUserId(assetData.getUserId());
-            assetDto.setAssetId(assetData.getAssetId());
-            assetDto.setAssetCat(assetData.getAssetCat());
-            assetDto.setAssetSubCat(assetData.getAssetSubCat());
-            assetDto.setLocation(assetData.getLocation());
-            assetDto.setStreet(assetData.getStreet());
-            assetDto.setDoorNo(assetData.getDoorNo());
-            assetDto.setTown(assetData.getTown());
-            assetDto.setDistrict(assetData.getDistrict());
-            assetDto.setState(assetData.getState());
-            assetDto.setPinCode(assetData.getPinCode());
-            assetDto.setAssetBrand(assetData.getAssetBrand());
-            assetDto.setAssetModel(assetData.getAssetModel());
-            assetDto.setRegDate(assetData.getRegDateFormatted());
-            assetDto.setPlanId(assetData.getPlanId());
-            assetDto.setMembershipExp(assetData.getMembershipExpDb());
-
-            log.info("Fetched asset details for assetId: {}", assetId);
-            return assetDto;
-        }
-        log.warn("No asset found for assetId: {}", assetId);
-        return null;
-    }
+	@Override
+	public ServicePersonAssetsDTO getAssetByAssetId(String assetId) {
+		log.info("Fetched asset details for assetId({})", assetId);
+		Optional<ServicePersonAssetsEntity> assetDb = assetRepo.findAllByAssetId(assetId);
+		if (assetDb.isEmpty()) {
+			return null;
+		}
+		ServicePersonAssetsDTO assetDto = new ServicePersonAssetsDTO();
+		assetDto.setUserId(assetDb.get().getUserId());
+		assetDto.setAssetId(assetDb.get().getAssetId());
+		assetDto.setAssetCat(assetDb.get().getAssetCat());
+		assetDto.setAssetSubCat(assetDb.get().getAssetSubCat());
+		assetDto.setLocation(assetDb.get().getLocation());
+		assetDto.setStreet(assetDb.get().getStreet());
+		assetDto.setDoorNo(assetDb.get().getDoorNo());
+		assetDto.setTown(assetDb.get().getTown());
+		assetDto.setDistrict(assetDb.get().getDistrict());
+		assetDto.setState(assetDb.get().getState());
+		assetDto.setPinCode(assetDb.get().getPinCode());
+		assetDto.setAssetBrand(assetDb.get().getAssetBrand());
+		assetDto.setAssetModel(assetDb.get().getAssetModel());
+		assetDto.setRegDate(assetDb.get().getRegDateFormatted());
+		assetDto.setPlanId(assetDb.get().getPlanId());
+		assetDto.setMembershipExp(assetDb.get().getMembershipExpDb());
+		return assetDto;
+	}
 
 }

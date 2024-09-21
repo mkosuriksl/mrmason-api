@@ -71,14 +71,10 @@ public class ServicePersonAssetsController {
 
 	@GetMapping("/getSPAssets")
 	public ResponseEntity<ResponseListServicePersonAssets> getAssetDetails(
-			@RequestParam(required = false) String userId,
-			@RequestParam(required = false) String assetId,
-			@RequestParam(required = false) String location,
-			@RequestParam(required = false) String assetCat,
-			@RequestParam(required = false) String assetSubCat,
-			@RequestParam(required = false) String assetModel,
+			@RequestParam(required = false) String userId, @RequestParam(required = false) String assetId,
+			@RequestParam(required = false) String location, @RequestParam(required = false) String assetCat,
+			@RequestParam(required = false) String assetSubCat, @RequestParam(required = false) String assetModel,
 			@RequestParam(required = false) String assetBrand) {
-
 		try {
 			List<ServicePersonAssetsEntity> entity = assetService.getAssets(userId, assetId, location, assetCat,
 					assetSubCat, assetModel, assetBrand);

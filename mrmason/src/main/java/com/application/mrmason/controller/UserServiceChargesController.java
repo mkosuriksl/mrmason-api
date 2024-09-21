@@ -18,15 +18,16 @@ import com.application.mrmason.dto.ResponseUserServiceChargesDto1;
 import com.application.mrmason.dto.ResponseUserServiceChargesDto2;
 import com.application.mrmason.dto.UserServiceChargeRequest;
 import com.application.mrmason.entity.UserServiceCharges;
+import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.service.UserServiceChargesService;
 
 @RestController
 @PreAuthorize("hasAuthority('Adm')")
 public class UserServiceChargesController {
-	
+
 	@Autowired
 	UserServiceChargesService service;
-	
+
 	@PostMapping("/adding-UserServiceCharges")
 	public ResponseEntity<ResponseUserServiceChargesDto> userServiceCharges(
 			@RequestBody UserServiceChargeRequest serviceChargeRequest) {
@@ -39,12 +40,12 @@ public class UserServiceChargesController {
 				response.setStatus(true);
 				response.setServiceChargesData(savedCharges);
 				return new ResponseEntity<>(response, HttpStatus.OK);
-			} else{
+			} else {
 				response.setMessage("No new charges were added/failed to add charges");
 				response.setStatus(false);
 				response.setServiceChargesData(savedCharges);
 				return new ResponseEntity<>(response, HttpStatus.OK);
-			} 
+			}
 		} catch (Exception e) {
 			response.setMessage(e.getMessage());
 			response.setStatus(false);
@@ -56,13 +57,18 @@ public class UserServiceChargesController {
 	@GetMapping("/getUserServiceCharegs")
 	public ResponseEntity<?> getUserCharges(@RequestParam(required = false) String serviceChargeKey,
 			@RequestParam(required = false) String serviceId, @RequestParam(required = false) String location,
-			@RequestParam(required = false) String brand, @RequestParam(required = false) String model,@RequestParam(required = false) String updatedBy,@RequestParam(required = false) String subcategory) {
+			@RequestParam(required = false) String brand, @RequestParam(required = false) String model,
+			@RequestParam String userId, @RequestParam(required = false) String subcategory) {
+
+		if (userId == null || userId.isBlank() || userId.isEmpty()) {
+			throw new ResourceNotFoundException("User Id is required.");
+		}
 
 		ResponseUserServiceChargesDto1 response = new ResponseUserServiceChargesDto1();
 		try {
 
 			List<UserServiceCharges> serviceCharges = service.getUserServiceCharges(serviceChargeKey, serviceId,
-					location, brand, model,updatedBy,subcategory);
+					location, brand, model, userId, subcategory);
 			if (serviceCharges != null && !serviceCharges.isEmpty()) {
 				response.setMessage("User service charges details");
 				response.setStatus(true);
@@ -101,6 +107,5 @@ public class UserServiceChargesController {
 		}
 
 	}
-
 
 }

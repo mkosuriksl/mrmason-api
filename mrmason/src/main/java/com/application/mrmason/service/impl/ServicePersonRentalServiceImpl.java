@@ -38,13 +38,14 @@ public class ServicePersonRentalServiceImpl implements ServicePersonRentalServic
 	}
 
 	@Override
-	public List<RentalAssetResponseDTO> getRentalReq(String assetCat, String assetSubCat, String assetBrand,
-			String assetModel, String userId, String assetId, String availableLocation) {
+	public List<RentalAssetResponseDTO> getRentalReq(String userId, String assetId, String assetCat,
+			String assetSubCat, String assetBrand,
+			String assetModel, String availableLocation) {
 
 		log.info(">>Service Logger getRentalReq()");
 
-		List<ServicePersonAssetsEntity> assets = fetchAssets(userId, assetCat, assetSubCat, assetBrand, assetModel,
-				assetId);
+		List<ServicePersonAssetsEntity> assets = fetchAssets(userId, assetId, assetCat, assetSubCat, assetBrand,
+				assetModel);
 
 		if (assets.isEmpty()) {
 			log.info("No assets found for the given criteria.");
@@ -72,13 +73,14 @@ public class ServicePersonRentalServiceImpl implements ServicePersonRentalServic
 	}
 
 	@Override
-	public List<RentalAssetResponseDTO> getRentalAssets(String assetCat, String assetSubCat, String assetBrand,
-			String assetModel, String userId, String assetId) {
+	public List<RentalAssetResponseDTO> getRentalAssets(String userId, String assetId, String assetCat,
+			String assetSubCat, String assetBrand,
+			String assetModel, String availableLocation) {
 
 		log.info(">>Service Logger getRentalAssets()");
 
-		List<ServicePersonAssetsEntity> assets = spAssetRepo.searchAssets(userId, assetId, assetCat, assetSubCat,
-				assetBrand, assetModel);
+		List<ServicePersonAssetsEntity> assets = fetchAssets(userId, assetId, assetCat, assetSubCat, assetBrand,
+				assetModel);
 
 		if (assets.isEmpty()) {
 			log.info("No assets found for the given criteria.");
@@ -89,7 +91,45 @@ public class ServicePersonRentalServiceImpl implements ServicePersonRentalServic
 				.map(ServicePersonAssetsEntity::getAssetId)
 				.collect(Collectors.toList());
 
-		return spRentRepo.searchRentals(userId, assetId, null, assetIds).stream()
+		List<ServicePersonRentalEntity> rentals = spRentRepo.searchRentals(userId, assetId, availableLocation,
+				assetIds);
+
+		return rentals.stream()
+				.map(rental -> {
+					ServicePersonAssetsEntity asset = assets.stream()
+							.filter(a -> a.getAssetId().equals(rental.getAssetId()))
+							.findFirst()
+							.orElseThrow(
+									() -> new RuntimeException("Asset not found for rental: " + rental.getAssetId()));
+
+					return buildRentalAssetResponseDTO(rental, asset);
+				})
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public List<RentalAssetResponseDTO> getRentalAssetsNoAuth(String userId, String assetId, String assetCat,
+			String assetSubCat, String assetBrand,
+			String assetModel, String availableLocation) {
+
+		log.info(">>Service Logger getRentalAssetsNoAuth()");
+
+		List<ServicePersonAssetsEntity> assets = fetchAssets(userId, assetId, assetCat, assetSubCat, assetBrand,
+				assetModel);
+
+		if (assets.isEmpty()) {
+			log.info("No assets found for the given criteria.");
+			return Collections.emptyList();
+		}
+
+		List<String> assetIds = assets.stream()
+				.map(ServicePersonAssetsEntity::getAssetId)
+				.collect(Collectors.toList());
+
+		List<ServicePersonRentalEntity> rentals = spRentRepo.searchRentals(userId, assetId, availableLocation,
+				assetIds);
+
+		return rentals.stream()
 				.map(rental -> {
 					ServicePersonAssetsEntity asset = assets.stream()
 							.filter(a -> a.getAssetId().equals(rental.getAssetId()))
@@ -142,8 +182,9 @@ public class ServicePersonRentalServiceImpl implements ServicePersonRentalServic
 		return null;
 	}
 
-	private List<ServicePersonAssetsEntity> fetchAssets(String userId, String assetCat, String assetSubCat,
-			String assetBrand, String assetModel, String assetId) {
+	private List<ServicePersonAssetsEntity> fetchAssets(String userId, String assetId, String assetCat,
+			String assetSubCat,
+			String assetBrand, String assetModel) {
 		return spAssetRepo.searchAssets(userId, assetId, assetCat, assetSubCat, assetBrand, assetModel);
 	}
 

@@ -55,16 +55,17 @@ public class ServicePersonRentalController {
 
 	@GetMapping("/getServicePersonRentalData")
 	public ResponseEntity<ResponseSPRentalDTO> getRentalReq(
+			@RequestParam(required = false) String userId,
+			@RequestParam(required = false) String assetId,
 			@RequestParam(required = false) String assetCat,
 			@RequestParam(required = false) String assetSubCat,
 			@RequestParam(required = false) String assetBrand,
 			@RequestParam(required = false) String assetModel,
-			@RequestParam(required = false) String userId,
-			@RequestParam(required = false) String assetId,
 			@RequestParam(required = false) String availableLocation) {
 
-		List<RentalAssetResponseDTO> rentalAssets = spRentService.getRentalReq(assetCat, assetSubCat, assetBrand,
-				assetModel, userId, assetId, availableLocation);
+		List<RentalAssetResponseDTO> rentalAssets = spRentService.getRentalReq(userId, assetId, assetCat, assetSubCat,
+				assetBrand,
+				assetModel, availableLocation);
 
 		ResponseSPRentalDTO response = new ResponseSPRentalDTO();
 
@@ -86,11 +87,11 @@ public class ServicePersonRentalController {
 			ResponseSPRentalDTO response = new ResponseSPRentalDTO();
 			if (spRentService.updateRentalAssetCharge(rent) != null) {
 				response.setAddRental(spRentService.updateRentalAssetCharge(rent));
-				response.setMessage("Service Person Asset Rental Charge updated successfully..");
+				response.setMessage("Service Person Asset Rental Charge updated successfully.");
 				response.setStatus(true);
 				return ResponseEntity.ok(response);
 			}
-			response.setMessage("Asset not found or update failed !");
+			response.setMessage("Asset not found or update failed!");
 			response.setStatus(false);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		} catch (Exception e) {
@@ -102,15 +103,17 @@ public class ServicePersonRentalController {
 
 	@GetMapping("/getServicePersonRentalAssets")
 	public ResponseEntity<ResponseSPRentalDTO> getRentalAssets(
+			@RequestParam(required = false) String userId,
+			@RequestParam(required = false) String assetId,
 			@RequestParam(required = false) String assetCat,
 			@RequestParam(required = false) String assetSubCat,
 			@RequestParam(required = false) String assetBrand,
 			@RequestParam(required = false) String assetModel,
-			@RequestParam(required = false) String userId,
-			@RequestParam(required = false) String assetId) {
+			@RequestParam(required = false) String availableLocation) {
 
-		List<RentalAssetResponseDTO> rentalAssets = spRentService.getRentalAssets(assetCat, assetSubCat, assetBrand,
-				assetModel, userId, assetId);
+		List<RentalAssetResponseDTO> rentalAssets = spRentService.getRentalAssets(userId, assetId, assetCat,
+				assetSubCat, assetBrand,
+				assetModel, availableLocation);
 
 		ResponseSPRentalDTO response = new ResponseSPRentalDTO();
 
@@ -126,4 +129,32 @@ public class ServicePersonRentalController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
+	@GetMapping("/getRentalAssetsNoAuth")
+	public ResponseEntity<ResponseSPRentalDTO> getRentalAssetsNoAuth(
+			@RequestParam(required = false) String userId,
+			@RequestParam(required = false) String assetId,
+			@RequestParam(required = false) String assetCat,
+			@RequestParam(required = false) String assetSubCat,
+			@RequestParam(required = false) String assetBrand,
+			@RequestParam(required = false) String assetModel,
+			@RequestParam(required = false) String availableLocation) {
+
+		List<RentalAssetResponseDTO> rentalAssets = spRentService.getRentalAssetsNoAuth(userId, assetId, assetCat,
+				assetSubCat,
+				assetBrand,
+				assetModel, availableLocation);
+
+		ResponseSPRentalDTO response = new ResponseSPRentalDTO();
+
+		if (rentalAssets.isEmpty()) {
+			response.setMessage("No assets found for the given criteria.");
+			response.setStatus(false);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		response.setMessage("Rental AssetIds retrieved successfully.");
+		response.setStatus(true);
+		response.setRentalData(rentalAssets);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 }

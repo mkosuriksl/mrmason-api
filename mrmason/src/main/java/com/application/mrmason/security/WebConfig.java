@@ -58,7 +58,7 @@ public class WebConfig {
 						"/getServiceCategory/nonCivil/{serviceCategory}", "/getServiceCategory","/getServiceRequest",
 						"/getAssetCategory/nonCivil/{assetCategory}", "/getAdminAsset/civil/{assetCat}",
 						"/getAdminAsset/nonCivil/{assetCat}", "/filterServicePerson", "/getServicePersonDetails",
-						"/paint-master/**").permitAll().anyRequest().authenticated());
+						"/paint-master/**","/getRentalAssetsNoAuth").permitAll().anyRequest().authenticated());
 
 		http.authenticationProvider(customDaoAuthenticationProvider());
 		http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);

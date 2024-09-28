@@ -58,7 +58,9 @@ public class WebConfig {
 						"/getServiceCategory/nonCivil/{serviceCategory}", "/getServiceCategory","/getServiceRequest",
 						"/getAssetCategory/nonCivil/{assetCategory}", "/getAdminAsset/civil/{assetCat}",
 						"/getAdminAsset/nonCivil/{assetCat}", "/filterServicePerson", "/getServicePersonDetails",
-						"/paint-master/**").permitAll().anyRequest().authenticated());
+						"/paint-master/**","/api/v1/auth/**", "/v2/api-docs", "/v3/api-docs",
+						"/v3/api-docs/**", "/swagger-resources", "/swagger-resources/**", "/configuration/ui",
+						"/configuration/security", "/swagger-ui/**", "/webjars/**", "/swagger-ui.html").permitAll().anyRequest().authenticated());
 
 		http.authenticationProvider(customDaoAuthenticationProvider());
 		http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);

@@ -18,7 +18,7 @@ public interface ServicePersonRentalService {
 			String assetSubCat, String assetBrand,
 			String assetModel, String availableLocation);
 
-	List<RentalAssetResponseDTO> getRentalAssetsNoAuth(String userId, String assetId, String assetCat,
+	List<RentalAssetResponseDTO> getRentalAssetsNoAuth(String assetCat,
 			String assetSubCat, String assetBrand,
 			String assetModel, String availableLocation);
 

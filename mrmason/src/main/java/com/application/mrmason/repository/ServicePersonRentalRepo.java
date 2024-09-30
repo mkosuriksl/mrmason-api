@@ -13,6 +13,15 @@ import java.util.Optional;
 public interface ServicePersonRentalRepo extends JpaRepository<ServicePersonRentalEntity, String> {
 
 	@Query("SELECT r FROM ServicePersonRentalEntity r WHERE "
+        + "(:availableLocation IS NULL OR r.availableLocation = :availableLocation) AND "
+        + "(:assetIds IS NULL OR r.assetId IN :assetIds) "
+        + "ORDER BY r.id DESC")
+List<ServicePersonRentalEntity> searchRentals(
+        @Param("availableLocation") String availableLocation,
+        @Param("assetIds") List<String> assetIds);
+
+
+	@Query("SELECT r FROM ServicePersonRentalEntity r WHERE "
 			+ "(:userId IS NULL OR r.userId = :userId) AND "
 			+ "(:assetId IS NULL OR r.assetId = :assetId) AND "
 			+ "(:availableLocation IS NULL OR r.availableLocation = :availableLocation) AND "

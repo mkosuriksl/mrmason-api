@@ -108,14 +108,13 @@ public class ServicePersonRentalServiceImpl implements ServicePersonRentalServic
 	}
 
 	@Override
-	public List<RentalAssetResponseDTO> getRentalAssetsNoAuth(String userId, String assetId, String assetCat,
+	public List<RentalAssetResponseDTO> getRentalAssetsNoAuth(String assetCat,
 			String assetSubCat, String assetBrand,
 			String assetModel, String availableLocation) {
 
 		log.info(">>Service Logger getRentalAssetsNoAuth()");
 
-		List<ServicePersonAssetsEntity> assets = fetchAssets(userId, assetId, assetCat, assetSubCat, assetBrand,
-				assetModel);
+		List<ServicePersonAssetsEntity> assets = fetchAssets(null, null, assetCat, assetSubCat, assetBrand, assetModel);
 
 		if (assets.isEmpty()) {
 			log.info("No assets found for the given criteria.");
@@ -126,8 +125,7 @@ public class ServicePersonRentalServiceImpl implements ServicePersonRentalServic
 				.map(ServicePersonAssetsEntity::getAssetId)
 				.collect(Collectors.toList());
 
-		List<ServicePersonRentalEntity> rentals = spRentRepo.searchRentals(userId, assetId, availableLocation,
-				assetIds);
+		List<ServicePersonRentalEntity> rentals = spRentRepo.searchRentals(availableLocation, assetIds);
 
 		return rentals.stream()
 				.map(rental -> {

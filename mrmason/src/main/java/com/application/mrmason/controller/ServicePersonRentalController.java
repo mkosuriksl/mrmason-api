@@ -131,15 +131,13 @@ public class ServicePersonRentalController {
 
 	@GetMapping("/getRentalAssetsNoAuth")
 	public ResponseEntity<ResponseSPRentalDTO> getRentalAssetsNoAuth(
-			@RequestParam(required = false) String userId,
-			@RequestParam(required = false) String assetId,
 			@RequestParam(required = false) String assetCat,
 			@RequestParam(required = false) String assetSubCat,
 			@RequestParam(required = false) String assetBrand,
 			@RequestParam(required = false) String assetModel,
 			@RequestParam(required = false) String availableLocation) {
 
-		List<RentalAssetResponseDTO> rentalAssets = spRentService.getRentalAssetsNoAuth(userId, assetId, assetCat,
+		List<RentalAssetResponseDTO> rentalAssets = spRentService.getRentalAssetsNoAuth(assetCat,
 				assetSubCat,
 				assetBrand,
 				assetModel, availableLocation);

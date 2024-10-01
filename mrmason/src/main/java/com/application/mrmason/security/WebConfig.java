@@ -1,7 +1,5 @@
 package com.application.mrmason.security;
 
-import java.util.Arrays;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,9 +10,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.application.mrmason.service.impl.CustomUserService;
 
@@ -55,16 +50,17 @@ public class WebConfig {
 						"/forgetPassword/verifyOtpAndChangePassword", "/forget-pwd-send-otp", "/forget-pwd-change",
 						"/admin/forgetPassword/sendOtp", "/admin/forgetPassword/verifyOtpAndChangePassword", "/getData",
 						"/getServiceCategory/civil/{serviceCategory}", "/getAssetCategory/civil/{assetCategory}",
-						"/getServiceCategory/nonCivil/{serviceCategory}", "/getServiceCategory","/getServiceRequest",
+						"/getServiceCategory/nonCivil/{serviceCategory}", "/getServiceCategory", "/getServiceRequest",
 						"/getAssetCategory/nonCivil/{assetCategory}", "/getAdminAsset/civil/{assetCat}",
 						"/getAdminAsset/nonCivil/{assetCat}", "/filterServicePerson", "/getServicePersonDetails",
-						"/paint-master/**","/api/v1/auth/**", "/v2/api-docs", "/v3/api-docs",
-						"/v3/api-docs/**", "/swagger-resources", "/swagger-resources/**", "/configuration/ui",
-						"/configuration/security", "/swagger-ui/**", "/webjars/**", "/swagger-ui.html").permitAll().anyRequest().authenticated());
+						"/paint-master/**", "/api/v1/auth/**", "/v2/api-docs", "/v3/api-docs", "/v3/api-docs/**",
+						"/swagger-resources", "/swagger-resources/**", "/configuration/ui", "/configuration/security",
+						"/swagger-ui/**", "/webjars/**", "/swagger-ui.html", "/getRentalAssetsNoAuth").permitAll()
+						.anyRequest().authenticated());
 
 		http.authenticationProvider(customDaoAuthenticationProvider());
 		http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 		return http.build();
 	}
-	
+
 }

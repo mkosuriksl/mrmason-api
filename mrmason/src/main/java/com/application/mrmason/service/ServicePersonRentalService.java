@@ -10,11 +10,17 @@ public interface ServicePersonRentalService {
 
 	ServicePersonRentalEntity addRentalReq(ServicePersonRentalEntity rent);
 
-	List<RentalAssetResponseDTO> getRentalReq(String assetCat, String assetSubCat, String assetBrand,
-			String assetModel, String userId, String assetId, String availableLocation);
+	List<RentalAssetResponseDTO> getRentalReq(String userId, String assetId, String assetCat,
+			String assetSubCat, String assetBrand,
+			String assetModel, String availableLocation);
 
-	List<RentalAssetResponseDTO> getRentalAssets(String assetCat, String assetSubCat, String assetBrand,
-			String assetModel, String userId, String assetId);
+	List<RentalAssetResponseDTO> getRentalAssets(String userId, String assetId, String assetCat,
+			String assetSubCat, String assetBrand,
+			String assetModel, String availableLocation);
+
+	List<RentalAssetResponseDTO> getRentalAssetsNoAuth(String assetCat,
+			String assetSubCat, String assetBrand,
+			String assetModel, String availableLocation);
 
 	ServicePersonRentalEntity updateRentalAssetCharge(ServicePersonRentalEntity rent);
 

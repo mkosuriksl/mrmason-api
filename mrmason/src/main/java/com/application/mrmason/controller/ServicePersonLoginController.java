@@ -18,9 +18,10 @@ import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.impl.OtpGenerationServiceImpl;
 import com.application.mrmason.service.impl.ServicePersonLoginService;
 import com.application.mrmason.service.impl.UserService;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
-
 public class ServicePersonLoginController {
 
 	@Autowired
@@ -42,6 +43,7 @@ public class ServicePersonLoginController {
 
 	@PostMapping("/sp-send-email-otp")
 	public ResponseEntity<ResponseMessageDto> sendEmail(@RequestBody OtpSendRequest login) {
+		log.info(">> sendEmail({})", login);
 		String email = login.getContactDetail();
 		ServicePersonLogin user = servicePersonDao.findByEmailAndRegSource(email, login.getRegSource())
 				.orElseThrow(() -> new ResourceNotFoundException("User Not Found By : " + login.getContactDetail()));

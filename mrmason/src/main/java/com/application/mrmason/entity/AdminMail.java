@@ -38,5 +38,6 @@ public class AdminMail {
 	private String emailSubject;
 	private String staticLocations;
 	private String template;
+	private String securityType;
 	
 }

@@ -21,6 +21,7 @@ import com.application.mrmason.repository.ServicePersonLoginDAO;
 import com.application.mrmason.repository.SpServiceDetailsRepo;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.JwtService;
+import com.application.mrmason.security.MailConfig;
 
 @Service
 public class UserService {
@@ -51,6 +52,9 @@ public class UserService {
 
 	@Autowired
 	private SmsService smsService;
+	
+	@Autowired
+	private EmailServiceImpl emailService;
 
 	public Optional<User> checkExistingUser(String email, String phone, RegSource regSource) {
 		List<User> users = userDAO.findByEmailANDMobile(email, phone);
@@ -71,7 +75,9 @@ public class UserService {
 		user.setPassword(encryptPassword);
 
 		// Email sending
-		sendEmail(user.getEmail());
+		String subject="Verify Your Email and Mobile Number";
+		String emailMessage="Thanks for registering with us. please verify your registered email and mobile.";
+		emailService.sendEmail(user.getEmail(),subject ,emailMessage);
 		// Mobile sms sending
 		String message = "Thanks for registering with us. please verify your registered email and mobile before login. - mekanik.in";
 		smsService.sendSMSMessage(user.getMobile(), message);
@@ -393,12 +399,12 @@ public class UserService {
 		return user.get();
 	}
 
-	public void sendEmail(String toMail) {
-		SimpleMailMessage mail = new SimpleMailMessage();
-		mail.setTo(toMail);
-		mail.setSubject("Verify Your Email and Mobile Number");
-		String body = "Thanks for registering with us. please verify your registered email and mobile.";
-		mail.setText(body);
-		mailsender.send(mail);
-	}
+//	public void sendEmail(String toMail) {
+//		SimpleMailMessage mail = new SimpleMailMessage();
+//		mail.setTo(toMail);
+//		mail.setSubject("Verify Your Email and Mobile Number");
+//		String body = "Thanks for registering with us. please verify your registered email and mobile.";
+//		mail.setText(body);
+//		mailsender.send(mail);
+//	}
 }

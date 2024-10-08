@@ -38,12 +38,21 @@ public class EmailServiceImpl implements EmailService {
 
 	@Override
 	public void sendEmail(String toMail, String otp) {
-		SimpleMailMessage mail = new SimpleMailMessage();
-		mail.setTo(toMail);
-		mail.setSubject("YOUR OTP FOR VERIFICATION.");
-		String body = "Thanks for registering with us. Your OTP to verify your email is " + otp + " - www.mrmason.in";
-		mail.setText(body);
-		mailsender.send(mail);
+		try {
+			MimeMessage message = mailsender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+			helper.setFrom("no_reply@kosuriers.com"); // Update this if needed
+			helper.setTo(toMail);
+			helper.setSubject("YOUR OTP FOR VERIFICATION.");
+			String body = "Thanks for registering with us. Your OTP to verify your email is " + otp + " - www.mrmason.in";
+			helper.setText(body, true); // Set to true for HTML content
+
+			mailsender.send(message);
+			log.info("Email sent successfully to {}", toMail);
+		} catch (MessagingException e) {
+			log.error("Failed to send email to {}: {}", toMail, e.getMessage());
+		}
 	}
 
 	public void sendWebMail(String toMail, String body) {

@@ -14,7 +14,7 @@ import com.application.mrmason.service.OtpGenerationService;
 @Service
 public class OtpGenerationServiceImpl implements OtpGenerationService {
 	@Autowired
-	EmailService mailService;
+	private EmailService mailService;
 
 	LocalTime local = LocalTime.now();
 	@Autowired

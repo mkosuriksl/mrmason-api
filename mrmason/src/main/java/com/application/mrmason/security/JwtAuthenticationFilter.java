@@ -1,6 +1,7 @@
 package com.application.mrmason.security;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
@@ -11,6 +12,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.application.mrmason.entity.User;
+import com.application.mrmason.repository.UserDAO;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -25,6 +29,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	@Autowired
 	private UserDetailsService userDetailsService;
+
+	@Autowired
+	private UserDAO userDAO;
 
 	private static final String ORIGIN = "Origin";
 
@@ -56,8 +63,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				String token = authHeader.substring(7);
 				try {
 					String username = jwtService.extractUsername(token);
-					UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
+					String userId = jwtService.extractUserId(token);
+					User user = userDAO.findByMobileOrEmailAndBodSeqNo(username, userId).get();
+					UserDetails userDetails = user;
 					if (!jwtService.isTokenValid(token, userDetails)) {
 						response.sendRedirect("/error");
 						return;

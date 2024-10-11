@@ -338,7 +338,7 @@ public class UserService {
 						if (loginDb.get().getEVerify().equalsIgnoreCase("yes")) {
 
 							if (byCrypt.matches(login.getPassword(), user.getPassword())) {
-								String jwtToken = jwtService.generateToken(userEmailMobile.get());
+								String jwtToken = jwtService.generateToken(userEmailMobile.get(),user.getBodSeqNo());
 								response.setJwtToken(jwtToken);
 								response.setMessage("Login Successful.");
 								response.setStatus(true);
@@ -358,7 +358,7 @@ public class UserService {
 						if (loginDb.get().getMobVerify().equalsIgnoreCase("yes")) {
 
 							if (byCrypt.matches(login.getPassword(), user.getPassword())) {
-								String jwtToken = jwtService.generateToken(userEmailMobile.get());
+								String jwtToken = jwtService.generateToken(userEmailMobile.get(),user.getBodSeqNo());
 								response.setJwtToken(jwtToken);
 								response.setMessage("Login Successful.");
 								response.setStatus(true);

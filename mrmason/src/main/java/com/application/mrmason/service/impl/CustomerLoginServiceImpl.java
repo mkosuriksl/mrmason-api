@@ -89,7 +89,7 @@ public class CustomerLoginServiceImpl implements CustomerLoginService {
 				if (userEmail != null && phno == null) {
 					if (loginDb.getEmailVerified().equalsIgnoreCase("yes")) {
 						if (byCrypt.matches(userPassword, loginDb.getUserPassword())) {
-							String jwtToken = jwtService.generateToken(customerRegistration);
+							String jwtToken = jwtService.generateToken(customerRegistration,customerRegistration.getUserid());
 							response.setMessage("login");
 							response.setJwtToken(jwtToken);
 							return response;
@@ -103,7 +103,7 @@ public class CustomerLoginServiceImpl implements CustomerLoginService {
 				} else if (userEmail == null && phno != null) {
 					if (loginDb.getMobileVerified().equalsIgnoreCase("yes")) {
 						if (byCrypt.matches(userPassword, loginDb.getUserPassword())) {
-							String jwtToken = jwtService.generateToken(customerRegistration);
+							String jwtToken = jwtService.generateToken(customerRegistration,customerRegistration.getUserid());
 							response.setJwtToken(jwtToken);
 							response.setMessage("login");
 							return response;

@@ -14,6 +14,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.application.mrmason.entity.User;
+import com.application.mrmason.repository.AdminDetailsRepo;
+import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.repository.UserDAO;
 
 import jakarta.servlet.FilterChain;
@@ -32,6 +34,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	@Autowired
 	private UserDAO userDAO;
+
+	@Autowired
+	private AdminDetailsRepo adminDetailsRepo;
+	
+	@Autowired
+	private CustomerRegistrationRepo customerRegistrationRepo;
 
 	private static final String ORIGIN = "Origin";
 
@@ -64,8 +72,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				try {
 					String username = jwtService.extractUsername(token);
 					String userId = jwtService.extractUserId(token);
-					User user = userDAO.findByMobileOrEmailAndBodSeqNo(username, userId).get();
-					UserDetails userDetails = user;
+					String userType = jwtService.extractUserType(token);
+					UserDetails userDetails = null;
+					if (userType.equals("Developer") || userType.equals("worker")) {
+						User user = userDAO.findByMobileOrEmailAndBodSeqNo(username, userId).get();
+						userDetails = user;
+					}
+
+					if (userType.equals("Adm")) {
+						userDetails = adminDetailsRepo.findByEmail(username);
+					}
+
+					if (userType.equals("EC")) {
+						userDetails = customerRegistrationRepo.findByUserEmail(username);
+					}
+
 					if (!jwtService.isTokenValid(token, userDetails)) {
 						response.sendRedirect("/error");
 						return;

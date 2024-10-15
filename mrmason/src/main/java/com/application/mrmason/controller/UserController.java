@@ -22,6 +22,7 @@ import com.application.mrmason.dto.ResponseMessageDto;
 import com.application.mrmason.dto.ResponseSpLoginDto;
 import com.application.mrmason.dto.ResponseUserDTO;
 import com.application.mrmason.dto.ResponseUserUpdateDto;
+import com.application.mrmason.dto.UpdateProfileRequest;
 import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.enums.RegSource;
@@ -46,7 +47,7 @@ public class UserController {
 	SPAvailabilityRepo availabilityReo;
 
 	ResponseUserDTO response = new ResponseUserDTO();
-	
+
 	ResponseUserUpdateDto userResponse = new ResponseUserUpdateDto();
 
 	ResponseMessageDto response2 = new ResponseMessageDto();
@@ -77,7 +78,7 @@ public class UserController {
 	}
 
 	@PutMapping("/sp-update-profile")
-	public ResponseEntity<?> updateServiceProfile(@RequestBody User registrationDetails) {
+	public ResponseEntity<?> updateServiceProfile(@RequestBody UpdateProfileRequest registrationDetails) {
 
 		String bodSeqNo = registrationDetails.getBodSeqNo();
 		User updatedUser = userService.updateProfile(registrationDetails, bodSeqNo);
@@ -208,10 +209,9 @@ public class UserController {
 	}
 
 	@GetMapping("/sp-get-profile")
-	public ResponseEntity<?> getProfile(@RequestParam(required = false) String email,
-			@RequestParam(required = false) RegSource regSource) {
+	public ResponseEntity<?> getProfile(@RequestParam(required = false) String bodSeqNo) {
 
-		Userdto profile = userService.getServiceProfile(email, regSource);
+		Userdto profile = userService.getServiceProfile(bodSeqNo);
 		try {
 			if (profile == null) {
 				response.setMessage("Invalid Email ....!");

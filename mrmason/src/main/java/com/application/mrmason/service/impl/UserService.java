@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.application.mrmason.dto.LoginRequest;
 import com.application.mrmason.dto.ResponseSpLoginDto;
+import com.application.mrmason.dto.UpdateProfileRequest;
 import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.ServicePersonLogin;
 import com.application.mrmason.entity.SpServiceDetails;
@@ -134,7 +135,7 @@ public class UserService {
 		return null;
 	}
 
-	public User updateProfile(User registrationDetails, String bodSeqNo) {
+	public User updateProfile(UpdateProfileRequest registrationDetails, String bodSeqNo) {
 		Optional<User> existedByEmail = Optional.of(userDAO.findByBodSeqNo(bodSeqNo));
 		if (existedByEmail.isPresent()) {
 
@@ -227,9 +228,9 @@ public class UserService {
 
 	}
 
-	public Userdto getServiceProfile(String email) {
+	public Userdto getServiceProfile(String bodSeqNo) {
 
-		Optional<User> user = Optional.ofNullable(userDAO.findByEmail(email));
+		Optional<User> user = Optional.ofNullable(userDAO.findByBodSeqNo(bodSeqNo));
 		List<SpServiceDetails> serviceDetails = detailsRepo.findByUserId(user.get().getBodSeqNo());
 
 		if (user.isPresent()) {

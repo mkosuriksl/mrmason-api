@@ -79,8 +79,8 @@ public class UserController {
 	@PutMapping("/sp-update-profile")
 	public ResponseEntity<?> updateServiceProfile(@RequestBody User registrationDetails) {
 
-		String email = registrationDetails.getEmail();
-		User updatedUser = userService.updateProfile(registrationDetails, email);
+		String bodSeqNo = registrationDetails.getBodSeqNo();
+		User updatedUser = userService.updateProfile(registrationDetails, bodSeqNo);
 
 		try {
 			if (updatedUser == null) {

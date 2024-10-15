@@ -134,8 +134,8 @@ public class UserService {
 		return null;
 	}
 
-	public User updateProfile(User registrationDetails, String email) {
-		Optional<User> existedByEmail = Optional.of(userDAO.findByEmail(email));
+	public User updateProfile(User registrationDetails, String bodSeqNo) {
+		Optional<User> existedByEmail = Optional.of(userDAO.findByBodSeqNo(bodSeqNo));
 		if (existedByEmail.isPresent()) {
 
 			existedByEmail.get().setName(registrationDetails.getName());

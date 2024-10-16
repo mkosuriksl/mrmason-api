@@ -1,5 +1,7 @@
 package com.application.mrmason.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,13 +21,13 @@ import com.application.mrmason.service.AdminMailService;
 public class AdminMailController {
 	@Autowired
 	AdminMailService apiService;
-	
-	ResponseAdminMailDto response=new ResponseAdminMailDto();
+
+	ResponseAdminMailDto response = new ResponseAdminMailDto();
 
 	@PostMapping("/addAdminMail")
 	public ResponseEntity<ResponseAdminMailDto> newAdminAsset(@RequestBody AdminMail api) {
 		try {
-			ResponseAdminMailDto response=apiService.addApiRequest(api);
+			ResponseAdminMailDto response = apiService.addApiRequest(api);
 			return ResponseEntity.ok(response);
 
 		} catch (Exception e) {
@@ -38,7 +40,7 @@ public class AdminMailController {
 	@GetMapping("/getAdminMail")
 	public ResponseEntity<ResponseAdminMailDto> getAssetDetails(@RequestParam(required = false) String email) {
 		try {
-			ResponseAdminMailDto response2=apiService.getApiRequest(email);
+			ResponseAdminMailDto response2 = apiService.getApiRequest(email);
 			return new ResponseEntity<>(response2, HttpStatus.OK);
 
 		} catch (Exception e) {
@@ -49,10 +51,15 @@ public class AdminMailController {
 
 	}
 
+	@GetMapping("/getAllAdminMail")
+	public ResponseEntity<List<AdminMail>> getAllEmailDetails() {
+		return new ResponseEntity<>(apiService.getAllEmailDetails(), HttpStatus.OK);
+	}
+
 	@PutMapping("/updateAdminMail")
 	public ResponseEntity<ResponseAdminMailDto> updateAssetDetails(@RequestBody AdminMail api) {
 		try {
-			ResponseAdminMailDto response=apiService.updateApiRequest(api);
+			ResponseAdminMailDto response = apiService.updateApiRequest(api);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 
 		} catch (Exception e) {

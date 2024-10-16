@@ -1,5 +1,8 @@
 package com.application.mrmason.service.impl;
 
+import java.util.Base64;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +21,8 @@ public class AdminMailServiceImpl implements AdminMailService {
 	@Override
 	public ResponseAdminMailDto addApiRequest(AdminMail admin) {
 		if (mailRepo.findByEmailid(admin.getEmailid()) == null) {
+			String encodedPassword = Base64.getEncoder().encodeToString(admin.getPwd().getBytes());
+			admin.setPwd(encodedPassword);
 			AdminMail data = mailRepo.save(admin);
 			response.setMessage("Admin mail added successfully.");
 			response.setStatus(true);
@@ -33,7 +38,7 @@ public class AdminMailServiceImpl implements AdminMailService {
 	public ResponseAdminMailDto getApiRequest(String email) {
 
 		AdminMail data = mailRepo.findByEmailid(email);
-		if(data!=null) {
+		if (data != null) {
 			response.setMessage("Admin mail details retrieved successfully.");
 			response.setStatus(true);
 			response.setData(data);
@@ -46,15 +51,21 @@ public class AdminMailServiceImpl implements AdminMailService {
 	}
 
 	@Override
+	public List<AdminMail> getAllEmailDetails() {
+		return mailRepo.findAll();
+	}
+
+	@Override
 	public ResponseAdminMailDto updateApiRequest(AdminMail admin) {
 		AdminMail data = mailRepo.findByEmailid(admin.getEmailid());
-		if(data!=null) {
+		if (data != null) {
 			data.setEmailSubject(admin.getEmailSubject());
-			data.setPwd(admin.getPwd());
+			String encodedPassword = Base64.getEncoder().encodeToString(admin.getPwd().getBytes());
+			data.setPwd(encodedPassword);
 			data.setUpdatedBy(admin.getUpdatedBy());
 			data.setMailHost(admin.getMailHost());
-			AdminMail updatedData=mailRepo.save(data);
-			
+			AdminMail updatedData = mailRepo.save(data);
+
 			response.setMessage("Admin mail details updated successfully.");
 			response.setStatus(true);
 			response.setData(updatedData);

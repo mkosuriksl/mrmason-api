@@ -8,6 +8,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.service.EmailService;
 import com.application.mrmason.service.OtpGenerationService;
 
@@ -40,12 +41,12 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 	}
 
 	@Override
-	public String generateMobileOtp(String mobile) {
+	public String generateMobileOtp(String mobile,RegSource regSource) {
 		int randomNum = (int) (Math.random() * 900000) + 100000;
 		String otp = String.valueOf(randomNum);
 		otpStorage.put(mobile, otp);
-		 String message = "Thanks for registering with us. Your OTP to verify your mobile number is " + otp + " - www.mrmason.in";
-		smsService.sendSMSMessage(mobile, message);
+		// String message = "Thanks for registering with us. Your OTP to verify your mobile number is " + otp + " - www.mrmason.in";
+		smsService.sendSMSMessage(mobile, otp,regSource);
 		
 		return otp;
 	}

@@ -2,7 +2,11 @@ package com.application.mrmason.entity;
 
 import java.time.LocalDateTime;
 
+import com.application.mrmason.enums.RegSource;
+
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -34,7 +38,8 @@ public class AdminSms {
 	
 	private String smsText;
 	
-	private String regSource;
+	@Enumerated(EnumType.STRING)
+	private RegSource regSource;
 	
 	private boolean active;
 

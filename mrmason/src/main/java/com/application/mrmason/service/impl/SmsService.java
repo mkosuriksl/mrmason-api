@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.entity.AdminSms;
+import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.repository.AdminSmsRepo;
 import com.application.mrmason.service.SmsSender;
 
@@ -28,25 +29,92 @@ public class SmsService implements SmsSender {
 	private AdminSmsRepo smsRepo;
 
 	@Override
-	public boolean sendSMSMessage(String phoneNumber, String message) {
-		log.info("sendSMSMessage Service Called=======>: ({}, {})", phoneNumber,message);
+	public boolean sendSMSMessage(String phoneNumber, String otp, RegSource regSource) {
+		log.info("sendSMSMessage Service Called=======>: ({}, {})", phoneNumber, otp);
+		String message = null;
 		try {
-			Optional<AdminSms> sms = smsRepo.findByActive();
+			Optional<AdminSms> sms = Optional.empty();
+			if (regSource.equals(RegSource.MRMASON)) {
+				sms = smsRepo.findByActive(regSource);
+				message = sms.get().getSmsText()
+						.replaceAll("%%OTP%%", otp);
+			}
+			if (regSource.equals(RegSource.MEKANIK)) {
+				sms = smsRepo.findByActive(regSource);
+				 message = sms.get().getSmsText()
+							.replaceAll("%%OTP%%", otp);
+			} else {
+				sms = smsRepo.findByActive(RegSource.MRMASON);
+			}
+
 			if (sms.isEmpty()) {
 				log.info("There is not any active Sms Creds =*=*=*=*=*=*=>: ({}, {})", phoneNumber, message);
 			}
 			// Construct message content with OTP
 
 			// Encode message content and other parameters
-			String key=  new String(Base64.getDecoder().decode(sms.get().getApiKey()));
+			String key = new String(Base64.getDecoder().decode(sms.get().getApiKey()));
 			String apiKey = URLEncoder.encode(key, StandardCharsets.UTF_8.toString());
 			String encodedMessage = URLEncoder.encode(message, StandardCharsets.UTF_8.toString());
 			String sender = URLEncoder.encode(sms.get().getSender(), StandardCharsets.UTF_8.toString());
 			String numbers = URLEncoder.encode(phoneNumber, StandardCharsets.UTF_8.toString());
 
 			// Construct URL
-			String url = sms.get().getUrl() + "apikey=" + apiKey + "&numbers=" + numbers + "&message="
-					+ encodedMessage + "&sender=" + sender;
+			String url = sms.get().getUrl() + "apikey=" + apiKey + "&numbers=" + numbers + "&message=" + encodedMessage
+					+ "&sender=" + sender;
+
+			// Create HTTP connection
+			HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+			conn.setRequestMethod("POST");
+			conn.setDoOutput(true);
+
+			// Read response
+			BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+			StringBuilder smsResponse = new StringBuilder();
+			String line;
+			while ((line = rd.readLine()) != null) {
+				smsResponse.append(line).append(" ");
+			}
+			rd.close();
+
+			// Log response
+			log.info("Response From SMS Service: {}", smsResponse);
+			return true;
+		} catch (Exception e) {
+			log.error("Exception while Sending SMS to Mobile Number {} with error: {}", phoneNumber, e.getMessage());
+			return false;
+		}
+	}
+	
+	@Override
+	public boolean registrationSendSMSMessage(String phoneNumber, String message, RegSource regSource) {
+		log.info("sendSMSMessage Service Called=======>: ({}, {})", phoneNumber, message);
+		try {
+			Optional<AdminSms> sms = Optional.empty();
+			if (regSource.equals(RegSource.MRMASON)) {
+				sms = smsRepo.findByActive(regSource);
+			}
+			if (regSource.equals(RegSource.MEKANIK)) {
+				sms = smsRepo.findByActive(regSource);
+			} else {
+				sms = smsRepo.findByActive(RegSource.MRMASON);
+			}
+
+			if (sms.isEmpty()) {
+				log.info("There is not any active Sms Creds =*=*=*=*=*=*=>: ({}, {})", phoneNumber, message);
+			}
+			// Construct message content with OTP
+
+			// Encode message content and other parameters
+			String key = new String(Base64.getDecoder().decode(sms.get().getApiKey()));
+			String apiKey = URLEncoder.encode(key, StandardCharsets.UTF_8.toString());
+			String encodedMessage = URLEncoder.encode(message, StandardCharsets.UTF_8.toString());
+			String sender = URLEncoder.encode(sms.get().getSender(), StandardCharsets.UTF_8.toString());
+			String numbers = URLEncoder.encode(phoneNumber, StandardCharsets.UTF_8.toString());
+
+			// Construct URL
+			String url = sms.get().getUrl() + "apikey=" + apiKey + "&numbers=" + numbers + "&message=" + encodedMessage
+					+ "&sender=" + sender;
 
 			// Create HTTP connection
 			HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();

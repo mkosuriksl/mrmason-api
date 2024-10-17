@@ -154,7 +154,7 @@ public class CustomerLoginServiceImpl implements CustomerLoginService {
 	public String sendSms(String mobile) {
 		Optional<CustomerLogin> userOp = Optional.ofNullable(loginRepo.findByUserMobile(mobile));
 		if (userOp.isPresent()) {
-			otpService.generateMobileOtp(mobile);
+			otpService.generateMobileOtp(mobile,null);
 			return "otp";
 		}
 		return null;

@@ -170,7 +170,7 @@ public class AdminDetailsServiceImpl implements AdminDetailsService {
 	public String sendSms(String mobile) {
 		Optional<AdminDetails> userOp = Optional.ofNullable(adminRepo.findByMobile(mobile));
 		if (userOp.isPresent()) {
-			otpService.generateMobileOtp(mobile);
+			otpService.generateMobileOtp(mobile,null);
 			return "otp";
 		}
 		return null;

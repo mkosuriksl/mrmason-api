@@ -37,7 +37,7 @@ public class CustomerMobileOtpController {
 			Optional<CustomerMobileOtp> user = Optional.of(otpRepo.findByMobileNum(mobile));
 
 			if (user.get().getOtp() == null) {
-				otpService.generateMobileOtp(mobile);
+				otpService.generateMobileOtp(mobile,login.getRegSource());
 				response.setStatus(true);
 				response.setMessage("Otp sent to the registered mobile number.");
 				return new ResponseEntity<>(response, HttpStatus.OK);

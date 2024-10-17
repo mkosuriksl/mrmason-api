@@ -81,7 +81,7 @@ public class UserService {
 		emailService.sendEmail(user.getEmail(),subject ,emailMessage);
 		// Mobile sms sending
 		String message = "Thanks for registering with us. please verify your registered email and mobile before login. - mekanik.in";
-		smsService.sendSMSMessage(user.getMobile(), message);
+		smsService.registrationSendSMSMessage(user.getMobile(), message,user.getRegSource());
 		User data = userDAO.save(user);
 
 		ServicePersonLogin service = new ServicePersonLogin();
@@ -185,7 +185,7 @@ public class UserService {
 	public String sendSms(String mobile, RegSource regSource) {
 		Optional<User> userOp = userDAO.findByMobileAndRegSource(mobile, regSource);
 		if (userOp.isPresent()) {
-			otpService.generateMobileOtp(mobile);
+			otpService.generateMobileOtp(mobile,regSource);
 			return "otp";
 		}
 		return null;

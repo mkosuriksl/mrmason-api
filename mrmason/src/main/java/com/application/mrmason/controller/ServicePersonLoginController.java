@@ -105,7 +105,7 @@ public class ServicePersonLoginController {
 			response.setMessage("Mobile Number already verified.");
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		} else {
-			String smsOtp = otpService.generateMobileOtp(mobile);
+			String smsOtp = otpService.generateMobileOtp(mobile,login.getRegSource());
 			user.setMOtp(smsOtp);
 			servicePersonDao.save(user);
 			response.setStatus(true);

@@ -1,6 +1,5 @@
 package com.application.mrmason.service.impl;
 
-import java.io.IOException;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,13 +23,11 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 
 	// Generate and send OTP to the user (via email, SMS, etc.)
 	@Override
-	public String generateOtp(String mail) {
+	public String generateOtp(String mail, RegSource regSource) {
 		int randomNum = (int) (Math.random() * 900000) + 100000;
 		String otp = String.valueOf(randomNum);
 		otpStorage.put(mail, otp);
-
-		mailService.sendEmail(mail, otp);
-
+		mailService.sendEmail(mail, otp,regSource);
 		return otp;
 	}
 
@@ -41,13 +38,14 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 	}
 
 	@Override
-	public String generateMobileOtp(String mobile,RegSource regSource) {
+	public String generateMobileOtp(String mobile, RegSource regSource) {
 		int randomNum = (int) (Math.random() * 900000) + 100000;
 		String otp = String.valueOf(randomNum);
 		otpStorage.put(mobile, otp);
-		// String message = "Thanks for registering with us. Your OTP to verify your mobile number is " + otp + " - www.mrmason.in";
-		smsService.sendSMSMessage(mobile, otp,regSource);
-		
+		// String message = "Thanks for registering with us. Your OTP to verify your
+		// mobile number is " + otp + " - www.mrmason.in";
+		smsService.sendSMSMessage(mobile, otp, regSource);
+
 		return otp;
 	}
 

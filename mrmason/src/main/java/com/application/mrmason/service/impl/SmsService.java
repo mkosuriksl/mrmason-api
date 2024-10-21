@@ -43,11 +43,7 @@ public class SmsService implements SmsSender {
 				sms = smsRepo.findByActive(regSource);
 				 message = sms.get().getSmsText()
 							.replaceAll("%%OTP%%", otp);
-			} if(regSource==null) {
-				sms = smsRepo.findByActive(RegSource.MRMASON);
-				message = sms.get().getSmsText()
-						.replaceAll("%%OTP%%", otp);
-			}
+			} 
 
 			if (sms.isEmpty()) {
 				log.info("There is not any active Sms Creds =*=*=*=*=*=*=>: ({}, {})", phoneNumber, message);
@@ -98,10 +94,7 @@ public class SmsService implements SmsSender {
 			}
 			if (regSource.equals(RegSource.MEKANIK)) {
 				sms = smsRepo.findByActive(regSource);
-			} else {
-				sms = smsRepo.findByActive(RegSource.MRMASON);
-			}
-
+			} 
 			if (sms.isEmpty()) {
 				log.info("There is not any active Sms Creds =*=*=*=*=*=*=>: ({}, {})", phoneNumber, message);
 			}

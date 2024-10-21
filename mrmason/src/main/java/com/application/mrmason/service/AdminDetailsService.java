@@ -3,6 +3,7 @@ package com.application.mrmason.service;
 import com.application.mrmason.dto.AdminDetailsDto;
 import com.application.mrmason.dto.ResponceAdminDetailsDto;
 import com.application.mrmason.entity.AdminDetails;
+import com.application.mrmason.enums.RegSource;
 
 public interface AdminDetailsService {
 	AdminDetails registerDetails(AdminDetails admin);
@@ -19,6 +20,6 @@ public interface AdminDetailsService {
 
 	String forgetPassword(String mobile,String email, String otp, String newPass, String confPass);
 
-	String sendMail(String email);
-	String sendSms(String mobile);
+	String sendMail(String email,RegSource regSource);
+	String sendSms(String mobile,RegSource regSource);
 }

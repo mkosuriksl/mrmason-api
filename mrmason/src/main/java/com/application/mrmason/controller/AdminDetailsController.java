@@ -159,7 +159,7 @@ public class AdminDetailsController {
 		String mobile=login.getMobile();
 		try {
 			if(email!=null&& mobile==null) {
-				if (adminService.sendMail(email) != null) {
+				if (adminService.sendMail(email,login.getRegSource()) != null) {
 					response2.setMessage("OTP Sent to Registered EmailId.");
 					response2.setStatus(true);
 					return new ResponseEntity<>(response2, HttpStatus.OK);
@@ -168,7 +168,7 @@ public class AdminDetailsController {
 				response2.setStatus(false);
 				return new ResponseEntity<>(response2, HttpStatus.OK);
 			}else {
-				if (adminService.sendSms(mobile) != null) {
+				if (adminService.sendSms(mobile,login.getRegSource()) != null) {
 					response2.setMessage("OTP Sent to Registered Mobile Number..");
 					response2.setStatus(true);
 					return new ResponseEntity<>(response2, HttpStatus.OK);

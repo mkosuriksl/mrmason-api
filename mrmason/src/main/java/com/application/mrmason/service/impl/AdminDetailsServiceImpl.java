@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.application.mrmason.dto.AdminDetailsDto;
 import com.application.mrmason.dto.ResponceAdminDetailsDto;
 import com.application.mrmason.entity.AdminDetails;
+import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.security.JwtService;
 import com.application.mrmason.service.AdminDetailsService;
@@ -157,20 +158,20 @@ public class AdminDetailsServiceImpl implements AdminDetailsService {
 	}
 
 	@Override
-	public String sendMail(String email) {
+	public String sendMail(String email,RegSource regSource) {
 		Optional<AdminDetails> userOp = Optional.ofNullable(adminRepo.findByEmail(email));
 		if (userOp.isPresent()) {
-			otpService.generateOtp(email);
+			otpService.generateOtp(email,regSource);
 			return "otp";
 		}
 		return null;
 	}
 
 	@Override
-	public String sendSms(String mobile) {
+	public String sendSms(String mobile,RegSource regSource) {
 		Optional<AdminDetails> userOp = Optional.ofNullable(adminRepo.findByMobile(mobile));
 		if (userOp.isPresent()) {
-			otpService.generateMobileOtp(mobile,null);
+			otpService.generateMobileOtp(mobile,regSource);
 			return "otp";
 		}
 		return null;

@@ -1,11 +1,11 @@
 package com.application.mrmason.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.service.EmailService;
 
 import jakarta.mail.MessagingException;
@@ -37,7 +37,7 @@ public class EmailServiceImpl implements EmailService {
 	}
 
 	@Override
-	public void sendEmail(String toMail, String otp) {
+	public void sendEmail(String toMail, String otp, RegSource regSource) {
 		try {
 			MimeMessage message = mailsender.createMimeMessage();
 			MimeMessageHelper helper = new MimeMessageHelper(message, true);
@@ -45,7 +45,13 @@ public class EmailServiceImpl implements EmailService {
 			helper.setFrom("no_reply@kosuriers.com"); // Update this if needed
 			helper.setTo(toMail);
 			helper.setSubject("YOUR OTP FOR VERIFICATION.");
-			String body = "Thanks for registering with us. Your OTP to verify your email is " + otp + " - www.mrmason.in";
+			String body =null;
+			if (regSource == RegSource.MRMASON) {
+				 body = "Thanks for registering with us. Your OTP to verify your email is " + otp + " - www.mrmason.in";
+			}else if(regSource == RegSource.MEKANIK) {
+				 body = "Thanks for registering with us. Your OTP to verify your email is " + otp + " - www.mekanik.in";
+			}
+			
 			helper.setText(body, true); // Set to true for HTML content
 
 			mailsender.send(message);
@@ -54,7 +60,7 @@ public class EmailServiceImpl implements EmailService {
 			log.error("Failed to send email to {}: {}", toMail, e.getMessage());
 		}
 	}
-
+	
 	public void sendWebMail(String toMail, String body) {
 
 		MimeMessage message = mailsender.createMimeMessage();

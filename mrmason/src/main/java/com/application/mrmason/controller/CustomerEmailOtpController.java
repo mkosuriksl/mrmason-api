@@ -41,7 +41,7 @@ public class CustomerEmailOtpController {
 			Optional<CustomerEmailOtp> user = Optional.of(otpRepo.findByEmail(userEmail));
 
 			if (user.get().getOtp() == null) {
-				otpService.generateOtp(userEmail);
+				otpService.generateOtp(userEmail,login.getRegSource());
 				response.setMessage("OTP Sent to Registered EmailId.");
 				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);

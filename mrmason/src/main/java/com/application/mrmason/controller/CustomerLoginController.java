@@ -25,7 +25,7 @@ public class CustomerLoginController {
 		String mobile=login.getMobile();
 		try {
 			if(email!=null) {
-				if (loginService.sendMail(email) != null) {
+				if (loginService.sendMail(email,login.getRegSource()) != null) {
 					response.setMessage("OTP Sent to Registered EmailId.");
 					response.setStatus(true);
 					return new ResponseEntity<>(response, HttpStatus.OK);
@@ -34,7 +34,7 @@ public class CustomerLoginController {
 				response.setStatus(false);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}else {
-				if (loginService.sendSms(mobile) != null) {
+				if (loginService.sendSms(mobile,login.getRegSource()) != null) {
 					response.setMessage("OTP Sent to Registered mobile number.");
 					response.setStatus(true);
 					return new ResponseEntity<>(response, HttpStatus.OK);

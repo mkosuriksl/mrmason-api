@@ -2,6 +2,8 @@ package com.application.mrmason.repository;
 
 
 
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,4 +15,5 @@ public interface AdminDetailsRepo extends JpaRepository<AdminDetails,Long >{
 //	List<AdminDetails>  findByAdminType(String adminType);
 	AdminDetails findByEmail(String email);
 	AdminDetails findByMobile(String mobile);
+	Optional<AdminDetails> findByAdminName(String adminName);
 }

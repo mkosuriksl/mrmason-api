@@ -176,7 +176,7 @@ public class UserService {
 	public String sendMail(String email, RegSource regSource) {
 		Optional<User> userOp = userDAO.findByEmailAndRegSource(email, regSource);
 		if (userOp.isPresent()) {
-			otpService.generateOtp(email);
+			otpService.generateOtp(email,regSource);
 			return "otp";
 		}
 		return null;

@@ -43,9 +43,7 @@ public class SmsService implements SmsSender {
 				sms = smsRepo.findByActive(regSource);
 				 message = sms.get().getSmsText()
 							.replaceAll("%%OTP%%", otp);
-			} else {
-				sms = smsRepo.findByActive(RegSource.MRMASON);
-			}
+			} 
 
 			if (sms.isEmpty()) {
 				log.info("There is not any active Sms Creds =*=*=*=*=*=*=>: ({}, {})", phoneNumber, message);
@@ -60,26 +58,26 @@ public class SmsService implements SmsSender {
 			String numbers = URLEncoder.encode(phoneNumber, StandardCharsets.UTF_8.toString());
 
 			// Construct URL
-			String url = sms.get().getUrl() + "apikey=" + apiKey + "&numbers=" + numbers + "&message=" + encodedMessage
-					+ "&sender=" + sender;
+            String url = sms.get().getUrl() + "apikey=" + apiKey + "&numbers=" + numbers + "&message=" + encodedMessage + "&sender=" + sender;
 
-			// Create HTTP connection
-			HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
-			conn.setRequestMethod("POST");
-			conn.setDoOutput(true);
 
-			// Read response
-			BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-			StringBuilder smsResponse = new StringBuilder();
-			String line;
-			while ((line = rd.readLine()) != null) {
-				smsResponse.append(line).append(" ");
-			}
-			rd.close();
+			 // Create HTTP connection
+            HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
 
-			// Log response
-			log.info("Response From SMS Service: {}", smsResponse);
-			return true;
+            // Read response
+            BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            StringBuilder smsResponse = new StringBuilder();
+            String line;
+            while ((line = rd.readLine()) != null) {
+                smsResponse.append(line).append(" ");
+            }
+            rd.close();
+
+            // Log response
+            log.info("Response From SMS Service: {}", smsResponse);
+            return true;
 		} catch (Exception e) {
 			log.error("Exception while Sending SMS to Mobile Number {} with error: {}", phoneNumber, e.getMessage());
 			return false;
@@ -96,10 +94,7 @@ public class SmsService implements SmsSender {
 			}
 			if (regSource.equals(RegSource.MEKANIK)) {
 				sms = smsRepo.findByActive(regSource);
-			} else {
-				sms = smsRepo.findByActive(RegSource.MRMASON);
-			}
-
+			} 
 			if (sms.isEmpty()) {
 				log.info("There is not any active Sms Creds =*=*=*=*=*=*=>: ({}, {})", phoneNumber, message);
 			}

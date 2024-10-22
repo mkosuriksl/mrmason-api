@@ -10,6 +10,7 @@ import com.application.mrmason.dto.CustomerRegistrationDto;
 import com.application.mrmason.dto.ResponseLoginDto;
 import com.application.mrmason.entity.CustomerLogin;
 import com.application.mrmason.entity.CustomerRegistration;
+import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.repository.CustomerLoginRepo;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.security.JwtService;
@@ -142,19 +143,19 @@ public class CustomerLoginServiceImpl implements CustomerLoginService {
 	}
 
 	@Override
-	public String sendMail(String email) {
+	public String sendMail(String email,RegSource regSource) {
 		Optional<CustomerLogin> userOp = Optional.ofNullable(loginRepo.findByUserEmail(email));
 		if (userOp.isPresent()) {
-			otpService.generateOtp(email);
+			otpService.generateOtp(email,regSource);
 			return "otp";
 		}
 		return null;
 	}
 	@Override
-	public String sendSms(String mobile) {
+	public String sendSms(String mobile,RegSource regSource) {
 		Optional<CustomerLogin> userOp = Optional.ofNullable(loginRepo.findByUserMobile(mobile));
 		if (userOp.isPresent()) {
-			otpService.generateMobileOtp(mobile,null);
+			otpService.generateMobileOtp(mobile,regSource);
 			return "otp";
 		}
 		return null;

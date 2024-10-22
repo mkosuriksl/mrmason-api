@@ -52,7 +52,7 @@ public class ServicePersonLoginController {
 			response.setMessage("Email already verified.");
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		} else {
-			String otp = otpService.generateOtp(email);
+			String otp = otpService.generateOtp(email,login.getRegSource());
 			user.setEOtp(otp);
 			servicePersonDao.save(user);
 			response.setStatus(true);

@@ -26,7 +26,7 @@ public class AdminUiEndPointController {
     @PostMapping("/addAdminUiEndPoint")
     public ResponseEntity<ResponseAdminUiEndPointDto<AdminUiEndPointEntity>> saveOrUpdate(
             @RequestBody AdminUiEndPointDto dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.save(dto));
+        return ResponseEntity.status(HttpStatus.OK).body(service.save(dto));
     }
 
     @PutMapping("/updateAdminUiEndPoint")

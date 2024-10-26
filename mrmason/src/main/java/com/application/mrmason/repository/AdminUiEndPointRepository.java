@@ -1,27 +1,24 @@
 package com.application.mrmason.repository;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import com.application.mrmason.entity.AdminUiEndPointEntity;
 import com.application.mrmason.entity.AdminUiEndPointId;
 
+@Repository
 public interface AdminUiEndPointRepository extends JpaRepository<AdminUiEndPointEntity, AdminUiEndPointId> {
 
-    Optional<AdminUiEndPointEntity> findById(AdminUiEndPointId id);
-
-    @Query("SELECT e FROM AdminUiEndPointEntity e WHERE e.id.systemId = :systemId")
-    Optional<AdminUiEndPointEntity> findBySystemId(@Param("systemId") String systemId);
-
-    @Query("SELECT e FROM AdminUiEndPointEntity e WHERE e.id.ipUrlToUi = :ipUrlToUi")
-    Optional<AdminUiEndPointEntity> findByIpUrlToUi(@Param("ipUrlToUi") String ipUrlToUi);
-
-    List<AdminUiEndPointEntity> findAllById_SystemId(String systemId);
-
-    List<AdminUiEndPointEntity> findAllById_IpUrlToUi(String ipUrlToUi);
-
+    @Query("SELECT e FROM AdminUiEndPointEntity e " +
+            "WHERE (:systemId IS NULL OR e.id.systemId = :systemId) " +
+            "AND (:ipUrlToUi IS NULL OR e.id.ipUrlToUi = :ipUrlToUi) " +
+            "AND (:updatedBy IS NULL OR e.updatedBy = :updatedBy)")
+    List<AdminUiEndPointEntity> findByDynamicQuery(
+            @Param("systemId") String systemId,
+            @Param("ipUrlToUi") String ipUrlToUi,
+            @Param("updatedBy") String updatedBy);
 }

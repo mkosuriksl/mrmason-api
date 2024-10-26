@@ -10,12 +10,10 @@ import java.io.Serializable;
 @Setter
 @Embeddable
 public class AdminUiEndPointId implements Serializable {
-
     private String systemId;
     private String ipUrlToUi;
-
-    public AdminUiEndPointId(String systemId) {
-        this.systemId = systemId;
+    
+    public AdminUiEndPointId() {
     }
 
     public AdminUiEndPointId(String systemId, String ipUrlToUi) {
@@ -23,7 +21,24 @@ public class AdminUiEndPointId implements Serializable {
         this.ipUrlToUi = ipUrlToUi;
     }
 
-    public AdminUiEndPointId() {
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (!(o instanceof AdminUiEndPointId))
+            return false;
 
+        AdminUiEndPointId that = (AdminUiEndPointId) o;
+
+        if (!systemId.equals(that.systemId))
+            return false;
+        return ipUrlToUi.equals(that.ipUrlToUi);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = systemId.hashCode();
+        result = 31 * result + ipUrlToUi.hashCode();
+        return result;
     }
 }

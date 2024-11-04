@@ -1,5 +1,6 @@
 package com.application.mrmason.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,14 +11,18 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.application.mrmason.dto.DeleteAccountRequest;
 import com.application.mrmason.dto.LoginRequest;
+import com.application.mrmason.dto.ResponseMessageDto;
 import com.application.mrmason.dto.ResponseSpLoginDto;
 import com.application.mrmason.dto.UpdateProfileRequest;
 import com.application.mrmason.dto.Userdto;
+import com.application.mrmason.entity.DeleteUser;
 import com.application.mrmason.entity.ServicePersonLogin;
 import com.application.mrmason.entity.SpServiceDetails;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.enums.RegSource;
+import com.application.mrmason.repository.DeleteUserRepo;
 import com.application.mrmason.repository.ServicePersonLoginDAO;
 import com.application.mrmason.repository.SpServiceDetailsRepo;
 import com.application.mrmason.repository.UserDAO;
@@ -53,9 +58,12 @@ public class UserService {
 
 	@Autowired
 	private SmsService smsService;
-	
+
 	@Autowired
 	private EmailServiceImpl emailService;
+
+	@Autowired
+	private DeleteUserRepo deleteUserRepo;
 
 	public Optional<User> checkExistingUser(String email, String phone, RegSource regSource) {
 		List<User> users = userDAO.findByEmailANDMobile(email, phone);
@@ -76,12 +84,12 @@ public class UserService {
 		user.setPassword(encryptPassword);
 
 		// Email sending
-		String subject="Verify Your Email and Mobile Number";
-		String emailMessage="Thanks for registering with us. please verify your registered email and mobile.";
-		emailService.sendEmail(user.getEmail(),subject ,emailMessage);
+		String subject = "Verify Your Email and Mobile Number";
+		String emailMessage = "Thanks for registering with us. please verify your registered email and mobile.";
+		emailService.sendEmail(user.getEmail(), subject, emailMessage);
 		// Mobile sms sending
 		String message = "Thanks for registering with us. please verify your registered email and mobile before login. - mekanik.in";
-		smsService.registrationSendSMSMessage(user.getMobile(), message,user.getRegSource());
+		smsService.registrationSendSMSMessage(user.getMobile(), message, user.getRegSource());
 		User data = userDAO.save(user);
 
 		ServicePersonLogin service = new ServicePersonLogin();
@@ -176,7 +184,7 @@ public class UserService {
 	public String sendMail(String email, RegSource regSource) {
 		Optional<User> userOp = userDAO.findByEmailAndRegSource(email, regSource);
 		if (userOp.isPresent()) {
-			otpService.generateOtp(email,regSource);
+			otpService.generateOtp(email, regSource);
 			return "otp";
 		}
 		return null;
@@ -185,7 +193,7 @@ public class UserService {
 	public String sendSms(String mobile, RegSource regSource) {
 		Optional<User> userOp = userDAO.findByMobileAndRegSource(mobile, regSource);
 		if (userOp.isPresent()) {
-			otpService.generateMobileOtp(mobile,regSource);
+			otpService.generateMobileOtp(mobile, regSource);
 			return "otp";
 		}
 		return null;
@@ -339,7 +347,7 @@ public class UserService {
 						if (loginDb.get().getEVerify().equalsIgnoreCase("yes")) {
 
 							if (byCrypt.matches(login.getPassword(), user.getPassword())) {
-								String jwtToken = jwtService.generateToken(userEmailMobile.get(),user.getBodSeqNo());
+								String jwtToken = jwtService.generateToken(userEmailMobile.get(), user.getBodSeqNo());
 								response.setJwtToken(jwtToken);
 								response.setMessage("Login Successful.");
 								response.setStatus(true);
@@ -359,7 +367,7 @@ public class UserService {
 						if (loginDb.get().getMobVerify().equalsIgnoreCase("yes")) {
 
 							if (byCrypt.matches(login.getPassword(), user.getPassword())) {
-								String jwtToken = jwtService.generateToken(userEmailMobile.get(),user.getBodSeqNo());
+								String jwtToken = jwtService.generateToken(userEmailMobile.get(), user.getBodSeqNo());
 								response.setJwtToken(jwtToken);
 								response.setMessage("Login Successful.");
 								response.setStatus(true);
@@ -378,7 +386,7 @@ public class UserService {
 						}
 					}
 				} else {
-					response.setMessage("Inactive User");
+					response.setMessage("Account status : " + user.getStatus());
 					response.setStatus(false);
 					return response;
 				}
@@ -398,6 +406,27 @@ public class UserService {
 
 		Optional<User> user = Optional.ofNullable(userDAO.findByEmail(email));
 		return user.get();
+	}
+
+	@Transactional
+	public ResponseMessageDto servicePersonDeletAccoutn(DeleteAccountRequest accountRequest) {
+		ResponseMessageDto rm = new ResponseMessageDto();
+		User user = userDAO.findByBodSeqNo(accountRequest.getSpId());
+		if (user != null) {
+			user.setStatus("DEACTIVATED");
+			DeleteUser deleteUser = new DeleteUser();
+			deleteUser.setDeletedDate(LocalDateTime.now());
+			deleteUser.setDeleteReason(accountRequest.getReason());
+			deleteUser.setDeactivated(true);
+			deleteUser.setUser(user);
+			deleteUserRepo.save(deleteUser);
+			rm.setMessage("Account deleted. Thank you for being with us.");
+			rm.setStatus(true);
+			return rm;
+		}
+		rm.setMessage("Account not found.!");
+		rm.setStatus(false);
+		return rm;
 	}
 
 //	public void sendEmail(String toMail) {

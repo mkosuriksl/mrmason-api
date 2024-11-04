@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ChangeForfotdto;
+import com.application.mrmason.dto.DeleteAccountRequest;
 import com.application.mrmason.dto.LoginRequest;
 import com.application.mrmason.dto.Logindto;
 import com.application.mrmason.dto.ResponseListUserDto;
@@ -228,6 +229,12 @@ public class UserController {
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
+	}
+
+	@PostMapping("/user/sp-delete-account")
+	public ResponseEntity<?> servicePersonDeletAccoutn(@RequestBody DeleteAccountRequest accountRequest) {
+		return new ResponseEntity<ResponseMessageDto>(userService.servicePersonDeletAccoutn(accountRequest),
+				HttpStatus.CREATED);
 	}
 
 	@PostMapping("/sp-login")

@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,7 +26,6 @@ import com.application.mrmason.repository.ServicePersonLoginDAO;
 import com.application.mrmason.repository.SpServiceDetailsRepo;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.JwtService;
-import com.application.mrmason.security.MailConfig;
 
 @Service
 public class UserService {
@@ -407,27 +405,46 @@ public class UserService {
 		Optional<User> user = Optional.ofNullable(userDAO.findByEmail(email));
 		return user.get();
 	}
-
+	
+	
 	@Transactional
-	public ResponseMessageDto servicePersonDeletAccoutn(DeleteAccountRequest accountRequest) {
-		ResponseMessageDto rm = new ResponseMessageDto();
-		User user = userDAO.findByBodSeqNo(accountRequest.getSpId());
-		if (user != null) {
-			user.setStatus("DEACTIVATED");
-			DeleteUser deleteUser = new DeleteUser();
-			deleteUser.setDeletedDate(LocalDateTime.now());
-			deleteUser.setDeleteReason(accountRequest.getReason());
-			deleteUser.setDeactivated(true);
-			deleteUser.setUser(user);
-			deleteUserRepo.save(deleteUser);
-			rm.setMessage("Account deleted. Thank you for being with us.");
-			rm.setStatus(true);
-			return rm;
-		}
-		rm.setMessage("Account not found.!");
-		rm.setStatus(false);
-		return rm;
+	public ResponseMessageDto servicePersonDeleteAccount(DeleteAccountRequest accountRequest) {
+	    ResponseMessageDto response = new ResponseMessageDto();
+
+	    // Retrieve the user based on the given ID
+	    User user = userDAO.findByBodSeqNo(accountRequest.getSpId());
+	    if (user == null) {
+	        response.setMessage("Account not found.");
+	        response.setStatus(false);
+	        return response;
+	    }
+
+	    // Retrieve service person login details by email or mobile and registration source
+	    Optional<ServicePersonLogin> servicePersonLogin = 
+	        emailLoginRepo.findByEmailOrMobileAndRegSource(user.getEmail(), user.getRegSource());
+
+	    // Update user status to 'DEACTIVATED'
+	    user.setStatus("DEACTIVATED");
+
+	    // Create and save a record in DeleteUser for tracking the deletion reason and date
+	    DeleteUser deleteUser = new DeleteUser();
+	    deleteUser.setDeletedDate(LocalDateTime.now());
+	    deleteUser.setDeleteReason(accountRequest.getReason());
+	    deleteUser.setDeactivated(true);
+	    deleteUser.setCandidateId(user.getBodSeqNo());
+	    deleteUserRepo.save(deleteUser);
+
+	    // Delete user and service person login
+	    userDAO.delete(user);
+	    servicePersonLogin.ifPresent(emailLoginRepo::delete);
+
+	    // Set response message for successful account deletion
+	    response.setMessage("Account deleted. Thank you for being with us.");
+	    response.setStatus(true);
+
+	    return response;
 	}
+
 
 //	public void sendEmail(String toMail) {
 //		SimpleMailMessage mail = new SimpleMailMessage();

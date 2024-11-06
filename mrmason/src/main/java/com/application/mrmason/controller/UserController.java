@@ -233,7 +233,7 @@ public class UserController {
 
 	@PostMapping("/user/sp-delete-account")
 	public ResponseEntity<?> servicePersonDeletAccoutn(@RequestBody DeleteAccountRequest accountRequest) {
-		return new ResponseEntity<ResponseMessageDto>(userService.servicePersonDeletAccoutn(accountRequest),
+		return new ResponseEntity<ResponseMessageDto>(userService.servicePersonDeleteAccount(accountRequest),
 				HttpStatus.CREATED);
 	}
 

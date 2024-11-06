@@ -4,12 +4,9 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -29,9 +26,14 @@ public class DeleteUser {
 	@Column(name = "id", unique = true, nullable = false)
 	private Long id;
 
-	@OneToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "user_sp_id", nullable = false)
-	private User user;
+	@Column(name = "candidate_id", nullable = false)
+	private String  candidateId;
+	
+	@Column(name = "email", nullable = false)
+	public String email;
+
+	@Column(name = "phone", nullable = false)
+	public String phone;
 
 	@Column(name = "deleted_date", nullable = false)
 	public LocalDateTime deletedDate;

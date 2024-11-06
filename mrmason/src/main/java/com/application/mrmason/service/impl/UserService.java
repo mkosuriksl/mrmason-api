@@ -423,13 +423,12 @@ public class UserService {
 	    Optional<ServicePersonLogin> servicePersonLogin = 
 	        emailLoginRepo.findByEmailOrMobileAndRegSource(user.getEmail(), user.getRegSource());
 
-	    // Update user status to 'DEACTIVATED'
-	    user.setStatus("DEACTIVATED");
-
 	    // Create and save a record in DeleteUser for tracking the deletion reason and date
 	    DeleteUser deleteUser = new DeleteUser();
 	    deleteUser.setDeletedDate(LocalDateTime.now());
 	    deleteUser.setDeleteReason(accountRequest.getReason());
+	    deleteUser.setEmail(user.getEmail());
+	    deleteUser.setPhone(user.getMobile());
 	    deleteUser.setDeactivated(true);
 	    deleteUser.setCandidateId(user.getBodSeqNo());
 	    deleteUserRepo.save(deleteUser);
@@ -441,7 +440,6 @@ public class UserService {
 	    // Set response message for successful account deletion
 	    response.setMessage("Account deleted. Thank you for being with us.");
 	    response.setStatus(true);
-
 	    return response;
 	}
 

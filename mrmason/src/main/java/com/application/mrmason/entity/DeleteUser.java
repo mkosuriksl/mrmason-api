@@ -28,6 +28,12 @@ public class DeleteUser {
 
 	@Column(name = "candidate_id", nullable = false)
 	private String  candidateId;
+	
+	@Column(name = "email", nullable = false)
+	public String email;
+
+	@Column(name = "phone", nullable = false)
+	public String phone;
 
 	@Column(name = "deleted_date", nullable = false)
 	public LocalDateTime deletedDate;

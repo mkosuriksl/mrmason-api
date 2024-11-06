@@ -73,53 +73,17 @@ public class AdminUiEndPointServiceImpl implements AdminUiEndPointService {
     }
 
     @Override
-    public ResponseAdminUiEndPointDto<List<AdminUiEndPointEntity>> getById(String systemId, String ipUrlToUi) {
-        logger.info("Fetching Admin UI EndPoint with systemId: {} and ipUrlToUi: {}", systemId, ipUrlToUi);
+    public ResponseAdminUiEndPointDto<List<AdminUiEndPointEntity>> getById(String systemId, String ipUrlToUi,
+            String updatedBy) {
+        logger.info("Fetching Admin UI EndPoint with systemId: {}, ipUrlToUi: {}, updatedBy: {}", systemId, ipUrlToUi,
+                updatedBy);
 
-        if (systemId == null && ipUrlToUi == null) {
-            logger.warn("At least one of systemId or ipUrlToUi must be provided");
-            return new ResponseAdminUiEndPointDto<>("At least one of systemId or ipUrlToUi must be provided", false,
-                    null);
-        }
+        List<AdminUiEndPointEntity> entities = repository.findByDynamicQuery(systemId, ipUrlToUi, updatedBy);
 
-        if (systemId != null && ipUrlToUi != null) {
-            Optional<AdminUiEndPointEntity> entityOpt = repository.findById(new AdminUiEndPointId(systemId, ipUrlToUi));
-            return entityOpt
-                    .map(entity -> new ResponseAdminUiEndPointDto<>("Admin UI EndPoint Retrieved successfully", true,
-                            List.of(entity)))
-                    .orElseGet(() -> new ResponseAdminUiEndPointDto<>("Admin UI EndPoint Not Retrieved", false, null));
-        }
-
-        if (systemId != null) {
-            List<AdminUiEndPointEntity> entities = repository.findAllById_SystemId(systemId);
-            if (!entities.isEmpty()) {
-                return new ResponseAdminUiEndPointDto<>("Admin UI EndPoints Retrieved successfully", true, entities);
-            } else {
-                return new ResponseAdminUiEndPointDto<>("No Admin UI EndPoints found for the provided systemId", false,
-                        null);
-            }
-        }
-
-        List<AdminUiEndPointEntity> entities = repository.findAllById_IpUrlToUi(ipUrlToUi);
-        if (!entities.isEmpty()) {
-            return new ResponseAdminUiEndPointDto<>("Admin UI EndPoints Retrieved successfully", true, entities);
-        } else {
-            return new ResponseAdminUiEndPointDto<>("No Admin UI EndPoints found for the provided ipUrlToUi", false,
-                    null);
-        }
-    }
-
-    @Override
-    public ResponseAdminUiEndPointDto<List<AdminUiEndPointEntity>> getAll() {
-        logger.info("Fetching all Admin UI EndPoints");
-
-        List<AdminUiEndPointEntity> entities = repository.findAll();
-
-        if (!entities.isEmpty()) {
-            return new ResponseAdminUiEndPointDto<>("All Admin Ui End Points Retrieved successfully", true, entities);
-        } else {
-            return new ResponseAdminUiEndPointDto<>("Admin Ui End Point Not Retrieved", false, null);
-        }
+        return entities.isEmpty()
+                ? new ResponseAdminUiEndPointDto<>("No Admin UI EndPoints found for the provided parameters", false,
+                        null)
+                : new ResponseAdminUiEndPointDto<>("Admin UI EndPoints retrieved successfully", true, entities);
     }
 
 }

@@ -32,8 +32,8 @@ import io.swagger.v3.oas.annotations.servers.Server;
                         url = "http://localhost:443"
                 ),
                 @Server(
-                        description = "PROD ENV",
-                        url = "https://javaapi.mrmason.in"
+                        description = "Dev ENV",
+                        url = "http://localhost:443"
                 )
         },
         security = {

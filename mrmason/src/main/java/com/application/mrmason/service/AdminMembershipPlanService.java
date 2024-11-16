@@ -12,6 +12,7 @@ public interface AdminMembershipPlanService {
 
     List<AdminMembershipPlanDTO> getMembershipPlan(
             String membershipPlanId, Integer amount, String noOfDaysValid, String planName, String status,
+            String defaultPlan,
             String updatedBy);
 
 }

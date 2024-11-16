@@ -36,13 +36,14 @@ public class AdminMembershipPlanServiceImpl implements AdminMembershipPlanServic
 
     @Override
     public List<AdminMembershipPlanDTO> getMembershipPlan(String membershipPlanId, Integer amount,
-            String noOfDaysValid, String planName, String status, String updatedBy) {
+            String noOfDaysValid, String planName, String status, String defaultPlan, String updatedBy) {
         log.info("Fetching membership plans with filters");
 
-        List<AdminMembershipPlanEntity> plans = membershipPlanRepository.findByCriteria(
-                membershipPlanId, amount, noOfDaysValid, planName, status, updatedBy);
-
-        return plans.stream().map(this::mapToDto).toList();
+        return membershipPlanRepository.findByCriteria(
+                membershipPlanId, amount, noOfDaysValid, planName, status, defaultPlan, updatedBy)
+                .stream()
+                .map(this::mapToDto)
+                .toList();
     }
 
     private AdminMembershipPlanEntity mapToEntity(AdminMembershipPlanDTO dto) {
@@ -52,6 +53,7 @@ public class AdminMembershipPlanServiceImpl implements AdminMembershipPlanServic
         entity.setNoOfDaysValid(dto.getNoOfDaysValid());
         entity.setPlanName(dto.getPlanName());
         entity.setStatus(dto.getStatus());
+        entity.setDefaultPlan(dto.getDefaultPlan());
         entity.setUpdatedBy(dto.getUpdatedBy());
         entity.setUpdatedDate(LocalDateTime.now());
         return entity;
@@ -62,6 +64,7 @@ public class AdminMembershipPlanServiceImpl implements AdminMembershipPlanServic
         entity.setNoOfDaysValid(dto.getNoOfDaysValid());
         entity.setPlanName(dto.getPlanName());
         entity.setStatus(dto.getStatus());
+        entity.setDefaultPlan(dto.getDefaultPlan());
         entity.setUpdatedBy(dto.getUpdatedBy());
         entity.setUpdatedDate(LocalDateTime.now());
     }
@@ -73,6 +76,7 @@ public class AdminMembershipPlanServiceImpl implements AdminMembershipPlanServic
         dto.setNoOfDaysValid(entity.getNoOfDaysValid());
         dto.setPlanName(entity.getPlanName());
         dto.setStatus(entity.getStatus());
+        dto.setDefaultPlan(entity.getDefaultPlan());
         dto.setUpdatedBy(entity.getUpdatedBy());
         dto.setUpdatedDate(entity.getUpdatedDate());
         return dto;

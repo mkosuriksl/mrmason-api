@@ -22,18 +22,24 @@ public class AdminMembershipPlanController {
         @PostMapping("/add-admin-membership-plan")
         public ResponseEntity<AdminMembershipPlanResponseDTO> addMembershipPlan(
                         @RequestBody AdminMembershipPlanDTO memPlanDTO) {
-                log.info("Adding new membership plan: {}", memPlanDTO);
+
+                log.info("Attempting to add new membership plan: {}", memPlanDTO);
                 AdminMembershipPlanDTO addedPlan = membershipPlanService.addMembershipPlan(memPlanDTO);
-                return ResponseEntity.ok(new AdminMembershipPlanResponseDTO("Admin Added Membership Plan successfully",
-                                "Success", addedPlan));
+                log.info("Membership plan added successfully with ID: {}", addedPlan.getMembershipPlanId());
+
+                return ResponseEntity.ok(new AdminMembershipPlanResponseDTO(
+                                "Admin added Membership Plan successfully", "Success", addedPlan));
         }
 
         @PutMapping("/update-admin-membership-plan")
         public ResponseEntity<AdminMembershipPlanResponseDTO> updateMembershipPlan(
                         @RequestBody AdminMembershipPlanDTO membershipPlanDTO) {
-                log.info("Updating membership plan with ID: {}", membershipPlanDTO.getMembershipPlanId());
-                AdminMembershipPlanDTO updatedPlan = membershipPlanService
-                                .updateMembershipPlan(membershipPlanDTO.getMembershipPlanId(), membershipPlanDTO);
+
+                log.info("Attempting to update membership plan with ID: {}", membershipPlanDTO.getMembershipPlanId());
+                AdminMembershipPlanDTO updatedPlan = membershipPlanService.updateMembershipPlan(
+                                membershipPlanDTO.getMembershipPlanId(), membershipPlanDTO);
+                log.info("Membership plan updated successfully with ID: {}", updatedPlan.getMembershipPlanId());
+
                 return ResponseEntity.ok(new AdminMembershipPlanResponseDTO(
                                 "Admin updated the Membership Plan successfully", "Success", updatedPlan));
         }
@@ -46,15 +52,21 @@ public class AdminMembershipPlanController {
                         @RequestParam(value = "noOfDaysValid", required = false) String noOfDaysValid,
                         @RequestParam(value = "planName", required = false) String planName,
                         @RequestParam(value = "status", required = false) String status,
+                        @RequestParam(value = "defaultPlan", required = false) String defaultPlan,
                         @RequestParam(value = "updatedBy", required = false) String updatedBy) {
 
-                log.info("Retrieving membership plans with filters");
-                List<AdminMembershipPlanDTO> membershipPlans = membershipPlanService.getMembershipPlan(
-                                membershipPlanId, amount, noOfDaysValid, planName, status, updatedBy);
+                log.info("Fetching membership plans with filters - Plan ID: {}, Amount: {}, Days Valid: {}, Plan Name: {}, Status: {}, Default Plan: {}, Updated By: {}",
+                                membershipPlanId, amount, noOfDaysValid, planName, status, defaultPlan, updatedBy);
 
-                String message = membershipPlans.isEmpty() ? "No membership plans are available"
-                                : "Admin Membership Plans Retrieved successfully";
-                return ResponseEntity.ok(new AdminMembershipGetResponseDTO(message,
-                                String.valueOf(!membershipPlans.isEmpty()), membershipPlans));
+                List<AdminMembershipPlanDTO> membershipPlans = membershipPlanService.getMembershipPlan(
+                                membershipPlanId, amount, noOfDaysValid, planName, status, defaultPlan, updatedBy);
+
+                String message = membershipPlans.isEmpty() ? "No membership plans available"
+                                : "Membership plans retrieved successfully";
+                log.info(message);
+
+                return ResponseEntity.ok(new AdminMembershipGetResponseDTO(
+                                message, String.valueOf(!membershipPlans.isEmpty()), membershipPlans));
         }
+
 }

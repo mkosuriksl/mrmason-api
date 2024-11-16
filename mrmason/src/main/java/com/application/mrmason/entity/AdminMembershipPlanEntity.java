@@ -1,6 +1,9 @@
 package com.application.mrmason.entity;
 
 import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,10 +33,14 @@ public class AdminMembershipPlanEntity {
     @Column(name = "status", length = 20)
     private String status;
 
+    @Column(name = "default_plan")
+    private String defaultPlan;
+
     @Column(name = "updated_by", length = 50)
     private String updatedBy;
 
     @Column(name = "updated_date")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd, HH:mm:ss")
     private LocalDateTime updatedDate;
 
     @PrePersist

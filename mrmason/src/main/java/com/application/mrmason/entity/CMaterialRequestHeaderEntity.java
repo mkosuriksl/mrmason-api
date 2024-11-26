@@ -37,8 +37,8 @@ public class CMaterialRequestHeaderEntity {
     @Column(name = "quote_id", length = 45)
     private String quoteId;
 
-    @Column(name = "c_id", length = 45)
-    private String customerId;
+    @Column(name = "requested_by", length = 45)
+    private String requestedBy;
 
     @Column(name = "c_moble", length = 45)
     private String customerMobile;

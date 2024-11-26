@@ -5,6 +5,7 @@ import com.application.mrmason.dto.CMaterialReqHeaderDetailsResponseDTO;
 import com.application.mrmason.dto.CommonMaterialRequestDto;
 import com.application.mrmason.dto.ResponseCMaterialReqHeaderDetailsDto;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface CMaterialReqHeaderDetailsService {
@@ -22,6 +23,7 @@ public interface CMaterialReqHeaderDetailsService {
                         String itemName,
                         String itemSize,
                         Integer qty,
-                        String updatedBy,
-                        String updatedDate);
+                        LocalDate orderDate,
+                        String requestedBy,
+                        LocalDate updatedDate);
 }

@@ -1,5 +1,6 @@
 package com.application.mrmason.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,7 +22,8 @@ public interface CMaterialReqHeaderDetailsRepository
                         "AND (:itemName IS NULL OR c.itemName = :itemName) " +
                         "AND (:itemSize IS NULL OR c.itemSize = :itemSize) " +
                         "AND (:qty IS NULL OR c.qty = :qty) " +
-                        "AND (:updatedBy IS NULL OR c.updatedBy = :updatedBy) " +
+                        "AND (:orderDate IS NULL OR c.orderDate = :orderDate)"+
+                        "AND (:requestedBy IS NULL OR c.requestedBy = :requestedBy) " +
                         "AND (:updatedDate IS NULL OR c.updatedDate = :updatedDate)")
         List<CMaterialReqHeaderDetailsEntity> findMaterialRequestsByFilters(
                         @Param("cMatRequestIdLineid") String cMatRequestIdLineid,
@@ -31,8 +33,9 @@ public interface CMaterialReqHeaderDetailsRepository
                         @Param("itemName") String itemName,
                         @Param("itemSize") String itemSize,
                         @Param("qty") Integer qty,
-                        @Param("updatedBy") String updatedBy,
-                        @Param("updatedDate") String updatedDate);
+                        @Param("orderDate") LocalDate orderDate,
+                        @Param("requestedBy") String requestedBy,
+                        @Param("updatedDate") LocalDate updatedDate);
 
         @Query("SELECT c FROM CMaterialReqHeaderDetailsEntity c WHERE c.cMatRequestId = :cMatRequestId")
         List<CMaterialReqHeaderDetailsEntity> findByCMatRequestId(@Param("cMatRequestId") String cMatRequestId);

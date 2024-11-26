@@ -38,8 +38,11 @@ public class CMaterialReqHeaderDetailsEntity {
     @Column(name = "qty")
     private int qty;
 
-    @Column(name = "updated_by")
-    private String updatedBy;
+    @Column(name = "order_date")
+    private LocalDate orderDate;
+
+    @Column(name = "requested_by")
+    private String requestedBy;
 
     @Column(name = "updated_date")
     private LocalDate updatedDate;

@@ -30,7 +30,7 @@ public class CMaterialRequestHeaderServiceImpl implements CMaterialRequestHeader
             updatedRequest.setUpdatedBy(request.getUpdatedBy());
             updatedRequest.setUpdatedDate(request.getUpdatedDate());
             updatedRequest.setQuoteId(request.getQuoteId());
-            updatedRequest.setCustomerId(request.getCustomerId());
+            updatedRequest.setRequestedBy(request.getRequestedBy());
             updatedRequest.setCustomerMobile(request.getCustomerMobile());
             updatedRequest.setDeliveryDate(request.getDeliveryDate());
             updatedRequest.setDeliveryLocation(request.getDeliveryLocation());

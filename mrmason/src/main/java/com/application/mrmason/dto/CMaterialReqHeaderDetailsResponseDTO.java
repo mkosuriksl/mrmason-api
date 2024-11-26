@@ -32,8 +32,11 @@ public class CMaterialReqHeaderDetailsResponseDTO {
     @JsonProperty("qty")
     private int qty;
 
-    @JsonProperty("updatedBy")
-    private String updatedBy;
+    @JsonProperty("orderDate")
+    private LocalDate orderDate;
+
+    @JsonProperty("requestedBy")
+    private String requestedBy;
 
     @JsonProperty("updatedDate")
     private LocalDate updatedDate;

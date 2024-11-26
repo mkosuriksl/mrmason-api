@@ -3,11 +3,16 @@ package com.application.mrmason.service.impl;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.dto.CMaterialReqHeaderDetailsDTO;
@@ -18,9 +23,11 @@ import com.application.mrmason.dto.ResponseCMaterialReqHeaderDetailsDto;
 import com.application.mrmason.entity.CMaterialReqHeaderDetailsEntity;
 import com.application.mrmason.entity.CMaterialRequestHeaderEntity;
 import com.application.mrmason.entity.CustomerRegistration;
+import com.application.mrmason.entity.User;
 import com.application.mrmason.repository.CMaterialReqHeaderDetailsRepository;
 import com.application.mrmason.repository.CMaterialRequestHeaderRepository;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
+import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.CMaterialReqHeaderDetailsService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +48,10 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
     @Autowired
     private EmailServiceImpl emailService;
 
+    @Autowired
+    private UserDAO userDAO;
+
+    @Transactional
     @Override
     public ResponseCMaterialReqHeaderDetailsDto addMaterialRequest(CommonMaterialRequestDto request) {
         List<CMaterialReqHeaderDetailsResponseDTO> responseList = new ArrayList<>();
@@ -48,18 +59,28 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
 
         try {
             String materialCategory = request.getMaterialCategory();
-            String customerId = request.getUpdatedBy();
+            String requestedBy = request.getRequestedBy();
             LocalDate deliveryDate = request.getDeliveryDate();
             String deliveryLocation = request.getDeliveryLocation();
 
             String generatedRequestId = generateRequestId();
             int totalQty = 0;
 
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+
+            boolean isCustomer = authorities.stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_EC"));
+            boolean isServicePerson = authorities.stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_Developer"));
+
+            if (!isCustomer && !isServicePerson) {
+                throw new AccessDeniedException("Unauthorized role");
+            }
+
             List<CMaterialReqHeaderDetailsDTO> requestDTOList = request.getMaterialRequests();
             for (int i = 0; i < requestDTOList.size(); i++) {
                 CMaterialReqHeaderDetailsDTO requestDTO = requestDTOList.get(i);
                 try {
-
                     String lineItemId = generateLineId(generatedRequestId, i + 1);
                     log.info("Generated Line Item ID: {}", lineItemId);
 
@@ -68,7 +89,8 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
                     entity.setCMatRequestId(generatedRequestId);
                     entity.setCMatRequestIdLineid(lineItemId);
                     entity.setMaterialCategory(materialCategory);
-                    entity.setUpdatedBy(customerId);
+                    entity.setRequestedBy(requestedBy);
+                    entity.setOrderDate(LocalDate.now());
                     entity.setUpdatedDate(LocalDate.now());
 
                     CMaterialReqHeaderDetailsEntity savedEntity = detailsRepo.save(entity);
@@ -77,14 +99,19 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
                     totalQty += requestDTO.getQty();
 
                 } catch (Exception e) {
-
                     log.error("Error processing material request for item {}: {}", requestDTO.getItemName(), e);
                     responseList.add(buildErrorResponse(requestDTO));
                 }
             }
 
-            CMaterialRequestHeaderEntity headerEntity = createHeaderEntity(generatedRequestId, totalQty, customerId,
-                    deliveryDate, deliveryLocation);
+            CMaterialRequestHeaderEntity headerEntity;
+            if (isCustomer) {
+                headerEntity = createCustomerHeaderEntity(generatedRequestId, totalQty, requestedBy, deliveryDate,
+                        deliveryLocation);
+            } else {
+                headerEntity = createServicePersonHeaderEntity(generatedRequestId, totalQty, requestedBy, deliveryDate,
+                        deliveryLocation);
+            }
             headerRepo.save(headerEntity);
 
             sendMaterialRequestEmail(headerEntity);
@@ -102,6 +129,55 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
         return response;
     }
 
+    private CMaterialRequestHeaderEntity createCustomerHeaderEntity(String requestId, int totalQty, String userid,
+            LocalDate deliveryDate, String deliveryLocation) {
+        CMaterialRequestHeaderEntity headerEntity = new CMaterialRequestHeaderEntity();
+        headerEntity.setMaterialRequestId(requestId);
+        headerEntity.setTotalQty(totalQty);
+        headerEntity.setCreatedDate(LocalDate.now());
+        headerEntity.setDeliveryDate(deliveryDate);
+        headerEntity.setDeliveryLocation(deliveryLocation);
+
+        CustomerRegistration customer = customerRegistrationRepo.findByUserid(userid);
+        if (customer != null) {
+            headerEntity.setRequestedBy(customer.getUserid());
+            headerEntity.setCustomerName(customer.getCustomerName());
+            headerEntity.setCustomerEmail(customer.getUserEmail());
+            headerEntity.setCustomerMobile(customer.getUserMobile());
+            headerEntity.setUpdatedBy(customer.getCustomerName());
+        } else {
+            log.warn("Customer with userId {} not found.", userid);
+            headerEntity.setRequestedBy(userid);
+        }
+
+        return headerEntity;
+    }
+
+    private CMaterialRequestHeaderEntity createServicePersonHeaderEntity(String requestId, int totalQty,
+            String bodSeqNo,
+            LocalDate deliveryDate, String deliveryLocation) {
+        CMaterialRequestHeaderEntity headerEntity = new CMaterialRequestHeaderEntity();
+        headerEntity.setMaterialRequestId(requestId);
+        headerEntity.setTotalQty(totalQty);
+        headerEntity.setCreatedDate(LocalDate.now());
+        headerEntity.setDeliveryDate(deliveryDate);
+        headerEntity.setDeliveryLocation(deliveryLocation);
+
+        User servicePerson = userDAO.findByBodSeqNo(bodSeqNo);
+        if (servicePerson != null) {
+            headerEntity.setRequestedBy(servicePerson.getBodSeqNo());
+            headerEntity.setCustomerName(servicePerson.getName());
+            headerEntity.setCustomerEmail(servicePerson.getEmail());
+            headerEntity.setCustomerMobile(servicePerson.getMobile());
+            headerEntity.setUpdatedBy(servicePerson.getName());
+        } else {
+            log.warn("Service person with bodSeqNo {} not found.", bodSeqNo);
+            headerEntity.setRequestedBy(bodSeqNo);
+        }
+
+        return headerEntity;
+    }
+
     private String generateRequestId() {
         LocalDateTime now = LocalDateTime.now();
         return String.format("CMM%04d%02d%02d%02d%02d%02d",
@@ -113,30 +189,6 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
         return String.format("%s_%04d", requestId, lineCounter);
     }
 
-    private CMaterialRequestHeaderEntity createHeaderEntity(String requestId, int totalQty, String userId,
-            LocalDate deliveryDate, String deliveryLocation) {
-        CMaterialRequestHeaderEntity headerEntity = new CMaterialRequestHeaderEntity();
-        headerEntity.setMaterialRequestId(requestId);
-        headerEntity.setTotalQty(totalQty);
-        headerEntity.setCreatedDate(LocalDate.now());
-        headerEntity.setDeliveryDate(deliveryDate);
-        headerEntity.setDeliveryLocation(deliveryLocation);
-
-        CustomerRegistration customer = customerRegistrationRepo.findByUserid(userId);
-        if (customer != null) {
-            headerEntity.setCustomerId(customer.getUserid());
-            headerEntity.setCustomerName(customer.getCustomerName());
-            headerEntity.setCustomerEmail(customer.getUserEmail());
-            headerEntity.setCustomerMobile(customer.getUserMobile());
-            headerEntity.setUpdatedBy(customer.getCustomerName());
-        } else {
-            log.warn("Customer with userId {} not found.", userId);
-            headerEntity.setCustomerId(userId);
-        }
-
-        return headerEntity;
-    }
-
     private CMaterialReqHeaderDetailsResponseDTO buildErrorResponse(CMaterialReqHeaderDetailsDTO requestDTO) {
         CMaterialReqHeaderDetailsResponseDTO errorResponse = new CMaterialReqHeaderDetailsResponseDTO();
         errorResponse.setCMatRequestId("N/A");
@@ -145,7 +197,7 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
         errorResponse.setItemName(requestDTO.getItemName());
         errorResponse.setItemSize(requestDTO.getItemSize());
         errorResponse.setQty(requestDTO.getQty());
-        errorResponse.setUpdatedBy("N/A");
+        errorResponse.setRequestedBy("N/A");
         errorResponse.setUpdatedDate(LocalDate.now());
         errorResponse.setCMatRequestIdLineid("N/A");
         return errorResponse;
@@ -167,7 +219,7 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
                             "</ul>" +
                             "<p>Thank you for using our service!</p>" +
                             "</body></html>",
-                    entity.getCustomerName(), entity.getMaterialRequestId(), entity.getCustomerId(),
+                    entity.getCustomerName(), entity.getMaterialRequestId(), entity.getRequestedBy(),
                     entity.getCreatedDate(),
                     entity.getTotalQty());
 
@@ -200,7 +252,7 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
         entity.setItemName(requestDTO.getItemName());
         entity.setItemSize(requestDTO.getItemSize());
         entity.setQty(requestDTO.getQty());
-        entity.setUpdatedBy(requestDTO.getUpdatedBy());
+        entity.setRequestedBy(requestDTO.getRequestedBy());
         entity.setUpdatedDate(LocalDate.now());
 
         CMaterialReqHeaderDetailsEntity updatedEntity = detailsRepo.save(entity);
@@ -214,7 +266,6 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
                 .sum();
 
         headerEntity.setTotalQty(updatedTotalQty);
-
         headerRepo.save(headerEntity);
 
         return mapToResponseDTO(updatedEntity);
@@ -223,11 +274,12 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
     @Override
     public List<CMaterialReqHeaderDetailsResponseDTO> getAllMaterialRequestHeaderDetails(
             String cMatRequestIdLineid, String cMatRequestId, String materialCategory, String brand, String itemName,
-            String itemSize, Integer qty, String updatedBy, String updatedDate) {
+            String itemSize, Integer qty, LocalDate orderDate, String requestedBy, LocalDate updatedDate) {
 
         try {
             List<CMaterialReqHeaderDetailsEntity> entities = detailsRepo.findMaterialRequestsByFilters(
-                    cMatRequestIdLineid, cMatRequestId, materialCategory, brand, itemName, itemSize, qty, updatedBy,
+                    cMatRequestIdLineid, cMatRequestId, materialCategory, brand, itemName, itemSize, qty, orderDate,
+                    requestedBy,
                     updatedDate);
 
             if (entities.isEmpty()) {
@@ -254,7 +306,8 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
         responseDTO.setItemName(entity.getItemName());
         responseDTO.setItemSize(entity.getItemSize());
         responseDTO.setQty(entity.getQty());
-        responseDTO.setUpdatedBy(entity.getUpdatedBy());
+        responseDTO.setOrderDate(entity.getOrderDate());
+        responseDTO.setRequestedBy(entity.getRequestedBy());
         responseDTO.setUpdatedDate(entity.getUpdatedDate());
 
         return responseDTO;

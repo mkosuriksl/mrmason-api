@@ -10,7 +10,7 @@ import java.util.List;
 @Setter
 public class CommonMaterialRequestDto {
     private String materialCategory;
-    private String updatedBy;
+    private String requestedBy;
     private LocalDate deliveryDate;
     private String deliveryLocation;
     private List<CMaterialReqHeaderDetailsDTO> materialRequests;

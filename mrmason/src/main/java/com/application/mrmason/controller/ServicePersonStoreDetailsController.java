@@ -1,14 +1,17 @@
 package com.application.mrmason.controller;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import org.springframework.security.core.Authentication;
+import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,24 +24,20 @@ import com.application.mrmason.dto.ResponseDeleteSPStoreDto;
 import com.application.mrmason.dto.ResponseSPStoreDto;
 import com.application.mrmason.dto.ResponseGetSPStoreDto;
 import com.application.mrmason.dto.ServicePersonStoreResponse;
-import com.application.mrmason.entity.AdminStoreVerificationEntity;
 import com.application.mrmason.entity.ServicePersonStoreDetailsEntity;
-import com.application.mrmason.repository.AdminStoreVerificationRepository;
 import com.application.mrmason.service.ServicePersonStoreDetailsService;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
-@PreAuthorize("hasAuthority('Developer')")
+
 public class ServicePersonStoreDetailsController {
 
     @Autowired
     private ServicePersonStoreDetailsService spStoreDetailsService;
 
-    @Autowired
-    private AdminStoreVerificationRepository adminStoreVerificationRepository;
-
+    @PreAuthorize("hasAuthority('Developer')")
     @PostMapping("/sp-add-stores")
     public ResponseEntity<?> addSPStores(@RequestBody List<ServicePersonStoreDetailsEntity> stores) {
         ResponseSPStoreDto response = new ResponseSPStoreDto();
@@ -58,81 +57,7 @@ public class ServicePersonStoreDetailsController {
         }
     }
 
-    @PostMapping("/sp-store-verification-status")
-    public ResponseEntity<?> verifyStore(@RequestBody Map<String, String> requestBody) {
-        String bodSeqNoStoreId = requestBody.get("bodSeqNoStoreId");
-        ResponseSPStoreDto response = new ResponseSPStoreDto();
-
-        try {
-
-            Optional<ServicePersonStoreDetailsEntity> storeOptional = spStoreDetailsService
-                    .findStoreById(bodSeqNoStoreId);
-            if (storeOptional.isPresent()) {
-                ServicePersonStoreDetailsEntity store = storeOptional.get();
-
-                Optional<AdminStoreVerificationEntity> adminVerification = adminStoreVerificationRepository
-                        .findByBodSeqNoStoreId(bodSeqNoStoreId);
-
-                if (adminVerification.isPresent()) {
-                    String verificationStatus = adminVerification.get().getVerificationStatus();
-
-                    if ("verified".equals(verificationStatus)) {
-                        store.setVerificationStatus("verified");
-
-                        spStoreDetailsService.verifyStore(store);
-
-                        store = spStoreDetailsService.findStoreById(bodSeqNoStoreId).orElse(null);
-
-                        if (store != null && "verified".equalsIgnoreCase(store.getVerificationStatus())) {
-                            response.setMessage("Store verified and updated successfully.");
-                            response.setStatus(true);
-                            response.setData(store);
-                            log.info("Store verified and expiry date set for bodSeqNoStoreId: {}", bodSeqNoStoreId);
-                            return new ResponseEntity<>(response, HttpStatus.OK);
-                        } else {
-                            log.warn("Failed to update store verification status for bodSeqNoStoreId: {}",
-                                    bodSeqNoStoreId);
-                            response.setMessage("Store verification update failed.");
-                            response.setStatus(false);
-                            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-                        }
-                    } else {
-
-                        store.setVerificationStatus(verificationStatus);
-                        store.setStoreExpiryDate(null);
-
-                        spStoreDetailsService.verifyStore(store);
-                        response.setMessage("Store verification status updated to: " + verificationStatus);
-                        response.setStatus(true);
-                        response.setData(store);
-                        log.info("Store verification status updated to {} for bodSeqNoStoreId: {}",
-                                verificationStatus, bodSeqNoStoreId);
-                        return new ResponseEntity<>(response, HttpStatus.OK);
-                    }
-                } else {
-
-                    response.setMessage(
-                            "Admin will update verification status through mail for store " + bodSeqNoStoreId);
-                    response.setStatus(false);
-                    log.warn("Admin will update status through mail for store {}", bodSeqNoStoreId);
-                    return new ResponseEntity<>(response, HttpStatus.OK);
-                }
-            } else {
-
-                response.setMessage("Store not found for bodSeqNoStoreId: " + bodSeqNoStoreId);
-                response.setStatus(false);
-                log.warn("No store found for verification with bodSeqNoStoreId: {}", bodSeqNoStoreId);
-                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-            }
-        } catch (Exception e) {
-
-            log.error("Error during store verification: {}", e.getMessage());
-            response.setMessage("Store verification failed. Please try again later.");
-            response.setStatus(false);
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
+    @PreAuthorize("hasAuthority('Developer')")
     @PutMapping("/sp-update-store")
     public ResponseEntity<?> updateSPStore(@RequestBody ServicePersonStoreDetailsEntity spStore) {
         ResponseSPStoreDto response = new ResponseSPStoreDto();
@@ -158,19 +83,30 @@ public class ServicePersonStoreDetailsController {
         }
     }
 
-    @PreAuthorize("hasAnyAuthority('Adm', 'Developer')")
     @GetMapping("/get-sp-store-details")
     public ResponseEntity<ResponseGetSPStoreDto<ServicePersonStoreDetailsEntity>> getSPStoreDetails(
             @RequestParam(required = false) String bodSeqNo,
             @RequestParam(required = false) String storeId,
             @RequestParam(required = false) String bodSeqNoStoreId,
-            @RequestParam(required = false) Date storeExpiryDate,
+            @RequestParam(required = false) LocalDate storeExpiryDate,
             @RequestParam(required = false) String storeCurrentPlan,
             @RequestParam(required = false) String verificationStatus,
             @RequestParam(required = false) String location,
             @RequestParam(required = false) String gst,
             @RequestParam(required = false) String tradeLicense,
             @RequestParam(required = false) String updatedBy) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+
+        boolean isEC = authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_EC"));
+        if (isEC) {
+            ResponseGetSPStoreDto<ServicePersonStoreDetailsEntity> response = new ResponseGetSPStoreDto<>();
+            response.setMessage("Customer has no access to this Resource.");
+            response.setStatus(false);
+            response.setData(null);
+            return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+        }
 
         ResponseGetSPStoreDto<ServicePersonStoreDetailsEntity> response = new ResponseGetSPStoreDto<>();
         try {
@@ -200,6 +136,7 @@ public class ServicePersonStoreDetailsController {
         }
     }
 
+    @PreAuthorize("hasAuthority('Developer')")
     @DeleteMapping("/delete-sp-store")
     public ResponseEntity<ResponseDeleteSPStoreDto> deleteSPStoreDetailsById(
             @RequestParam(required = false) String bodSeqNoStoreId,
@@ -237,6 +174,7 @@ public class ServicePersonStoreDetailsController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('Developer')")
     @GetMapping("/search-sp-storeByLocation")
     public ResponseEntity<ResponseGetSPStoreDto<ServicePersonStoreResponse>> getDataBy(
             @RequestParam(required = false) String location) {

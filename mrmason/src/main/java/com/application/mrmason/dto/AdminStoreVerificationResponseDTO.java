@@ -18,8 +18,9 @@ public class AdminStoreVerificationResponseDTO {
     private String verificationStatus;
     private String verificationComment;
     private String updatedBy;
+    private String storeExpiryDate;
+    private String storeCurrentPlan;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd, HH:mm:ss", timezone = "Asia/Kolkata")
     private Timestamp updatedDate;
-    private String defaultPlan;
     private AdminMembershipPlanEntity defaultPlanData;
 }

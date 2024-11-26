@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,16 +23,15 @@ public class AdminStoreVerificationController {
 
     @Autowired
     private AdminStoreVerificationService verificationService;
+    @PutMapping("/admin_store_verification")
+    public ResponseEntity<AdminStoreVerificationResponse<List<AdminStoreVerificationResponseDTO>>> verifyStores(
+            @RequestBody List<AdminStoreVerificationRequestDTO> requestDTOs) {
 
-    @PostMapping("/admin_store_verification")
-    public ResponseEntity<AdminStoreVerificationResponse<AdminStoreVerificationResponseDTO>> verifyStore(
-            @RequestBody AdminStoreVerificationRequestDTO requestDTO) {
+        List<AdminStoreVerificationResponseDTO> responseDTOs = verificationService.verifyStores(requestDTOs);
 
-        AdminStoreVerificationResponseDTO responseDTO = verificationService.verifyStore(requestDTO);
-        AdminStoreVerificationResponse<AdminStoreVerificationResponseDTO> response = new AdminStoreVerificationResponse<>(
-                "Store verification updated successfully", "SUCCESS", responseDTO);
-
-        return ResponseEntity.ok(response);
+        AdminStoreVerificationResponse<List<AdminStoreVerificationResponseDTO>> response = new AdminStoreVerificationResponse<>(
+                "Store verifications updated successfully", "SUCCESS", responseDTOs);
+                 return ResponseEntity.ok(response);
     }
 
     @GetMapping("/get_stores_verification_status")

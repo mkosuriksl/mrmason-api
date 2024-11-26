@@ -1,6 +1,6 @@
 package com.application.mrmason.repository;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,7 +29,7 @@ public interface ServicePersonStoreDetailsRepo extends JpaRepository<ServicePers
             @Param("bodSeqNo") String bodSeqNo,
             @Param("storeId") String storeId,
             @Param("bodSeqNoStoreId") String bodSeqNoStoreId,
-            @Param("storeExpiryDate") Date storeExpiryDate,
+            @Param("storeExpiryDate") LocalDate storeExpiryDate,
             @Param("storeCurrentPlan") String storeCurrentPlan,
             @Param("verificationStatus") String verificationStatus,
             @Param("location") String location,

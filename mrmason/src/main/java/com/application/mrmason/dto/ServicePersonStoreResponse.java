@@ -1,7 +1,7 @@
 package com.application.mrmason.dto;
 
 import java.sql.Timestamp;
-import java.util.Date;
+import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -20,7 +20,7 @@ public class ServicePersonStoreResponse {
 	private String spUserIdStoreId;
 
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd, HH:mm:ss")
-	private Date storeExpiryDate;
+	private LocalDate storeExpiryDate;
 
 	private String storeCurrentPlan;
 

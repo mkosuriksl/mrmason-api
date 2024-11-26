@@ -12,6 +12,7 @@ import com.application.mrmason.repository.AdminStoreVerificationRepository;
 import com.application.mrmason.repository.ServicePersonStoreDetailsRepo;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.AdminStoreVerificationService;
+import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -43,88 +46,121 @@ public class AdminStoreVerificationServiceImpl implements AdminStoreVerification
     private EmailServiceImpl emailService;
 
     @Override
-    public AdminStoreVerificationResponseDTO verifyStore(AdminStoreVerificationRequestDTO requestDTO) {
+    @Transactional
+    public List<AdminStoreVerificationResponseDTO> verifyStores(List<AdminStoreVerificationRequestDTO> requestDTOs) {
+        List<AdminStoreVerificationResponseDTO> responseList = new ArrayList<>();
 
-        Optional<ServicePersonStoreDetailsEntity> storeDetails = spStoreDetailsRepository
-                .findByBodSeqNoStoreId(requestDTO.getBodSeqNoStoreId());
+        for (AdminStoreVerificationRequestDTO storeDetails : requestDTOs) {
+            Optional<ServicePersonStoreDetailsEntity> storeOpt = spStoreDetailsRepository
+                    .findByBodSeqNoStoreId(storeDetails.getBodSeqNoStoreId());
 
-        if (storeDetails.isEmpty()) {
-            throw new EntityNotFoundException("Store not found");
-        }
+            if (storeOpt.isPresent()) {
+                ServicePersonStoreDetailsEntity store = storeOpt.get();
 
-        User user = userDAO.findByBodSeqNo(requestDTO.getBodSeqNo());
-        if (user == null) {
-            throw new EntityNotFoundException("User not found for the given Service person");
-        }
+                User user = userDAO.findByBodSeqNo(storeDetails.getBodSeqNo());
+                if (user == null) {
+                    throw new EntityNotFoundException("User not found for bodSeqNo: " + storeDetails.getBodSeqNo());
+                }
 
-        AdminMembershipPlanEntity planEntity = null;
+                AdminMembershipPlanEntity planEntity = null;
+                LocalDate storeExpiryDate = null;
+                String storeCurrentPlan = null;
 
-        if (requestDTO.getDefaultPlan() != null && !requestDTO.getDefaultPlan().isEmpty()) {
-            Optional<AdminMembershipPlanEntity> planEntities = adminmemPlanRepository
-                    .findByDefaultPlan(requestDTO.getDefaultPlan());
+                if ("Verified".equalsIgnoreCase(storeDetails.getVerificationStatus())) {
 
-            if (planEntities.isPresent()) {
-                planEntity = planEntities.get();
-                log.info("Plan found for store {}: {}", requestDTO.getStoreId(), planEntity.getPlanName());
+                    Optional<AdminMembershipPlanEntity> planOpt = adminmemPlanRepository
+                            .findBySpecificDefaultPlan(storeDetails.getDefaultPlan());
+
+                    if (planOpt.isEmpty()) {
+
+                        planOpt = adminmemPlanRepository.findFirstNonNullDefaultPlan();
+                    }
+
+                    if (planOpt.isPresent()) {
+                        planEntity = planOpt.get();
+                        log.info("Plan found for store {}: {}", storeDetails.getStoreId(),
+                                planEntity.getMembershipPlanId());
+
+                        int daysValid = planEntity.getNoOfDaysValid();
+                        storeExpiryDate = LocalDate.now().plusDays(daysValid);
+                        storeCurrentPlan = planEntity.getMembershipPlanId();
+
+                        store.setStoreExpiryDate(storeExpiryDate);
+                        store.setStoreCurrentPlan(storeCurrentPlan);
+                        store.setVerificationStatus(storeDetails.getVerificationStatus());
+                        spStoreDetailsRepository.save(store);
+
+                        log.info("Store details updated for bodSeqNoStoreId: {}", storeDetails.getBodSeqNoStoreId());
+                    } else {
+                        log.warn("No membership plan found for default plan: {}", storeDetails.getDefaultPlan());
+                    }
+                } else {
+
+                    store.setStoreExpiryDate(null);
+                    store.setStoreCurrentPlan(null);
+                    store.setVerificationStatus(storeDetails.getVerificationStatus());
+                    spStoreDetailsRepository.save(store);
+
+                    log.info("Store details reset for bodSeqNoStoreId: {}, status changed to: {}",
+                            storeDetails.getBodSeqNoStoreId(), storeDetails.getVerificationStatus());
+                }
+
+                Optional<AdminStoreVerificationEntity> existingVerification = repository
+                        .findByBodSeqNoStoreId(storeDetails.getBodSeqNoStoreId());
+                AdminStoreVerificationEntity verification = existingVerification.orElseGet(() -> {
+                    log.info("Creating new store verification for bodSeqNoStoreId: {}",
+                            storeDetails.getBodSeqNoStoreId());
+                    AdminStoreVerificationEntity newVerification = new AdminStoreVerificationEntity();
+                    newVerification.setBodSeqNoStoreId(storeDetails.getBodSeqNoStoreId());
+                    return newVerification;
+                });
+
+                verification.setStoreId(storeDetails.getStoreId());
+                verification.setBodSeqNo(storeDetails.getBodSeqNo());
+                verification.setVerificationStatus(storeDetails.getVerificationStatus());
+                verification.setVerificationComment(storeDetails.getVerificationComment());
+                verification.setUpdatedBy(storeDetails.getUpdatedBy());
+
+                AdminStoreVerificationEntity savedVerification = repository.save(verification);
+                log.info("Store verification saved for bodSeqNoStoreId: {}", savedVerification.getBodSeqNoStoreId());
+
+                String email = user.getEmail();
+                if (email != null && !email.isEmpty()) {
+                    String subject = "Store Verification Status Updated";
+                    String body = String.format(
+                            "<html><body>" +
+                                    "<h3>Hello %s,</h3>" +
+                                    "<p>Your store verification status has been updated to: <b>%s</b>.</p>" +
+                                    "<b>Description:</b> %s" +
+                                    "<p>Visit <a href='https://www.mekanik.in'>www.mekanik.in</a> for more details.</p>"
+                                    +
+                                    "<p>Best regards,<br/>The Mekanik Team</p>" +
+                                    "</body></html>",
+                            user.getName(), storeDetails.getVerificationStatus(),
+                            storeDetails.getVerificationComment());
+
+                    try {
+                        emailService.sendEmail(email, subject, body);
+                        log.info("Verification status email sent to: {}", email);
+                    } catch (Exception e) {
+                        log.error("Failed to send email notification: {}", e.getMessage(), e);
+                    }
+                }
+
+                AdminStoreVerificationResponseDTO responseDTO = new AdminStoreVerificationResponseDTO();
+                BeanUtils.copyProperties(savedVerification, responseDTO);
+                responseDTO.setDefaultPlanData(planEntity);
+                responseDTO.setStoreExpiryDate(storeExpiryDate != null ? storeExpiryDate.toString() : "");
+                responseDTO.setStoreCurrentPlan(storeCurrentPlan);
+
+                responseList.add(responseDTO);
+
             } else {
-                log.warn("No membership plan found for the given default plan");
-            }
-        } else {
-            log.info("Default plan not provided; defaultPlanData will be null");
-        }
-
-        Optional<AdminStoreVerificationEntity> existingVerification = repository
-                .findByBodSeqNoStoreId(requestDTO.getBodSeqNoStoreId());
-
-        AdminStoreVerificationEntity verification;
-        if (existingVerification.isPresent()) {
-
-            verification = existingVerification.get();
-            log.info("Updating existing store verification for bodSeqNoStoreId: {}", requestDTO.getBodSeqNoStoreId());
-        } else {
-
-            verification = new AdminStoreVerificationEntity();
-            verification.setBodSeqNoStoreId(requestDTO.getBodSeqNoStoreId());
-            log.info("Creating new store verification for bodSeqNoStoreId: {}", requestDTO.getBodSeqNoStoreId());
-        }
-
-        verification.setStoreId(requestDTO.getStoreId());
-        verification.setBodSeqNo(requestDTO.getBodSeqNo());
-        verification.setDefaultPlan(requestDTO.getDefaultPlan());
-        verification.setVerificationStatus(requestDTO.getVerificationStatus());
-        verification.setVerificationComment(requestDTO.getVerificationComment());
-        verification.setUpdatedBy(requestDTO.getUpdatedBy());
-
-        AdminStoreVerificationEntity savedVerification = repository.save(verification);
-        log.info("Store verification saved with bodSeqNoStoreId: {}", savedVerification.getBodSeqNoStoreId());
-
-        String email = user.getEmail();
-        if (email != null && !email.isEmpty()) {
-            String subject = "Store Verification Status Updated";
-            String body = String.format(
-                    "<html><body>" +
-                            "<h3>Hello %s,</h3>" +
-                            "<p>Your store verification status has been updated to: <b>%s</b>.</p>" +
-                            "<b>Description:</b> %s" +
-                            "<p>Visit <a href='https://www.mekanik.in'>www.mekanik.in</a> for more details.</p>" +
-                            "<p>Best regards,<br/>The Mekanik Team</p>" +
-                            "</body></html>",
-                    user.getName(), requestDTO.getVerificationStatus(), requestDTO.getVerificationComment());
-
-            try {
-                emailService.sendEmail(email, subject, body);
-                log.info("Verification status email sent to: {}", email);
-            } catch (Exception e) {
-                log.error("Failed to send email notification: {}", e.getMessage(), e);
+                log.warn("Store not found for bodSeqNoStoreId: {}", storeDetails.getBodSeqNoStoreId());
             }
         }
 
-        AdminStoreVerificationResponseDTO responseDTO = new AdminStoreVerificationResponseDTO();
-        BeanUtils.copyProperties(savedVerification, responseDTO);
-
-        responseDTO.setDefaultPlanData(planEntity);
-
-        return responseDTO;
+        return responseList;
     }
 
     public AdminStoreVerificationResponse<List<AdminStoreVerificationResponseDTO>> getVerificationsByParams(

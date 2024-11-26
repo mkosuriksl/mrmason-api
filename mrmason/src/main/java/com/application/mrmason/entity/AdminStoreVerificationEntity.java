@@ -37,9 +37,6 @@ public class AdminStoreVerificationEntity {
     @Column(name = "verification_status")
     private String verificationStatus;
 
-    @Column(name = "default_plan")
-    private String defaultPlan;
-
     @Column(name = "verification_comment")
     private String verificationComment;
 

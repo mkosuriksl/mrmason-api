@@ -1,8 +1,8 @@
 package com.application.mrmason.entity;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -32,8 +32,8 @@ public class ServicePersonStoreDetailsEntity {
     private String storeId;
 
     @Column(name = "store_expiry_date")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd, HH:mm:ss")
-    private Date storeExpiryDate;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate storeExpiryDate;
 
     @Column(name = "store_current_plan", length = 20)
     private String storeCurrentPlan;

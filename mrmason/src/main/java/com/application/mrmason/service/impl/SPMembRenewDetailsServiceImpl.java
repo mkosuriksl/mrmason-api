@@ -54,7 +54,7 @@ public class SPMembRenewDetailsServiceImpl implements SPMembRenewDetailsService 
         ResponseSPMembRenewalDetailsDto response = new ResponseSPMembRenewalDetailsDto();
 
         try {
-           
+
             String generatedOrderId = generateOrderId();
             int totalOrderAmount = 0;
 
@@ -216,8 +216,15 @@ public class SPMembRenewDetailsServiceImpl implements SPMembRenewDetailsService 
 
     private String generateOrderId() {
         LocalDateTime now = LocalDateTime.now();
-        return "MEM" + now.getYear() + now.getMonthValue() + now.getDayOfMonth()
-                + now.getHour() + now.getMinute() + now.getSecond();
+
+        String year = String.format("%04d", now.getYear());
+        String month = String.format("%02d", now.getMonthValue());
+        String day = String.format("%02d", now.getDayOfMonth());
+        String hour = String.format("%02d", now.getHour());
+        String minute = String.format("%02d", now.getMinute());
+        String second = String.format("%02d", now.getSecond());
+
+        return "MEM" + year + month + day + hour + minute + second;
     }
 
     private String generateLineId(String generatedOrderId, int lineCounter) {

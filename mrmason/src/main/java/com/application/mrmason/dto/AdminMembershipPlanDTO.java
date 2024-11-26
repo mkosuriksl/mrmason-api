@@ -15,12 +15,12 @@ public class AdminMembershipPlanDTO {
 
     private String membershipPlanId;
     private int amount;
-    private String noOfDaysValid;
+    private int noOfDaysValid;
     private String planName;
     private String status;
     private String defaultPlan;
     private String updatedBy;
-     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd, HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd, HH:mm:ss")
     private LocalDateTime updatedDate;
 
 }

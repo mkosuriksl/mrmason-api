@@ -28,6 +28,12 @@ public interface AdminMembershipPlanRepository extends JpaRepository<AdminMember
                         @Param("status") String status,
                         @Param("updatedBy") String updatedBy);
 
+        @Query("SELECT p FROM AdminMembershipPlanEntity p WHERE p.defaultPlan = :defaultPlan")
+        Optional<AdminMembershipPlanEntity> findBySpecificDefaultPlan(@Param("defaultPlan") String defaultPlan);
+
+        @Query("SELECT p FROM AdminMembershipPlanEntity p WHERE p.defaultPlan IS NOT NULL")
+        Optional<AdminMembershipPlanEntity> findFirstNonNullDefaultPlan();
+
         Optional<AdminMembershipPlanEntity> findByDefaultPlan(String defaultPlan);
 
 }

@@ -25,7 +25,7 @@ public class AdminMembershipPlanEntity {
     private int amount;
 
     @Column(name = "no_of_days_valid", length = 10)
-    private String noOfDaysValid;
+    private int noOfDaysValid;
 
     @Column(name = "plan_name", length = 20)
     private String planName;

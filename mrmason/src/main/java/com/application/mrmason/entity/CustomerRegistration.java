@@ -66,6 +66,10 @@ public class CustomerRegistration implements UserDetails {
 	@Column(name = "regdate")
 	private String regDate;
 
+	public String getCustomerName() {
+		return this.userName;
+	}
+	
 
 	@PrePersist
 	private void prePersist() {

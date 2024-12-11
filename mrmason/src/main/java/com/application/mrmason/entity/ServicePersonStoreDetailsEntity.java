@@ -2,6 +2,7 @@ package com.application.mrmason.entity;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -15,20 +16,30 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "sp_store_details")
+@Table(name = "user_store_details")
 @Getter
 @Setter
 public class ServicePersonStoreDetailsEntity {
 
     @Id
     @Column(name = "sp_userid_store_id", length = 50)
-    private String spUserIdStoreId;
+    private String bodSeqNoStoreId;
 
     @Column(name = "sp_userid", length = 50, nullable = false)
-    private String spUserId;
+    private String bodSeqNo;
 
     @Column(name = "store_id", length = 50)
     private String storeId;
+
+    @Column(name = "store_expiry_date")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd, HH:mm:ss")
+    private Date storeExpiryDate;
+
+    @Column(name = "store_current_plan", length = 20)
+    private String storeCurrentPlan;
+
+    @Column(name = "verification_status", length = 50)
+    private String verificationStatus;
 
     @Column(name = "location", length = 100)
     private String location;
@@ -46,14 +57,14 @@ public class ServicePersonStoreDetailsEntity {
     private String updatedBy;
 
     @Column(name = "updated_date")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd, HH:mm:ss.SSSXXX", timezone = "Asia/Kolkata")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd, HH:mm:ss")
     private Timestamp updatedDate;
 
     @PrePersist
     @PreUpdate
     private void prePersistOrUpdate() {
-        if (this.spUserIdStoreId == null && spUserId != null && storeId != null) {
-            this.spUserIdStoreId = spUserId + "_" + storeId;
+        if (this.bodSeqNoStoreId == null && bodSeqNo != null && storeId != null) {
+            this.bodSeqNoStoreId = bodSeqNo + "_" + storeId;
 
         }
         this.updatedDate = Timestamp.valueOf(LocalDateTime.now());

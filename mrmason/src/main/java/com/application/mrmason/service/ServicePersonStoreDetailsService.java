@@ -1,21 +1,27 @@
 package com.application.mrmason.service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 import com.application.mrmason.dto.ResponseDeleteSPStoreDto;
+import com.application.mrmason.dto.ResponseSPStoreDto;
 import com.application.mrmason.dto.ServicePersonStoreResponse;
 import com.application.mrmason.entity.ServicePersonStoreDetailsEntity;
 
 public interface ServicePersonStoreDetailsService {
 
-    ServicePersonStoreDetailsEntity addStore(ServicePersonStoreDetailsEntity store);
+    List<ServicePersonStoreDetailsEntity> addStores(List<ServicePersonStoreDetailsEntity> stores);
 
-    public List<ServicePersonStoreDetailsEntity> getSPStoreDetails(String spUserId, String storeId,
-            String spUserIdStoreId, String location, String gst,
-            String tradeLicense, String updatedBy);
+    ResponseSPStoreDto verifyStore(ServicePersonStoreDetailsEntity store);
 
-    ResponseDeleteSPStoreDto deleteSPStoreDetailsById(String spUserIdStoreId);
+    List<ServicePersonStoreDetailsEntity> getSPStoreDetails(String bodSeqNo, String storeId,
+            String bodSeqNoStoreId, Date storeExpiryDate,
+            String storeCurrentPlan, String verificationStatus,
+            String location, String gst, String tradeLicense,
+            String updatedBy);
+
+    ResponseDeleteSPStoreDto deleteSPStoreDetailsById(String bodSeqNoStoreId);
 
     List<ServicePersonStoreResponse> getDataBy(String location);
 
@@ -23,6 +29,6 @@ public interface ServicePersonStoreDetailsService {
 
     Optional<ServicePersonStoreDetailsEntity> findStoreByStoreId(String storeId);
 
-    Optional<ServicePersonStoreDetailsEntity> findStoreById(String spUserIdStoreId);
+    Optional<ServicePersonStoreDetailsEntity> findStoreById(String bodSeqNoStoreId);
 
 }

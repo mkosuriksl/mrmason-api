@@ -1,6 +1,7 @@
 package com.application.mrmason.dto;
 
 import java.sql.Timestamp;
+import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -18,6 +19,13 @@ public class ServicePersonStoreResponse {
 
 	private String spUserIdStoreId;
 
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd, HH:mm:ss")
+	private Date storeExpiryDate;
+
+	private String storeCurrentPlan;
+
+	private String verificationStatus;
+
 	private String location;
 
 	private String gst;
@@ -28,6 +36,6 @@ public class ServicePersonStoreResponse {
 
 	private String updatedBy;
 
-	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd, HH:mm:ss.SSSXXX", timezone = "Asia/Kolkata")
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd, HH:mm:ss")
 	private Timestamp updatedDate;
 }

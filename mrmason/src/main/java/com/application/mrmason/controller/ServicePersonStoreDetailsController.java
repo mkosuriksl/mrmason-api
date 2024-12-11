@@ -1,6 +1,8 @@
 package com.application.mrmason.controller;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +21,9 @@ import com.application.mrmason.dto.ResponseDeleteSPStoreDto;
 import com.application.mrmason.dto.ResponseSPStoreDto;
 import com.application.mrmason.dto.ResponseGetSPStoreDto;
 import com.application.mrmason.dto.ServicePersonStoreResponse;
+import com.application.mrmason.entity.AdminStoreVerificationEntity;
 import com.application.mrmason.entity.ServicePersonStoreDetailsEntity;
+import com.application.mrmason.repository.AdminStoreVerificationRepository;
 import com.application.mrmason.service.ServicePersonStoreDetailsService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -32,29 +36,99 @@ public class ServicePersonStoreDetailsController {
     @Autowired
     private ServicePersonStoreDetailsService spStoreDetailsService;
 
-    @PostMapping("/sp-add-store")
-    public ResponseEntity<?> addSPStore(@RequestBody ServicePersonStoreDetailsEntity store) {
+    @Autowired
+    private AdminStoreVerificationRepository adminStoreVerificationRepository;
+
+    @PostMapping("/sp-add-stores")
+    public ResponseEntity<?> addSPStores(@RequestBody List<ServicePersonStoreDetailsEntity> stores) {
         ResponseSPStoreDto response = new ResponseSPStoreDto();
         try {
-            ServicePersonStoreDetailsEntity spStore = spStoreDetailsService.addStore(store);
-            if (spStore != null) {
-                response.setMessage("Service Person Store details added successfully");
-                response.setStatus(true);
-                response.setData(spStore);
-                log.info("Added SP Store successfully for store ID: {}", spStore.getStoreId());
-                return new ResponseEntity<>(response, HttpStatus.OK);
+            List<ServicePersonStoreDetailsEntity> spStores = spStoreDetailsService.addStores(stores);
+            response.setMessage("Service Person Stores added successfully");
+            response.setStatus(true);
+            response.setStoresList(spStores);
+            log.info("Added SP Stores successfully.");
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            response.setMessage("An error occurred while adding stores");
+            response.setStatus(false);
+            response.setStoresList(null);
+            log.error("Failed to add SP Stores: {}", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("/sp-store-verification-status")
+    public ResponseEntity<?> verifyStore(@RequestBody Map<String, String> requestBody) {
+        String bodSeqNoStoreId = requestBody.get("bodSeqNoStoreId");
+        ResponseSPStoreDto response = new ResponseSPStoreDto();
+
+        try {
+
+            Optional<ServicePersonStoreDetailsEntity> storeOptional = spStoreDetailsService
+                    .findStoreById(bodSeqNoStoreId);
+            if (storeOptional.isPresent()) {
+                ServicePersonStoreDetailsEntity store = storeOptional.get();
+
+                Optional<AdminStoreVerificationEntity> adminVerification = adminStoreVerificationRepository
+                        .findByBodSeqNoStoreId(bodSeqNoStoreId);
+
+                if (adminVerification.isPresent()) {
+                    String verificationStatus = adminVerification.get().getVerificationStatus();
+
+                    if ("verified".equals(verificationStatus)) {
+                        store.setVerificationStatus("verified");
+
+                        spStoreDetailsService.verifyStore(store);
+
+                        store = spStoreDetailsService.findStoreById(bodSeqNoStoreId).orElse(null);
+
+                        if (store != null && "verified".equalsIgnoreCase(store.getVerificationStatus())) {
+                            response.setMessage("Store verified and updated successfully.");
+                            response.setStatus(true);
+                            response.setData(store);
+                            log.info("Store verified and expiry date set for bodSeqNoStoreId: {}", bodSeqNoStoreId);
+                            return new ResponseEntity<>(response, HttpStatus.OK);
+                        } else {
+                            log.warn("Failed to update store verification status for bodSeqNoStoreId: {}",
+                                    bodSeqNoStoreId);
+                            response.setMessage("Store verification update failed.");
+                            response.setStatus(false);
+                            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+                        }
+                    } else {
+
+                        store.setVerificationStatus(verificationStatus);
+                        store.setStoreExpiryDate(null);
+
+                        spStoreDetailsService.verifyStore(store);
+                        response.setMessage("Store verification status updated to: " + verificationStatus);
+                        response.setStatus(true);
+                        response.setData(store);
+                        log.info("Store verification status updated to {} for bodSeqNoStoreId: {}",
+                                verificationStatus, bodSeqNoStoreId);
+                        return new ResponseEntity<>(response, HttpStatus.OK);
+                    }
+                } else {
+
+                    response.setMessage(
+                            "Admin will update verification status through mail for store " + bodSeqNoStoreId);
+                    response.setStatus(false);
+                    log.warn("Admin will update status through mail for store {}", bodSeqNoStoreId);
+                    return new ResponseEntity<>(response, HttpStatus.OK);
+                }
             } else {
-                response.setMessage("Store already exists or Service Person not present");
+
+                response.setMessage("Store not found for bodSeqNoStoreId: " + bodSeqNoStoreId);
                 response.setStatus(false);
-                response.setData(null);
-                log.warn("Store already exists or Service Person not present, unable to add store.");
-                return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+                log.warn("No store found for verification with bodSeqNoStoreId: {}", bodSeqNoStoreId);
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
             }
         } catch (Exception e) {
-            response.setMessage("An error occurred while adding store");
+
+            log.error("Error during store verification: {}", e.getMessage());
+            response.setMessage("Store verification failed. Please try again later.");
             response.setStatus(false);
-            response.setData(null);
-            log.error("Failed to add SP Store: {}", e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -73,7 +147,7 @@ public class ServicePersonStoreDetailsController {
             } else {
                 response.setMessage("Failed to update/Please check your sp_userid_store_id");
                 response.setStatus(false);
-                log.warn("Update failed, SP store with ID {} not found.", spStore.getSpUserIdStoreId());
+                log.warn("Update failed, SP store with ID {} not found.", spStore.getBodSeqNoStoreId());
                 return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
             }
         } catch (Exception e) {
@@ -84,11 +158,15 @@ public class ServicePersonStoreDetailsController {
         }
     }
 
+    @PreAuthorize("hasAnyAuthority('Adm', 'Developer')")
     @GetMapping("/get-sp-store-details")
     public ResponseEntity<ResponseGetSPStoreDto<ServicePersonStoreDetailsEntity>> getSPStoreDetails(
-            @RequestParam(required = false) String spUserId,
+            @RequestParam(required = false) String bodSeqNo,
             @RequestParam(required = false) String storeId,
-            @RequestParam(required = false) String spUserIdStoreId,
+            @RequestParam(required = false) String bodSeqNoStoreId,
+            @RequestParam(required = false) Date storeExpiryDate,
+            @RequestParam(required = false) String storeCurrentPlan,
+            @RequestParam(required = false) String verificationStatus,
             @RequestParam(required = false) String location,
             @RequestParam(required = false) String gst,
             @RequestParam(required = false) String tradeLicense,
@@ -96,8 +174,9 @@ public class ServicePersonStoreDetailsController {
 
         ResponseGetSPStoreDto<ServicePersonStoreDetailsEntity> response = new ResponseGetSPStoreDto<>();
         try {
-            List<ServicePersonStoreDetailsEntity> spStoreDetails = spStoreDetailsService.getSPStoreDetails(
-                    spUserId, storeId, spUserIdStoreId, location, gst, tradeLicense, updatedBy);
+            List<ServicePersonStoreDetailsEntity> spStoreDetails = spStoreDetailsService.getSPStoreDetails(bodSeqNo,
+                    storeId, bodSeqNoStoreId, storeExpiryDate,
+                    storeCurrentPlan, verificationStatus, location, gst, tradeLicense, updatedBy);
 
             if (spStoreDetails != null && !spStoreDetails.isEmpty()) {
                 response.setMessage("Found Service Person store details ");
@@ -123,26 +202,27 @@ public class ServicePersonStoreDetailsController {
 
     @DeleteMapping("/delete-sp-store")
     public ResponseEntity<ResponseDeleteSPStoreDto> deleteSPStoreDetailsById(
-            @RequestParam(required = false) String spUserIdStoreId,
+            @RequestParam(required = false) String bodSeqNoStoreId,
             @RequestParam(required = false) String storeId) {
 
         ResponseDeleteSPStoreDto response;
 
-        if (spUserIdStoreId != null) {
-            Optional<ServicePersonStoreDetailsEntity> storeToDelete = spStoreDetailsService.findStoreById(spUserIdStoreId);
+        if (bodSeqNoStoreId != null) {
+            Optional<ServicePersonStoreDetailsEntity> storeToDelete = spStoreDetailsService
+                    .findStoreById(bodSeqNoStoreId);
             if (storeToDelete.isPresent()) {
-                spStoreDetailsService.deleteSPStoreDetailsById(spUserIdStoreId);
-                log.info("Deleted SP store details for spUserIdStoreId: {}", spUserIdStoreId);
-                response = new ResponseDeleteSPStoreDto("Data deleted successfully for spUserIdStoreId", true,
+                spStoreDetailsService.deleteSPStoreDetailsById(bodSeqNoStoreId);
+                log.info("Deleted SP store details for   bodSeqNoStoreId: {}", bodSeqNoStoreId);
+                response = new ResponseDeleteSPStoreDto("Data deleted successfully for   bodSeqNoStoreId", true,
                         List.of(storeToDelete.get()));
             } else {
-                response = new ResponseDeleteSPStoreDto("No store found to delete for spUserIdStoreId", false,
+                response = new ResponseDeleteSPStoreDto("No store found to delete for   bodSeqNoStoreId", false,
                         List.of());
             }
         } else if (storeId != null) {
             Optional<ServicePersonStoreDetailsEntity> storeToDelete = spStoreDetailsService.findStoreByStoreId(storeId);
             if (storeToDelete.isPresent()) {
-                spStoreDetailsService.deleteSPStoreDetailsById(storeToDelete.get().getSpUserIdStoreId());
+                spStoreDetailsService.deleteSPStoreDetailsById(storeToDelete.get().getBodSeqNoStoreId());
                 log.info("Deleted SP store details for storeId: {}", storeId);
                 response = new ResponseDeleteSPStoreDto("Data deleted successfully for storeId", true,
                         List.of(storeToDelete.get()));
@@ -150,7 +230,7 @@ public class ServicePersonStoreDetailsController {
                 response = new ResponseDeleteSPStoreDto("No store found to delete for storeId", false, List.of());
             }
         } else {
-            response = new ResponseDeleteSPStoreDto("Please provide either spUserIdStoreId or storeId.", false,
+            response = new ResponseDeleteSPStoreDto("Please provide either   bodSeqNoStoreId or storeId.", false,
                     List.of());
         }
 

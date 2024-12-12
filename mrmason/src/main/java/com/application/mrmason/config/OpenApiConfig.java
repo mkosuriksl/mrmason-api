@@ -30,11 +30,8 @@ import io.swagger.v3.oas.annotations.servers.Server;
                 @Server(
                         description = "Local ENV",
                         url = "http://localhost:443"
-                ),
-                @Server(
-                        description = "PROD ENV",
-                        url = "https://javaapi.mrmason.in"
                 )
+                
         },
         security = {
                 @SecurityRequirement(
@@ -52,4 +49,3 @@ import io.swagger.v3.oas.annotations.servers.Server;
 )
 public class OpenApiConfig {
 }
-

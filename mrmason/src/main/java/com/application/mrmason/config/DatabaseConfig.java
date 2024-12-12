@@ -1,6 +1,6 @@
 package com.application.mrmason.config;
 
-import org.springframework.beans.factory.annotation.Value;
+/*import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -16,10 +16,10 @@ public class DatabaseConfig {
     private String driverClass;
 
     @Value("${spring.datasource.username}")
-    private String encryptedUsername;
+    private static String encryptedUsername;
 
     @Value("${spring.datasource.password}")
-    private String encryptedPassword;
+    private static String encryptedPassword;
 
     @Bean
     public DriverManagerDataSource dataSource() throws Exception {
@@ -34,4 +34,5 @@ public class DatabaseConfig {
         dataSource.setPassword(decryptedPassword);
         return dataSource;
     }
-}
+    
+}*/

@@ -420,7 +420,7 @@ public class UserService {
 	    }
 
 	    // Retrieve service person login details by email or mobile and registration source
-	    Optional<ServicePersonLogin> servicePersonLogin = 
+	    ServicePersonLogin servicePersonLogin = 
 	        emailLoginRepo.findByEmailOrMobileAndRegSource(user.getEmail(), user.getRegSource());
 
 	    // Create and save a record in DeleteUser for tracking the deletion reason and date
@@ -432,10 +432,10 @@ public class UserService {
 	    deleteUser.setDeactivated(true);
 	    deleteUser.setCandidateId(user.getBodSeqNo());
 	    deleteUserRepo.save(deleteUser);
-
+	    emailLoginRepo.delete(servicePersonLogin);
 	    // Delete user and service person login
 	    userDAO.delete(user);
-	    servicePersonLogin.ifPresent(emailLoginRepo::delete);
+//	    servicePersonLogin.ifPresent(emailLoginRepo::delete);
 
 	    // Set response message for successful account deletion
 	    response.setMessage("Account deleted. Thank you for being with us.");

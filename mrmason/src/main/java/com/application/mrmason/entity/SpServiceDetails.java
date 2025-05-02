@@ -41,7 +41,14 @@ public class SpServiceDetails {
         this.userServicesId =serviceType+"_"+userId;
         if (location != null) {
 			// Remove unnecessary spaces and format commas properly
-        	   location = location.replaceAll("\\s*,\\s*", ",").trim();
+        	 location = location.replaceAll("\\s*,\\s*", ",").trim();
+
+             // Remove spaces within each part of the comma-separated location
+             String[] parts = location.split(",");
+             for (int i = 0; i < parts.length; i++) {
+                 parts[i] = parts[i].replaceAll("\\s+", "");
+             }
+             location = String.join(",", parts);
 		}
 	}
 }

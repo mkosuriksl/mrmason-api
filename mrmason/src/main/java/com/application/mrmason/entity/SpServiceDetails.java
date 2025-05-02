@@ -39,5 +39,9 @@ public class SpServiceDetails {
 	private void prePersist() {
 	
         this.userServicesId =serviceType+"_"+userId;
+        if (location != null) {
+			// Remove unnecessary spaces and format commas properly
+        	   location = location.replaceAll("\\s*,\\s*", ",").trim();
+		}
 	}
 }

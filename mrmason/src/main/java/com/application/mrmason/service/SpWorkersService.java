@@ -7,7 +7,8 @@ import com.application.mrmason.entity.SpWorkers;
 
 public interface SpWorkersService {
 	String addWorkers(SpWorkers worker);
-    List<SpWorkersDto> getWorkers(String spId,String workerId,String phno,String location,String workerAvail);
+//    List<SpWorkersDto> getWorkers(String spId,String workerId,String phno,String location,String workerAvail);
+	List<SpWorkers> getWorkers(String spId,String workerId,String phno,String location,String workerAvail);
     String updateWorkers(SpWorkersDto worker); 
-    SpWorkersDto getDetails(String phno);
+    SpWorkersDto getDetails(String phno,String email);
 }

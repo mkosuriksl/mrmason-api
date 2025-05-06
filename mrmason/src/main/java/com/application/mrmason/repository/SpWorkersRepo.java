@@ -11,4 +11,5 @@ public interface SpWorkersRepo extends JpaRepository<SpWorkers,String>{
 	List<SpWorkers> findByServicePersonIdOrWorkerIdOrWorkPhoneNumOrWorkerLocationOrWorkerAvail(String serviceId, String workId, String workPhoneNum, String workerLocation, String workerAvail);
 	SpWorkers findByWorkerIdAndServicePersonId(String workId, String serviceId);
 	SpWorkers findByWorkPhoneNum(String workPhoneNum);
+	SpWorkers findByWorkerEmail(String workPhoneNum);
 }

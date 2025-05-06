@@ -20,6 +20,9 @@ public interface AdminDetailsService {
 
 	String forgetPassword(String mobile,String email, String otp, String newPass, String confPass);
 
-	String sendMail(String email,RegSource regSource);
+//	String sendMail(String email,RegSource regSource);
+	
+	String sendMail(String email);
+	
 	String sendSms(String mobile,RegSource regSource);
 }

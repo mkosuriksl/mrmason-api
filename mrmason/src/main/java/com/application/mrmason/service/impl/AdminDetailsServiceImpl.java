@@ -157,15 +157,25 @@ public class AdminDetailsServiceImpl implements AdminDetailsService {
 		}
 	}
 
+//	@Override
+//	public String sendMail(String email,RegSource regSource) {
+//		Optional<AdminDetails> userOp = Optional.ofNullable(adminRepo.findByEmail(email));
+//		if (userOp.isPresent()) {
+//			otpService.generateOtp(email,regSource);
+//			return "otp";
+//		}
+//		return null;
+//	}
 	@Override
-	public String sendMail(String email,RegSource regSource) {
+	public String sendMail(String email) {
 		Optional<AdminDetails> userOp = Optional.ofNullable(adminRepo.findByEmail(email));
 		if (userOp.isPresent()) {
-			otpService.generateOtp(email,regSource);
+			otpService.generateOtp(email);
 			return "otp";
 		}
 		return null;
 	}
+
 
 	@Override
 	public String sendSms(String mobile,RegSource regSource) {

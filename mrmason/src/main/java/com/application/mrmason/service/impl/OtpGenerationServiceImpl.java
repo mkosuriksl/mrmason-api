@@ -9,8 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.entity.AdminDetails;
+import com.application.mrmason.entity.ServicePersonLogin;
+import com.application.mrmason.entity.User;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.repository.AdminDetailsRepo;
+import com.application.mrmason.repository.ServicePersonLoginDAO;
+import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.EmailService;
 import com.application.mrmason.service.OtpGenerationService;
 
@@ -24,6 +28,8 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 	SmsService smsService;
 	
 	@Autowired
+	ServicePersonLoginDAO userDAO;
+	@Autowired
 	public AdminDetailsRepo adminRepo;
 	private final Map<String, String> otpStorage = new HashMap<>(); // Store OTPs temporarily
 
@@ -33,6 +39,12 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 		int randomNum = (int) (Math.random() * 900000) + 100000;
 		String otp = String.valueOf(randomNum);
 		otpStorage.put(mail, otp);
+		Optional<ServicePersonLogin> userOpt = Optional.ofNullable(userDAO.findByEmail(mail));
+		if (userOpt.isPresent()) {
+			ServicePersonLogin user = userOpt.get();
+	        user.setEOtp(otp);
+	        userDAO.save(user);
+	    }
 		mailService.sendEmail(mail, otp,regSource);
 		return otp;
 	}
@@ -63,6 +75,12 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 		int randomNum = (int) (Math.random() * 900000) + 100000;
 		String otp = String.valueOf(randomNum);
 		otpStorage.put(mobile, otp);
+		Optional<ServicePersonLogin> userOpt = Optional.ofNullable(userDAO.findByMobile(mobile));
+		if (userOpt.isPresent()) {
+			ServicePersonLogin user = userOpt.get();
+	        user.setMOtp(otp);
+	        userDAO.save(user);
+	    }
 		// String message = "Thanks for registering with us. Your OTP to verify your
 		// mobile number is " + otp + " - www.mrmason.in";
 		smsService.sendSMSMessage(mobile, otp, regSource);

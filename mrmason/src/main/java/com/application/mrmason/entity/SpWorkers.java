@@ -33,6 +33,8 @@ public class SpWorkers {
 	private String workerLocation;
 	@Column(name="worker_availability")
 	private String workerAvail;
+	@Column(name="worker_email")
+	private String workerEmail;
 	
 	@PrePersist
 	private void prePersist() {

@@ -13,4 +13,5 @@ public class SpWorkersDto {
 	private String workerAvail;
 	private String workerName;
 	private String workerStatus;
+	private String workerEmail;
 }

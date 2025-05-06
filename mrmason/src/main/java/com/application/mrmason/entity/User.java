@@ -98,6 +98,7 @@ public class User implements UserDetails {
 	@PrePersist
 	private void prePersist() {
 		LocalDateTime now = LocalDateTime.now();
+		if (this.bodSeqNo == null || this.bodSeqNo.isEmpty()) {
 		String year = String.valueOf(now.getYear());
 		String month = String.format("%02d", now.getMonthValue());
 		String day = String.format("%02d", now.getDayOfMonth());
@@ -106,7 +107,7 @@ public class User implements UserDetails {
 		String second = String.format("%02d", now.getSecond());
 		String millis = String.format("%03d", now.getNano() / 1000000).substring(0, 2);
 		this.bodSeqNo = "SP" + year + month + day + hour + minute + second + millis;
-
+		}
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy hh:mm a");
 		this.update = now;
 		this.updatedDate = now.format(formatter);

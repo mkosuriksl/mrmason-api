@@ -43,11 +43,11 @@ public class SpWorkersController {
 			String addedService = service.addWorkers(worker);
 			if (addedService == "added") {
 				response.setMessage("Worker added successfully");
-				response.setData(service.getDetails(worker.getWorkPhoneNum()));
+				response.setData(service.getDetails(worker.getWorkPhoneNum(),worker.getWorkerEmail()));
 				response.setStatus(true);
 				return ResponseEntity.status(HttpStatus.OK).body(response);
 			}else if(addedService=="notUnique") {
-				response.setMessage("Mobile number is already exists.!");
+				response.setMessage("Mobile number/Email Id is already exists.!");
 				response.setStatus(false);
 				return ResponseEntity.status(HttpStatus.OK).body(response);
 			}
@@ -64,13 +64,17 @@ public class SpWorkersController {
 	public ResponseEntity<ResponseGetWorkerDto> getAssetDetails(@RequestParam(required = false)String spId,@RequestParam(required = false)String workerId,@RequestParam(required = false)String phno,@RequestParam(required = false)String location,@RequestParam(required = false)String workerAvail) {
 		
 		try {
-			List<SpWorkersDto> entity = service.getWorkers(spId, workerId, phno, location, workerAvail);
+			List<SpWorkers> entity = service.getWorkers(spId, workerId, phno, location, workerAvail);
 			if(!entity.isEmpty()) {
 				response2.setMessage("Worker details retrived successfully..");
 				response2.setWorkersData(entity);
 				response2.setStatus(true);
-				User data=userRepo.findByBodSeqNo(spId);
-				response2.setUserData(userService.getServiceProfile(data.getEmail()));
+				User data=userRepo.findByBodSeqNo(entity.get(0).getServicePersonId());
+				if (data != null) {
+				    response2.setUserData(userService.getServiceProfile(data.getBodSeqNo()));
+				} else {
+				    response2.setUserData(null);
+				}
 				return new ResponseEntity<>(response2, HttpStatus.OK);
 			}else {
 				response2.setMessage("No data found for details provided.!");
@@ -96,7 +100,7 @@ public class SpWorkersController {
 			if (spData=="updated") {
 				SpWorkers workerData= repo.findByWorkerIdAndServicePersonId(worker.getWorkerId(), worker.getServicePersonId());
 				
-				response.setData(service.getDetails(workerData.getWorkPhoneNum()));
+				response.setData(service.getDetails(workerData.getWorkPhoneNum(),workerData.getWorkerEmail()));
 				response.setMessage("Worker details updated successfully..");
 				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);

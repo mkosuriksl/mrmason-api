@@ -37,6 +37,24 @@ public class EmailServiceImpl implements EmailService {
 	}
 
 	@Override
+	public void sendEmail(String toMail, String otp) {
+		try {
+			MimeMessage message = mailsender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+			helper.setFrom("no_reply@kosuriers.com"); // Update this if needed
+			helper.setTo(toMail);
+			helper.setSubject("YOUR OTP FOR VERIFICATION.");
+			String body =null;
+			body = "Thanks for registering with us. Your OTP to verify your email is " + otp + " - www.mrmason.in";	
+			helper.setText(body, true); // Set to true for HTML content
+			mailsender.send(message);
+			log.info("Email sent successfully to {}", toMail);
+		} catch (MessagingException e) {
+			log.error("Failed to send email to {}: {}", toMail, e.getMessage());
+		}
+	}
+	@Override
 	public void sendEmail(String toMail, String otp, RegSource regSource) {
 		try {
 			MimeMessage message = mailsender.createMimeMessage();

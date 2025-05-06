@@ -3,11 +3,14 @@ package com.application.mrmason.service.impl;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.enums.RegSource;
+import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.service.EmailService;
 import com.application.mrmason.service.OtpGenerationService;
 
@@ -19,6 +22,9 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 	LocalTime local = LocalTime.now();
 	@Autowired
 	SmsService smsService;
+	
+	@Autowired
+	public AdminDetailsRepo adminRepo;
 	private final Map<String, String> otpStorage = new HashMap<>(); // Store OTPs temporarily
 
 	// Generate and send OTP to the user (via email, SMS, etc.)
@@ -28,6 +34,21 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 		String otp = String.valueOf(randomNum);
 		otpStorage.put(mail, otp);
 		mailService.sendEmail(mail, otp,regSource);
+		return otp;
+	}
+	
+	@Override
+	public String generateOtp(String mail) {
+		int randomNum = (int) (Math.random() * 900000) + 100000;
+		String otp = String.valueOf(randomNum);
+		otpStorage.put(mail, otp);
+		Optional<AdminDetails> userOpt = Optional.ofNullable(adminRepo.findByEmail(mail));
+	    if (userOpt.isPresent()) {
+	        AdminDetails user = userOpt.get();
+	        user.setOtp(otp);
+	        adminRepo.save(user);
+	    }
+		mailService.sendEmail(mail, otp);
 		return otp;
 	}
 

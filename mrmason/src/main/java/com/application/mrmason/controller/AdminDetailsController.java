@@ -159,7 +159,8 @@ public class AdminDetailsController {
 		String mobile=login.getMobile();
 		try {
 			if(email!=null&& mobile==null) {
-				if (adminService.sendMail(email,login.getRegSource()) != null) {
+//				if (adminService.sendMail(email,login.getRegSource()) != null) {
+				if (adminService.sendMail(email) != null ){
 					response2.setMessage("OTP Sent to Registered EmailId.");
 					response2.setStatus(true);
 					return new ResponseEntity<>(response2, HttpStatus.OK);

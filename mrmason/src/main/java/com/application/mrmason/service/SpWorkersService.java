@@ -11,4 +11,5 @@ public interface SpWorkersService {
 	List<SpWorkers> getWorkers(String spId,String workerId,String phno,String location,String workerAvail);
     String updateWorkers(SpWorkersDto worker); 
     SpWorkersDto getDetails(String phno,String email);
+    public SpWorkers getWorkerById(String workerId);
 }

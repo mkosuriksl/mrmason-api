@@ -200,5 +200,10 @@ public class SpWorkersServiceImpl implements SpWorkersService {
 		spWorker.setWorkerStatus(data.getStatus());
 		return spWorker;
 	}
+	
+	@Override
+	public SpWorkers getWorkerById(String workerId) {
+        return workerRepo.findByWorkerIdOne(workerId);
+    }
 
 }

@@ -27,7 +27,11 @@ public class JwtService {
 	private long jwtExpiration;
 	@Value("${application.security.jwt.refresh-token.expiration}")
 	private long refreshExpiration;
+	
+	public static String CURRENT_USER = "";
 
+	public static Collection<? extends GrantedAuthority> CURRENT_ROLE =  Collections.emptyList();;
+	
 	public String extractUsername(String token) {
 		return extractClaim(token, Claims::getSubject);
 	}
@@ -63,6 +67,7 @@ public class JwtService {
 		return buildToken(new HashMap<>(), userDetails, null,refreshExpiration, "your-issuer", "your-audience");
 	}
 
+	
 	private Object getUserTypeFromUserDetails(UserDetails userDetails) {
 		if (userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_Developer"))) {
 			return UserType.Developer;
@@ -84,8 +89,11 @@ public class JwtService {
 
 	public boolean isTokenValid(String token, UserDetails userDetails) {
 		final String username = extractUsername(token);
+		CURRENT_USER = userDetails.getUsername();
+		CURRENT_ROLE=userDetails.getAuthorities();
 		return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
 	}
+	
 
 	private boolean isTokenExpired(String token) {
 		return extractExpiration(token).before(new Date());

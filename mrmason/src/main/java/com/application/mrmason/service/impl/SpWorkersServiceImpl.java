@@ -175,9 +175,9 @@ public class SpWorkersServiceImpl implements SpWorkersService {
 		if (user.isPresent()) {
 			user.get().setWorkerLocation(location);
 			user.get().setWorkerAvail(workerAvail);
-			User data=userRepo.findByBodSeqNo(spId);
-			data.setStatus(workerStatus);
-			userRepo.save(data);
+//			User data=userRepo.findByBodSeqNo(workerId);
+//			data.setStatus(workerStatus);
+//			userRepo.save(data);
 			workerRepo.save(user.get());
 			return "updated";
 		}

@@ -98,9 +98,9 @@ public class SpWorkersController {
 		try {
 			String spData= service.updateWorkers(worker);
 			if (spData=="updated") {
-				SpWorkers workerData= repo.findByWorkerIdAndServicePersonId(worker.getWorkerId(), worker.getServicePersonId());
-				
-				response.setData(service.getDetails(workerData.getWorkPhoneNum(),workerData.getWorkerEmail()));
+//				SpWorkers workerData= repo.findByWorkerIdAndServicePersonId(worker.getWorkerId(), worker.getServicePersonId());
+//				
+//				response.setData(service.getDetails(workerData.getWorkPhoneNum(),workerData.getWorkerEmail()));
 				response.setMessage("Worker details updated successfully..");
 				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);

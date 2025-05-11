@@ -72,6 +72,13 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 		String storedOtp=stored.getEOtp();
 		return storedOtp!= null && storedOtp.equals(enteredOtp);
 	}
+	
+	@Override
+	public boolean verifyOtp(String email, String enteredOtp) {
+		String storedOtp = otpStorage.get(email);
+		return storedOtp != null && storedOtp.equals(enteredOtp);
+	}
+
 
 	@Override
 	public String generateMobileOtp(String mobile, RegSource regSource) {
@@ -98,4 +105,5 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 		return storedOtp != null && storedOtp.equals(enteredOtp);
 	}
 
+	
 }

@@ -202,7 +202,7 @@ public class UserService {
 		Optional<User> userEmail = userDAO.findByEmailAndRegSource(email, regSource);
 		Optional<User> userMobile = userDAO.findByMobileAndRegSource(mobile, regSource);
 		if (userEmail.isPresent()) {
-			if (otpService.verifyOtp(email, otp)) {
+			if (otpService.verifyOtp(email, otp,regSource)) {
 				if (newPass.equals(confPass)) {
 					String encryptPassword = byCrypt.encode(confPass);
 					userEmail.get().setPassword(encryptPassword);

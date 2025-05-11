@@ -6,7 +6,7 @@ public interface OtpGenerationService {
 	
 	String generateOtp(String mail,RegSource regSource);
 	String generateOtp(String mail);
-	boolean verifyOtp(String email, String enteredOtp);
+	boolean verifyOtp(String email, String enteredOtp,RegSource regSource);
 	String generateMobileOtp(String mobile,RegSource regSource);
 	boolean verifyMobileOtp(String mobile, String enteredOtp);
 }

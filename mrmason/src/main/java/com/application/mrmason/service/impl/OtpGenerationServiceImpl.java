@@ -39,7 +39,8 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 		int randomNum = (int) (Math.random() * 900000) + 100000;
 		String otp = String.valueOf(randomNum);
 		otpStorage.put(mail, otp);
-		Optional<ServicePersonLogin> userOpt = Optional.ofNullable(userDAO.findByEmail(mail));
+//		Optional<ServicePersonLogin> userOpt = Optional.ofNullable(userDAO.findByEmail(mail));
+		Optional<ServicePersonLogin> userOpt = userDAO.findByEmailAndRegSource(mail,regSource);
 		if (userOpt.isPresent()) {
 			ServicePersonLogin user = userOpt.get();
 	        user.setEOtp(otp);
@@ -65,9 +66,11 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 	}
 
 	@Override
-	public boolean verifyOtp(String email, String enteredOtp) {
-		String storedOtp = otpStorage.get(email);
-		return storedOtp != null && storedOtp.equals(enteredOtp);
+	public boolean verifyOtp(String email, String enteredOtp,RegSource regSource) {
+//		String storedOtp = otpStorage.get(email);
+		ServicePersonLogin stored = userDAO.findByEmailEOtpAndRegSourceIgnoreCase(email,enteredOtp,regSource);
+		String storedOtp=stored.getEOtp();
+		return storedOtp!= null && storedOtp.equals(enteredOtp);
 	}
 
 	@Override
@@ -75,7 +78,8 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 		int randomNum = (int) (Math.random() * 900000) + 100000;
 		String otp = String.valueOf(randomNum);
 		otpStorage.put(mobile, otp);
-		Optional<ServicePersonLogin> userOpt = Optional.ofNullable(userDAO.findByMobile(mobile));
+//		Optional<ServicePersonLogin> userOpt = Optional.ofNullable(userDAO.findByMobile(mobile));
+		Optional<ServicePersonLogin> userOpt = userDAO.findByMobileAndRegSource(mobile,regSource);
 		if (userOpt.isPresent()) {
 			ServicePersonLogin user = userOpt.get();
 	        user.setMOtp(otp);

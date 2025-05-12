@@ -45,7 +45,7 @@ public class SPWorkAssignmentServiceImpl implements SPWorkAssignmentService {
 	public SPWorkAssignment createAssignment(SPWorkAssignment assignment) {
 	    String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
 
-	    User loginStore = userDAO.findByEmailOne(loggedInUserEmail)
+	    User loginEmail = userDAO.findByEmailOne(loggedInUserEmail)
 	        .orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
 
 	    List<SpWorkers> spWorkerList = workerRepo.findByWorkerId(assignment.getWorkerId());
@@ -56,7 +56,9 @@ public class SPWorkAssignmentServiceImpl implements SPWorkAssignmentService {
 	    SpWorkers spWorker = spWorkerList.get(0);
 	    assignment.setWorkerId(spWorker.getWorkerId());
 	    assignment.setServicePersonId(spWorker.getServicePersonId());
-	    assignment.setUpdatedBy(loginStore.getBodSeqNo());
+	    assignment.setUpdatedBy(loginEmail.getBodSeqNo());
+	    assignment.setUpdatedDate(new Date());
+	    assignment.setCurrency("INR");
 
 	    return repository.save(assignment);
 	}
@@ -92,21 +94,23 @@ public class SPWorkAssignmentServiceImpl implements SPWorkAssignmentService {
 
 	@Override
 	public SPWorkAssignment updateWorkAssignment(SPWorkAssignment updatedAssignment) {
-	    if (updatedAssignment == null || updatedAssignment.getRecId() == null) {
-	        throw new IllegalArgumentException("Updated assignment or recId must not be null.");
-	    }
+		
+		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
 
+	    User loginEmail = userDAO.findByEmailOne(loggedInUserEmail)
+	        .orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
 	    SPWorkAssignment existing = repository.findById(updatedAssignment.getRecId())
 	        .orElseThrow(() -> new EntityNotFoundException("Work assignment not found with recId: " + updatedAssignment.getRecId()));
 
 	    // Update fields
-	    existing.setServicePersonId(updatedAssignment.getServicePersonId());
-	    existing.setWorkerId(updatedAssignment.getWorkerId());
+//	    existing.setServicePersonId(updatedAssignment.getServicePersonId());
+//	    existing.setWorkerId(updatedAssignment.getWorkerId());
 	    existing.setDateOfWork(updatedAssignment.getDateOfWork());
-	    existing.setUpdatedBy(updatedAssignment.getUpdatedBy());
+	    existing.setUpdatedBy(loginEmail.getBodSeqNo());
 	    existing.setUpdatedDate(new Date()); // Set current date/time
 	    existing.setAmount(updatedAssignment.getAmount());
-
+	    existing.setPaymentStatus(updatedAssignment.getPaymentStatus());
+	    existing.setPaymentMethod(updatedAssignment.getPaymentMethod());
 	    return repository.save(existing);
 	}
 

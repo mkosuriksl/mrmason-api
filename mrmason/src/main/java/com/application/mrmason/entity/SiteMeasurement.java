@@ -49,6 +49,15 @@ public class SiteMeasurement {
     
     @Column(name = "expected_start_date")
     private Date expectedStartDate;
+    
+    @Column(name = "updatedDate")
+    private Date updatedDate;
+    
+    @Column(name = "updated_by")
+    private String updatedBy;
+    
+    @Column(name = "customer_Id")
+    private String customerId;
 
     @PrePersist
 	private void prePersist() {

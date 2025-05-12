@@ -36,7 +36,13 @@ public class SPWorkAssignment {
 	private Date updatedDate;
 	@Column(name="amount")
 	private Integer amount;
-	
+	@Column(name="payment_status")
+	private String paymentStatus;
+	@Column(name="payment_method")
+	private String 	paymentMethod;
+	@Column(name="currency")
+	private String currency;
+		
 	@PrePersist
 	private void prePersist() {
 		LocalDateTime now = LocalDateTime.now();

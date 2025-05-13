@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +16,6 @@ import com.application.mrmason.entity.ServicePersonLogin;
 import com.application.mrmason.entity.SpWorkers;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
-import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.repository.ServicePersonLoginDAO;
 import com.application.mrmason.repository.SpWorkersRepo;
 import com.application.mrmason.repository.UserDAO;
@@ -21,6 +23,7 @@ import com.application.mrmason.service.SpWorkersService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
@@ -109,8 +112,7 @@ public class SpWorkersServiceImpl implements SpWorkersService {
 //        return dtos;
 //    }
 	@Override
-	public List<SpWorkers> getWorkers(String spId, String workerId, String phno, String location, String workerAvail) {
-
+	public Page<SpWorkers> getWorkers(String spId, String workerId, String phno, String location, String workerAvail, Pageable pageable) {
 	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 	    CriteriaQuery<SpWorkers> query = cb.createQuery(SpWorkers.class);
 	    Root<SpWorkers> root = query.from(SpWorkers.class);
@@ -133,34 +135,74 @@ public class SpWorkersServiceImpl implements SpWorkersService {
 	        predicates.add(cb.equal(root.get("workerAvail"), workerAvail));
 	    }
 
-	    query.select(root);
-	    if (!predicates.isEmpty()) {
-	        query.where(cb.and(predicates.toArray(new Predicate[0]))); // ✅ FIX: using AND instead of OR
-	    }
+	    query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
 
-	    return entityManager.createQuery(query).getResultList();
+	    TypedQuery<SpWorkers> typedQuery = entityManager.createQuery(query);
+	    typedQuery.setFirstResult((int) pageable.getOffset());
+	    typedQuery.setMaxResults(pageable.getPageSize());
 
-//	    List<SpWorkersDto> dtos = new ArrayList<>();
-//	    for (SpWorkers workerEntity : workers) {
-//	        SpWorkersDto dto = new SpWorkersDto();
-//	        dto.setServicePersonId(workerEntity.getServicePersonId());
-//	        dto.setWorkerId(workerEntity.getWorkerId());
-//	        dto.setWorkPhoneNum(workerEntity.getWorkPhoneNum());
-//	        dto.setWorkerLocation(workerEntity.getWorkerLocation());
-//	        dto.setWorkerName(workerEntity.getWorkerName());
-//	        dto.setWorkerAvail(workerEntity.getWorkerAvail());
-//	        dto.setWorkerEmail(workerEntity.getWorkerEmail());
-//	        // Fetch related User status
-//	        User data = userRepo.findByBodSeqNo(workerEntity.getServicePersonId());
-//	        if (data != null) {
-//	            dto.setWorkerStatus(data.getStatus());
-//	        }
-//
-//	        dtos.add(dto);
-//	    }
+	    // For total count
+	    CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+	    Root<SpWorkers> countRoot = countQuery.from(SpWorkers.class);
+	    countQuery.select(cb.count(countRoot)).where(cb.and(predicates.toArray(new Predicate[0])));
+	    Long total = entityManager.createQuery(countQuery).getSingleResult();
 
-//	    return dtos;
+	    return new PageImpl<>(typedQuery.getResultList(), pageable, total);
 	}
+
+//	@Override
+//	public List<SpWorkers> getWorkers(String spId, String workerId, String phno, String location, String workerAvail) {
+//
+//	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+//	    CriteriaQuery<SpWorkers> query = cb.createQuery(SpWorkers.class);
+//	    Root<SpWorkers> root = query.from(SpWorkers.class);
+//
+//	    List<Predicate> predicates = new ArrayList<>();
+//
+//	    if (spId != null && !spId.trim().isEmpty()) {
+//	        predicates.add(cb.equal(root.get("servicePersonId"), spId));
+//	    }
+//	    if (workerId != null && !workerId.trim().isEmpty()) {
+//	        predicates.add(cb.equal(root.get("workerId"), workerId));
+//	    }
+//	    if (phno != null && !phno.trim().isEmpty()) {
+//	        predicates.add(cb.equal(root.get("workPhoneNum"), phno));
+//	    }
+//	    if (location != null && !location.trim().isEmpty()) {
+//	        predicates.add(cb.equal(root.get("workerLocation"), location));
+//	    }
+//	    if (workerAvail != null && !workerAvail.trim().isEmpty()) {
+//	        predicates.add(cb.equal(root.get("workerAvail"), workerAvail));
+//	    }
+//
+//	    query.select(root);
+//	    if (!predicates.isEmpty()) {
+//	        query.where(cb.and(predicates.toArray(new Predicate[0]))); // ✅ FIX: using AND instead of OR
+//	    }
+//
+//	    return entityManager.createQuery(query).getResultList();
+//
+////	    List<SpWorkersDto> dtos = new ArrayList<>();
+////	    for (SpWorkers workerEntity : workers) {
+////	        SpWorkersDto dto = new SpWorkersDto();
+////	        dto.setServicePersonId(workerEntity.getServicePersonId());
+////	        dto.setWorkerId(workerEntity.getWorkerId());
+////	        dto.setWorkPhoneNum(workerEntity.getWorkPhoneNum());
+////	        dto.setWorkerLocation(workerEntity.getWorkerLocation());
+////	        dto.setWorkerName(workerEntity.getWorkerName());
+////	        dto.setWorkerAvail(workerEntity.getWorkerAvail());
+////	        dto.setWorkerEmail(workerEntity.getWorkerEmail());
+////	        // Fetch related User status
+////	        User data = userRepo.findByBodSeqNo(workerEntity.getServicePersonId());
+////	        if (data != null) {
+////	            dto.setWorkerStatus(data.getStatus());
+////	        }
+////
+////	        dtos.add(dto);
+////	    }
+//
+////	    return dtos;
+//	}
 
 
 	@Override

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ResponseGetWorkerDto;
 import com.application.mrmason.entity.SPWorkAssignment;
+import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.SPWorkAssignmentService;
 import com.application.mrmason.service.SpWorkersService;
@@ -40,9 +41,9 @@ public class SPWorkAssignmentController {
 	@Autowired
 	private SpWorkersService spWorkersService;
 	
-    @PostMapping
-    public ResponseEntity<SPWorkAssignment> createWorkAssignment(@RequestBody SPWorkAssignment request) {
-        SPWorkAssignment savedAssignment = service.createAssignment(request);
+    @PostMapping("/add")
+    public ResponseEntity<SPWorkAssignment> createWorkAssignment(@RequestBody SPWorkAssignment request,@RequestParam RegSource regSource) {
+        SPWorkAssignment savedAssignment = service.createAssignment(request,regSource);
         return ResponseEntity.ok(savedAssignment);
     }
     
@@ -115,12 +116,12 @@ public class SPWorkAssignmentController {
 //    }
     
     @PutMapping
-    public ResponseEntity<SPWorkAssignment> updateWorkAssignment(@RequestBody SPWorkAssignment updatedAssignment) {
+    public ResponseEntity<SPWorkAssignment> updateWorkAssignment(@RequestBody SPWorkAssignment updatedAssignment,@RequestParam RegSource regSource) {
         if (updatedAssignment.getRecId() == null) {
             return ResponseEntity.badRequest().body(null);
         }
 
-        SPWorkAssignment updated = service.updateWorkAssignment(updatedAssignment);
+        SPWorkAssignment updated = service.updateWorkAssignment(updatedAssignment,regSource);
         return ResponseEntity.ok(updated);
     }
 

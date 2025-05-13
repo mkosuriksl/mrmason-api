@@ -1,19 +1,24 @@
 package com.application.mrmason.service.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.entity.SPWorkAssignment;
 import com.application.mrmason.entity.SpWorkers;
 import com.application.mrmason.entity.User;
+import com.application.mrmason.entity.UserType;
+import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.SPWorkAssignmentRepository;
 import com.application.mrmason.repository.SpWorkersRepo;
@@ -46,12 +51,27 @@ public class SPWorkAssignmentServiceImpl implements SPWorkAssignmentService {
 	UserDAO userDAO;
 
 	@Override
-	public SPWorkAssignment createAssignment(SPWorkAssignment assignment) {
-	    String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
+	public SPWorkAssignment createAssignment(SPWorkAssignment assignment,RegSource regSource) {
+//	    String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
+//
+//	    User loginEmail = userDAO.findByEmailOne(loggedInUserEmail)
+//	        .orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
 
-	    User loginEmail = userDAO.findByEmailOne(loggedInUserEmail)
-	        .orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
+		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
+		Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
+		System.out.println("ROLE"+loggedInUserEmail);
+		List<String> roleNames = loggedInRole.stream()
+		        .map(GrantedAuthority::getAuthority)
+		        .map(role -> role.replace("ROLE_", "")) // Remove "ROLE_" prefix
+		        .collect(Collectors.toList());
 
+		if (roleNames.equals("Developer")||roleNames.equals("Adm")) {
+		    throw new ResourceNotFoundException("Role Developer not found in: " + roleNames);
+		}
+		UserType userType = UserType.valueOf(roleNames.get(0)); // Make sure roleNames is not empty
+		User user = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType,regSource)
+		    .orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
+		
 	    List<SpWorkers> spWorkerList = workerRepo.findByWorkerId(assignment.getWorkerId());
 	    if (spWorkerList.isEmpty()) {
 	        throw new ResourceNotFoundException("Worker not found with ID: " + assignment.getWorkerId());
@@ -60,7 +80,7 @@ public class SPWorkAssignmentServiceImpl implements SPWorkAssignmentService {
 	    SpWorkers spWorker = spWorkerList.get(0);
 	    assignment.setWorkerId(spWorker.getWorkerId());
 	    assignment.setServicePersonId(spWorker.getServicePersonId());
-	    assignment.setUpdatedBy(loginEmail.getBodSeqNo());
+	    assignment.setUpdatedBy(user.getBodSeqNo());
 	    assignment.setUpdatedDate(new Date());
 	    assignment.setCurrency("INR");
 
@@ -97,12 +117,26 @@ public class SPWorkAssignmentServiceImpl implements SPWorkAssignmentService {
 //	}
 
 	@Override
-	public SPWorkAssignment updateWorkAssignment(SPWorkAssignment updatedAssignment) {
+	public SPWorkAssignment updateWorkAssignment(SPWorkAssignment updatedAssignment,RegSource regSource) {
 		
+//		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
+//
+//	    User loginEmail = userDAO.findByEmailOne(loggedInUserEmail)
+//	        .orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
 		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
+		Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
+		System.out.println("ROLE"+loggedInUserEmail);
+		List<String> roleNames = loggedInRole.stream()
+		        .map(GrantedAuthority::getAuthority)
+		        .map(role -> role.replace("ROLE_", "")) // Remove "ROLE_" prefix
+		        .collect(Collectors.toList());
 
-	    User loginEmail = userDAO.findByEmailOne(loggedInUserEmail)
-	        .orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
+		if (roleNames.equals("Developer")||roleNames.equals("Adm")) {
+		    throw new ResourceNotFoundException("Role Developer not found in: " + roleNames);
+		}
+		UserType userType = UserType.valueOf(roleNames.get(0)); // Make sure roleNames is not empty
+		User user = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType,regSource)
+		    .orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
 	    SPWorkAssignment existing = repository.findById(updatedAssignment.getRecId())
 	        .orElseThrow(() -> new EntityNotFoundException("Work assignment not found with recId: " + updatedAssignment.getRecId()));
 
@@ -110,7 +144,7 @@ public class SPWorkAssignmentServiceImpl implements SPWorkAssignmentService {
 //	    existing.setServicePersonId(updatedAssignment.getServicePersonId());
 //	    existing.setWorkerId(updatedAssignment.getWorkerId());
 	    existing.setDateOfWork(updatedAssignment.getDateOfWork());
-	    existing.setUpdatedBy(loginEmail.getBodSeqNo());
+	    existing.setUpdatedBy(user.getBodSeqNo());
 	    existing.setUpdatedDate(new Date()); // Set current date/time
 	    existing.setAmount(updatedAssignment.getAmount());
 	    existing.setPaymentStatus(updatedAssignment.getPaymentStatus());

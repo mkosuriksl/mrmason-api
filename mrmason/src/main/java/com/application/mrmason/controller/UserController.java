@@ -147,7 +147,7 @@ public class UserController {
 					response2.setStatus(true);
 					return new ResponseEntity<>(response2, HttpStatus.OK);
 				}
-				response2.setMessage("Invalid Email ID.!");
+				response2.setMessage("EmailId is either Invalid/Wrong Email.Please Verify Email Account!");
 				response2.setStatus(false);
 				return new ResponseEntity<>(response2, HttpStatus.OK);
 
@@ -157,7 +157,7 @@ public class UserController {
 					response2.setStatus(true);
 					return new ResponseEntity<>(response2, HttpStatus.OK);
 				}
-				response2.setMessage("Invalid Mobile number..!");
+				response2.setMessage("Mobile number is either Invalid/Wrong Mobile number.Please Verify Mobile!");
 				response2.setStatus(false);
 				return new ResponseEntity<>(response2, HttpStatus.OK);
 			}

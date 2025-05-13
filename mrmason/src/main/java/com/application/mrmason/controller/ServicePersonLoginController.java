@@ -111,10 +111,10 @@ public class ServicePersonLoginController {
 			response.setStatus(true);
 			response.setMessage("Otp sent to the registered mobile number.");
 			//findByMobileAndRegSource
-			User userStatus = userDAO.findByMobileAndRegSource(login.getContactDetail(), login.getRegSource()).orElseThrow(
-					() -> new ResourceNotFoundException("User Not Found By : " + login.getContactDetail()));
-			userStatus.setStatus("active");
-			userDAO.save(userStatus);
+//			User userStatus = userDAO.findByMobileAndRegSource(login.getContactDetail(), login.getRegSource()).orElseThrow(
+//					() -> new ResourceNotFoundException("User Not Found By : " + login.getContactDetail()));
+//			userStatus.setStatus("active");
+//			userDAO.save(userStatus);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
@@ -140,6 +140,10 @@ public class ServicePersonLoginController {
 				response.setStatus(true);
 				servicePersonDao.save(optVerify);
 				response.setMessage("Mobile Number Verified successfully");
+				User userStatus = userDAO.findByMobileAndRegSource(login.getContactDetail(), login.getRegSource()).orElseThrow(
+						() -> new ResourceNotFoundException("User Not Found By : " + login.getContactDetail()));
+				userStatus.setStatus("active");
+				userDAO.save(userStatus);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 		} catch (Exception e) {

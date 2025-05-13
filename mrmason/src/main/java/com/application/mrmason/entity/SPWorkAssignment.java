@@ -22,7 +22,7 @@ import lombok.Setter;
 public class SPWorkAssignment {
 
 	@Id
-	@Column(name="rec_id")
+	@Column(name="rec_id",nullable = false)
 	private String recId;
 	@Column(name="work_ord_id")
 	private String servicePersonId;

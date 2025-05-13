@@ -12,4 +12,8 @@ public class ResponseGetSiteMeasurementDTO {
 	private String message;
 	private boolean status;
 	private List<SiteMeasurement> data;
+	private int currentPage;
+	private int pageSize;
+	private long totalElements;
+	private int totalPages;
 }

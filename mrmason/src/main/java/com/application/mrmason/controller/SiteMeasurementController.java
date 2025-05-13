@@ -2,14 +2,16 @@ package com.application.mrmason.controller;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -122,29 +124,64 @@ public class SiteMeasurementController {
 		return dto;
 	}
 
-	@PreAuthorize("hasAuthority('EC') or hasAuthority('Adm')")
 	@GetMapping("/get-site-measurement")
-	public ResponseEntity<?> getSiteMeasurement(@RequestParam(required = false) String serviceRequestId,
-			@RequestParam(required = false) String eastSiteLegth, @RequestParam(required = false) String location,
-			@RequestParam(required = false) Map<String, String> requestParams) {
+	public ResponseEntity<?> getSiteMeasurement(
+	        @RequestParam(required = false) String serviceRequestId,
+	        @RequestParam(required = false) String eastSiteLegth,
+	        @RequestParam(required = false) String location,
+	        @RequestParam(defaultValue = "0") int page,
+	        @RequestParam(defaultValue = "10") int size) {
 
-		ResponseGetSiteMeasurementDTO response = new ResponseGetSiteMeasurementDTO();
+	    ResponseGetSiteMeasurementDTO response = new ResponseGetSiteMeasurementDTO();
 
-		try {
-			List<SiteMeasurement> sm = siteMeasurementService.getSiteMeasurement(serviceRequestId, eastSiteLegth,
-					location);
-			if (sm != null && !sm.isEmpty()) {
-				response.setMessage("Site Measurement Details");
-				response.setStatus(true);
-				response.setData(sm);
-			} else {
-				response.setMessage("No details found for given parameters/check your parameters");
-				response.setStatus(false);
-				response.setData(sm != null ? sm : List.of());
-			}
-			return ResponseEntity.ok(response);
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-		}
+	    try {
+	        Pageable pageable = PageRequest.of(page, size);
+	        Page<SiteMeasurement> smPage = siteMeasurementService.getSiteMeasurement(serviceRequestId, eastSiteLegth, location, pageable);
+
+	        if (!smPage.isEmpty()) {
+	            response.setMessage("Site Measurement Details");
+	            response.setStatus(true);
+	            response.setData(smPage.getContent());
+	        } else {
+	            response.setMessage("No details found for given parameters/check your parameters");
+	            response.setStatus(false);
+	            response.setData(List.of());
+	        }
+
+	        // Optional: Add pagination metadata to response DTO
+	        response.setCurrentPage(smPage.getNumber());
+	        response.setPageSize(smPage.getSize());
+	        response.setTotalElements(smPage.getTotalElements());
+	        response.setTotalPages(smPage.getTotalPages());
+
+	        return ResponseEntity.ok(response);
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+	    }
 	}
+
+//	@GetMapping("/get-site-measurement")
+//	public ResponseEntity<?> getSiteMeasurement(@RequestParam(required = false) String serviceRequestId,
+//			@RequestParam(required = false) String eastSiteLegth, @RequestParam(required = false) String location,
+//			@RequestParam(required = false) Map<String, String> requestParams) {
+//
+//		ResponseGetSiteMeasurementDTO response = new ResponseGetSiteMeasurementDTO();
+//
+//		try {
+//			List<SiteMeasurement> sm = siteMeasurementService.getSiteMeasurement(serviceRequestId, eastSiteLegth,
+//					location);
+//			if (sm != null && !sm.isEmpty()) {
+//				response.setMessage("Site Measurement Details");
+//				response.setStatus(true);
+//				response.setData(sm);
+//			} else {
+//				response.setMessage("No details found for given parameters/check your parameters");
+//				response.setStatus(false);
+//				response.setData(sm != null ? sm : List.of());
+//			}
+//			return ResponseEntity.ok(response);
+//		} catch (Exception e) {
+//			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+//		}
+//	}
 }

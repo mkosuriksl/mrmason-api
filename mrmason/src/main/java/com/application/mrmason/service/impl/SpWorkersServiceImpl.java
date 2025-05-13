@@ -114,9 +114,10 @@ public class SpWorkersServiceImpl implements SpWorkersService {
 	@Override
 	public Page<SpWorkers> getWorkers(String spId, String workerId, String phno, String location, String workerAvail, Pageable pageable) {
 	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+
+	    // === Selection query ===
 	    CriteriaQuery<SpWorkers> query = cb.createQuery(SpWorkers.class);
 	    Root<SpWorkers> root = query.from(SpWorkers.class);
-
 	    List<Predicate> predicates = new ArrayList<>();
 
 	    if (spId != null && !spId.trim().isEmpty()) {
@@ -136,19 +137,37 @@ public class SpWorkersServiceImpl implements SpWorkersService {
 	    }
 
 	    query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
-
 	    TypedQuery<SpWorkers> typedQuery = entityManager.createQuery(query);
 	    typedQuery.setFirstResult((int) pageable.getOffset());
 	    typedQuery.setMaxResults(pageable.getPageSize());
 
-	    // For total count
+	    // === Count query ===
 	    CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
 	    Root<SpWorkers> countRoot = countQuery.from(SpWorkers.class);
-	    countQuery.select(cb.count(countRoot)).where(cb.and(predicates.toArray(new Predicate[0])));
+	    List<Predicate> countPredicates = new ArrayList<>();
+
+	    if (spId != null && !spId.trim().isEmpty()) {
+	        countPredicates.add(cb.equal(countRoot.get("servicePersonId"), spId));
+	    }
+	    if (workerId != null && !workerId.trim().isEmpty()) {
+	        countPredicates.add(cb.equal(countRoot.get("workerId"), workerId));
+	    }
+	    if (phno != null && !phno.trim().isEmpty()) {
+	        countPredicates.add(cb.equal(countRoot.get("workPhoneNum"), phno));
+	    }
+	    if (location != null && !location.trim().isEmpty()) {
+	        countPredicates.add(cb.equal(countRoot.get("workerLocation"), location));
+	    }
+	    if (workerAvail != null && !workerAvail.trim().isEmpty()) {
+	        countPredicates.add(cb.equal(countRoot.get("workerAvail"), workerAvail));
+	    }
+
+	    countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
 	    Long total = entityManager.createQuery(countQuery).getSingleResult();
 
 	    return new PageImpl<>(typedQuery.getResultList(), pageable, total);
 	}
+
 
 //	@Override
 //	public List<SpWorkers> getWorkers(String spId, String workerId, String phno, String location, String workerAvail) {

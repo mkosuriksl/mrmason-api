@@ -1,8 +1,9 @@
 package com.application.mrmason.controller;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,16 +14,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-
-import com.application.mrmason.dto.ResponseGetWorkerDto;
 import com.application.mrmason.dto.ResponseSpWorkersDto;
 import com.application.mrmason.dto.ResponsesGetWorkerDto;
 import com.application.mrmason.dto.SpWorkersDto;
 import com.application.mrmason.entity.SpWorkers;
-import com.application.mrmason.entity.User;
 import com.application.mrmason.repository.SpWorkersRepo;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.SpWorkersService;

@@ -3,28 +3,23 @@ package com.application.mrmason.service.impl;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import com.application.mrmason.entity.CustomerLogin;
 import com.application.mrmason.entity.CustomerRegistration;
-import com.application.mrmason.entity.ServicePersonLogin;
 import com.application.mrmason.entity.SiteMeasurement;
-import com.application.mrmason.entity.SpWorkers;
-import com.application.mrmason.entity.User;
-import com.application.mrmason.exceptions.ResourceNotFoundException;
-import com.application.mrmason.repository.CustomerLoginRepo;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
-import com.application.mrmason.repository.ServicePersonLoginDAO;
 import com.application.mrmason.repository.SiteMeasurementRepository;
-import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.AuthDetailsProvider;
 import com.application.mrmason.service.SiteMeasurementService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
@@ -70,32 +65,84 @@ public class SiteMeasurementServiceImpl implements SiteMeasurementService {
         return null;
     }
     
+//    @Override
+//	public List<SiteMeasurement> getSiteMeasurement(String serviceRequestId, String eastSiteLegth, String location) {
+//
+//	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+//	    CriteriaQuery<SiteMeasurement> query = cb.createQuery(SiteMeasurement.class);
+//	    Root<SiteMeasurement> root = query.from(SiteMeasurement.class);
+//
+//	    List<Predicate> predicates = new ArrayList<>();
+//
+//	    if (serviceRequestId != null && !serviceRequestId.trim().isEmpty()) {
+//	        predicates.add(cb.equal(root.get("serviceRequestId"), serviceRequestId));
+//	    }
+//	    if (eastSiteLegth != null && !eastSiteLegth.trim().isEmpty()) {
+//	        predicates.add(cb.equal(root.get("eastSiteLegth"), eastSiteLegth));
+//	    }
+//	    if (location != null && !location.trim().isEmpty()) {
+//	        predicates.add(cb.equal(root.get("location"), location));
+//	    }
+//
+//	    query.select(root);
+//	    if (!predicates.isEmpty()) {
+//	        query.where(cb.and(predicates.toArray(new Predicate[0]))); // ✅ FIX: using AND instead of OR
+//	    }
+//
+//	    return entityManager.createQuery(query).getResultList();
+//    }
     @Override
-	public List<SiteMeasurement> getSiteMeasurement(String serviceRequestId, String eastSiteLegth, String location) {
+    public Page<SiteMeasurement> getSiteMeasurement(String serviceRequestId, String eastSiteLegth, String location, Pageable pageable) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<SiteMeasurement> query = cb.createQuery(SiteMeasurement.class);
+        Root<SiteMeasurement> root = query.from(SiteMeasurement.class);
 
-	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-	    CriteriaQuery<SiteMeasurement> query = cb.createQuery(SiteMeasurement.class);
-	    Root<SiteMeasurement> root = query.from(SiteMeasurement.class);
+        List<Predicate> predicates = new ArrayList<>();
 
-	    List<Predicate> predicates = new ArrayList<>();
+        if (serviceRequestId != null && !serviceRequestId.trim().isEmpty()) {
+            predicates.add(cb.equal(root.get("serviceRequestId"), serviceRequestId));
+        }
+        if (eastSiteLegth != null && !eastSiteLegth.trim().isEmpty()) {
+            predicates.add(cb.equal(root.get("eastSiteLegth"), eastSiteLegth));
+        }
+        if (location != null && !location.trim().isEmpty()) {
+            predicates.add(cb.equal(root.get("location"), location));
+        }
 
-	    if (serviceRequestId != null && !serviceRequestId.trim().isEmpty()) {
-	        predicates.add(cb.equal(root.get("serviceRequestId"), serviceRequestId));
-	    }
-	    if (eastSiteLegth != null && !eastSiteLegth.trim().isEmpty()) {
-	        predicates.add(cb.equal(root.get("eastSiteLegth"), eastSiteLegth));
-	    }
-	    if (location != null && !location.trim().isEmpty()) {
-	        predicates.add(cb.equal(root.get("location"), location));
-	    }
+        query.select(root);
+        if (!predicates.isEmpty()) {
+            query.where(cb.and(predicates.toArray(new Predicate[0])));
+        }
 
-	    query.select(root);
-	    if (!predicates.isEmpty()) {
-	        query.where(cb.and(predicates.toArray(new Predicate[0]))); // ✅ FIX: using AND instead of OR
-	    }
+        TypedQuery<SiteMeasurement> typedQuery = entityManager.createQuery(query);
+        typedQuery.setFirstResult((int) pageable.getOffset());
+        typedQuery.setMaxResults(pageable.getPageSize());
 
-	    return entityManager.createQuery(query).getResultList();
+        // For total count
+        CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+        Root<SiteMeasurement> countRoot = countQuery.from(SiteMeasurement.class);
+
+        List<Predicate> countPredicates = new ArrayList<>();
+        if (serviceRequestId != null && !serviceRequestId.trim().isEmpty()) {
+            countPredicates.add(cb.equal(countRoot.get("serviceRequestId"), serviceRequestId));
+        }
+        if (eastSiteLegth != null && !eastSiteLegth.trim().isEmpty()) {
+            countPredicates.add(cb.equal(countRoot.get("eastSiteLegth"), eastSiteLegth));
+        }
+        if (location != null && !location.trim().isEmpty()) {
+            countPredicates.add(cb.equal(countRoot.get("location"), location));
+        }
+
+        countQuery.select(cb.count(countRoot));
+        if (!countPredicates.isEmpty()) {
+            countQuery.where(cb.and(countPredicates.toArray(new Predicate[0])));
+        }
+
+        Long total = entityManager.createQuery(countQuery).getSingleResult();
+
+        return new PageImpl<>(typedQuery.getResultList(), pageable, total);
     }
+
 
     @Override
     public SiteMeasurement findByServiceRequestId(String serviceRequestId) {

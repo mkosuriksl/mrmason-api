@@ -116,6 +116,9 @@ public class SiteMeasurementController {
 		dto.setExpectedAttachedBathRooms(measurement.getExpectedAttachedBathRooms());
 		dto.setExpectedAdditionalBathRooms(measurement.getExpectedAdditionalBathRooms());
 		dto.setExpectedStartDate(measurement.getExpectedStartDate());
+		dto.setUpdatedDate(measurement.getUpdatedDate());
+		dto.setUpdatedBy(measurement.getUpdatedBy());
+		dto.setCustomerId(measurement.getCustomerId());
 		return dto;
 	}
 

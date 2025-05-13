@@ -182,8 +182,11 @@ public class UserService {
 	public String sendMail(String email, RegSource regSource) {
 		Optional<User> userOp = userDAO.findByEmailAndRegSource(email, regSource);
 		if (userOp.isPresent()) {
-			otpService.generateOtp(email, regSource);
-			return "otp";
+			User user = userOp.get();
+			if ("active".equalsIgnoreCase(user.getStatus())) {
+				otpService.generateOtp(email, regSource);
+				return "otp";
+			}
 		}
 		return null;
 	}
@@ -191,8 +194,11 @@ public class UserService {
 	public String sendSms(String mobile, RegSource regSource) {
 		Optional<User> userOp = userDAO.findByMobileAndRegSource(mobile, regSource);
 		if (userOp.isPresent()) {
+			User user = userOp.get();
+			if ("active".equalsIgnoreCase(user.getStatus())) {
 			otpService.generateMobileOtp(mobile, regSource);
 			return "otp";
+			}
 		}
 		return null;
 	}
@@ -202,7 +208,7 @@ public class UserService {
 		Optional<User> userEmail = userDAO.findByEmailAndRegSource(email, regSource);
 		Optional<User> userMobile = userDAO.findByMobileAndRegSource(mobile, regSource);
 		if (userEmail.isPresent()) {
-			if (otpService.verifyOtp(email, otp,regSource)) {
+			if (otpService.verifyOtp(email, otp, regSource)) {
 				if (newPass.equals(confPass)) {
 					String encryptPassword = byCrypt.encode(confPass);
 					userEmail.get().setPassword(encryptPassword);
@@ -405,44 +411,44 @@ public class UserService {
 		Optional<User> user = Optional.ofNullable(userDAO.findByEmail(email));
 		return user.get();
 	}
-	
-	
+
 	@Transactional
 	public ResponseMessageDto servicePersonDeleteAccount(DeleteAccountRequest accountRequest) {
-	    ResponseMessageDto response = new ResponseMessageDto();
+		ResponseMessageDto response = new ResponseMessageDto();
 
-	    // Retrieve the user based on the given ID
-	    User user = userDAO.findByBodSeqNo(accountRequest.getSpId());
-	    if (user == null) {
-	        response.setMessage("Account not found.");
-	        response.setStatus(false);
-	        return response;
-	    }
+		// Retrieve the user based on the given ID
+		User user = userDAO.findByBodSeqNo(accountRequest.getSpId());
+		if (user == null) {
+			response.setMessage("Account not found.");
+			response.setStatus(false);
+			return response;
+		}
 
-	    // Retrieve service person login details by email or mobile and registration source
-	    ServicePersonLogin servicePersonLogin = 
-	        emailLoginRepo.findByEmailOrMobileAndRegSource(user.getEmail(), user.getRegSource());
+		// Retrieve service person login details by email or mobile and registration
+		// source
+		ServicePersonLogin servicePersonLogin = emailLoginRepo.findByEmailOrMobileAndRegSource(user.getEmail(),
+				user.getRegSource());
 
-	    // Create and save a record in DeleteUser for tracking the deletion reason and date
-	    DeleteUser deleteUser = new DeleteUser();
-	    deleteUser.setDeletedDate(LocalDateTime.now());
-	    deleteUser.setDeleteReason(accountRequest.getReason());
-	    deleteUser.setEmail(user.getEmail());
-	    deleteUser.setPhone(user.getMobile());
-	    deleteUser.setDeactivated(true);
-	    deleteUser.setCandidateId(user.getBodSeqNo());
-	    deleteUserRepo.save(deleteUser);
-	    emailLoginRepo.delete(servicePersonLogin);
-	    // Delete user and service person login
-	    userDAO.delete(user);
+		// Create and save a record in DeleteUser for tracking the deletion reason and
+		// date
+		DeleteUser deleteUser = new DeleteUser();
+		deleteUser.setDeletedDate(LocalDateTime.now());
+		deleteUser.setDeleteReason(accountRequest.getReason());
+		deleteUser.setEmail(user.getEmail());
+		deleteUser.setPhone(user.getMobile());
+		deleteUser.setDeactivated(true);
+		deleteUser.setCandidateId(user.getBodSeqNo());
+		deleteUserRepo.save(deleteUser);
+		emailLoginRepo.delete(servicePersonLogin);
+		// Delete user and service person login
+		userDAO.delete(user);
 //	    servicePersonLogin.ifPresent(emailLoginRepo::delete);
 
-	    // Set response message for successful account deletion
-	    response.setMessage("Account deleted. Thank you for being with us.");
-	    response.setStatus(true);
-	    return response;
+		// Set response message for successful account deletion
+		response.setMessage("Account deleted. Thank you for being with us.");
+		response.setStatus(true);
+		return response;
 	}
-
 
 //	public void sendEmail(String toMail) {
 //		SimpleMailMessage mail = new SimpleMailMessage();

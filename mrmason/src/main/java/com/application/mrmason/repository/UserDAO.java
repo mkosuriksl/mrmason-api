@@ -1,14 +1,17 @@
 package com.application.mrmason.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Repository;
 
 import com.application.mrmason.entity.User;
+import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
 
 @Repository
@@ -22,6 +25,9 @@ public interface UserDAO extends JpaRepository<User, String> {
 	
 	@Query("SELECT s FROM User s WHERE s.email = :email")
 	Optional<User> findByEmailOne(@Param("email") String email);
+	
+	@Query("SELECT s FROM User s WHERE s.email = :email AND s.userType = :userType AND s.regSource = :regSource")
+	Optional<User> findByEmailAndUserTypeAndRegSource(@Param("email") String email,@Param("userType") UserType userType,RegSource regSource);
 
 	@Query("SELECT u FROM User u WHERE u.email = :email AND u.regSource = :regSource")
 	Optional<User> findByEmailAndRegSource(String email, RegSource regSource);
@@ -63,6 +69,7 @@ public interface UserDAO extends JpaRepository<User, String> {
 	
 	@Query("SELECT u FROM User u WHERE (u.mobile = :contact OR u.email = :contact) AND u.bodSeqNo = :userId")
 	Optional<User> findByMobileOrEmailAndBodSeqNo(String contact, String userId);
+
 
 
 }

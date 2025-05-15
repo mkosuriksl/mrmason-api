@@ -1,7 +1,10 @@
 package com.application.mrmason.controller;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.application.mrmason.dto.ResponseListServiceRequestDto;
 import com.application.mrmason.dto.ResponseListServiceRequestDto1;
 import com.application.mrmason.dto.ResponseServiceReqDto;
+import com.application.mrmason.dto.ServiceRequestWithCustomerDTO;
+import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.entity.ServiceRequest;
+import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.service.ServiceRequestService;
 
 @RestController
@@ -24,6 +30,9 @@ public class ServiceRequestController {
 	@Autowired
 	ServiceRequestService reqService;
 	ResponseListServiceRequestDto response=new ResponseListServiceRequestDto();
+	
+	@Autowired
+	private CustomerRegistrationRepo customerRegistrationRepo;
 	
 	@PostMapping("/addServiceRequest")
 	public ResponseEntity<ResponseServiceReqDto> addRequest(@RequestBody ServiceRequest request){
@@ -46,37 +55,91 @@ public class ServiceRequestController {
 			return 	new ResponseEntity<>(response,HttpStatus.OK);
 		}
 	} 
-	
 	@GetMapping("/getServiceRequest")
-	public ResponseEntity<ResponseListServiceRequestDto> getRequest(@RequestParam(required = false)String userId,
-																	@RequestParam(required = false)String assetId,
-																	@RequestParam(required = false)String location,
-																	@RequestParam(required = false)String serviceSubCategory,
-																	@RequestParam(required = false)String email,
-																	@RequestParam(required = false)String status,
-																	@RequestParam(required = false)String mobile,
-																	@RequestParam(required = false)String fromDate,
-																	@RequestParam(required = false)String toDate){
-		try {
+	public ResponseEntity<ResponseListServiceRequestDto> getRequest(
+			@RequestParam(required = false) String userId,
+	        @RequestParam(required = false) String assetId,
+	        @RequestParam(required = false) String location,
+	        @RequestParam(required = false) String serviceSubCategory,
+	        @RequestParam(required = false) String email,
+	        @RequestParam(required = false) String mobile,
+	        @RequestParam(required = false) String status,
+	        @RequestParam(required = false) String fromDate,
+	        @RequestParam(required = false) String toDate) {
 
-			List<ServiceRequest> serviceReq =reqService.getServiceReq(userId, assetId, location, serviceSubCategory, email, mobile, status, fromDate, toDate);
-			if(serviceReq.isEmpty()) {
-				response.setMessage("No data found for the given details.!");
-				response.setData(serviceReq);
-				response.setStatus(true);
-				return new ResponseEntity<>(response, HttpStatus.OK);
-			}
-			response.setData(serviceReq);
-			response.setMessage("ServiceRequest data fetched successfully..");
-			response.setStatus(true);
-			return ResponseEntity.ok(response);
+	    try {
+	        List<ServiceRequest> serviceReqList = reqService.getServiceReq(userId,
+	                assetId, location, serviceSubCategory,email,mobile, status, fromDate, toDate);
 
-		}catch(Exception e) {
-			response.setMessage(e.getMessage());
-			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.OK);
-		}
+	        if (serviceReqList.isEmpty()) {
+	            response.setMessage("No data found for the given details.!");
+	            response.setData(Collections.emptyList());
+	            response.setStatus(true);
+	            return new ResponseEntity<>(response, HttpStatus.OK);
+	        }
+
+	        List<ServiceRequestWithCustomerDTO> combinedList = new ArrayList<>();
+
+	        for (ServiceRequest req : serviceReqList) {
+	            CustomerRegistration customer = customerRegistrationRepo.findByUserid(req.getRequestedBy());
+
+	            ServiceRequestWithCustomerDTO dto = new ServiceRequestWithCustomerDTO();
+	            BeanUtils.copyProperties(req, dto);
+
+	            if (customer != null) {
+	                dto.setUserName(customer.getUsername());
+	                dto.setUserEmail(customer.getUserEmail());
+	                dto.setUserMobile(customer.getUserMobile());
+	                dto.setLocation(customer.getUserTown());
+	                dto.setUserDistrict(customer.getUserDistrict());
+	                dto.setUserState(customer.getUserState());
+	                dto.setUserPincode(customer.getUserPincode());
+	            }
+
+	            combinedList.add(dto);
+	        }
+
+	        response.setData(combinedList);
+	        response.setMessage("ServiceRequest data fetched successfully.");
+	        response.setStatus(true);
+	        return ResponseEntity.ok(response);
+
+	    } catch (Exception e) {
+	        response.setMessage("Error occurred: " + e.getMessage());
+	        response.setStatus(false);
+	        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+	    }
 	}
+
+//	public ResponseEntity<ResponseListServiceRequestDto> getRequest(@RequestParam(required = false)String userId,
+//																	@RequestParam(required = false)String assetId,
+//																	@RequestParam(required = false)String location,
+//																	@RequestParam(required = false)String serviceSubCategory,
+//																	@RequestParam(required = false)String email,
+//																	@RequestParam(required = false)String status,
+//																	@RequestParam(required = false)String mobile,
+//																	@RequestParam(required = false)String fromDate,
+//																	@RequestParam(required = false)String toDate){
+//		try {
+//
+//			List<ServiceRequest> serviceReq =reqService.getServiceReq(userId, assetId, location, serviceSubCategory, email, mobile, status, fromDate, toDate);
+//			if(serviceReq.isEmpty()) {
+//				response.setMessage("No data found for the given details.!");
+//				response.setData(serviceReq);
+//				response.setStatus(true);
+//				return new ResponseEntity<>(response, HttpStatus.OK);
+//			}
+//			response.setData(serviceReq);
+//			response.setMessage("ServiceRequest data fetched successfully..");
+//			response.setStatus(true);
+//			return ResponseEntity.ok(response);
+//
+//		}catch(Exception e) {
+//			response.setMessage(e.getMessage());
+//			response.setStatus(false);
+//			return new ResponseEntity<>(response, HttpStatus.OK);
+//		}
+//	}
 	@PutMapping("/updateServiceRequest")
 	public ResponseEntity<ResponseServiceReqDto> updateRequest(@RequestBody ServiceRequest request){
 		ResponseServiceReqDto response=new ResponseServiceReqDto();

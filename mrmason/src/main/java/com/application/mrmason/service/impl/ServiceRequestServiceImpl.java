@@ -1,7 +1,12 @@
 package com.application.mrmason.service.impl;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -21,6 +26,13 @@ import com.application.mrmason.repository.ServiceRequestRepo;
 import com.application.mrmason.repository.ServiceStatusUpateRepo;
 import com.application.mrmason.service.ServiceRequestService;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+
 @Service
 public class ServiceRequestServiceImpl implements ServiceRequestService {
 	@Autowired
@@ -31,6 +43,8 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
 	public CustomerRegistrationRepo repo;
 	@Autowired
 	ServiceStatusUpateRepo statusRepo;
+	@PersistenceContext
+	private EntityManager entityManager;
 
 	ServiceStatusUpate statusUpdate = new ServiceStatusUpate();
 	@Autowired
@@ -57,30 +71,89 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
 		}
 		return null;
 	}
-
+	
 	@Override
-	public List<ServiceRequest> getServiceReq(String userId, String assetId, String location, String serviceName,
-			String email, String mobile, String status, String fromDate, String toDate) {
-		if (userId != null) {
-			return requestRepo.findByRequestedByOrderByServiceRequestDateDesc(userId);
-		} else if (assetId != null) {
-			return requestRepo.findByAssetIdOrderByServiceRequestDateDesc(assetId);
-		} else if (location != null) {
-			return requestRepo.findByLocationOrderByServiceRequestDateDesc(location);
-		} else if (serviceName != null) {
-			return requestRepo.findByServiceSubCategoryOrderByServiceRequestDateDesc(serviceName);
-		} else if (email != null || mobile != null) {
-			CustomerRegistration customer = repo.findByUserEmailOrUserMobile(email, mobile);
-			if (customer != null) {
-				return requestRepo.findByRequestedByOrderByServiceRequestDateDesc(customer.getUserid());
-			}
-		} else if (status != null) {
-			return requestRepo.findByStatusOrderByServiceRequestDateDesc(status);
-		} else if (fromDate != null && toDate != null) {
-			return requestRepo.findByServiceRequestDateBetween(fromDate, toDate);
-		}
-		return Collections.emptyList();
+	public List<ServiceRequest> getServiceReq(String userId,String assetId, String location, String serviceSubCategory,
+			String email,String mobile,String status, String fromDate, String toDate) {
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+	    CriteriaQuery<ServiceRequest> query = cb.createQuery(ServiceRequest.class);
+	    Root<ServiceRequest> root = query.from(ServiceRequest.class);
+	    List<Predicate> predicates = new ArrayList<>();
+
+	    // First: derive userId from email or mobile (if userId not directly passed)
+	    if ((email != null || mobile != null) && userId == null) {
+	        CustomerRegistration customer = null;
+
+	        if (email != null) {
+	            customer = repo.findByUserEmail(email);
+	        } else if (mobile != null) {
+	            customer = repo.findByUserMobile(mobile);
+	        }
+
+	        if (customer != null) {
+	            userId = customer.getUserid(); // assign derived userId
+	        } else {
+	            // If no matching user found, return empty list
+	            return new ArrayList<>();
+	        }
+	    }
+
+	    if (userId != null) {
+	        predicates.add(cb.equal(root.get("requestedBy"), userId));
+	    }
+
+	    if (assetId != null) {
+	        predicates.add(cb.equal(root.get("assetId"), assetId));
+	    }
+	    if (location != null) {
+	        predicates.add(cb.equal(root.get("location"), location));
+	    }
+	    if (serviceSubCategory != null) {
+	        predicates.add(cb.equal(root.get("serviceSubCategory"), serviceSubCategory));
+	    }
+	    if (status != null) {
+	        predicates.add(cb.equal(root.get("status"), status));
+	    }
+
+	    DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+	    DateTimeFormatter dbFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+	    if (fromDate != null) {
+	        String formattedFrom = LocalDate.parse(fromDate, inputFormatter).format(dbFormatter);
+	        predicates.add(cb.greaterThanOrEqualTo(root.get("serviceRequestDate"), formattedFrom));
+	    }
+
+	    if (toDate != null) {
+	        String formattedTo = LocalDate.parse(toDate, inputFormatter).format(dbFormatter);
+	        predicates.add(cb.lessThanOrEqualTo(root.get("serviceRequestDate"), formattedTo));
+	    }
+
+	    query.where(predicates.toArray(new Predicate[0]));
+	    return entityManager.createQuery(query).getResultList();
 	}
+//	@Override
+//	public List<ServiceRequest> getServiceReq(String userId, String assetId, String location, String serviceName,
+//			String email, String mobile, String status, String fromDate, String toDate) {
+//		if (userId != null) {
+//			return requestRepo.findByRequestedByOrderByServiceRequestDateDesc(userId);
+//		} else if (assetId != null) {
+//			return requestRepo.findByAssetIdOrderByServiceRequestDateDesc(assetId);
+//		} else if (location != null) {
+//			return requestRepo.findByLocationOrderByServiceRequestDateDesc(location);
+//		} else if (serviceName != null) {
+//			return requestRepo.findByServiceSubCategoryOrderByServiceRequestDateDesc(serviceName);
+//		} else if (email != null || mobile != null) {
+//			CustomerRegistration customer = repo.findByUserEmailOrUserMobile(email, mobile);
+//			if (customer != null) {
+//				return requestRepo.findByRequestedByOrderByServiceRequestDateDesc(customer.getUserid());
+//			}
+//		} else if (status != null) {
+//			return requestRepo.findByStatusOrderByServiceRequestDateDesc(status);
+//		} else if (fromDate != null && toDate != null) {
+//			return requestRepo.findByServiceRequestDateBetween(fromDate, toDate);
+//		}
+//		return Collections.emptyList();
+//	}
 
 	@Override
 	public ServiceRequest updateRequest(ServiceRequest requestData) {

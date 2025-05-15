@@ -1,12 +1,14 @@
 package com.application.mrmason.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.application.mrmason.entity.CustomerAssets;
 import com.application.mrmason.entity.CustomerRegistration;
 @Repository
 public interface CustomerRegistrationRepo extends JpaRepository<CustomerRegistration, Long>{
@@ -20,4 +22,5 @@ public interface CustomerRegistrationRepo extends JpaRepository<CustomerRegistra
 	
 	@Query("SELECT c FROM CustomerRegistration c WHERE c.userEmail = :userEmail")
     CustomerRegistration findByUserEmailCustomQuery(@Param("userEmail") String userEmail);
+	CustomerRegistration findByUserMobile(String mobile);
 }

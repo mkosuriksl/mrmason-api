@@ -1,5 +1,8 @@
 package com.application.mrmason.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -47,10 +50,10 @@ public class MaterialRequirementByRequestController {
 
 	@PostMapping("/add-materialRequirementByRequest")
 	public ResponseEntity<ResponseMaterialRequirementByRequestDTO> createMaterialRequirementByRequest(
-			@RequestBody MaterialRequirementByRequest entity, @RequestParam RegSource regSource) {
+			@RequestBody List<MaterialRequirementByRequest> entity, @RequestParam RegSource regSource) {
 		ResponseMaterialRequirementByRequestDTO response = new ResponseMaterialRequirementByRequestDTO();
 		try {
-			MaterialRequirementByRequest savedRequest = requestService.createMaterialRequirementByRequest(entity,
+			List<MaterialRequirementByRequest> savedRequest = requestService.createMaterialRequirementByRequest(entity,
 					regSource);
 			if (savedRequest != null) {
 				response.setMessage("MaterialRequirementByRequest added successfully");
@@ -68,6 +71,14 @@ public class MaterialRequirementByRequestController {
 			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
+	public List<MaterialRequirementByRequestDTO> mapToDTO(List<MaterialRequirementByRequest> entities) {
+	    List<MaterialRequirementByRequestDTO> dtoList = new ArrayList<>();
+	    for (MaterialRequirementByRequest entity : entities) {
+	        dtoList.add(mapToDTO(entity));
+	    }
+	    return dtoList;
+	}
+
 
 	private MaterialRequirementByRequestDTO mapToDTO(MaterialRequirementByRequest entity) {
 		MaterialRequirementByRequestDTO dto = new MaterialRequirementByRequestDTO();
@@ -104,10 +115,10 @@ public class MaterialRequirementByRequestController {
 
 	@PutMapping("/update-materialRequirementByRequest")
 	public ResponseEntity<ResponseMaterialRequirementByRequestDTO> updateMaterialRequirementByRequest(
-			@RequestBody MaterialRequirementByRequest entity, @RequestParam RegSource regSource) {
+			@RequestBody List<MaterialRequirementByRequest> entity, @RequestParam RegSource regSource) {
 		ResponseMaterialRequirementByRequestDTO response = new ResponseMaterialRequirementByRequestDTO();
 		try {
-			MaterialRequirementByRequest savedquotationRequest = requestService
+			List<MaterialRequirementByRequest> savedquotationRequest = requestService
 					.updateMaterialRequirementByRequest(entity, regSource);
 			if (savedquotationRequest != null) {
 				response.setMessage("MaterialRequirementByRequest Updated successfully");

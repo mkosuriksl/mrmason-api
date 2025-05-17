@@ -13,6 +13,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
+import com.application.mrmason.dto.MaterialRequestMr;
+import com.application.mrmason.entity.AdminDetails;
+import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.entity.MaterialRequirementByRequest;
 import com.application.mrmason.entity.SiteMeasurement;
 import com.application.mrmason.entity.SpWorkers;
@@ -20,6 +23,9 @@ import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
+import com.application.mrmason.repository.AdminDetailsRepo;
+import com.application.mrmason.repository.CustomerRegistrationRepo;
+import com.application.mrmason.repository.MaterialRequestMRRepository;
 import com.application.mrmason.repository.MaterialRequirementByRequestRepository;
 import com.application.mrmason.repository.SiteMeasurementRepository;
 import com.application.mrmason.repository.UserDAO;
@@ -49,98 +55,198 @@ public class MaterialRequirementByRequestServiceImpl implements MaterialRequirem
 
 	@Autowired
 	private SiteMeasurementRepository siteRepository;
+	
+	@Autowired
+	private MaterialRequestMRRepository mrRepository;
+	
+	@Autowired
+	private CustomerRegistrationRepo customerRegistrationRepo;
+	
+	@Autowired
+	public AdminDetailsRepo adminRepo;
 
 	@Override
-	public MaterialRequirementByRequest createMaterialRequirementByRequest(
-			MaterialRequirementByRequest materialRequirementByRequest, RegSource regSource) {
+	public List<MaterialRequirementByRequest> createMaterialRequirementByRequest(
+	        List<MaterialRequirementByRequest> requestList, RegSource regSource) {
 
-		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
-		Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
-		System.out.println("ROLE" + loggedInUserEmail);
-		List<String> roleNames = loggedInRole.stream().map(GrantedAuthority::getAuthority)
-				.map(role -> role.replace("ROLE_", "")) // Remove "ROLE_" prefix
-				.collect(Collectors.toList());
+	    String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
+	    Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
 
-		if (roleNames.equals("Developer") || roleNames.equals("Adm")) {
-			throw new ResourceNotFoundException("Role Developer not found in: " + roleNames);
-		}
-		UserType userType = UserType.valueOf(roleNames.get(0)); // Make sure roleNames is not empty
-		User user = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource)
-				.orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
+	    List<String> roleNames = loggedInRole.stream()
+	        .map(GrantedAuthority::getAuthority)
+	        .map(role -> role.replace("ROLE_", ""))
+	        .collect(Collectors.toList());
 
-		SiteMeasurement siteMeasurement = siteRepository
-				.findByServiceRequestId(materialRequirementByRequest.getReqId());
-		if (siteMeasurement == null) {
-			throw new ResourceNotFoundException(
-					"SiteMeasurement not found for reqId: " + materialRequirementByRequest.getReqId());
-		}
+	    if (roleNames.equals("Developer")) {
+	        throw new ResourceNotFoundException("Restricted role: " + roleNames);
+	    }
 
-		String reqId = siteMeasurement.getServiceRequestId();
+	    UserType userType = UserType.valueOf(roleNames.get(0));
 
-		// === Generate reqIdLineId ===
-		int count = repository.countByReqId(reqId); // You need to implement this in your repository
-		String lineIdSuffix = String.format("_%04d", count + 1);
-		String reqIdLineId = reqId + lineIdSuffix;
+	    // User identity variables
+	    String userId;
+	    String spId;
 
-		// === Set values ===
-		materialRequirementByRequest.setReqId(reqId);
-		materialRequirementByRequest.setReqIdLineId(reqIdLineId);
-		materialRequirementByRequest.setUpdatedBy(user.getBodSeqNo());
-		materialRequirementByRequest.setUpdatedDate(new Date());
-		materialRequirementByRequest.setSpId(user.getBodSeqNo());
+	    if (userType == UserType.EC) {
+	        // EC User
+	        CustomerRegistration customer = customerRegistrationRepo
+	            .findByUserEmailAndUserType(loggedInUserEmail, userType)
+	            .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + loggedInUserEmail));
+	        
+	        userId = customer.getUserid();
+	        spId = customer.getUserid();
 
-		return repository.save(materialRequirementByRequest);
+	    } else if (userType == UserType.Adm) {
+	        // Admin User
+	        AdminDetails admin = adminRepo.findByEmailAndUserType(loggedInUserEmail,userType)
+	            .orElseThrow(() -> new ResourceNotFoundException("Admin not found: " + loggedInUserEmail));
+	        
+	        userId = admin.getEmail();
+	        spId = admin.getEmail(); // or any other logic you want to follow
+
+	    } else {
+	        // Other user types
+	        User user = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource)
+	            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
+	        
+	        userId = user.getBodSeqNo();
+	        spId = user.getBodSeqNo(); // modify if needed
+	    }
+
+	    List<MaterialRequirementByRequest> savedList = new ArrayList<>();
+	    String reqId = null;
+	    boolean isNewReqId = false;
+
+	    boolean hasNullReqId = requestList.stream()
+	        .anyMatch(req -> req.getReqId() == null || req.getReqId().trim().isEmpty());
+
+	    if (hasNullReqId) {
+	        reqId = "MR" + System.currentTimeMillis();
+	        isNewReqId = true;
+	    }
+
+	    int lineCounter = 1;
+
+	    for (MaterialRequirementByRequest req : requestList) {
+	        String currentReqId = req.getReqId();
+
+	        if (currentReqId == null || currentReqId.trim().isEmpty()) {
+	            currentReqId = reqId;
+	        } else {
+	            SiteMeasurement siteMeasurement = siteRepository.findByServiceRequestId(currentReqId);
+	            if (siteMeasurement == null) {
+	                throw new ResourceNotFoundException("SiteMeasurement not found for reqId: " + currentReqId);
+	            }
+	        }
+
+	        String lineIdSuffix = String.format("_%04d", lineCounter++);
+	        String reqIdLineId = currentReqId + lineIdSuffix;
+
+	        req.setReqId(currentReqId);
+	        req.setReqIdLineId(reqIdLineId);
+	        req.setUpdatedBy(userId);
+	        req.setUpdatedDate(new Date());
+	        req.setSpId(spId);
+
+	        MaterialRequirementByRequest saved = repository.save(req);
+	        savedList.add(saved);
+
+	        if (isNewReqId) {
+	            MaterialRequestMr mr = new MaterialRequestMr();
+	            mr.setReqId(currentReqId);
+	            mr.setReqIdLineId(reqIdLineId);
+	            mr.setCreatedDate(new Date());
+	            mrRepository.save(mr);
+	        }
+	    }
+
+	    return savedList;
 	}
 
+
 	@Override
-	public MaterialRequirementByRequest updateMaterialRequirementByRequest(
-			MaterialRequirementByRequest materialRequirementByRequest, RegSource regSource) {
+	public List<MaterialRequirementByRequest> updateMaterialRequirementByRequest(
+			List<MaterialRequirementByRequest> materialRequirementByRequest, RegSource regSource) {
 		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
 		Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
 		List<String> roleNames = loggedInRole.stream().map(GrantedAuthority::getAuthority)
 				.map(role -> role.replace("ROLE_", "")) // Remove "ROLE_" prefix
 				.collect(Collectors.toList());
 
-		if (roleNames.equals("Developer") || roleNames.equals("Adm")) {
-			throw new ResourceNotFoundException("Role Developer not found in: " + roleNames);
-		}
-		UserType userType = UserType.valueOf(roleNames.get(0)); // Make sure roleNames is not empty
-		User user = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource)
-				.orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
-		MaterialRequirementByRequest existing = repository.findById(materialRequirementByRequest.getReqIdLineId())
-				.orElseThrow(() -> new EntityNotFoundException(
-						"Work assignment not found with recId: " + materialRequirementByRequest.getReqIdLineId()));
+		if (roleNames.equals("Developer")) {
+	        throw new ResourceNotFoundException("Restricted role: " + roleNames);
+	    }
 
-		existing.setUpdatedBy(user.getBodSeqNo());
-		existing.setUpdatedDate(new Date()); // Set current date/time
-		existing.setStatus(materialRequirementByRequest.getStatus());
-		existing.setAmount(materialRequirementByRequest.getAmount());
-		existing.setMaterialCategory(materialRequirementByRequest.getMaterialCategory());
-		existing.setBrand(materialRequirementByRequest.getBrand());
-		existing.setItemName(materialRequirementByRequest.getItemName());
-		existing.setShape(materialRequirementByRequest.getShape());
-		existing.setModelName(materialRequirementByRequest.getModelName());
-		existing.setModelCode(materialRequirementByRequest.getModelCode());
-		existing.setSizeInInch(materialRequirementByRequest.getSizeInInch());
-		existing.setLength(materialRequirementByRequest.getLength());
-		existing.setLengthInUnit(materialRequirementByRequest.getLengthInUnit());
-		existing.setWidth(materialRequirementByRequest.getWidth());
-		existing.setWidthInUnit(materialRequirementByRequest.getWidthInUnit());
-		existing.setThickness(materialRequirementByRequest.getThickness());
-		existing.setThicknessInUnit(materialRequirementByRequest.getThicknessInUnit());
-		existing.setNoOfItems(materialRequirementByRequest.getNoOfItems());
-		existing.setWeightInKgs(materialRequirementByRequest.getWeightInKgs());
-		existing.setGst(materialRequirementByRequest.getGst());
-		existing.setTotalAmount(materialRequirementByRequest.getTotalAmount());
-		return repository.save(existing);
+	    UserType userType = UserType.valueOf(roleNames.get(0));
+
+	    // User identity variables
+	    String userId;
+	    String spId;
+
+	    if (userType == UserType.EC) {
+	        // EC User
+	        CustomerRegistration customer = customerRegistrationRepo
+	            .findByUserEmailAndUserType(loggedInUserEmail, userType)
+	            .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + loggedInUserEmail));
+	        
+	        userId = customer.getUserid();
+
+	    } else if (userType == UserType.Adm) {
+	        // Admin User
+	        AdminDetails admin = adminRepo.findByEmailAndUserType(loggedInUserEmail,userType)
+	            .orElseThrow(() -> new ResourceNotFoundException("Admin not found: " + loggedInUserEmail));
+	        
+	        userId = admin.getEmail();// or any other logic you want to follow
+
+	    } else {
+	        // Other user types
+	        User user = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource)
+	            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
+	        
+	        userId = user.getBodSeqNo(); // modify if needed
+	    }
+
+
+		List<MaterialRequirementByRequest> updatedList = new ArrayList<>();
+		for (MaterialRequirementByRequest request : materialRequirementByRequest) {
+			MaterialRequirementByRequest existing = repository.findById(request.getReqIdLineId())
+					.orElseThrow(() -> new EntityNotFoundException(
+							"Work assignment not found with recId: " + request.getReqIdLineId()));
+
+//			existing.setUpdatedBy(user.getBodSeqNo());
+			existing.setUpdatedBy(userId);
+			existing.setUpdatedDate(new Date()); // Set current date/time
+			existing.setStatus(request.getStatus());
+			existing.setAmount(request.getAmount());
+			existing.setMaterialCategory(request.getMaterialCategory());
+			existing.setBrand(request.getBrand());
+			existing.setItemName(request.getItemName());
+			existing.setShape(request.getShape());
+			existing.setModelName(request.getModelName());
+			existing.setModelCode(request.getModelCode());
+			existing.setSizeInInch(request.getSizeInInch());
+			existing.setLength(request.getLength());
+			existing.setLengthInUnit(request.getLengthInUnit());
+			existing.setWidth(request.getWidth());
+			existing.setWidthInUnit(request.getWidthInUnit());
+			existing.setThickness(request.getThickness());
+			existing.setThicknessInUnit(request.getThicknessInUnit());
+			existing.setNoOfItems(request.getNoOfItems());
+			existing.setWeightInKgs(request.getWeightInKgs());
+			existing.setGst(request.getGst());
+			existing.setTotalAmount(request.getTotalAmount());
+//		return repository.save(existing);
+			updatedList.add(repository.save(existing));
+		}
+		return updatedList;
 	}
 
 	@Override
 
 	public Page<MaterialRequirementByRequest> getMaterialRequirementByRequest(String materialCategory, String brand,
 			String itemName, String reqIdLineId, String modelName, String modelCode, String reqId, String spId,
-			String updatedBy, String status, Pageable pageable,RegSource regSource) {
-		
+			String updatedBy, String status, Pageable pageable, RegSource regSource) {
+
 		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
 		Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
 		List<String> roleNames = loggedInRole.stream().map(GrantedAuthority::getAuthority)

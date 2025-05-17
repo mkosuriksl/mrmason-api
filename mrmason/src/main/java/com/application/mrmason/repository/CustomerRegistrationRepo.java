@@ -10,6 +10,8 @@ import org.springframework.stereotype.Repository;
 
 import com.application.mrmason.entity.CustomerAssets;
 import com.application.mrmason.entity.CustomerRegistration;
+import com.application.mrmason.entity.User;
+import com.application.mrmason.entity.UserType;
 @Repository
 public interface CustomerRegistrationRepo extends JpaRepository<CustomerRegistration, Long>{
 	CustomerRegistration findByUserEmailOrUserMobile(String email,String phNo);
@@ -23,4 +25,5 @@ public interface CustomerRegistrationRepo extends JpaRepository<CustomerRegistra
 	@Query("SELECT c FROM CustomerRegistration c WHERE c.userEmail = :userEmail")
     CustomerRegistration findByUserEmailCustomQuery(@Param("userEmail") String userEmail);
 	CustomerRegistration findByUserMobile(String mobile);
+	Optional<CustomerRegistration> findByUserEmailAndUserType(String loggedInUserEmail, UserType userType);
 }

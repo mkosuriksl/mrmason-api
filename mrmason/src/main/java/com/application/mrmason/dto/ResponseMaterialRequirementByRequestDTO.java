@@ -1,5 +1,7 @@
 package com.application.mrmason.dto;
 
+import java.util.List;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,5 +10,5 @@ import lombok.Setter;
 public class ResponseMaterialRequirementByRequestDTO {
     private String message;
     private boolean status;
-    private MaterialRequirementByRequestDTO data;
+    private List<MaterialRequirementByRequestDTO> data;
 }

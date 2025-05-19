@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Repository;
 
+import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
@@ -69,6 +70,10 @@ public interface UserDAO extends JpaRepository<User, String> {
 	
 	@Query("SELECT u FROM User u WHERE (u.mobile = :contact OR u.email = :contact) AND u.bodSeqNo = :userId")
 	Optional<User> findByMobileOrEmailAndBodSeqNo(String contact, String userId);
+
+	@Query("SELECT s FROM User s WHERE s.email = :email AND s.userType = :userType")
+	Optional<User> findByEmailAndUserType(@Param("email") String email, @Param("userType") UserType userType);
+
 
 
 

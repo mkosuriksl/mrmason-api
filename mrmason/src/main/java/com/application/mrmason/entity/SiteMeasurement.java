@@ -24,16 +24,16 @@ public class SiteMeasurement {
     private String serviceRequestId;
     
     @Column(name = "east_site_length")
-    private String eastSiteLegth;
+    private String eastSiteLength;
     
     @Column(name = "west_site_length")
-    private String westSiteLegth;
+    private String westSiteLength;
     
     @Column(name = "south_site_length")
-    private String southSiteLegth;
+    private String southSiteLength;
     
     @Column(name = "north_site_length")
-    private String northSiteLegth;
+    private String northSiteLength;
     
     @Column(name = "location")
     private String location;
@@ -58,7 +58,22 @@ public class SiteMeasurement {
     
     @Column(name = "customer_Id")
     private String customerId;
+    
+    @Column(name = "user_id")
+    private String userId; 
 
+    @Column(name = "building_type")
+    private String buildingType;
+    
+    @Column(name = "no_of_floors")
+    private String noOfFloors;
+    
+    @Column(name = "request_date")
+    private Date requestDate;
+    
+    @Column(name = "status")
+    private String status;
+    
     @PrePersist
 	private void prePersist() {
 		LocalDateTime now = LocalDateTime.now();

@@ -11,10 +11,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SiteMeasurementDTO {
 	private String serviceRequestId;
-	private String eastSiteLegth;
-	private String westSiteLegth;
-	private String southSiteLegth;
-	private String northSiteLegth;
+	private String eastSiteLength;
+	private String westSiteLength;
+	private String southSiteLength;
+	private String northSiteLength;
 	private String location;
 	private String expectedBedRooms;
 	private String expectedAttachedBathRooms;
@@ -23,5 +23,10 @@ public class SiteMeasurementDTO {
 	private Date updatedDate;
 	private String updatedBy;
 	private String customerId;
+	private String userId;
+	private String buildingType;
+	private String noOfFloors;
+	private Date requestDate;
+	private String status;
 
 }

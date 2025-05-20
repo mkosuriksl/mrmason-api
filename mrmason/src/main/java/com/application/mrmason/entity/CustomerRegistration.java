@@ -3,6 +3,7 @@ package com.application.mrmason.entity;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -65,6 +66,12 @@ public class CustomerRegistration implements UserDetails {
 	@CreationTimestamp
 	@Column(name = "regdate")
 	private String regDate;
+	
+	@Column(name="updated_by")
+	private String updatedBy;
+	
+	@Column(name="updated_date")
+	private Date updatedDate;
 
 	public String getCustomerName() {
 		return this.userName;
@@ -118,4 +125,7 @@ public class CustomerRegistration implements UserDetails {
 	public boolean isEnabled() {
 		return true;
 	}
+
+
+	
 }

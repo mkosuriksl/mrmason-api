@@ -5,6 +5,8 @@ import java.util.Date;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
@@ -24,12 +26,18 @@ public class SPWorkAssignment {
 	@Id
 	@Column(name="rec_id",nullable = false)
 	private String recId;
+	
+	@Column(name="workerId_workOrdId_line",nullable = false)
+	private String workerIdWorkOrdIdLine;
+	
 	@Column(name="work_ord_id")
-	private String servicePersonId;
+	private String workOrdId;
 	@Column(name="worker_id")
 	private String workerId;
 	@Column(name="date_of_work")
 	private String dateOfWork;
+	@Column(name="end_date_of_work")
+	private String endDateOfWork;
 	@Column(name="updated_by")
 	private String updatedBy;
 	@Column(name="updated_date")
@@ -42,9 +50,20 @@ public class SPWorkAssignment {
 	private String 	paymentMethod;
 	@Column(name="currency")
 	private String currency;
-		
+	@Column(name="location")
+	private String location;
+	@Column(name="available")
+	private String available;
+	@Enumerated(EnumType.STRING)
+	@Column(name="status")
+	private SPWAStatus status;
+	@Column(name="spid")
+	private String spId;
 	@PrePersist
 	private void prePersist() {
+		if (this.workerIdWorkOrdIdLine == null) {
+	        this.workerIdWorkOrdIdLine = this.workerId + "_" + this.workOrdId + "_0001";
+	    }
 		LocalDateTime now = LocalDateTime.now();
 		String year = String.valueOf(now.getYear());
 		String month = String.format("%02d", now.getMonthValue());
@@ -52,8 +71,8 @@ public class SPWorkAssignment {
 		String hour = String.format("%02d", now.getHour());
 		String minute = String.format("%02d", now.getMinute());
 		String second = String.format("%02d", now.getSecond());
-		String millis = String.format("%03d", now.getNano() / 1000000).substring(0, 2); 
-		this.recId ="OR"+ year + month + day + hour + minute + second+millis;
+		String millis = String.format("%03d", now.getNano() / 1000000).substring(0, 2);
+		this.recId = "SPWA" + "_"+ year + month + day + hour + minute + second + millis;
 	}
 	
 }

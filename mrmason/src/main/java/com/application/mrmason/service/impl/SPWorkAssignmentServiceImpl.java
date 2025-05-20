@@ -1,5 +1,8 @@
 package com.application.mrmason.service.impl;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -14,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
+import com.application.mrmason.entity.SPWAStatus;
 import com.application.mrmason.entity.SPWorkAssignment;
 import com.application.mrmason.entity.SpWorkers;
 import com.application.mrmason.entity.User;
@@ -51,11 +55,7 @@ public class SPWorkAssignmentServiceImpl implements SPWorkAssignmentService {
 	UserDAO userDAO;
 
 	@Override
-	public SPWorkAssignment createAssignment(SPWorkAssignment assignment,RegSource regSource) {
-//	    String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
-//
-//	    User loginEmail = userDAO.findByEmailOne(loggedInUserEmail)
-//	        .orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
+	public List<SPWorkAssignment> createAssignment(SPWorkAssignment assignment,RegSource regSource) {
 
 		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
 		Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
@@ -78,13 +78,38 @@ public class SPWorkAssignmentServiceImpl implements SPWorkAssignmentService {
 	    }
 
 	    SpWorkers spWorker = spWorkerList.get(0);
-	    assignment.setWorkerId(spWorker.getWorkerId());
-	    assignment.setServicePersonId(spWorker.getServicePersonId());
-	    assignment.setUpdatedBy(user.getBodSeqNo());
-	    assignment.setUpdatedDate(new Date());
-	    assignment.setCurrency("INR");
+	    LocalDate start = LocalDate.parse(assignment.getDateOfWork());
+	    LocalDate end = LocalDate.parse(assignment.getEndDateOfWork());
 
-	    return repository.save(assignment);
+	    List<SPWorkAssignment> assignmentsToSave = new ArrayList<>();
+
+	    for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
+	        SPWorkAssignment newAssignment = new SPWorkAssignment();
+
+	        newAssignment.setWorkerId(spWorker.getWorkerId());
+	        newAssignment.setWorkOrdId(assignment.getWorkOrdId());
+	        newAssignment.setDateOfWork(date.toString());
+	        newAssignment.setEndDateOfWork(assignment.getEndDateOfWork());
+	        newAssignment.setUpdatedBy(user.getBodSeqNo());
+	        newAssignment.setUpdatedDate(new Date());
+	        newAssignment.setCurrency("INR");
+	        newAssignment.setStatus(SPWAStatus.NEW);
+	        newAssignment.setSpId(user.getBodSeqNo());
+	        newAssignment.setAmount(assignment.getAmount());
+	        newAssignment.setPaymentStatus(assignment.getPaymentStatus());
+	        newAssignment.setPaymentMethod(assignment.getPaymentMethod());
+	        newAssignment.setLocation(assignment.getLocation());
+	        newAssignment.setAvailable(assignment.getAvailable());
+
+	        // Generate unique recId
+	        String recId = "SPWA_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
+	        newAssignment.setRecId(recId);
+	        newAssignment.setWorkerIdWorkOrdIdLine(spWorker.getWorkerId() + "_" + assignment.getWorkOrdId() + "_" + "0001");
+
+	        assignmentsToSave.add(newAssignment);
+	    }
+
+	    return repository.saveAll(assignmentsToSave);
 	}
 
 //	public List<SPWorkAssignment> getWorkers(String recId,String servicePersonId, String workerId, String updatedBy) {
@@ -149,12 +174,16 @@ public class SPWorkAssignmentServiceImpl implements SPWorkAssignmentService {
 	    existing.setAmount(updatedAssignment.getAmount());
 	    existing.setPaymentStatus(updatedAssignment.getPaymentStatus());
 	    existing.setPaymentMethod(updatedAssignment.getPaymentMethod());
+	    existing.setStatus(updatedAssignment.getStatus());
+	    existing.setAvailable(updatedAssignment.getAvailable());
+	    existing.setLocation(updatedAssignment.getLocation());
+	    
 	    return repository.save(existing);
 	}
 
 	@Override
-	public Page<SPWorkAssignment> getWorkers(String recId, String servicePersonId, String workerId, String updatedBy,
-	        Pageable pageable) {
+	public Page<SPWorkAssignment> getWorkers(String recId, String workerIdWorkOrdIdLine, String workerId, String updatedBy,
+	        String location,String available,String fromDateOfWork,String toDateOfWork,String spId,Pageable pageable) {
 
 	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
@@ -166,8 +195,8 @@ public class SPWorkAssignmentServiceImpl implements SPWorkAssignmentService {
 	    if (recId != null && !recId.trim().isEmpty()) {
 	        predicates.add(cb.equal(root.get("recId"), recId));
 	    }
-	    if (servicePersonId != null && !servicePersonId.trim().isEmpty()) {
-	        predicates.add(cb.equal(root.get("servicePersonId"), servicePersonId));
+	    if (workerIdWorkOrdIdLine != null && !workerIdWorkOrdIdLine.trim().isEmpty()) {
+	        predicates.add(cb.equal(root.get("workerIdWorkOrdIdLine"), workerIdWorkOrdIdLine));
 	    }
 	    if (workerId != null && !workerId.trim().isEmpty()) {
 	        predicates.add(cb.equal(root.get("workerId"), workerId));
@@ -175,7 +204,23 @@ public class SPWorkAssignmentServiceImpl implements SPWorkAssignmentService {
 	    if (updatedBy != null && !updatedBy.trim().isEmpty()) {
 	        predicates.add(cb.equal(root.get("updatedBy"), updatedBy));
 	    }
-
+	    if (location != null && !location.trim().isEmpty()) {
+	        predicates.add(cb.equal(root.get("location"), location));
+	    }
+	    if (available != null && !available.trim().isEmpty()) {
+	        predicates.add(cb.equal(root.get("available"), available));
+	    }
+	    if (fromDateOfWork != null && toDateOfWork != null) {
+			predicates.add(cb.between(root.get("dateOfWork"), fromDateOfWork, toDateOfWork));
+		} else if (fromDateOfWork != null) {
+			predicates.add(cb.greaterThanOrEqualTo(root.get("dateOfWork"), fromDateOfWork));
+		} else if (toDateOfWork != null) {
+			predicates.add(cb.lessThanOrEqualTo(root.get("dateOfWork"), toDateOfWork));
+		}
+	    if (spId != null && !spId.trim().isEmpty()) {
+	        predicates.add(cb.equal(root.get("spId"), spId));
+	    }
+		
 	    query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
 	    TypedQuery<SPWorkAssignment> typedQuery = entityManager.createQuery(query);
 	    typedQuery.setFirstResult((int) pageable.getOffset());
@@ -189,8 +234,8 @@ public class SPWorkAssignmentServiceImpl implements SPWorkAssignmentService {
 	    if (recId != null && !recId.trim().isEmpty()) {
 	        countPredicates.add(cb.equal(countRoot.get("recId"), recId));
 	    }
-	    if (servicePersonId != null && !servicePersonId.trim().isEmpty()) {
-	        countPredicates.add(cb.equal(countRoot.get("servicePersonId"), servicePersonId));
+	    if (workerIdWorkOrdIdLine != null && !workerIdWorkOrdIdLine.trim().isEmpty()) {
+	        countPredicates.add(cb.equal(countRoot.get("workerIdWorkOrdIdLine"), workerIdWorkOrdIdLine));
 	    }
 	    if (workerId != null && !workerId.trim().isEmpty()) {
 	        countPredicates.add(cb.equal(countRoot.get("workerId"), workerId));
@@ -198,7 +243,22 @@ public class SPWorkAssignmentServiceImpl implements SPWorkAssignmentService {
 	    if (updatedBy != null && !updatedBy.trim().isEmpty()) {
 	        countPredicates.add(cb.equal(countRoot.get("updatedBy"), updatedBy));
 	    }
-
+	    if (location != null && !location.trim().isEmpty()) {
+	    	countPredicates.add(cb.equal(countRoot.get("location"), location));
+	    }
+	    if (available != null && !available.trim().isEmpty()) {
+	    	countPredicates.add(cb.equal(countRoot.get("available"), available));
+	    }
+	    if (fromDateOfWork != null && toDateOfWork != null) {
+			countPredicates.add(cb.between(countRoot.get("dateOfWork"), fromDateOfWork, toDateOfWork));
+		} else if (fromDateOfWork != null) {
+			countPredicates.add(cb.greaterThanOrEqualTo(countRoot.get("dateOfWork"), fromDateOfWork));
+		} else if (toDateOfWork != null) {
+			countPredicates.add(cb.lessThanOrEqualTo(countRoot.get("dateOfWork"), toDateOfWork));
+		}
+	    if (spId != null && !spId.trim().isEmpty()) {
+	    	countPredicates.add(cb.equal(countRoot.get("spId"), spId));
+	    }
 	    countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
 	    Long total = entityManager.createQuery(countQuery).getSingleResult();
 

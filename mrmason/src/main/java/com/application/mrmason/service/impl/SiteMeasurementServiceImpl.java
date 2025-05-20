@@ -385,7 +385,7 @@ public class SiteMeasurementServiceImpl implements SiteMeasurementService {
 			predicates.add(cb.equal(root.get("serviceRequestId"), serviceRequestId));
 		}
 		if (eastSiteLegth != null && !eastSiteLegth.trim().isEmpty()) {
-			predicates.add(cb.equal(root.get("eastSiteLegth"), eastSiteLegth));
+			predicates.add(cb.equal(root.get("eastSiteLength"), eastSiteLegth));
 		}
 		if (location != null && !location.trim().isEmpty()) {
 			predicates.add(cb.equal(root.get("location"), location));
@@ -448,7 +448,7 @@ public class SiteMeasurementServiceImpl implements SiteMeasurementService {
 			countPredicates.add(cb.equal(countRoot.get("serviceRequestId"), serviceRequestId));
 		}
 		if (eastSiteLegth != null && !eastSiteLegth.trim().isEmpty()) {
-			countPredicates.add(cb.equal(countRoot.get("eastSiteLegth"), eastSiteLegth));
+			countPredicates.add(cb.equal(countRoot.get("eastSiteLength"), eastSiteLegth));
 		}
 		if (location != null && !location.trim().isEmpty()) {
 			countPredicates.add(cb.equal(countRoot.get("location"), location));

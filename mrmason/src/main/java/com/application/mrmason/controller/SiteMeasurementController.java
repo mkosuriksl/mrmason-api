@@ -136,7 +136,7 @@ public class SiteMeasurementController {
 
 	@GetMapping("/get-site-measurement")
 	public ResponseEntity<?> getSiteMeasurement(@RequestParam(required = false) String serviceRequestId,
-			@RequestParam(required = false) String eastSiteLegth, @RequestParam(required = false) String location,
+			@RequestParam(required = false) String eastSiteLength, @RequestParam(required = false) String location,
 			@RequestParam(required = false) String userId,
 	        @RequestParam(required = false)@DateTimeFormat(pattern = "dd-MM-yyyy") Date fromRequestDate,
 	        @RequestParam(required = false)@DateTimeFormat(pattern = "dd-MM-yyyy") Date toRequestDate, 
@@ -148,7 +148,7 @@ public class SiteMeasurementController {
 
 		try {
 			Pageable pageable = PageRequest.of(page, size);
-			Page<SiteMeasurement> smPage = siteMeasurementService.getSiteMeasurement(serviceRequestId, eastSiteLegth,
+			Page<SiteMeasurement> smPage = siteMeasurementService.getSiteMeasurement(serviceRequestId, eastSiteLength,
 					location, userId,fromRequestDate,toRequestDate,expectedFromMonth,expectedToMonth, pageable);
 
 			if (!smPage.isEmpty()) {

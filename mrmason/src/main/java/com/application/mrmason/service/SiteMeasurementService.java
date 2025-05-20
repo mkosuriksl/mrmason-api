@@ -15,6 +15,7 @@ public interface SiteMeasurementService {
     SiteMeasurement updateSiteMeasurement(SiteMeasurement measurement,RegSource regSource);
     SiteMeasurement findByServiceRequestId(String serviceRequestId);
 //    public List<SiteMeasurement> getSiteMeasurement(String serviceRequestId, String eastSiteLegth, String location);
-    public Page<SiteMeasurement> getSiteMeasurement(String serviceRequestId, String eastSiteLegth, String location,String userId,Date fromRequestDate, Date toRequestDate, Pageable pageable);
+    public Page<SiteMeasurement> getSiteMeasurement(String serviceRequestId, String eastSiteLegth, String location,String userId,Date fromRequestDate, Date toRequestDate,String expectedFromMonth,
+            String expectedToMonth, Pageable pageable);
     public UpdateSiteMeasurementStatusResponseDTO updateStatus(UpdateSiteMeasurementStatusRequestDTO dto,RegSource regSource);
 }

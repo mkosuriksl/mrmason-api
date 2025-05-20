@@ -59,8 +59,8 @@ public class SiteMeasurement {
     @Column(name = "customer_Id")
     private String customerId;
     
-    @Column(name = "user_id")
-    private String userId; 
+//    @Column(name = "user_id")
+//    private String userId; 
 
     @Column(name = "building_type")
     private String buildingType;

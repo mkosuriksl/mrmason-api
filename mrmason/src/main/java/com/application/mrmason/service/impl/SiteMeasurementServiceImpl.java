@@ -1,10 +1,11 @@
 package com.application.mrmason.service.impl;
 
+import java.io.ByteArrayOutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,12 +32,23 @@ import com.application.mrmason.repository.UpdateSiteMeasurementStatusRepository;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.AuthDetailsProvider;
 import com.application.mrmason.service.SiteMeasurementService;
+import com.itextpdf.io.font.constants.StandardFonts;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.property.UnitValue;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
@@ -60,11 +72,12 @@ public class SiteMeasurementServiceImpl implements SiteMeasurementService {
 	
 	@Autowired
 	private UpdateSiteMeasurementStatusRepository updateSMSR;
+	
+	@Autowired
+	private EmailServiceImpl emailService;
 
 	@Override
 	public SiteMeasurement addSiteMeasurement(SiteMeasurement measurement, RegSource regSource) {
-//    	String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
-//    	CustomerRegistration login = repo.findByUserEmail(loggedInUserEmail);
 		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
 		Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
 
@@ -106,7 +119,87 @@ public class SiteMeasurementServiceImpl implements SiteMeasurementService {
 		measurement.setUpdatedDate(new Date());
 		measurement.setRequestDate(new Date());
 		measurement.setStatus("NEW");
-		return repository.save(measurement);
+		SiteMeasurement saved = repository.save(measurement);
+		CustomerRegistration customer = repo.findByUserids(saved.getCustomerId())
+			    .orElseThrow(() -> new ResourceNotFoundException("Customer not found for ID: " + saved.getCustomerId()));
+
+			String subject = "Site Measurement Added Successfully";
+			String body = "Dear " + customer.getCustomerName() + ",<br><br>" +
+			              "Your site measurement has been successfully recorded. See attached PDF.<br><br>Regards,<br>Mr Mason Team";
+
+			// Generate PDF
+			byte[] pdf = generateSiteMeasurementPdf(saved, customer);
+
+			// Send email
+			emailService.sendEmailWithAttachment(customer.getUserEmail(), subject, body, pdf, "SiteMeasurement.pdf");
+
+	    return saved;
+	}
+	public byte[] generateSiteMeasurementPdf(SiteMeasurement measurement, CustomerRegistration customer) {
+	    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
+	        PdfWriter writer = new PdfWriter(outputStream);
+	        PdfDocument pdf = new PdfDocument(writer);
+	        Document document = new Document(pdf);
+
+	        PdfFont font = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+	        float fontSize = 5f;
+
+	        // Header
+	        document.add(new Paragraph("Site Measurement Report").setFont(font).setFontSize(14).setBold());
+	        document.add(new Paragraph("Customer: " + customer.getCustomerName()).setFont(font).setFontSize(fontSize));
+	        document.add(new Paragraph("Service Request ID: " + measurement.getServiceRequestId())
+	                .setFont(font).setFontSize(fontSize));
+	        document.add(new Paragraph(" ")); // Spacer
+
+	        // Table
+	        Table table = new Table(UnitValue.createPercentArray(18)).useAllAvailableWidth();
+	        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+
+	        // Headers
+	        String[] headers = {
+	                "Service Request ID", "East Site Length", "West Site Length", "South Site Length", "North Site Length",
+	                "Location", "Expected BedRooms", "Expected Attached BathRooms", "Expected Additional BathRooms",
+	                "Expected Start Date", "Updated Date", "Updated By", "Customer ID", "User ID",
+	                "Building Type", "No Of Floors", "Request Date", "Status"
+	        };
+
+	        for (String h : headers) {
+	            table.addHeaderCell(new Cell().add(new Paragraph(h)).setFont(font).setFontSize(fontSize).setBold());
+	        }
+
+	        // Data row
+	        table.addCell(new Cell().add(new Paragraph(measurement.getServiceRequestId())).setFont(font).setFontSize(fontSize));
+	        table.addCell(new Cell().add(new Paragraph(measurement.getEastSiteLength())).setFont(font).setFontSize(fontSize));
+	        table.addCell(new Cell().add(new Paragraph(measurement.getWestSiteLength())).setFont(font).setFontSize(fontSize));
+	        table.addCell(new Cell().add(new Paragraph(measurement.getSouthSiteLength())).setFont(font).setFontSize(fontSize));
+	        table.addCell(new Cell().add(new Paragraph(measurement.getNorthSiteLength())).setFont(font).setFontSize(fontSize));
+	        table.addCell(new Cell().add(new Paragraph(measurement.getLocation())).setFont(font).setFontSize(fontSize));
+	        table.addCell(new Cell().add(new Paragraph(measurement.getExpectedBedRooms())).setFont(font).setFontSize(fontSize));
+	        table.addCell(new Cell().add(new Paragraph(measurement.getExpectedAttachedBathRooms())).setFont(font).setFontSize(fontSize));
+	        table.addCell(new Cell().add(new Paragraph(measurement.getExpectedAdditionalBathRooms())).setFont(font).setFontSize(fontSize));
+	        table.addCell(new Cell().add(new Paragraph(sdf.format(measurement.getExpectedStartDate()))).setFont(font).setFontSize(fontSize));
+	        table.addCell(new Cell().add(new Paragraph(sdf.format(measurement.getUpdatedDate()))).setFont(font).setFontSize(fontSize));
+	        table.addCell(new Cell().add(new Paragraph(measurement.getUpdatedBy())).setFont(font).setFontSize(fontSize));
+	        table.addCell(new Cell().add(new Paragraph(measurement.getCustomerId())).setFont(font).setFontSize(fontSize));
+//	        table.addCell(new Cell().add(new Paragraph(measurement.getUserId() == null ? "null" : measurement.getUserId())).setFont(font).setFontSize(fontSize));
+	        table.addCell(new Cell().add(new Paragraph(measurement.getBuildingType())).setFont(font).setFontSize(fontSize));
+	        table.addCell(new Cell().add(new Paragraph(measurement.getNoOfFloors())).setFont(font).setFontSize(fontSize));
+	        table.addCell(new Cell().add(new Paragraph(sdf.format(measurement.getRequestDate()))).setFont(font).setFontSize(fontSize));
+	        table.addCell(new Cell().add(new Paragraph(measurement.getStatus())).setFont(font).setFontSize(fontSize));
+
+	        // Add to document
+	        document.add(table);
+
+	        // Footer
+	        document.add(new Paragraph("\nThank you,\nMr Mason Team").setFont(font).setFontSize(fontSize));
+
+	        document.close();
+	        return outputStream.toByteArray();
+
+	    } catch (Exception e) {
+	        throw new RuntimeException("Failed to generate PDF", e);
+	    }
 	}
 
 	@Override
@@ -159,12 +252,26 @@ public class SiteMeasurementServiceImpl implements SiteMeasurementService {
 			existingMeasurement.setExpectedAttachedBathRooms(measurement.getExpectedAttachedBathRooms());
 			existingMeasurement.setExpectedAdditionalBathRooms(measurement.getExpectedAdditionalBathRooms());
 			existingMeasurement.setExpectedStartDate(measurement.getExpectedStartDate());
-			existingMeasurement.setCustomerId(measurement.getCustomerId());
-			existingMeasurement.setUserId(measurement.getUserId());
+//			existingMeasurement.setUserId(measurement.getUserId());
 			existingMeasurement.setUpdatedBy(userId);
 			existingMeasurement.setNoOfFloors(measurement.getNoOfFloors());
 			existingMeasurement.setBuildingType(measurement.getBuildingType());
-			return repository.save(existingMeasurement);
+			SiteMeasurement saved =  repository.save(existingMeasurement);
+			CustomerRegistration customer = repo.findByUserids(existingMeasurement.getCustomerId())
+	                .orElseThrow(() -> new ResourceNotFoundException("Customer not found for ID: " + saved.getCustomerId()));
+
+	        // Prepare email
+	        String subject = "Site Measurement Updated Successfully";
+	        String body = "Dear " + customer.getCustomerName() + ",<br><br>" +
+	                      "Your site measurement has been updated. See attached PDF.<br><br>Regards,<br>Mr Mason Team";
+
+	        // Generate PDF
+	        byte[] pdf = generateSiteMeasurementPdf(saved, customer);
+
+	        // Send email
+	        emailService.sendEmailWithAttachment(customer.getUserEmail(), subject, body, pdf, "UpdatedSiteMeasurement.pdf");
+
+	        return saved;
 		}
 		return null;
 	}
@@ -265,7 +372,8 @@ public class SiteMeasurementServiceImpl implements SiteMeasurementService {
 
 	@Override
 	public Page<SiteMeasurement> getSiteMeasurement(String serviceRequestId, String eastSiteLegth, String location,
-			String userId, Date fromRequestDate, Date toRequestDate, Pageable pageable) {
+			String userId, Date fromRequestDate, Date toRequestDate,String expectedFromMonth,
+	        String expectedToMonth, Pageable pageable) {
 		// Step 4: Build Criteria Query
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<SiteMeasurement> query = cb.createQuery(SiteMeasurement.class);
@@ -286,7 +394,7 @@ public class SiteMeasurementServiceImpl implements SiteMeasurementService {
 		// Step 5: Use request-provided userId if present, else fallback to
 		// loggedInUserId
 		if (userId != null && !userId.trim().isEmpty()) {
-			predicates.add(cb.equal(root.get("userId"), userId));
+			predicates.add(cb.equal(root.get("customerId"), userId));
 		}
 		if (fromRequestDate != null && toRequestDate != null) {
 			predicates.add(cb.between(root.get("requestDate"), fromRequestDate, toRequestDate));
@@ -295,6 +403,31 @@ public class SiteMeasurementServiceImpl implements SiteMeasurementService {
 		} else if (toRequestDate != null) {
 			predicates.add(cb.lessThanOrEqualTo(root.get("requestDate"), toRequestDate));
 		}
+		
+		Expression<Integer> monthExpr = cb.function("month", Integer.class, root.get("expectedStartDate"));
+	    Expression<Integer> dayExpr = cb.function("day", Integer.class, root.get("expectedStartDate"));
+
+	    if (expectedFromMonth != null && expectedToMonth != null) {
+	        int fromMonth = Integer.parseInt(expectedFromMonth);
+	        int toMonth = Integer.parseInt(expectedToMonth);
+
+	        if (fromMonth <= toMonth) {
+	            predicates.add(cb.between(monthExpr, fromMonth, toMonth));
+	        } else {
+	            // Handle year wrapping: e.g., Nov (11) to Feb (2)
+	            predicates.add(cb.or(
+	                cb.between(monthExpr, fromMonth, 12),
+	                cb.between(monthExpr, 1, toMonth)
+	            ));
+	        }
+	    } else if (expectedFromMonth != null) {
+	        int fromMonth = Integer.parseInt(expectedFromMonth);
+	        predicates.add(cb.equal(monthExpr, fromMonth));
+	    } else if (expectedToMonth != null) {
+	        int toMonth = Integer.parseInt(expectedToMonth);
+	        predicates.add(cb.equal(monthExpr, toMonth));
+	    }
+
 
 		query.select(root);
 		if (!predicates.isEmpty()) {
@@ -321,7 +454,7 @@ public class SiteMeasurementServiceImpl implements SiteMeasurementService {
 			countPredicates.add(cb.equal(countRoot.get("location"), location));
 		}
 		if (userId != null && !userId.trim().isEmpty()) {
-			countPredicates.add(cb.equal(countRoot.get("userId"), userId));
+			countPredicates.add(cb.equal(countRoot.get("customerId"), userId));
 		}
 
 		if (fromRequestDate != null && toRequestDate != null) {
@@ -331,6 +464,26 @@ public class SiteMeasurementServiceImpl implements SiteMeasurementService {
 		} else if (toRequestDate != null) {
 			countPredicates.add(cb.lessThanOrEqualTo(countRoot.get("requestDate"), toRequestDate));
 		}
+		Expression<Integer> countMonthExpr = cb.function("month", Integer.class, countRoot.get("expectedStartDate"));
+	    if (expectedFromMonth != null && expectedToMonth != null) {
+	        int fromMonth = Integer.parseInt(expectedFromMonth);
+	        int toMonth = Integer.parseInt(expectedToMonth);
+
+	        if (fromMonth <= toMonth) {
+	            countPredicates.add(cb.between(countMonthExpr, fromMonth, toMonth));
+	        } else {
+	            countPredicates.add(cb.or(
+	                cb.between(countMonthExpr, fromMonth, 12),
+	                cb.between(countMonthExpr, 1, toMonth)
+	            ));
+	        }
+	    } else if (expectedFromMonth != null) {
+	        int fromMonth = Integer.parseInt(expectedFromMonth);
+	        countPredicates.add(cb.equal(countMonthExpr, fromMonth));
+	    } else if (expectedToMonth != null) {
+	        int toMonth = Integer.parseInt(expectedToMonth);
+	        countPredicates.add(cb.equal(countMonthExpr, toMonth));
+	    }
 
 		countQuery.select(cb.count(countRoot));
 		if (!countPredicates.isEmpty()) {
@@ -400,6 +553,11 @@ public class SiteMeasurementServiceImpl implements SiteMeasurementService {
 		update.setComments(dto.getComments());
 		update.setUpdatedDate(new Date());
 		updateSMSR.save(update);
+		
+		siteOpt.setStatus(dto.getStatus());
+		siteOpt.setUpdatedBy(userId);
+		siteOpt.setUpdatedDate(new Date());
+		repository.save(siteOpt);
 
 		// Build and return response DTO
 		UpdateSiteMeasurementStatusResponseDTO response = new UpdateSiteMeasurementStatusResponseDTO();

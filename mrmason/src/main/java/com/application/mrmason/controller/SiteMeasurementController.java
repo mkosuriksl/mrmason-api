@@ -2,6 +2,10 @@ package com.application.mrmason.controller;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -23,10 +27,13 @@ import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.ResponseGetSiteMeasurementDTO;
 import com.application.mrmason.dto.ResponseSiteMeasurementDTO;
 import com.application.mrmason.dto.SiteMeasurementDTO;
+import com.application.mrmason.dto.SiteMeasurementWithCustomerDTO;
 import com.application.mrmason.dto.UpdateSiteMeasurementStatusRequestDTO;
 import com.application.mrmason.dto.UpdateSiteMeasurementStatusResponseDTO;
+import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.entity.SiteMeasurement;
 import com.application.mrmason.enums.RegSource;
+import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.service.SiteMeasurementService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +44,9 @@ public class SiteMeasurementController {
 
 	@Autowired
 	private SiteMeasurementService siteMeasurementService;
+	
+	@Autowired
+	private CustomerRegistrationRepo customerRegistrationRepo;
 
 	@ExceptionHandler(AccessDeniedException.class)
 	public ResponseEntity<ResponseSiteMeasurementDTO> handleAccessDeniedException(AccessDeniedException ex) {
@@ -116,7 +126,7 @@ public class SiteMeasurementController {
 		dto.setUpdatedDate(measurement.getUpdatedDate());
 		dto.setUpdatedBy(measurement.getUpdatedBy());
 		dto.setCustomerId(measurement.getCustomerId());
-		dto.setUserId(measurement.getUserId());
+//		dto.setUserId(measurement.getUserId());
 		dto.setBuildingType(measurement.getBuildingType());
 		dto.setNoOfFloors(measurement.getNoOfFloors());
 		dto.setRequestDate(measurement.getRequestDate());
@@ -129,7 +139,9 @@ public class SiteMeasurementController {
 			@RequestParam(required = false) String eastSiteLegth, @RequestParam(required = false) String location,
 			@RequestParam(required = false) String userId,
 	        @RequestParam(required = false)@DateTimeFormat(pattern = "dd-MM-yyyy") Date fromRequestDate,
-	        @RequestParam(required = false)@DateTimeFormat(pattern = "dd-MM-yyyy") Date toRequestDate, @RequestParam(defaultValue = "0") int page,
+	        @RequestParam(required = false)@DateTimeFormat(pattern = "dd-MM-yyyy") Date toRequestDate, 
+	        @RequestParam(required = false) String expectedFromMonth,
+	        @RequestParam(required = false) String expectedToMonth,@RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "10") int size) {
 
 		ResponseGetSiteMeasurementDTO response = new ResponseGetSiteMeasurementDTO();
@@ -137,12 +149,33 @@ public class SiteMeasurementController {
 		try {
 			Pageable pageable = PageRequest.of(page, size);
 			Page<SiteMeasurement> smPage = siteMeasurementService.getSiteMeasurement(serviceRequestId, eastSiteLegth,
-					location, userId,fromRequestDate,toRequestDate, pageable);
+					location, userId,fromRequestDate,toRequestDate,expectedFromMonth,expectedToMonth, pageable);
 
 			if (!smPage.isEmpty()) {
-				response.setMessage("Site Measurement Details");
-				response.setStatus(true);
-				response.setData(smPage.getContent());
+				List<SiteMeasurement> siteMeasurements = smPage.getContent();
+
+	            // Extract customerIds
+	            List<String> customerIds = siteMeasurements.stream()
+	                .map(SiteMeasurement::getCustomerId)
+	                .filter(Objects::nonNull)
+	                .distinct()
+	                .collect(Collectors.toList());
+
+	            // Fetch all customers by these IDs (you need to add this method in your CustomerRegistrationRepository)
+	            List<CustomerRegistration> customers = customerRegistrationRepo.findByUserIds(customerIds);
+
+	            // Now map customerId to CustomerRegistration for easy lookup
+	            Map<String, CustomerRegistration> customerMap = customers.stream()
+	                .collect(Collectors.toMap(CustomerRegistration::getUserid, Function.identity()));
+
+	            // Create combined DTO list
+	            List<SiteMeasurementWithCustomerDTO> combinedList = siteMeasurements.stream()
+	                .map(sm -> new SiteMeasurementWithCustomerDTO(sm, customerMap.get(sm.getCustomerId())))
+	                .collect(Collectors.toList());
+
+	            response.setMessage("Site Measurement Details with Customer Info");
+	            response.setStatus(true);
+	            response.setData(combinedList);
 			} else {
 				response.setMessage("No details found for given parameters/check your parameters");
 				response.setStatus(false);
@@ -178,29 +211,4 @@ public class SiteMeasurementController {
 
         return ResponseEntity.ok(genericResponse);
     }
-
-//	@GetMapping("/get-site-measurement")
-//	public ResponseEntity<?> getSiteMeasurement(@RequestParam(required = false) String serviceRequestId,
-//			@RequestParam(required = false) String eastSiteLegth, @RequestParam(required = false) String location,
-//			@RequestParam(required = false) Map<String, String> requestParams) {
-//
-//		ResponseGetSiteMeasurementDTO response = new ResponseGetSiteMeasurementDTO();
-//
-//		try {
-//			List<SiteMeasurement> sm = siteMeasurementService.getSiteMeasurement(serviceRequestId, eastSiteLegth,
-//					location);
-//			if (sm != null && !sm.isEmpty()) {
-//				response.setMessage("Site Measurement Details");
-//				response.setStatus(true);
-//				response.setData(sm);
-//			} else {
-//				response.setMessage("No details found for given parameters/check your parameters");
-//				response.setStatus(false);
-//				response.setData(sm != null ? sm : List.of());
-//			}
-//			return ResponseEntity.ok(response);
-//		} catch (Exception e) {
-//			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-//		}
-//	}
 }

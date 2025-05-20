@@ -7,9 +7,11 @@ import org.springframework.stereotype.Service;
 
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.service.EmailService;
+import com.itextpdf.io.IOException;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.util.ByteArrayDataSource;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -35,6 +37,26 @@ public class EmailServiceImpl implements EmailService {
 			log.error("Failed to send email to {}: {}", toEmail, e.getMessage());
 		}
 	}
+	
+	public void sendEmailWithAttachment(String to, String subject, String bodyText, byte[] pdfBytes, String filename) {
+	    try {
+	        MimeMessage message = mailsender.createMimeMessage();
+	        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+	        helper.setFrom("no_reply@kosuriers.com");
+	        helper.setTo(to);
+	        helper.setSubject(subject);
+	        helper.setText(bodyText, true); // send as HTML
+
+	        ByteArrayDataSource dataSource = new ByteArrayDataSource(pdfBytes, "application/pdf");
+	        helper.addAttachment(filename, dataSource);
+
+	        mailsender.send(message);
+	    } catch (MessagingException | IOException e) {
+	        throw new RuntimeException("Failed to send email with attachment", e);
+	    }
+	}
+
 
 	@Override
 	public void sendEmail(String toMail, String otp) {

@@ -8,9 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.application.mrmason.entity.CustomerAssets;
 import com.application.mrmason.entity.CustomerRegistration;
-import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 @Repository
 public interface CustomerRegistrationRepo extends JpaRepository<CustomerRegistration, Long>{
@@ -26,4 +24,12 @@ public interface CustomerRegistrationRepo extends JpaRepository<CustomerRegistra
     CustomerRegistration findByUserEmailCustomQuery(@Param("userEmail") String userEmail);
 	CustomerRegistration findByUserMobile(String mobile);
 	Optional<CustomerRegistration> findByUserEmailAndUserType(String loggedInUserEmail, UserType userType);
+	
+	@Query("SELECT c FROM CustomerRegistration c WHERE c.userid IN :userIds")
+	List<CustomerRegistration> findByUserIds(@Param("userIds") List<String> userIds);
+	
+	@Query("SELECT c FROM CustomerRegistration c WHERE c.userid = :userid")
+	Optional<CustomerRegistration> findByUserids(String userid);
+
+
 }

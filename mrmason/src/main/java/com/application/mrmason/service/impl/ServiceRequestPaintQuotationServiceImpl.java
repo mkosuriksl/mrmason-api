@@ -57,35 +57,43 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 
 	@Override
 	public List<ServiceRequestPaintQuotation> createServiceRequestPaintQuotationService(
-			List<ServiceRequestPaintQuotation> dtoList, RegSource regSource) {
-		UserInfo userInfo = getLoggedInUserInfo(regSource);
+		    String requestId, List<ServiceRequestPaintQuotation> dtoList, RegSource regSource) {
 
-		String requestId = dtoList.get(0).getRequestId();
-		ServiceRequest serviceRequest = serviceRequestRepo.findByRequestId(requestId);
-		if (serviceRequest == null) {
-			throw new RuntimeException("Service request not found with ID: " + requestId);
+		    UserInfo userInfo = getLoggedInUserInfo(regSource);
+		    ServiceRequest serviceRequest = serviceRequestRepo.findByRequestId(requestId);
+
+		    if (serviceRequest == null) {
+		        throw new RuntimeException("Service request not found with ID: " + requestId);
+		    }
+
+		    List<ServiceRequestPaintQuotation> savedQuotations = new ArrayList<>();
+		    int counter = 1;
+
+		    for (ServiceRequestPaintQuotation dto : dtoList) {
+		        ServiceRequestPaintQuotation sRPQ = new ServiceRequestPaintQuotation();
+		        sRPQ.setRequestId(requestId);
+
+		        String lineId = requestId + "_" + String.format("%04d", counter++);
+		        sRPQ.setRequestLineId(lineId);
+
+		        sRPQ.setRequestLineIdDescription(dto.getRequestLineIdDescription());
+		        sRPQ.setAreasInSqft(dto.getAreasInSqft());
+		        sRPQ.setQuotationAmount(dto.getQuotationAmount());
+		        sRPQ.setQuotedDate(dto.getQuotedDate());
+		        sRPQ.setStatus(SPWAStatus.NEW);
+		        sRPQ.setNoOfDays(dto.getNoOfDays());
+		        sRPQ.setNoOfResources(dto.getNoOfResources());
+		        sRPQ.setSpId(userInfo.userId);
+		        sRPQ.setUpdatedBy(userInfo.userId);
+		        sRPQ.setUpdatedDate(new Date());
+
+		        ServiceRequestPaintQuotation saved = serviceRequestPaintQuotationRepository.save(sRPQ);
+		        savedQuotations.add(saved);
+		    }
+
+		    return savedQuotations;
 		}
-		List<ServiceRequestPaintQuotation> savedQuotations = new ArrayList<>();
-		for (ServiceRequestPaintQuotation dto : dtoList) {
-			ServiceRequestPaintQuotation sRPQ = new ServiceRequestPaintQuotation();
-			sRPQ.setRequestId(serviceRequest.getRequestId());
-			sRPQ.setRequestLineIdDescription(dto.getRequestLineIdDescription());
-			sRPQ.setAreasInSqft(dto.getAreasInSqft());
-			sRPQ.setQuotationAmount(dto.getQuotationAmount());
-			sRPQ.setQuotedDate(dto.getQuotedDate());
-			sRPQ.setStatus(SPWAStatus.NEW);
-			sRPQ.setNoOfDays(dto.getNoOfDays());
-			sRPQ.setNoOfResources(dto.getNoOfResources());
-			sRPQ.setSpId(userInfo.userId);
-			sRPQ.setUpdatedBy(userInfo.userId);
-			sRPQ.setUpdatedDate(new Date());
 
-			ServiceRequestPaintQuotation saved = serviceRequestPaintQuotationRepository.save(sRPQ);
-			savedQuotations.add(saved);
-		}
-		return savedQuotations;
-
-	}
 
 	private static class UserInfo {
 
@@ -125,7 +133,6 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 	
 	@Override
 	public Page<ServiceRequestPaintQuotation> getServiceRequestPaintQuotationService(
-			String serviceRequestPaintId, 
 			String requestLineId, String requestLineIdDescription, String requestId,
 			Integer quotationAmount,String status,String spId,Pageable pageable) {
 
@@ -136,9 +143,6 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 	    Root<ServiceRequestPaintQuotation> root = query.from(ServiceRequestPaintQuotation.class);
 	    List<Predicate> predicates = new ArrayList<>();
 
-	    if (serviceRequestPaintId != null && !serviceRequestPaintId.trim().isEmpty()) {
-	        predicates.add(cb.equal(root.get("serviceRequestPaintId"), serviceRequestPaintId));
-	    }
 	    if (requestLineId != null && !requestLineId.trim().isEmpty()) {
 	        predicates.add(cb.equal(root.get("requestLineId"), requestLineId));
 	    }
@@ -168,9 +172,6 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 	    Root<ServiceRequestPaintQuotation> countRoot = countQuery.from(ServiceRequestPaintQuotation.class);
 	    List<Predicate> countPredicates = new ArrayList<>();
 
-	    if (serviceRequestPaintId != null && !serviceRequestPaintId.trim().isEmpty()) {
-	    	countPredicates.add(cb.equal(countRoot.get("serviceRequestPaintId"), serviceRequestPaintId));
-	    }
 	    if (requestLineId != null && !requestLineId.trim().isEmpty()) {
 	    	countPredicates.add(cb.equal(countRoot.get("requestLineId"), requestLineId));
 	    }

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.ResponseGetServiceRequestPaintQuotationDto;
+import com.application.mrmason.dto.ServiceRequestPaintQuotationWrapper;
 import com.application.mrmason.entity.ServiceRequestPaintQuotation;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.service.ServiceRequestPaintQuotationService;
@@ -28,10 +29,11 @@ public class ServiceRequestPaintQuotationController {
 
 	@PostMapping("/add-serviceRequestPaintquotation")
 	public ResponseEntity<GenericResponse<List<ServiceRequestPaintQuotation>>> createWorkAssignment(
-			@RequestBody List<ServiceRequestPaintQuotation> request, @RequestParam RegSource regSource) {
+			@RequestBody ServiceRequestPaintQuotationWrapper requestWrapper, @RequestParam RegSource regSource) {
 
 		List<ServiceRequestPaintQuotation> savedAssignments = serviceRequestPaintQuotationService
-				.createServiceRequestPaintQuotationService(request, regSource);
+				.createServiceRequestPaintQuotationService(requestWrapper.getRequestId(), requestWrapper.getItems(),
+						regSource);
 
 		GenericResponse<List<ServiceRequestPaintQuotation>> response = new GenericResponse<>(
 				"Service Request Paint Quotation created successfully", true, savedAssignments);
@@ -41,7 +43,6 @@ public class ServiceRequestPaintQuotationController {
 
 	@GetMapping("/get-serviceRequestPaintquotation")
 	public ResponseEntity<ResponseGetServiceRequestPaintQuotationDto> getServiceRequestPaintQuotationService(
-			@RequestParam(required = false) String serviceRequestPaintId,
 			@RequestParam(required = false) String requestLineId,
 			@RequestParam(required = false) String requestLineIdDescription,
 			@RequestParam(required = false) String requestId, @RequestParam(required = false) Integer quotationAmount,
@@ -50,7 +51,7 @@ public class ServiceRequestPaintQuotationController {
 
 		Pageable pageable = PageRequest.of(page, size);
 		Page<ServiceRequestPaintQuotation> srpqPage = serviceRequestPaintQuotationService
-				.getServiceRequestPaintQuotationService(serviceRequestPaintId, requestLineId, requestLineIdDescription,
+				.getServiceRequestPaintQuotationService( requestLineId, requestLineIdDescription,
 						requestId, quotationAmount, status, spId, pageable);
 		ResponseGetServiceRequestPaintQuotationDto response = new ResponseGetServiceRequestPaintQuotationDto();
 

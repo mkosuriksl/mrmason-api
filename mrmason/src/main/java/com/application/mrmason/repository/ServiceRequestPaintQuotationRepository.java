@@ -4,7 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.application.mrmason.entity.ServiceRequestPaintQuotation;
 
-public interface ServiceRequestPaintQuotationRepository extends JpaRepository<ServiceRequestPaintQuotation, Long>{
+public interface ServiceRequestPaintQuotationRepository extends JpaRepository<ServiceRequestPaintQuotation, String>{
 
 
 }

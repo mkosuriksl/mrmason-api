@@ -11,8 +11,9 @@ import com.application.mrmason.enums.RegSource;
 
 @Service
 public interface ServiceRequestPaintQuotationService {
-	public List<ServiceRequestPaintQuotation> createServiceRequestPaintQuotationService(List<ServiceRequestPaintQuotation> dtoList, RegSource regSource);
+	public List<ServiceRequestPaintQuotation> createServiceRequestPaintQuotationService(
+		    String requestId, List<ServiceRequestPaintQuotation> dtoList, RegSource regSource);
 	public Page<ServiceRequestPaintQuotation> getServiceRequestPaintQuotationService(
-			String serviceRequestPaintId, String requestLineId, String requestLineIdDescription, String requestId,
+			 String requestLineId, String requestLineIdDescription, String requestId,
 			Integer quotationAmount,String status,String spId,Pageable pageable);
 }

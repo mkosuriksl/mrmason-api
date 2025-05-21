@@ -2,6 +2,7 @@ package com.application.mrmason.entity;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -59,20 +60,28 @@ public class SPWorkAssignment {
 	private SPWAStatus status;
 	@Column(name="spid")
 	private String spId;
+//	@PrePersist
+//	private void prePersist() {
+//		if (this.workerIdWorkOrdIdLine == null) {
+//	        this.workerIdWorkOrdIdLine = this.workerId + "_" + this.workOrdId + "_0001";
+//	    }
+//		LocalDateTime now = LocalDateTime.now();
+//		String year = String.valueOf(now.getYear());
+//		String month = String.format("%02d", now.getMonthValue());
+//		String day = String.format("%02d", now.getDayOfMonth());
+//		String hour = String.format("%02d", now.getHour());
+//		String minute = String.format("%02d", now.getMinute());
+//		String second = String.format("%02d", now.getSecond());
+//		String millis = String.format("%03d", now.getNano() / 1000000).substring(0, 2);
+//		this.recId = "SPWA" + "_"+ year + month + day + hour + minute + second + millis;
+//	}
 	@PrePersist
 	private void prePersist() {
-		if (this.workerIdWorkOrdIdLine == null) {
+	    if (this.workerIdWorkOrdIdLine == null) {
 	        this.workerIdWorkOrdIdLine = this.workerId + "_" + this.workOrdId + "_0001";
 	    }
-		LocalDateTime now = LocalDateTime.now();
-		String year = String.valueOf(now.getYear());
-		String month = String.format("%02d", now.getMonthValue());
-		String day = String.format("%02d", now.getDayOfMonth());
-		String hour = String.format("%02d", now.getHour());
-		String minute = String.format("%02d", now.getMinute());
-		String second = String.format("%02d", now.getSecond());
-		String millis = String.format("%03d", now.getNano() / 1000000).substring(0, 2);
-		this.recId = "SPWA" + "_"+ year + month + day + hour + minute + second + millis;
+	    this.recId = "SPWA_" + UUID.randomUUID().toString().replace("-", "").substring(0, 20);
 	}
+
 	
 }

@@ -10,12 +10,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.ResponseGetServiceRequestPlumbingQuotationDto;
+import com.application.mrmason.dto.ServiceRequestPaintQuotationWrapper;
+import com.application.mrmason.dto.ServiceRequestPlumbingQuotationWrapper;
+import com.application.mrmason.entity.ServiceRequestPaintQuotation;
 import com.application.mrmason.entity.ServiceRequestPlumbingQuotation;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.service.ServiceRequestPlumbingQuotationService;
@@ -28,10 +32,10 @@ public class ServiceRequestPlumbingQuotationController {
 
 	@PostMapping("/add-serviceRequestPlumbingquotation")
 	public ResponseEntity<GenericResponse<List<ServiceRequestPlumbingQuotation>>> createWorkAssignment(
-			@RequestBody List<ServiceRequestPlumbingQuotation> request, @RequestParam RegSource regSource) {
+			@RequestBody ServiceRequestPlumbingQuotationWrapper requestWrapper, @RequestParam RegSource regSource) {
 
 		List<ServiceRequestPlumbingQuotation> savedAssignments = plumbingQuotationService
-				.createServiceRequestPlumbingQuotation(request, regSource);
+				.createServiceRequestPlumbingQuotation(requestWrapper.getRequestId(), requestWrapper.getItems(), regSource);
 
 		GenericResponse<List<ServiceRequestPlumbingQuotation>> response = new GenericResponse<>(
 				"Service Request Plumbing Quotation created successfully", true, savedAssignments);
@@ -64,6 +68,21 @@ public class ServiceRequestPlumbingQuotationController {
 		response.setTotalPages(srpqPage.getTotalPages());
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+	
+	@PutMapping("/update-serviceRequestPlumbingquotation")
+	public ResponseEntity<GenericResponse<List<ServiceRequestPlumbingQuotation>>> updateWorkAssignment(
+	        @RequestBody ServiceRequestPlumbingQuotationWrapper requestWrapper,
+	        @RequestParam RegSource regSource) {
+
+	    List<ServiceRequestPlumbingQuotation> updatedAssignments = plumbingQuotationService
+	            .updateServiceRequestPlumbingQuotation(requestWrapper.getRequestId(), requestWrapper.getItems(),
+	                    regSource);
+
+	    GenericResponse<List<ServiceRequestPlumbingQuotation>> response = new GenericResponse<>(
+	            "Service Request Paint Quotation updated successfully", true, updatedAssignments);
+
+	    return ResponseEntity.ok(response);
 	}
 
 }

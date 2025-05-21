@@ -24,10 +24,6 @@ import lombok.Setter;
 @Table(name = "service_request_electrical_quotation")
 public class ServiceRequestElectricalQuotation {
 
-//	@GeneratedValue(strategy = GenerationType.IDENTITY)
-//	@Column(name = "service_request_electrical_id")
-//	private long serviceRequestElectricalId;
-
 	@Id
 	@Column(name = "request_lineid")
 	private String requestLineId;

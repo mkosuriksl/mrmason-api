@@ -27,10 +27,6 @@ import lombok.Setter;
 @Builder
 @Table(name = "service_request_paint_quotation")
 public class ServiceRequestPaintQuotation {
-
-//	@GeneratedValue(strategy = GenerationType.IDENTITY)
-//	@Column(name = "service_request_paint_id")
-//	private long serviceRequestPaintId;
 	
 	@Id
 	@Column(name = "request_lineid")

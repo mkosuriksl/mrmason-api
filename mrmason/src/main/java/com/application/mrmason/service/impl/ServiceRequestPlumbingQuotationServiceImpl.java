@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +18,6 @@ import org.springframework.stereotype.Service;
 import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.SPWAStatus;
 import com.application.mrmason.entity.ServiceRequest;
-import com.application.mrmason.entity.ServiceRequestPaintQuotation;
 import com.application.mrmason.entity.ServiceRequestPlumbingQuotation;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
@@ -57,34 +58,53 @@ public class ServiceRequestPlumbingQuotationServiceImpl implements ServiceReques
 
 	@Override
 	public List<ServiceRequestPlumbingQuotation> createServiceRequestPlumbingQuotation(
-			List<ServiceRequestPlumbingQuotation> dtoList, RegSource regSource) {
+			String requestId,List<ServiceRequestPlumbingQuotation> dtoList, RegSource regSource) {
 		UserInfo userInfo = getLoggedInUserInfo(regSource);
 
-		String requestId = dtoList.get(0).getRequestId();
 		ServiceRequest serviceRequest = serviceRequestRepo.findByRequestId(requestId);
-		if (serviceRequest == null) {
-			throw new RuntimeException("Service request not found with ID: " + requestId);
-		}
-		List<ServiceRequestPlumbingQuotation> savedQuotations = new ArrayList<>();
-		for (ServiceRequestPlumbingQuotation dto : dtoList) {
-			ServiceRequestPlumbingQuotation sRPQ = new ServiceRequestPlumbingQuotation();
-			sRPQ.setRequestId(serviceRequest.getRequestId());
-			sRPQ.setRequestLineIdDescription(dto.getRequestLineIdDescription());
-			sRPQ.setAreasInSqft(dto.getAreasInSqft());
-			sRPQ.setQuotationAmount(dto.getQuotationAmount());
-			sRPQ.setQuotedDate(dto.getQuotedDate());
-			sRPQ.setStatus(SPWAStatus.NEW);
-			sRPQ.setNoOfDays(dto.getNoOfDays());
-			sRPQ.setNoOfResources(dto.getNoOfResources());
-			sRPQ.setSpId(userInfo.userId);
-			sRPQ.setUpdatedBy(userInfo.userId);
-			sRPQ.setUpdatedDate(new Date());
 
-			ServiceRequestPlumbingQuotation saved = plumbingQuotationRepository.save(sRPQ);
-			savedQuotations.add(saved);
-		}
-		return savedQuotations;
+	    if (serviceRequest == null) {
+	        throw new RuntimeException("Service request not found with ID: " + requestId);
+	    }
+	    List<String> existingLineIds = plumbingQuotationRepository
+	            .findByRequestId(requestId)
+	            .stream()
+	            .map(ServiceRequestPlumbingQuotation::getRequestLineId)
+	            .collect(Collectors.toList());
 
+	    // Step 2: Extract the highest counter
+	    int maxCounter = existingLineIds.stream()
+	            .map(id -> id.substring(id.lastIndexOf("_") + 1))
+	            .mapToInt(Integer::parseInt)
+	            .max()
+	            .orElse(0); // If no entries exist, start at 0
+
+	    List<ServiceRequestPlumbingQuotation> savedQuotations = new ArrayList<>();
+
+	    for (ServiceRequestPlumbingQuotation dto : dtoList) {
+	        // Generate next lineId
+	        int nextCounter = ++maxCounter;
+	        String lineId = requestId + "_" + String.format("%04d", nextCounter);
+
+	        // Create new entry
+	        ServiceRequestPlumbingQuotation sRPQ = new ServiceRequestPlumbingQuotation();
+	        sRPQ.setRequestId(requestId);
+	        sRPQ.setRequestLineId(lineId);
+	        sRPQ.setRequestLineIdDescription(dto.getRequestLineIdDescription());
+	        sRPQ.setAreasInSqft(dto.getAreasInSqft());
+	        sRPQ.setQuotationAmount(dto.getQuotationAmount());
+	        sRPQ.setQuotedDate(new Date());
+	        sRPQ.setStatus(SPWAStatus.NEW);
+	        sRPQ.setNoOfDays(dto.getNoOfDays());
+	        sRPQ.setNoOfResources(dto.getNoOfResources());
+	        sRPQ.setSpId(userInfo.userId);
+	        sRPQ.setUpdatedBy(userInfo.userId);
+	        sRPQ.setUpdatedDate(new Date());
+
+	        ServiceRequestPlumbingQuotation saved = plumbingQuotationRepository.save(sRPQ);
+	        savedQuotations.add(saved);
+	    }
+	    return savedQuotations;
 	}
 
 	private static class UserInfo {
@@ -185,6 +205,47 @@ public class ServiceRequestPlumbingQuotationServiceImpl implements ServiceReques
 	    Long total = entityManager.createQuery(countQuery).getSingleResult();
 
 	    return new PageImpl<>(typedQuery.getResultList(), pageable, total);
+	}
+
+	@Override
+	public List<ServiceRequestPlumbingQuotation> updateServiceRequestPlumbingQuotation(String requestId,
+			List<ServiceRequestPlumbingQuotation> dtoList, RegSource regSource) {
+		UserInfo userInfo = getLoggedInUserInfo(regSource);
+	    ServiceRequest serviceRequest = serviceRequestRepo.findByRequestId(requestId);
+
+	    if (serviceRequest == null) {
+	        throw new RuntimeException("Service request not found with ID: " + requestId);
+	    }
+
+	    // Step 1: Get existing records and map them by requestLineId
+	    Map<String, ServiceRequestPlumbingQuotation> existingMap = plumbingQuotationRepository
+	            .findByRequestId(requestId)
+	            .stream()
+	            .collect(Collectors.toMap(ServiceRequestPlumbingQuotation::getRequestLineId, Function.identity()));
+
+	    List<ServiceRequestPlumbingQuotation> updatedQuotations = new ArrayList<>();
+
+	    for (ServiceRequestPlumbingQuotation dto : dtoList) {
+	    	ServiceRequestPlumbingQuotation existing = existingMap.get(dto.getRequestLineId());
+
+	        if (existing != null) {
+	            existing.setRequestLineIdDescription(dto.getRequestLineIdDescription());
+	            existing.setAreasInSqft(dto.getAreasInSqft());
+	            existing.setQuotationAmount(dto.getQuotationAmount());
+	            existing.setQuotedDate(new Date());
+	            existing.setStatus(dto.getStatus()); // Optional: mark as updated
+	            existing.setNoOfDays(dto.getNoOfDays());
+	            existing.setNoOfResources(dto.getNoOfResources());
+	            existing.setUpdatedBy(userInfo.userId);
+	            existing.setUpdatedDate(new Date());
+
+	            ServiceRequestPlumbingQuotation saved = plumbingQuotationRepository.save(existing);
+	            updatedQuotations.add(saved);
+	        }
+	        // else: skip as it's not an existing record
+	    }
+
+	    return updatedQuotations;
 	}
 
 }

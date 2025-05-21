@@ -2,14 +2,10 @@ package com.application.mrmason.entity;
 
 import java.util.Date;
 
-import org.hibernate.annotations.CreationTimestamp;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
@@ -27,11 +23,12 @@ import lombok.Setter;
 @Builder
 @Table(name = "service_request_electrical_quotation")
 public class ServiceRequestElectricalQuotation {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "service_request_electrical_id")
-	private long serviceRequestElectricalId;
 
+//	@GeneratedValue(strategy = GenerationType.IDENTITY)
+//	@Column(name = "service_request_electrical_id")
+//	private long serviceRequestElectricalId;
+
+	@Id
 	@Column(name = "request_lineid")
 	private String requestLineId;
 
@@ -76,5 +73,11 @@ public class ServiceRequestElectricalQuotation {
 		}
 
 	}
+	public String getRequestLineId() {
+        return requestLineId;
+    }
 
+    public void setRequestLineId(String requestLineId) {
+        this.requestLineId = requestLineId;
+    }
 }

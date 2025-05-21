@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +19,6 @@ import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.SPWAStatus;
 import com.application.mrmason.entity.ServiceRequest;
 import com.application.mrmason.entity.ServiceRequestElectricalQuotation;
-import com.application.mrmason.entity.ServiceRequestPaintQuotation;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
@@ -56,23 +57,39 @@ public class ServiceRequestElectricalQuotationServiceImpl implements ServiceRequ
 	private ServiceRequestElectricalQuotationRepository electricalQuotationRepository;
 
 	@Override
-	public List<ServiceRequestElectricalQuotation> createServiceRequestElectricalQuotationService(
+	public List<ServiceRequestElectricalQuotation> createServiceRequestElectricalQuotationService(String requestId,
 			List<ServiceRequestElectricalQuotation> dtoList, RegSource regSource) {
-		UserInfo userInfo = getLoggedInUserInfo(regSource);
 
-		String requestId = dtoList.get(0).getRequestId();
+		UserInfo userInfo = getLoggedInUserInfo(regSource);
 		ServiceRequest serviceRequest = serviceRequestRepo.findByRequestId(requestId);
+
 		if (serviceRequest == null) {
 			throw new RuntimeException("Service request not found with ID: " + requestId);
 		}
+
+		// Step 1: Fetch existing line IDs for this requestId
+		List<String> existingLineIds = electricalQuotationRepository.findByRequestId(requestId).stream()
+				.map(ServiceRequestElectricalQuotation::getRequestLineId).collect(Collectors.toList());
+
+		// Step 2: Extract the highest counter
+		int maxCounter = existingLineIds.stream().map(id -> id.substring(id.lastIndexOf("_") + 1))
+				.mapToInt(Integer::parseInt).max().orElse(0); // If no entries exist, start at 0
+
 		List<ServiceRequestElectricalQuotation> savedQuotations = new ArrayList<>();
+
 		for (ServiceRequestElectricalQuotation dto : dtoList) {
+			// Generate next lineId
+			int nextCounter = ++maxCounter;
+			String lineId = requestId + "_" + String.format("%04d", nextCounter);
+
+			// Create new entry
 			ServiceRequestElectricalQuotation sRPQ = new ServiceRequestElectricalQuotation();
-			sRPQ.setRequestId(serviceRequest.getRequestId());
+			sRPQ.setRequestId(requestId);
+			sRPQ.setRequestLineId(lineId);
 			sRPQ.setRequestLineIdDescription(dto.getRequestLineIdDescription());
 			sRPQ.setQty(dto.getQty());
 			sRPQ.setAmount(dto.getAmount());
-			sRPQ.setQuotedDate(dto.getQuotedDate());
+			sRPQ.setQuotedDate(new Date());
 			sRPQ.setStatus(SPWAStatus.NEW);
 			sRPQ.setNoOfDays(dto.getNoOfDays());
 			sRPQ.setNoOfResources(dto.getNoOfResources());
@@ -83,6 +100,7 @@ public class ServiceRequestElectricalQuotationServiceImpl implements ServiceRequ
 			ServiceRequestElectricalQuotation saved = electricalQuotationRepository.save(sRPQ);
 			savedQuotations.add(saved);
 		}
+
 		return savedQuotations;
 	}
 
@@ -121,9 +139,9 @@ public class ServiceRequestElectricalQuotationServiceImpl implements ServiceRequ
 
 		return new UserInfo(userId);
 	}
+
 	@Override
-	public Page<ServiceRequestElectricalQuotation> getServiceRequestElectricalQuotationService(
-			String serviceRequestElectricalId, String requestLineId, String requestLineIdDescription, String requestId,
+	public Page<ServiceRequestElectricalQuotation> getServiceRequestElectricalQuotationService(String requestLineId, String requestLineIdDescription, String requestId,
 			Integer qty, Integer amount, String status, String spId, Pageable pageable) {
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -134,9 +152,6 @@ public class ServiceRequestElectricalQuotationServiceImpl implements ServiceRequ
 		Root<ServiceRequestElectricalQuotation> root = query.from(ServiceRequestElectricalQuotation.class);
 		List<Predicate> predicates = new ArrayList<>();
 
-		if (serviceRequestElectricalId != null && !serviceRequestElectricalId.trim().isEmpty()) {
-			predicates.add(cb.equal(root.get("serviceRequestElectricalId"), serviceRequestElectricalId));
-		}
 		if (requestLineId != null && !requestLineId.trim().isEmpty()) {
 			predicates.add(cb.equal(root.get("requestLineId"), requestLineId));
 		}
@@ -166,9 +181,6 @@ public class ServiceRequestElectricalQuotationServiceImpl implements ServiceRequ
 		Root<ServiceRequestElectricalQuotation> countRoot = countQuery.from(ServiceRequestElectricalQuotation.class);
 		List<Predicate> countPredicates = new ArrayList<>();
 
-		if (serviceRequestElectricalId != null && !serviceRequestElectricalId.trim().isEmpty()) {
-			countPredicates.add(cb.equal(countRoot.get("serviceRequestElectricalId"), serviceRequestElectricalId));
-		}
 		if (requestLineId != null && !requestLineId.trim().isEmpty()) {
 			countPredicates.add(cb.equal(countRoot.get("requestLineId"), requestLineId));
 		}
@@ -192,5 +204,47 @@ public class ServiceRequestElectricalQuotationServiceImpl implements ServiceRequ
 
 		return new PageImpl<>(typedQuery.getResultList(), pageable, total);
 	}
+	
+	@Override
+	public List<ServiceRequestElectricalQuotation> updateServiceRequestElectricalQuotation(
+	        String requestId, List<ServiceRequestElectricalQuotation> dtoList, RegSource regSource) {
+
+	    UserInfo userInfo = getLoggedInUserInfo(regSource);
+	    ServiceRequest serviceRequest = serviceRequestRepo.findByRequestId(requestId);
+
+	    if (serviceRequest == null) {
+	        throw new RuntimeException("Service request not found with ID: " + requestId);
+	    }
+
+	    // Step 1: Delete existing quotations for the requestId
+	    Map<String, ServiceRequestElectricalQuotation> existingMap = electricalQuotationRepository
+	            .findByRequestId(requestId)
+	            .stream()
+	            .collect(Collectors.toMap(ServiceRequestElectricalQuotation::getRequestLineId, Function.identity()));
+
+	    List<ServiceRequestElectricalQuotation> updatedQuotations = new ArrayList<>();
+
+	    for (ServiceRequestElectricalQuotation dto : dtoList) {
+	    	ServiceRequestElectricalQuotation existing = existingMap.get(dto.getRequestLineId());
+
+	        if (existing != null) {
+	            existing.setRequestLineIdDescription(dto.getRequestLineIdDescription());
+	            existing.setQty(dto.getQty());
+	            existing.setAmount(dto.getAmount());
+	            existing.setQuotedDate(new Date());
+	            existing.setStatus(dto.getStatus()); // Optional: mark as updated
+	            existing.setNoOfDays(dto.getNoOfDays());
+	            existing.setNoOfResources(dto.getNoOfResources());
+	            existing.setUpdatedBy(userInfo.userId);
+	            existing.setUpdatedDate(new Date());
+
+	            ServiceRequestElectricalQuotation saved = electricalQuotationRepository.save(existing);
+	            updatedQuotations.add(saved);
+	        }
+	    }
+
+	    return updatedQuotations;
+	}
+
 
 }

@@ -56,44 +56,6 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 	@Autowired
 	private ServiceRequestPaintQuotationRepository serviceRequestPaintQuotationRepository;
 
-//	@Override
-//	public List<ServiceRequestPaintQuotation> createServiceRequestPaintQuotationService(
-//		    String requestId, List<ServiceRequestPaintQuotation> dtoList, RegSource regSource) {
-//
-//		    UserInfo userInfo = getLoggedInUserInfo(regSource);
-//		    ServiceRequest serviceRequest = serviceRequestRepo.findByRequestId(requestId);
-//
-//		    if (serviceRequest == null) {
-//		        throw new RuntimeException("Service request not found with ID: " + requestId);
-//		    }
-//
-//		    List<ServiceRequestPaintQuotation> savedQuotations = new ArrayList<>();
-//		    int counter = 1;
-//
-//		    for (ServiceRequestPaintQuotation dto : dtoList) {
-//		        ServiceRequestPaintQuotation sRPQ = new ServiceRequestPaintQuotation();
-//		        sRPQ.setRequestId(requestId);
-//
-//		        String lineId = requestId + "_" + String.format("%04d", counter++);
-//		        sRPQ.setRequestLineId(lineId);
-//
-//		        sRPQ.setRequestLineIdDescription(dto.getRequestLineIdDescription());
-//		        sRPQ.setAreasInSqft(dto.getAreasInSqft());
-//		        sRPQ.setQuotationAmount(dto.getQuotationAmount());
-//		        sRPQ.setQuotedDate(dto.getQuotedDate());
-//		        sRPQ.setStatus(SPWAStatus.NEW);
-//		        sRPQ.setNoOfDays(dto.getNoOfDays());
-//		        sRPQ.setNoOfResources(dto.getNoOfResources());
-//		        sRPQ.setSpId(userInfo.userId);
-//		        sRPQ.setUpdatedBy(userInfo.userId);
-//		        sRPQ.setUpdatedDate(new Date());
-//
-//		        ServiceRequestPaintQuotation saved = serviceRequestPaintQuotationRepository.save(sRPQ);
-//		        savedQuotations.add(saved);
-//		    }
-//
-//		    return savedQuotations;
-//		}
 
 	@Override
 	public List<ServiceRequestPaintQuotation> createServiceRequestPaintQuotationService(

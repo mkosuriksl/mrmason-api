@@ -10,18 +10,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.ResponseGetServiceRequestElectricalQuotationDto;
-import com.application.mrmason.dto.ResponseGetServiceRequestPaintQuotationDto;
+import com.application.mrmason.dto.ServiceRequestElectricalQuotationWrapper;
 import com.application.mrmason.entity.ServiceRequestElectricalQuotation;
-import com.application.mrmason.entity.ServiceRequestPaintQuotation;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.service.ServiceRequestElectricalQuotationService;
-import com.application.mrmason.service.ServiceRequestPaintQuotationService;
 
 @RestController
 public class ServiceRequestElectricalQuotationController {
@@ -31,10 +30,10 @@ public class ServiceRequestElectricalQuotationController {
 
 	@PostMapping("/add-serviceRequestElectricalquotation")
 	public ResponseEntity<GenericResponse<List<ServiceRequestElectricalQuotation>>> createServiceRequestElectricalQuotationService(
-			@RequestBody List<ServiceRequestElectricalQuotation> request, @RequestParam RegSource regSource) {
+			@RequestBody ServiceRequestElectricalQuotationWrapper requestWrapper, @RequestParam RegSource regSource) {
 
 		List<ServiceRequestElectricalQuotation> savedAssignments = electricalQuotationService
-				.createServiceRequestElectricalQuotationService(request, regSource);
+				.createServiceRequestElectricalQuotationService(requestWrapper.getRequestId(), requestWrapper.getItems(),regSource);
 
 		GenericResponse<List<ServiceRequestElectricalQuotation>> response = new GenericResponse<>(
 				"Service Request Electrical Quotation created successfully", true, savedAssignments);
@@ -44,7 +43,6 @@ public class ServiceRequestElectricalQuotationController {
 
 	@GetMapping("/get-serviceRequestElectricalquotation")
 	public ResponseEntity<ResponseGetServiceRequestElectricalQuotationDto> getServiceRequestPaintQuotationService(
-			@RequestParam(required = false) String serviceRequestPaintId,
 			@RequestParam(required = false) String requestLineId,
 			@RequestParam(required = false) String requestLineIdDescription,
 			@RequestParam(required = false) String requestId, @RequestParam(required = false) Integer qty,
@@ -54,7 +52,7 @@ public class ServiceRequestElectricalQuotationController {
 
 		Pageable pageable = PageRequest.of(page, size);
 		Page<ServiceRequestElectricalQuotation> srpqPage = electricalQuotationService
-				.getServiceRequestElectricalQuotationService(serviceRequestPaintId, requestLineId, requestLineIdDescription,
+				.getServiceRequestElectricalQuotationService(requestLineId, requestLineIdDescription,
 						requestId, qty,amount, status, spId, pageable);
 		ResponseGetServiceRequestElectricalQuotationDto response = new ResponseGetServiceRequestElectricalQuotationDto();
 
@@ -69,6 +67,21 @@ public class ServiceRequestElectricalQuotationController {
 		response.setTotalPages(srpqPage.getTotalPages());
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+	
+	@PutMapping("/update-serviceRequestElectricalquotation")
+	public ResponseEntity<GenericResponse<List<ServiceRequestElectricalQuotation>>> updateWorkAssignment(
+	        @RequestBody ServiceRequestElectricalQuotationWrapper requestWrapper,
+	        @RequestParam RegSource regSource) {
+
+	    List<ServiceRequestElectricalQuotation> updatedAssignments = electricalQuotationService
+	            .updateServiceRequestElectricalQuotation(requestWrapper.getRequestId(), requestWrapper.getItems(),
+	                    regSource);
+
+	    GenericResponse<List<ServiceRequestElectricalQuotation>> response = new GenericResponse<>(
+	            "Service Request Electrical Quotation updated successfully", true, updatedAssignments);
+
+	    return ResponseEntity.ok(response);
 	}
 
 }

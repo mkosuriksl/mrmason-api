@@ -41,7 +41,6 @@ public class ServiceRequestPlumbingQuotationController {
 
 	@GetMapping("/get-serviceRequestPlumbingquotation")
 	public ResponseEntity<ResponseGetServiceRequestPlumbingQuotationDto> getServiceRequestPaintQuotationService(
-			@RequestParam(required = false) String serviceRequestPlumbingId,
 			@RequestParam(required = false) String requestLineId,
 			@RequestParam(required = false) String requestLineIdDescription,
 			@RequestParam(required = false) String requestId, @RequestParam(required = false) Integer quotationAmount,
@@ -50,7 +49,7 @@ public class ServiceRequestPlumbingQuotationController {
 
 		Pageable pageable = PageRequest.of(page, size);
 		Page<ServiceRequestPlumbingQuotation> srpqPage = plumbingQuotationService
-				.getServiceRequestPlumbingQuotation(serviceRequestPlumbingId, requestLineId, requestLineIdDescription,
+				.getServiceRequestPlumbingQuotation(requestLineId, requestLineIdDescription,
 						requestId, quotationAmount, status, spId, pageable);
 		ResponseGetServiceRequestPlumbingQuotationDto response = new ResponseGetServiceRequestPlumbingQuotationDto();
 

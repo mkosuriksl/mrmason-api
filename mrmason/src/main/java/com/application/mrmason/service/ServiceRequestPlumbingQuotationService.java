@@ -12,7 +12,7 @@ public interface ServiceRequestPlumbingQuotationService {
 	public List<ServiceRequestPlumbingQuotation> createServiceRequestPlumbingQuotation(
 			List<ServiceRequestPlumbingQuotation> dtoList, RegSource regSource);
 
-	public Page<ServiceRequestPlumbingQuotation> getServiceRequestPlumbingQuotation(String serviceRequestPlumbingId,
+	public Page<ServiceRequestPlumbingQuotation> getServiceRequestPlumbingQuotation(
 			String requestLineId, String requestLineIdDescription, String requestId, Integer quotationAmount,
 			String status, String spId, Pageable pageable);
 }

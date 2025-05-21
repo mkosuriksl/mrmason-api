@@ -124,7 +124,7 @@ public class ServiceRequestPlumbingQuotationServiceImpl implements ServiceReques
 	}
 
 	@Override
-	public Page<ServiceRequestPlumbingQuotation> getServiceRequestPlumbingQuotation(String serviceRequestPlumbingId,
+	public Page<ServiceRequestPlumbingQuotation> getServiceRequestPlumbingQuotation(
 			String requestLineId, String requestLineIdDescription, String requestId, Integer quotationAmount,
 			String status, String spId, Pageable pageable) {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -134,9 +134,6 @@ public class ServiceRequestPlumbingQuotationServiceImpl implements ServiceReques
 	    Root<ServiceRequestPlumbingQuotation> root = query.from(ServiceRequestPlumbingQuotation.class);
 	    List<Predicate> predicates = new ArrayList<>();
 
-	    if (serviceRequestPlumbingId != null && !serviceRequestPlumbingId.trim().isEmpty()) {
-	        predicates.add(cb.equal(root.get("serviceRequestPlumbingId"), serviceRequestPlumbingId));
-	    }
 	    if (requestLineId != null && !requestLineId.trim().isEmpty()) {
 	        predicates.add(cb.equal(root.get("requestLineId"), requestLineId));
 	    }
@@ -166,9 +163,6 @@ public class ServiceRequestPlumbingQuotationServiceImpl implements ServiceReques
 	    Root<ServiceRequestPlumbingQuotation> countRoot = countQuery.from(ServiceRequestPlumbingQuotation.class);
 	    List<Predicate> countPredicates = new ArrayList<>();
 
-	    if (serviceRequestPlumbingId != null && !serviceRequestPlumbingId.trim().isEmpty()) {
-	    	countPredicates.add(cb.equal(countRoot.get("serviceRequestPlumbingId"), serviceRequestPlumbingId));
-	    }
 	    if (requestLineId != null && !requestLineId.trim().isEmpty()) {
 	    	countPredicates.add(cb.equal(countRoot.get("requestLineId"), requestLineId));
 	    }

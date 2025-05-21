@@ -85,5 +85,9 @@ public class SiteMeasurement {
 		String second = String.format("%02d", now.getSecond());
 		String millis = String.format("%03d", now.getNano() / 1000000).substring(0, 2);
 		this.serviceRequestId = "SR" + year + month + day + hour + minute + second + millis;
+		if (location != null) {
+			// Remove unnecessary spaces and format commas properly
+        	   location = location.replaceAll("\\s*,\\s*", ",").trim();
+		}
 	}
 }

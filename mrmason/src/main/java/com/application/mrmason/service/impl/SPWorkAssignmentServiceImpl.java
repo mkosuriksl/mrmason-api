@@ -101,10 +101,10 @@ public class SPWorkAssignmentServiceImpl implements SPWorkAssignmentService {
 	        newAssignment.setLocation(assignment.getLocation());
 	        newAssignment.setAvailable(assignment.getAvailable());
 
-	        // Generate unique recId
-	        String recId = "SPWA_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
-	        newAssignment.setRecId(recId);
-	        newAssignment.setWorkerIdWorkOrdIdLine(spWorker.getWorkerId() + "_" + assignment.getWorkOrdId() + "_" + "0001");
+//	        // Generate unique recId
+//	        String recId = "SPWA_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
+//	        newAssignment.setRecId(recId);
+//	        newAssignment.setWorkerIdWorkOrdIdLine(spWorker.getWorkerId() + "_" + assignment.getWorkOrdId() + "_" + "0001");
 
 	        assignmentsToSave.add(newAssignment);
 	    }

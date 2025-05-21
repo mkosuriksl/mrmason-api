@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -67,5 +68,21 @@ public class ServiceRequestPaintQuotationController {
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
+	
+	@PutMapping("/update-serviceRequestPaintQuotation")
+	public ResponseEntity<GenericResponse<List<ServiceRequestPaintQuotation>>> updateWorkAssignment(
+	        @RequestBody ServiceRequestPaintQuotationWrapper requestWrapper,
+	        @RequestParam RegSource regSource) {
+
+	    List<ServiceRequestPaintQuotation> updatedAssignments = serviceRequestPaintQuotationService
+	            .updateServiceRequestPaintQuotationService(requestWrapper.getRequestId(), requestWrapper.getItems(),
+	                    regSource);
+
+	    GenericResponse<List<ServiceRequestPaintQuotation>> response = new GenericResponse<>(
+	            "Service Request Paint Quotation updated successfully", true, updatedAssignments);
+
+	    return ResponseEntity.ok(response);
+	}
+
 
 }

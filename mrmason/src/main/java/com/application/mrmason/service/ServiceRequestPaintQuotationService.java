@@ -16,4 +16,6 @@ public interface ServiceRequestPaintQuotationService {
 	public Page<ServiceRequestPaintQuotation> getServiceRequestPaintQuotationService(
 			 String requestLineId, String requestLineIdDescription, String requestId,
 			Integer quotationAmount,String status,String spId,Pageable pageable);
+	public List<ServiceRequestPaintQuotation> updateServiceRequestPaintQuotationService(
+	        String requestId, List<ServiceRequestPaintQuotation> dtoList, RegSource regSource);
 }

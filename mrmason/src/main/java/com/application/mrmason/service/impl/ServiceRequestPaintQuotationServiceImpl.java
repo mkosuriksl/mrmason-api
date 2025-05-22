@@ -239,7 +239,7 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 	            existing.setRequestLineIdDescription(dto.getRequestLineIdDescription());
 	            existing.setAreasInSqft(dto.getAreasInSqft());
 	            existing.setQuotationAmount(dto.getQuotationAmount());
-	            existing.setQuotedDate(dto.getQuotedDate());
+	            existing.setQuotedDate(new Date());
 	            existing.setStatus(dto.getStatus()); // Optional: mark as updated
 	            existing.setNoOfDays(dto.getNoOfDays());
 	            existing.setNoOfResources(dto.getNoOfResources());

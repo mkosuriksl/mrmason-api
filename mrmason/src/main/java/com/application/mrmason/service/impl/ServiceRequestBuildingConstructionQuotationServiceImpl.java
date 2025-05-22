@@ -18,17 +18,17 @@ import org.springframework.stereotype.Service;
 import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.SPWAStatus;
 import com.application.mrmason.entity.ServiceRequest;
-import com.application.mrmason.entity.ServiceRequestCarpentaryQuotation;
+import com.application.mrmason.entity.ServiceRequestBuildingConstructionQuotation;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.AdminDetailsRepo;
-import com.application.mrmason.repository.ServiceRequestCarpentaryQuotationRepository;
+import com.application.mrmason.repository.ServiceRequestBuildingConstructionQuotationRepository;
 import com.application.mrmason.repository.ServiceRequestRepo;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.AuthDetailsProvider;
-import com.application.mrmason.service.ServiceRequestCarpentaryQuotationService;
+import com.application.mrmason.service.ServiceRequestBuildingConstructionQuotationService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -39,7 +39,8 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 @Service
-public class ServiceRequestCarpentaryQuotationServiceImpl implements ServiceRequestCarpentaryQuotationService {
+public class ServiceRequestBuildingConstructionQuotationServiceImpl
+		implements ServiceRequestBuildingConstructionQuotationService {
 
 	@Autowired
 	public AdminDetailsRepo adminRepo;
@@ -54,11 +55,11 @@ public class ServiceRequestCarpentaryQuotationServiceImpl implements ServiceRequ
 	private ServiceRequestRepo serviceRequestRepo;
 
 	@Autowired
-	private ServiceRequestCarpentaryQuotationRepository serviceRequestCarpentaryQuotationRepository;
+	private ServiceRequestBuildingConstructionQuotationRepository buildingConstructionQuotationRepository ;
 
 	@Override
-	public List<ServiceRequestCarpentaryQuotation> createServiceRequestCarpentaryQuotationService(String requestId,
-			List<ServiceRequestCarpentaryQuotation> dtoList, RegSource regSource) {
+	public List<ServiceRequestBuildingConstructionQuotation> createServiceRequestBuildingConstructionQuotation(
+			String requestId, List<ServiceRequestBuildingConstructionQuotation> dtoList, RegSource regSource) {
 		UserInfo userInfo = getLoggedInUserInfo(regSource);
 		ServiceRequest serviceRequest = serviceRequestRepo.findByRequestId(requestId);
 
@@ -67,22 +68,22 @@ public class ServiceRequestCarpentaryQuotationServiceImpl implements ServiceRequ
 		}
 
 		// Step 1: Fetch existing line IDs for this requestId
-		List<String> existingLineIds = serviceRequestCarpentaryQuotationRepository.findByRequestId(requestId).stream()
-				.map(ServiceRequestCarpentaryQuotation::getRequestLineId).collect(Collectors.toList());
+		List<String> existingLineIds = buildingConstructionQuotationRepository.findByRequestId(requestId).stream()
+				.map(ServiceRequestBuildingConstructionQuotation::getRequestLineId).collect(Collectors.toList());
 
 		// Step 2: Extract the highest counter
 		int maxCounter = existingLineIds.stream().map(id -> id.substring(id.lastIndexOf("_") + 1))
 				.mapToInt(Integer::parseInt).max().orElse(0); // If no entries exist, start at 0
 
-		List<ServiceRequestCarpentaryQuotation> savedQuotations = new ArrayList<>();
+		List<ServiceRequestBuildingConstructionQuotation> savedQuotations = new ArrayList<>();
 
-		for (ServiceRequestCarpentaryQuotation dto : dtoList) {
+		for (ServiceRequestBuildingConstructionQuotation dto : dtoList) {
 			// Generate next lineId
 			int nextCounter = ++maxCounter;
 			String lineId = requestId + "_" + String.format("%04d", nextCounter);
 
 			// Create new entry
-			ServiceRequestCarpentaryQuotation sRPQ = new ServiceRequestCarpentaryQuotation();
+			ServiceRequestBuildingConstructionQuotation sRPQ = new ServiceRequestBuildingConstructionQuotation();
 			sRPQ.setRequestId(requestId);
 			sRPQ.setRequestLineId(lineId);
 			sRPQ.setRequestLineIdDescription(dto.getRequestLineIdDescription());
@@ -96,13 +97,12 @@ public class ServiceRequestCarpentaryQuotationServiceImpl implements ServiceRequ
 			sRPQ.setUpdatedBy(userInfo.userId);
 			sRPQ.setUpdatedDate(new Date());
 
-			ServiceRequestCarpentaryQuotation saved = serviceRequestCarpentaryQuotationRepository.save(sRPQ);
+			ServiceRequestBuildingConstructionQuotation saved = buildingConstructionQuotationRepository.save(sRPQ);
 			savedQuotations.add(saved);
 		}
 
 		return savedQuotations;
 	}
-
 	private static class UserInfo {
 
 		String userId;
@@ -138,17 +138,16 @@ public class ServiceRequestCarpentaryQuotationServiceImpl implements ServiceRequ
 
 		return new UserInfo(userId);
 	}
-
 	@Override
-	public Page<ServiceRequestCarpentaryQuotation> getServiceRequestCarpentaryQuotationService(String requestLineId,
-			String requestLineIdDescription, String requestId, Integer quotationAmount, String status, String spId,
-			Pageable pageable) {
+	public Page<ServiceRequestBuildingConstructionQuotation> getServiceRequestBuildingConstructionQuotation(
+			String requestLineId, String requestLineIdDescription, String requestId, Integer quotationAmount,
+			String status, String spId, Pageable pageable) {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
 		// === Main query ===
-		CriteriaQuery<ServiceRequestCarpentaryQuotation> query = cb
-				.createQuery(ServiceRequestCarpentaryQuotation.class);
-		Root<ServiceRequestCarpentaryQuotation> root = query.from(ServiceRequestCarpentaryQuotation.class);
+		CriteriaQuery<ServiceRequestBuildingConstructionQuotation> query = cb
+				.createQuery(ServiceRequestBuildingConstructionQuotation.class);
+		Root<ServiceRequestBuildingConstructionQuotation> root = query.from(ServiceRequestBuildingConstructionQuotation.class);
 		List<Predicate> predicates = new ArrayList<>();
 
 		if (requestLineId != null && !requestLineId.trim().isEmpty()) {
@@ -171,13 +170,13 @@ public class ServiceRequestCarpentaryQuotationServiceImpl implements ServiceRequ
 		}
 
 		query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
-		TypedQuery<ServiceRequestCarpentaryQuotation> typedQuery = entityManager.createQuery(query);
+		TypedQuery<ServiceRequestBuildingConstructionQuotation> typedQuery = entityManager.createQuery(query);
 		typedQuery.setFirstResult((int) pageable.getOffset());
 		typedQuery.setMaxResults(pageable.getPageSize());
 
 		// === Count query ===
 		CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
-		Root<ServiceRequestCarpentaryQuotation> countRoot = countQuery.from(ServiceRequestCarpentaryQuotation.class);
+		Root<ServiceRequestBuildingConstructionQuotation> countRoot = countQuery.from(ServiceRequestBuildingConstructionQuotation.class);
 		List<Predicate> countPredicates = new ArrayList<>();
 
 		if (requestLineId != null && !requestLineId.trim().isEmpty()) {
@@ -205,8 +204,8 @@ public class ServiceRequestCarpentaryQuotationServiceImpl implements ServiceRequ
 	}
 
 	@Override
-	public List<ServiceRequestCarpentaryQuotation> updateServiceRequestCarpentaryQuotationService(String requestId,
-			List<ServiceRequestCarpentaryQuotation> dtoList, RegSource regSource) {
+	public List<ServiceRequestBuildingConstructionQuotation> updateServiceRequestBuildingConstructionQuotation(
+			String requestId, List<ServiceRequestBuildingConstructionQuotation> dtoList, RegSource regSource) {
 		UserInfo userInfo = getLoggedInUserInfo(regSource);
 		ServiceRequest serviceRequest = serviceRequestRepo.findByRequestId(requestId);
 
@@ -215,14 +214,14 @@ public class ServiceRequestCarpentaryQuotationServiceImpl implements ServiceRequ
 		}
 
 		// Step 1: Get existing records and map them by requestLineId
-		Map<String, ServiceRequestCarpentaryQuotation> existingMap = serviceRequestCarpentaryQuotationRepository
+		Map<String, ServiceRequestBuildingConstructionQuotation> existingMap = buildingConstructionQuotationRepository
 				.findByRequestId(requestId).stream()
-				.collect(Collectors.toMap(ServiceRequestCarpentaryQuotation::getRequestLineId, Function.identity()));
+				.collect(Collectors.toMap(ServiceRequestBuildingConstructionQuotation::getRequestLineId, Function.identity()));
 
-		List<ServiceRequestCarpentaryQuotation> updatedQuotations = new ArrayList<>();
+		List<ServiceRequestBuildingConstructionQuotation> updatedQuotations = new ArrayList<>();
 
-		for (ServiceRequestCarpentaryQuotation dto : dtoList) {
-			ServiceRequestCarpentaryQuotation existing = existingMap.get(dto.getRequestLineId());
+		for (ServiceRequestBuildingConstructionQuotation dto : dtoList) {
+			ServiceRequestBuildingConstructionQuotation existing = existingMap.get(dto.getRequestLineId());
 
 			if (existing != null) {
 				existing.setRequestLineIdDescription(dto.getRequestLineIdDescription());
@@ -235,7 +234,7 @@ public class ServiceRequestCarpentaryQuotationServiceImpl implements ServiceRequ
 				existing.setUpdatedBy(userInfo.userId);
 				existing.setUpdatedDate(new Date());
 
-				ServiceRequestCarpentaryQuotation saved = serviceRequestCarpentaryQuotationRepository.save(existing);
+				ServiceRequestBuildingConstructionQuotation saved = buildingConstructionQuotationRepository.save(existing);
 				updatedQuotations.add(saved);
 			}
 			// else: skip as it's not an existing record

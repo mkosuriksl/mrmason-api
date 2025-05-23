@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.ResponseGetWorkerDto;
+import com.application.mrmason.dto.SPWorkerAssignmentDTO;
 import com.application.mrmason.entity.SPWorkAssignment;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.repository.UserDAO;
@@ -66,13 +67,12 @@ public class SPWorkAssignmentController {
 			@RequestParam(defaultValue = "10") int size) {
 
 		Pageable pageable = PageRequest.of(page, size);
-		Page<SPWorkAssignment> workersPage = service.getWorkers(recId, workerIdWorkOrdIdLine, workerId, updatedBy,location,available,fromDateOfWork,toDateOfWork,spId, pageable);
+		Page<SPWorkerAssignmentDTO> workersPage = service.getWorkers(recId, workerIdWorkOrdIdLine, workerId, updatedBy,location,available,fromDateOfWork,toDateOfWork,spId, pageable);
 		ResponseGetWorkerDto response = new ResponseGetWorkerDto();
 
 		response.setMessage("Worker details retrieved successfully.");
 		response.setStatus(true);
-		response.setSpworkerAssignment(workersPage.getContent());
-		response.setUserData(null); // or your actual userData
+		response.setSpworkerAssignment(workersPage.getContent()); // or your actual userData
 
 		// Set pagination fields
 		response.setCurrentPage(workersPage.getNumber());

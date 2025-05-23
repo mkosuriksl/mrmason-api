@@ -115,7 +115,7 @@ public class CustomerRegistrationForSPAdminServiceImpl implements CustomerRegist
 	            .map(role -> role.replace("ROLE_", ""))
 	            .collect(Collectors.toList());
 
-	    if (roleNames.contains("Developer")) {
+	    if (roleNames.equals("Developer")) {
 	        throw new ResourceNotFoundException("Restricted role: " + roleNames);
 	    }
 

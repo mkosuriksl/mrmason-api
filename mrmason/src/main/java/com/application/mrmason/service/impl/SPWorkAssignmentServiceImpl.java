@@ -1,13 +1,10 @@
 package com.application.mrmason.service.impl;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
+import com.application.mrmason.dto.SPWorkerAssignmentDTO;
 import com.application.mrmason.entity.SPWAStatus;
 import com.application.mrmason.entity.SPWorkAssignment;
 import com.application.mrmason.entity.SpWorkers;
@@ -33,11 +31,14 @@ import com.application.mrmason.service.SPWorkAssignmentService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+
+
 
 @Service
 public class SPWorkAssignmentServiceImpl implements SPWorkAssignmentService {
@@ -181,56 +182,158 @@ public class SPWorkAssignmentServiceImpl implements SPWorkAssignmentService {
 	    return repository.save(existing);
 	}
 
-	@Override
-	public Page<SPWorkAssignment> getWorkers(String recId, String workerIdWorkOrdIdLine, String workerId, String updatedBy,
-	        String location,String available,String fromDateOfWork,String toDateOfWork,String spId,Pageable pageable) {
+//	@Override
+//	public Page<SPWorkAssignment> getWorkers(String recId, String workerIdWorkOrdIdLine, String workerId, String updatedBy,
+//	        String location,String available,String fromDateOfWork,String toDateOfWork,String spId,Pageable pageable) {
+//
+//	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+//
+//	    // === Main query ===
+//	    CriteriaQuery<SPWorkAssignment> query = cb.createQuery(SPWorkAssignment.class);
+//	    Root<SPWorkAssignment> root = query.from(SPWorkAssignment.class);
+//	    List<Predicate> predicates = new ArrayList<>();
+//
+//	    if (recId != null && !recId.trim().isEmpty()) {
+//	        predicates.add(cb.equal(root.get("recId"), recId));
+//	    }
+//	    if (workerIdWorkOrdIdLine != null && !workerIdWorkOrdIdLine.trim().isEmpty()) {
+//	        predicates.add(cb.equal(root.get("workerIdWorkOrdIdLine"), workerIdWorkOrdIdLine));
+//	    }
+//	    if (workerId != null && !workerId.trim().isEmpty()) {
+//	        predicates.add(cb.equal(root.get("workerId"), workerId));
+//	    }
+//	    if (updatedBy != null && !updatedBy.trim().isEmpty()) {
+//	        predicates.add(cb.equal(root.get("updatedBy"), updatedBy));
+//	    }
+//	    if (location != null && !location.trim().isEmpty()) {
+//	        predicates.add(cb.equal(root.get("location"), location));
+//	    }
+//	    if (available != null && !available.trim().isEmpty()) {
+//	        predicates.add(cb.equal(root.get("available"), available));
+//	    }
+//	    if (fromDateOfWork != null && toDateOfWork != null) {
+//			predicates.add(cb.between(root.get("dateOfWork"), fromDateOfWork, toDateOfWork));
+//		} else if (fromDateOfWork != null) {
+//			predicates.add(cb.greaterThanOrEqualTo(root.get("dateOfWork"), fromDateOfWork));
+//		} else if (toDateOfWork != null) {
+//			predicates.add(cb.lessThanOrEqualTo(root.get("dateOfWork"), toDateOfWork));
+//		}
+//	    if (spId != null && !spId.trim().isEmpty()) {
+//	        predicates.add(cb.equal(root.get("spId"), spId));
+//	    }
+//		
+//	    query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
+//	    TypedQuery<SPWorkAssignment> typedQuery = entityManager.createQuery(query);
+//	    typedQuery.setFirstResult((int) pageable.getOffset());
+//	    typedQuery.setMaxResults(pageable.getPageSize());
+//
+//	    // === Count query ===
+//	    CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+//	    Root<SPWorkAssignment> countRoot = countQuery.from(SPWorkAssignment.class);
+//	    List<Predicate> countPredicates = new ArrayList<>();
+//
+//	    if (recId != null && !recId.trim().isEmpty()) {
+//	        countPredicates.add(cb.equal(countRoot.get("recId"), recId));
+//	    }
+//	    if (workerIdWorkOrdIdLine != null && !workerIdWorkOrdIdLine.trim().isEmpty()) {
+//	        countPredicates.add(cb.equal(countRoot.get("workerIdWorkOrdIdLine"), workerIdWorkOrdIdLine));
+//	    }
+//	    if (workerId != null && !workerId.trim().isEmpty()) {
+//	        countPredicates.add(cb.equal(countRoot.get("workerId"), workerId));
+//	    }
+//	    if (updatedBy != null && !updatedBy.trim().isEmpty()) {
+//	        countPredicates.add(cb.equal(countRoot.get("updatedBy"), updatedBy));
+//	    }
+//	    if (location != null && !location.trim().isEmpty()) {
+//	    	countPredicates.add(cb.equal(countRoot.get("location"), location));
+//	    }
+//	    if (available != null && !available.trim().isEmpty()) {
+//	    	countPredicates.add(cb.equal(countRoot.get("available"), available));
+//	    }
+//	    if (fromDateOfWork != null && toDateOfWork != null) {
+//			countPredicates.add(cb.between(countRoot.get("dateOfWork"), fromDateOfWork, toDateOfWork));
+//		} else if (fromDateOfWork != null) {
+//			countPredicates.add(cb.greaterThanOrEqualTo(countRoot.get("dateOfWork"), fromDateOfWork));
+//		} else if (toDateOfWork != null) {
+//			countPredicates.add(cb.lessThanOrEqualTo(countRoot.get("dateOfWork"), toDateOfWork));
+//		}
+//	    if (spId != null && !spId.trim().isEmpty()) {
+//	    	countPredicates.add(cb.equal(countRoot.get("spId"), spId));
+//	    }
+//	    countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
+//	    Long total = entityManager.createQuery(countQuery).getSingleResult();
+//
+//	    return new PageImpl<>(typedQuery.getResultList(), pageable, total);
+//	}
+
+	public Page<SPWorkerAssignmentDTO> getWorkers(
+	    String recId, String workerIdWorkOrdIdLine, String workerId, String updatedBy,
+	    String location, String available, String fromDateOfWork, String toDateOfWork,
+	    String spId, Pageable pageable) {
 
 	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
-	    // === Main query ===
-	    CriteriaQuery<SPWorkAssignment> query = cb.createQuery(SPWorkAssignment.class);
-	    Root<SPWorkAssignment> root = query.from(SPWorkAssignment.class);
+	    // Main query selecting fields from both SPWorkAssignment and Worker
+	    CriteriaQuery<Tuple> query = cb.createTupleQuery();
+	    Root<SPWorkAssignment> spRoot = query.from(SPWorkAssignment.class);
+	    Root<SpWorkers> workerRoot = query.from(SpWorkers.class);
+
+	    // Join condition on workerId
+	    Predicate joinCondition = cb.equal(spRoot.get("workerId"), workerRoot.get("workerId"));
+
 	    List<Predicate> predicates = new ArrayList<>();
+	    predicates.add(joinCondition);
 
 	    if (recId != null && !recId.trim().isEmpty()) {
-	        predicates.add(cb.equal(root.get("recId"), recId));
+	        predicates.add(cb.equal(spRoot.get("recId"), recId));
 	    }
 	    if (workerIdWorkOrdIdLine != null && !workerIdWorkOrdIdLine.trim().isEmpty()) {
-	        predicates.add(cb.equal(root.get("workerIdWorkOrdIdLine"), workerIdWorkOrdIdLine));
+	        predicates.add(cb.equal(spRoot.get("workerIdWorkOrdIdLine"), workerIdWorkOrdIdLine));
 	    }
 	    if (workerId != null && !workerId.trim().isEmpty()) {
-	        predicates.add(cb.equal(root.get("workerId"), workerId));
+	        predicates.add(cb.equal(spRoot.get("workerId"), workerId));
 	    }
 	    if (updatedBy != null && !updatedBy.trim().isEmpty()) {
-	        predicates.add(cb.equal(root.get("updatedBy"), updatedBy));
+	        predicates.add(cb.equal(spRoot.get("updatedBy"), updatedBy));
 	    }
 	    if (location != null && !location.trim().isEmpty()) {
-	        predicates.add(cb.equal(root.get("location"), location));
+	        predicates.add(cb.equal(spRoot.get("location"), location));
 	    }
 	    if (available != null && !available.trim().isEmpty()) {
-	        predicates.add(cb.equal(root.get("available"), available));
+	        predicates.add(cb.equal(spRoot.get("available"), available));
 	    }
 	    if (fromDateOfWork != null && toDateOfWork != null) {
-			predicates.add(cb.between(root.get("dateOfWork"), fromDateOfWork, toDateOfWork));
-		} else if (fromDateOfWork != null) {
-			predicates.add(cb.greaterThanOrEqualTo(root.get("dateOfWork"), fromDateOfWork));
-		} else if (toDateOfWork != null) {
-			predicates.add(cb.lessThanOrEqualTo(root.get("dateOfWork"), toDateOfWork));
-		}
-	    if (spId != null && !spId.trim().isEmpty()) {
-	        predicates.add(cb.equal(root.get("spId"), spId));
+	        predicates.add(cb.between(spRoot.get("dateOfWork"), fromDateOfWork, toDateOfWork));
+	    } else if (fromDateOfWork != null) {
+	        predicates.add(cb.greaterThanOrEqualTo(spRoot.get("dateOfWork"), fromDateOfWork));
+	    } else if (toDateOfWork != null) {
+	        predicates.add(cb.lessThanOrEqualTo(spRoot.get("dateOfWork"), toDateOfWork));
 	    }
-		
-	    query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
-	    TypedQuery<SPWorkAssignment> typedQuery = entityManager.createQuery(query);
+	    if (spId != null && !spId.trim().isEmpty()) {
+	        predicates.add(cb.equal(spRoot.get("spId"), spId));
+	    }
+
+	    query.multiselect(spRoot, workerRoot.get("workerName"), workerRoot.get("workPhoneNum"))
+	         .where(cb.and(predicates.toArray(new Predicate[0])));
+
+	    TypedQuery<Tuple> typedQuery = entityManager.createQuery(query);
 	    typedQuery.setFirstResult((int) pageable.getOffset());
 	    typedQuery.setMaxResults(pageable.getPageSize());
 
-	    // === Count query ===
+	    List<Tuple> results = typedQuery.getResultList();
+
+	    List<SPWorkerAssignmentDTO> dtos = new ArrayList<>();
+	    for (Tuple tuple : results) {
+	        SPWorkAssignment assignment = tuple.get(spRoot);
+	        String workerName = tuple.get(workerRoot.get("workerName"));
+	        String workPhoneNum = tuple.get(workerRoot.get("workPhoneNum"));
+	        dtos.add(new SPWorkerAssignmentDTO(assignment, workerName, workPhoneNum));
+	    }
+
+	    // Count query for pagination
 	    CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
 	    Root<SPWorkAssignment> countRoot = countQuery.from(SPWorkAssignment.class);
 	    List<Predicate> countPredicates = new ArrayList<>();
-
 	    if (recId != null && !recId.trim().isEmpty()) {
 	        countPredicates.add(cb.equal(countRoot.get("recId"), recId));
 	    }
@@ -244,28 +347,25 @@ public class SPWorkAssignmentServiceImpl implements SPWorkAssignmentService {
 	        countPredicates.add(cb.equal(countRoot.get("updatedBy"), updatedBy));
 	    }
 	    if (location != null && !location.trim().isEmpty()) {
-	    	countPredicates.add(cb.equal(countRoot.get("location"), location));
+	        countPredicates.add(cb.equal(countRoot.get("location"), location));
 	    }
 	    if (available != null && !available.trim().isEmpty()) {
-	    	countPredicates.add(cb.equal(countRoot.get("available"), available));
+	        countPredicates.add(cb.equal(countRoot.get("available"), available));
 	    }
 	    if (fromDateOfWork != null && toDateOfWork != null) {
-			countPredicates.add(cb.between(countRoot.get("dateOfWork"), fromDateOfWork, toDateOfWork));
-		} else if (fromDateOfWork != null) {
-			countPredicates.add(cb.greaterThanOrEqualTo(countRoot.get("dateOfWork"), fromDateOfWork));
-		} else if (toDateOfWork != null) {
-			countPredicates.add(cb.lessThanOrEqualTo(countRoot.get("dateOfWork"), toDateOfWork));
-		}
-	    if (spId != null && !spId.trim().isEmpty()) {
-	    	countPredicates.add(cb.equal(countRoot.get("spId"), spId));
+	        countPredicates.add(cb.between(countRoot.get("dateOfWork"), fromDateOfWork, toDateOfWork));
+	    } else if (fromDateOfWork != null) {
+	        countPredicates.add(cb.greaterThanOrEqualTo(countRoot.get("dateOfWork"), fromDateOfWork));
+	    } else if (toDateOfWork != null) {
+	        countPredicates.add(cb.lessThanOrEqualTo(countRoot.get("dateOfWork"), toDateOfWork));
 	    }
+	    if (spId != null && !spId.trim().isEmpty()) {
+	        countPredicates.add(cb.equal(countRoot.get("spId"), spId));
+	    }
+
 	    countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
 	    Long total = entityManager.createQuery(countQuery).getSingleResult();
 
-	    return new PageImpl<>(typedQuery.getResultList(), pageable, total);
+	    return new PageImpl<>(dtos, pageable, total);
 	}
-
-
-
-
 }

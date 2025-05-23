@@ -14,18 +14,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
-import com.application.mrmason.dto.AdminPaintTaskRequestDTO;
+import com.application.mrmason.dto.AdminCarpentaryTasksManagemntRequestDTO;
+import com.application.mrmason.entity.AdminCarpentaryTasksManagemnt;
 import com.application.mrmason.entity.AdminDetails;
-import com.application.mrmason.entity.AdminPaintTasksManagemnt;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
+import com.application.mrmason.repository.AdminCarpentaryTasksManagemntRepository;
 import com.application.mrmason.repository.AdminDetailsRepo;
-import com.application.mrmason.repository.AdminPaintTasksManagemntRepository;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.AuthDetailsProvider;
-import com.application.mrmason.service.AdminPaintTasksManagemntService;
+import com.application.mrmason.service.AdminCarpentaryTasksManagemntService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -36,10 +36,10 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 @Service
-public class AdminPaintTasksManagemntServiceImpl implements AdminPaintTasksManagemntService {
+public class AdminCarpentaryTasksManagemntServiceImpl implements AdminCarpentaryTasksManagemntService {
 
 	@Autowired
-	private AdminPaintTasksManagemntRepository repository;
+	private AdminCarpentaryTasksManagemntRepository repository;
 
 	@Autowired
 	public AdminDetailsRepo adminRepo;
@@ -51,9 +51,9 @@ public class AdminPaintTasksManagemntServiceImpl implements AdminPaintTasksManag
 	private EntityManager entityManager;
 
 	@Override
-	public List<AdminPaintTasksManagemnt> createAdmin(AdminPaintTaskRequestDTO requestDTO) {
+	public List<AdminCarpentaryTasksManagemnt> createAdmin(AdminCarpentaryTasksManagemntRequestDTO requestDTO) {
 		AdminInfo userInfo = getLoggedInAdminInfo();
-		for (AdminPaintTasksManagemnt task : requestDTO.getTasks()) {
+		for (AdminCarpentaryTasksManagemnt task : requestDTO.getTasks()) {
 			task.setUserId(requestDTO.getUserId()); // Set common userId
 			task.setUpdatedDate(new Date());
 			task.setUpdatedBy(userInfo.userId);
@@ -93,10 +93,10 @@ public class AdminPaintTasksManagemntServiceImpl implements AdminPaintTasksManag
 	}
 
 	@Override
-	public List<AdminPaintTasksManagemnt> updateAdmin(List<AdminPaintTasksManagemnt> taskList) {
+	public List<AdminCarpentaryTasksManagemnt> updateAdmin(List<AdminCarpentaryTasksManagemnt> taskList) {
 		AdminInfo userInfo = getLoggedInAdminInfo();
 
-		for (AdminPaintTasksManagemnt task : taskList) {
+		for (AdminCarpentaryTasksManagemnt task : taskList) {
 			if (task.getAdminTaskId() == null || task.getAdminTaskId().isEmpty()) {
 				throw new ResourceNotFoundException("adminTaskId is required for update.");
 			}
@@ -115,10 +115,8 @@ public class AdminPaintTasksManagemntServiceImpl implements AdminPaintTasksManag
 	}
 
 	@Override
-	public Page<AdminPaintTasksManagemnt> getServiceRequestPaintQuotationService(String serviceCategory,
-			String taskName, String taskId, String adminTaskId, RegSource regSource, Pageable pageable)
-			throws AccessDeniedException {
-
+	public Page<AdminCarpentaryTasksManagemnt> getAdmin(String serviceCategory, String taskName, String taskId,
+			String adminTaskId, RegSource regSource, Pageable pageable) throws AccessDeniedException {
 		UserInfo userInfo = getLoggedInAdminSPInfo(regSource);
 
 		// ALLOW only Admin or Developer, block others
@@ -128,8 +126,8 @@ public class AdminPaintTasksManagemntServiceImpl implements AdminPaintTasksManag
 		}
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		CriteriaQuery<AdminPaintTasksManagemnt> query = cb.createQuery(AdminPaintTasksManagemnt.class);
-		Root<AdminPaintTasksManagemnt> root = query.from(AdminPaintTasksManagemnt.class);
+		CriteriaQuery<AdminCarpentaryTasksManagemnt> query = cb.createQuery(AdminCarpentaryTasksManagemnt.class);
+		Root<AdminCarpentaryTasksManagemnt> root = query.from(AdminCarpentaryTasksManagemnt.class);
 		List<Predicate> predicates = new ArrayList<>();
 
 		if (serviceCategory != null && !serviceCategory.trim().isEmpty()) {
@@ -146,13 +144,13 @@ public class AdminPaintTasksManagemntServiceImpl implements AdminPaintTasksManag
 		}
 
 		query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
-		TypedQuery<AdminPaintTasksManagemnt> typedQuery = entityManager.createQuery(query);
+		TypedQuery<AdminCarpentaryTasksManagemnt> typedQuery = entityManager.createQuery(query);
 		typedQuery.setFirstResult((int) pageable.getOffset());
 		typedQuery.setMaxResults(pageable.getPageSize());
 
 		// Count query
 		CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
-		Root<AdminPaintTasksManagemnt> countRoot = countQuery.from(AdminPaintTasksManagemnt.class);
+		Root<AdminCarpentaryTasksManagemnt> countRoot = countQuery.from(AdminCarpentaryTasksManagemnt.class);
 		List<Predicate> countPredicates = new ArrayList<>();
 
 		if (serviceCategory != null && !serviceCategory.trim().isEmpty()) {

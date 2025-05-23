@@ -21,8 +21,8 @@ import lombok.Setter;
 @AllArgsConstructor
 @Entity
 @Builder
-@Table(name = "admin_paint_tasks_managemnt")
-public class AdminPaintTasksManagemnt {
+@Table(name = "admin_carpentary_tasks_managemnt")
+public class AdminCarpentaryTasksManagemnt {
 
 	@Id
 	@Column(name = "request_lineid")
@@ -45,9 +45,10 @@ public class AdminPaintTasksManagemnt {
 
 	@Column(name = "user_id")
 	private String userId;
-	
+
 	@PrePersist
 	private void prePersist() {
 	    this.adminTaskId = "ADM" + UUID.randomUUID().toString().replace("-", "").substring(0, 20);
 	}
+
 }

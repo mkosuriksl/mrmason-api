@@ -18,15 +18,15 @@ import org.springframework.stereotype.Service;
 import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.SPWAStatus;
 import com.application.mrmason.entity.SiteMeasurement;
-import com.application.mrmason.entity.ServiceRequest;
 import com.application.mrmason.entity.ServiceRequestBuildingConstructionQuotation;
+import com.application.mrmason.entity.ServiceRequestQuotation;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.ServiceRequestBuildingConstructionQuotationRepository;
-import com.application.mrmason.repository.ServiceRequestRepo;
+import com.application.mrmason.repository.ServiceRequestQuotationRepository;
 import com.application.mrmason.repository.SiteMeasurementRepository;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.AuthDetailsProvider;
@@ -58,6 +58,9 @@ public class ServiceRequestBuildingConstructionQuotationServiceImpl
 
 	@Autowired
 	private ServiceRequestBuildingConstructionQuotationRepository buildingConstructionQuotationRepository ;
+	
+	@Autowired
+	ServiceRequestQuotationRepository serviceRequestQuotationAuditRepository;
 
 	@Override
 	public List<ServiceRequestBuildingConstructionQuotation> createServiceRequestBuildingConstructionQuotation(
@@ -79,6 +82,7 @@ public class ServiceRequestBuildingConstructionQuotationServiceImpl
 
 		List<ServiceRequestBuildingConstructionQuotation> savedQuotations = new ArrayList<>();
 
+		Integer totalQuotationAmount = 0;
 		for (ServiceRequestBuildingConstructionQuotation dto : dtoList) {
 			// Generate next lineId
 			int nextCounter = ++maxCounter;
@@ -101,7 +105,19 @@ public class ServiceRequestBuildingConstructionQuotationServiceImpl
 
 			ServiceRequestBuildingConstructionQuotation saved = buildingConstructionQuotationRepository.save(sRPQ);
 			savedQuotations.add(saved);
+			totalQuotationAmount += dto.getQuotationAmount();
+			
 		}
+		ServiceRequestQuotation audit = new ServiceRequestQuotation();
+	    audit.setRequestId(requestId);
+	    audit.setQuotationAmount(totalQuotationAmount);
+	    audit.setQuotedDate(new Date());
+	    audit.setQuotatedBy(userInfo.userId);
+	    audit.setStatus(SPWAStatus.NEW);
+	    audit.setUpdatedBy(userInfo.userId);
+	    audit.setUpdatedDate(new Date());
+	    serviceRequestQuotationAuditRepository.save(audit);
+
 
 		return savedQuotations;
 	}

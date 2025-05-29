@@ -19,6 +19,7 @@ import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.SPWAStatus;
 import com.application.mrmason.entity.ServiceRequest;
 import com.application.mrmason.entity.ServiceRequestPlumbingQuotation;
+import com.application.mrmason.entity.ServiceRequestQuotation;
 import com.application.mrmason.entity.SiteMeasurement;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
@@ -26,6 +27,7 @@ import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.ServiceRequestPlumbingQuotationRepository;
+import com.application.mrmason.repository.ServiceRequestQuotationRepository;
 import com.application.mrmason.repository.ServiceRequestRepo;
 import com.application.mrmason.repository.SiteMeasurementRepository;
 import com.application.mrmason.repository.UserDAO;
@@ -58,6 +60,9 @@ public class ServiceRequestPlumbingQuotationServiceImpl implements ServiceReques
 	@Autowired
 	private ServiceRequestPlumbingQuotationRepository plumbingQuotationRepository;
 
+	@Autowired
+	ServiceRequestQuotationRepository serviceRequestQuotationAuditRepository;
+	
 	@Override
 	public List<ServiceRequestPlumbingQuotation> createServiceRequestPlumbingQuotation(
 			String requestId,List<ServiceRequestPlumbingQuotation> dtoList, RegSource regSource) {
@@ -83,6 +88,7 @@ public class ServiceRequestPlumbingQuotationServiceImpl implements ServiceReques
 
 	    List<ServiceRequestPlumbingQuotation> savedQuotations = new ArrayList<>();
 
+	    Integer totalQuotationAmount = 0;
 	    for (ServiceRequestPlumbingQuotation dto : dtoList) {
 	        // Generate next lineId
 	        int nextCounter = ++maxCounter;
@@ -105,7 +111,19 @@ public class ServiceRequestPlumbingQuotationServiceImpl implements ServiceReques
 
 	        ServiceRequestPlumbingQuotation saved = plumbingQuotationRepository.save(sRPQ);
 	        savedQuotations.add(saved);
+			totalQuotationAmount += dto.getQuotationAmount();
+
 	    }
+	    
+	    ServiceRequestQuotation audit = new ServiceRequestQuotation();
+	    audit.setRequestId(requestId);
+	    audit.setQuotationAmount(totalQuotationAmount);
+	    audit.setQuotedDate(new Date());
+	    audit.setQuotatedBy(userInfo.userId);
+	    audit.setStatus(SPWAStatus.NEW);
+	    audit.setUpdatedBy(userInfo.userId);
+	    audit.setUpdatedDate(new Date());
+	    serviceRequestQuotationAuditRepository.save(audit);
 	    return savedQuotations;
 	}
 

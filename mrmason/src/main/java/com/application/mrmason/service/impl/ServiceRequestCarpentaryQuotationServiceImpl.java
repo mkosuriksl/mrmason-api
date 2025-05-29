@@ -19,6 +19,7 @@ import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.SPWAStatus;
 import com.application.mrmason.entity.ServiceRequest;
 import com.application.mrmason.entity.ServiceRequestCarpentaryQuotation;
+import com.application.mrmason.entity.SiteMeasurement;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
@@ -26,6 +27,7 @@ import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.ServiceRequestCarpentaryQuotationRepository;
 import com.application.mrmason.repository.ServiceRequestRepo;
+import com.application.mrmason.repository.SiteMeasurementRepository;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.AuthDetailsProvider;
 import com.application.mrmason.service.ServiceRequestCarpentaryQuotationService;
@@ -51,7 +53,7 @@ public class ServiceRequestCarpentaryQuotationServiceImpl implements ServiceRequ
 	private EntityManager entityManager;
 
 	@Autowired
-	private ServiceRequestRepo serviceRequestRepo;
+	private SiteMeasurementRepository serviceRequestRepo;
 
 	@Autowired
 	private ServiceRequestCarpentaryQuotationRepository serviceRequestCarpentaryQuotationRepository;
@@ -60,7 +62,7 @@ public class ServiceRequestCarpentaryQuotationServiceImpl implements ServiceRequ
 	public List<ServiceRequestCarpentaryQuotation> createServiceRequestCarpentaryQuotationService(String requestId,
 			List<ServiceRequestCarpentaryQuotation> dtoList, RegSource regSource) {
 		UserInfo userInfo = getLoggedInUserInfo(regSource);
-		ServiceRequest serviceRequest = serviceRequestRepo.findByRequestId(requestId);
+		SiteMeasurement serviceRequest = serviceRequestRepo.findByServiceRequestId(requestId);
 
 		if (serviceRequest == null) {
 			throw new RuntimeException("Service request not found with ID: " + requestId);
@@ -208,7 +210,7 @@ public class ServiceRequestCarpentaryQuotationServiceImpl implements ServiceRequ
 	public List<ServiceRequestCarpentaryQuotation> updateServiceRequestCarpentaryQuotationService(String requestId,
 			List<ServiceRequestCarpentaryQuotation> dtoList, RegSource regSource) {
 		UserInfo userInfo = getLoggedInUserInfo(regSource);
-		ServiceRequest serviceRequest = serviceRequestRepo.findByRequestId(requestId);
+		SiteMeasurement serviceRequest = serviceRequestRepo.findByServiceRequestId(requestId);
 
 		if (serviceRequest == null) {
 			throw new RuntimeException("Service request not found with ID: " + requestId);

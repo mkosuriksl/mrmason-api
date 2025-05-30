@@ -27,12 +27,9 @@ import lombok.Setter;
 public class ServiceRequestQuotation {
 	
 	@Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;  // Auto-incremented primary key
-
     @Column(name = "quotation_id", unique = true)
     private String quotationId;
-
+	
 	@Column(name = "request_id")
 	private String requestId;
 

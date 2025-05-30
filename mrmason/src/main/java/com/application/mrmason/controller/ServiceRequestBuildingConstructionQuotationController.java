@@ -81,7 +81,7 @@ public class ServiceRequestBuildingConstructionQuotationController {
 	    GenericResponse<List<ServiceRequestBuildingConstructionQuotation>> response = new GenericResponse<>(
 	            "Service Request Building Construction Quotation updated successfully", true, updatedAssignments);
 
-	    return ResponseEntity.ok(response);
+	    return ResponseEntity.ok(response);                  
 	}
 
 

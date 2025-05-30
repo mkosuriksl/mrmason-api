@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -19,6 +21,7 @@ import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.SPWAStatus;
 import com.application.mrmason.entity.SiteMeasurement;
 import com.application.mrmason.entity.ServiceRequestBuildingConstructionQuotation;
+import com.application.mrmason.entity.ServiceRequestPaintQuotation;
 import com.application.mrmason.entity.ServiceRequestQuotation;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
@@ -73,8 +76,14 @@ public class ServiceRequestBuildingConstructionQuotationServiceImpl
 		}
 
 		// Step 1: Fetch existing line IDs for this requestId
-		List<String> existingLineIds = buildingConstructionQuotationRepository.findByRequestId(requestId).stream()
-				.map(ServiceRequestBuildingConstructionQuotation::getRequestLineId).collect(Collectors.toList());
+//		List<String> existingLineIds = buildingConstructionQuotationRepository.findByRequestId(requestId).stream()
+//				.map(ServiceRequestBuildingConstructionQuotation::getRequestLineId).collect(Collectors.toList());
+		
+		 List<String> existingLineIds = buildingConstructionQuotationRepository
+		            .findByRequestId(requestId)
+		            .stream()
+		            .map(ServiceRequestBuildingConstructionQuotation::getRequestLineId)
+		            .collect(Collectors.toList());
 
 		// Step 2: Extract the highest counter
 		int maxCounter = existingLineIds.stream().map(id -> id.substring(id.lastIndexOf("_") + 1))
@@ -82,7 +91,7 @@ public class ServiceRequestBuildingConstructionQuotationServiceImpl
 
 		List<ServiceRequestBuildingConstructionQuotation> savedQuotations = new ArrayList<>();
 
-		Integer totalQuotationAmount = 0;
+		
 		for (ServiceRequestBuildingConstructionQuotation dto : dtoList) {
 			// Generate next lineId
 			int nextCounter = ++maxCounter;
@@ -105,17 +114,36 @@ public class ServiceRequestBuildingConstructionQuotationServiceImpl
 
 			ServiceRequestBuildingConstructionQuotation saved = buildingConstructionQuotationRepository.save(sRPQ);
 			savedQuotations.add(saved);
-			totalQuotationAmount += dto.getQuotationAmount();
 			
 		}
-		ServiceRequestQuotation audit = new ServiceRequestQuotation();
-	    audit.setRequestId(requestId);
-	    audit.setQuotationAmount(totalQuotationAmount);
-	    audit.setQuotedDate(new Date());
-	    audit.setQuotatedBy(userInfo.userId);
-	    audit.setStatus(SPWAStatus.NEW);
-	    audit.setUpdatedBy(userInfo.userId);
-	    audit.setUpdatedDate(new Date());
+		Collection<ServiceRequestBuildingConstructionQuotation> allQuotationsForRequest = buildingConstructionQuotationRepository.findByRequestId(requestId);
+
+	    Integer totalQuotationAmountFromDb = allQuotationsForRequest.stream()
+	            .map(ServiceRequestBuildingConstructionQuotation::getQuotationAmount)
+	            .filter(Objects::nonNull)
+	            .reduce(0, Integer::sum);
+
+	    // ✅ Step 3: Update or insert into ServiceRequestQuotation header
+	    List<ServiceRequestQuotation> existingAuditOpt = serviceRequestQuotationAuditRepository.findByRequestId(requestId);
+
+	    ServiceRequestQuotation audit;
+	    if (!existingAuditOpt.isEmpty()) {
+	        // Update existing
+	        audit = existingAuditOpt.get(0);
+	        audit.setQuotationAmount(totalQuotationAmountFromDb);
+	        audit.setUpdatedBy(userInfo.userId);
+	        audit.setUpdatedDate(new Date());
+	    } else {
+	        // Create new
+	        audit = new ServiceRequestQuotation();
+	        audit.setRequestId(requestId);
+	        audit.setQuotationAmount(totalQuotationAmountFromDb);
+	        audit.setQuotedDate(new Date());
+	        audit.setQuotatedBy(userInfo.userId);
+	        audit.setStatus(SPWAStatus.NEW);
+	        audit.setUpdatedBy(userInfo.userId);
+	        audit.setUpdatedDate(new Date());
+	    }
 	    serviceRequestQuotationAuditRepository.save(audit);
 
 
@@ -239,6 +267,11 @@ public class ServiceRequestBuildingConstructionQuotationServiceImpl
 		List<ServiceRequestBuildingConstructionQuotation> updatedQuotations = new ArrayList<>();
 
 		for (ServiceRequestBuildingConstructionQuotation dto : dtoList) {
+			String lineRequestIdPrefix = dto.getRequestLineId().split("_")[0];
+	        if (!lineRequestIdPrefix.equals(requestId)) {
+	            throw new IllegalArgumentException("Invalid requestLineId: " + dto.getRequestLineId() +
+	                " does not match requestId: " + requestId);
+	        }
 			ServiceRequestBuildingConstructionQuotation existing = existingMap.get(dto.getRequestLineId());
 
 			if (existing != null) {
@@ -257,7 +290,35 @@ public class ServiceRequestBuildingConstructionQuotationServiceImpl
 			}
 			// else: skip as it's not an existing record
 		}
+		Integer totalQuotationAmount = buildingConstructionQuotationRepository.findByRequestId(requestId).stream()
+	            .map(ServiceRequestBuildingConstructionQuotation::getQuotationAmount)
+	            .filter(Objects::nonNull)
+	            .reduce(0, Integer::sum);
 
+	    // Step 3: Update or create ServiceRequestQuotation header
+		List<ServiceRequestQuotation> existingHeaders = serviceRequestQuotationAuditRepository.findByRequestIds(requestId);
+
+	    SPWAStatus status = !dtoList.isEmpty() ? dtoList.get(0).getStatus() : null;
+
+	    ServiceRequestQuotation header;
+	    if (!existingHeaders.isEmpty()) {
+	        header = existingHeaders.get(0);
+	        header.setQuotationAmount(totalQuotationAmount);
+	        header.setUpdatedBy(userInfo.userId);
+	        header.setUpdatedDate(new Date());
+	        header.setStatus(status);
+	        serviceRequestQuotationAuditRepository.save(header);
+	    } else {
+	        header = new ServiceRequestQuotation();
+	        header.setRequestId(requestId);
+	        header.setQuotationAmount(totalQuotationAmount);
+	        header.setQuotedDate(new Date());
+	        header.setQuotatedBy(userInfo.userId);
+	        header.setUpdatedBy(userInfo.userId);
+	        header.setUpdatedDate(new Date());
+	        header.setStatus(status);
+	    }
+	    serviceRequestQuotationAuditRepository.save(header);
 		return updatedQuotations;
 	}
 

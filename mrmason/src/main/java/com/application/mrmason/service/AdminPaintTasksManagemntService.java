@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.application.mrmason.dto.AdminPaintTaskRequestDTO;
+import com.application.mrmason.dto.TaskResponseDto;
 import com.application.mrmason.entity.AdminPaintTasksManagemnt;
 import com.application.mrmason.enums.RegSource;
 
@@ -15,4 +16,5 @@ public interface AdminPaintTasksManagemntService {
 	public List<AdminPaintTasksManagemnt> updateAdmin(List<AdminPaintTasksManagemnt> taskList);
 	Page<AdminPaintTasksManagemnt> getServiceRequestPaintQuotationService(String serviceCategory, String taskName,
 			String taskId, String adminTaskId,RegSource regSource, Pageable pageable) throws AccessDeniedException;
+	List<TaskResponseDto> getTaskDetails(String serviceCategory, String taskId, String taskName); 
 }

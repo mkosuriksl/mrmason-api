@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.application.mrmason.dto.AdminPaintTaskRequestDTO;
 import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.ResponseGetAdminPaintTasksManagemntDto;
+import com.application.mrmason.dto.TaskResponseDto;
 import com.application.mrmason.entity.AdminPaintTasksManagemnt;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.service.AdminPaintTasksManagemntService;
@@ -79,5 +80,16 @@ public class AdminPaintTasksManagemntController {
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
+	
+	@GetMapping("/get-paint-tasks-measureNames")
+	public ResponseEntity<List<TaskResponseDto>> getTaskDetails(
+	        @RequestParam(required = false) String serviceCategory,
+	        @RequestParam(required = false) String taskId,
+	        @RequestParam(required = false) String taskName)   {
+
+	    List<TaskResponseDto> result = service.getTaskDetails(serviceCategory, taskId, taskName);
+	    return ResponseEntity.ok(result);
+	}
+
 
 }

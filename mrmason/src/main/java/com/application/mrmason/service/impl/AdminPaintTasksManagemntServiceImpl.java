@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.dto.AdminPaintTaskRequestDTO;
+import com.application.mrmason.dto.MeasureTaskDto;
+import com.application.mrmason.dto.TaskResponseDto;
 import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.AdminPaintTasksManagemnt;
 import com.application.mrmason.entity.User;
@@ -208,5 +211,48 @@ public class AdminPaintTasksManagemntServiceImpl implements AdminPaintTasksManag
 
 		return new UserInfo(userId, role);
 	}
+
+	@Override
+	public List<TaskResponseDto> getTaskDetails(String serviceCategory, String taskId, String taskName) {
+	    List<AdminPaintTasksManagemnt> records = repository.findByFilters(serviceCategory, taskId, taskName);
+
+	    // Group records by task identity: serviceCategory + taskId + taskName
+	    Map<String, List<AdminPaintTasksManagemnt>> grouped = records.stream()
+	        .collect(Collectors.groupingBy(record -> 
+	            record.getServiceCategory() + "|" + record.getTaskId() + "|" + record.getTaskName()
+	        ));
+
+	    List<TaskResponseDto> responseList = new ArrayList<>();
+
+	    for (Map.Entry<String, List<AdminPaintTasksManagemnt>> entry : grouped.entrySet()) {
+	        List<AdminPaintTasksManagemnt> groupRecords = entry.getValue();
+
+	        // Get first record as a template for serviceCategory, taskId, taskName
+	        AdminPaintTasksManagemnt first = groupRecords.get(0);
+
+	        TaskResponseDto dto = new TaskResponseDto();
+	        dto.setServiceCategory(first.getServiceCategory());
+	        dto.setTaskId(first.getTaskId());
+	        dto.setTaskName(first.getTaskName());
+
+	        // Collect distinct measure names for this task
+	        List<MeasureTaskDto> measures = groupRecords.stream()
+	            .map(r -> {
+	                MeasureTaskDto m = new MeasureTaskDto();
+	                m.setMeasureName(r.getMeasureName());
+	                return m;
+	            })
+	            .distinct()
+	            .collect(Collectors.toList());
+
+	        dto.setMeasureTasks(measures);
+
+	        responseList.add(dto);
+	    }
+
+	    return responseList;
+	}
+
+
 
 }

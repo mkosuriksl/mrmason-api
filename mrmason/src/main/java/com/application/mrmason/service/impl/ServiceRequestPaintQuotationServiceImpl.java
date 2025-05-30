@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -19,13 +21,17 @@ import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.SPWAStatus;
 import com.application.mrmason.entity.ServiceRequest;
 import com.application.mrmason.entity.ServiceRequestPaintQuotation;
+import com.application.mrmason.entity.ServiceRequestQuotation;
+import com.application.mrmason.entity.SiteMeasurement;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.ServiceRequestPaintQuotationRepository;
+import com.application.mrmason.repository.ServiceRequestQuotationRepository;
 import com.application.mrmason.repository.ServiceRequestRepo;
+import com.application.mrmason.repository.SiteMeasurementRepository;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.AuthDetailsProvider;
 import com.application.mrmason.service.ServiceRequestPaintQuotationService;
@@ -51,18 +57,20 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 	private EntityManager entityManager;
 
 	@Autowired
-	private ServiceRequestRepo serviceRequestRepo;
-
+	private SiteMeasurementRepository serviceRequestRepo;
+	
 	@Autowired
 	private ServiceRequestPaintQuotationRepository serviceRequestPaintQuotationRepository;
 
+	@Autowired
+	ServiceRequestQuotationRepository serviceRequestQuotationAuditRepository;
 
 	@Override
 	public List<ServiceRequestPaintQuotation> createServiceRequestPaintQuotationService(
 	        String requestId, List<ServiceRequestPaintQuotation> dtoList, RegSource regSource) {
 
 	    UserInfo userInfo = getLoggedInUserInfo(regSource);
-	    ServiceRequest serviceRequest = serviceRequestRepo.findByRequestId(requestId);
+	    SiteMeasurement serviceRequest = serviceRequestRepo.findByServiceRequestId(requestId);
 
 	    if (serviceRequest == null) {
 	        throw new RuntimeException("Service request not found with ID: " + requestId);
@@ -70,7 +78,7 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 
 	    // Step 1: Fetch existing line IDs for this requestId
 	    List<String> existingLineIds = serviceRequestPaintQuotationRepository
-	            .findByRequestId(requestId)
+	            .findByRequestId(requestId)        
 	            .stream()
 	            .map(ServiceRequestPaintQuotation::getRequestLineId)
 	            .collect(Collectors.toList());
@@ -84,6 +92,7 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 
 	    List<ServiceRequestPaintQuotation> savedQuotations = new ArrayList<>();
 
+	    Integer totalQuotationAmount = 0;
 	    for (ServiceRequestPaintQuotation dto : dtoList) {
 	        // Generate next lineId
 	        int nextCounter = ++maxCounter;
@@ -106,8 +115,40 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 
 	        ServiceRequestPaintQuotation saved = serviceRequestPaintQuotationRepository.save(sRPQ);
 	        savedQuotations.add(saved);
+			totalQuotationAmount += dto.getQuotationAmount();
+
 	    }
 
+	    Collection<ServiceRequestPaintQuotation> allQuotationsForRequest = serviceRequestPaintQuotationRepository.findByRequestId(requestId);
+
+	    Integer totalQuotationAmountFromDb = allQuotationsForRequest.stream()
+	            .map(ServiceRequestPaintQuotation::getQuotationAmount)
+	            .filter(Objects::nonNull)
+	            .reduce(0, Integer::sum);
+
+	    // ✅ Step 3: Update or insert into ServiceRequestQuotation header
+	    List<ServiceRequestQuotation> existingAuditOpt = serviceRequestQuotationAuditRepository.findByRequestId(requestId);
+
+	    ServiceRequestQuotation audit;
+	    if (!existingAuditOpt.isEmpty()) {
+	        // Update existing
+	        audit = existingAuditOpt.get(0);
+	        audit.setQuotationAmount(totalQuotationAmountFromDb);
+	        audit.setUpdatedBy(userInfo.userId);
+	        audit.setUpdatedDate(new Date());
+	    } else {
+	        // Create new
+	        audit = new ServiceRequestQuotation();
+	        audit.setRequestId(requestId);
+	        audit.setQuotationAmount(totalQuotationAmountFromDb);
+	        audit.setQuotedDate(new Date());
+	        audit.setQuotatedBy(userInfo.userId);
+	        audit.setStatus(SPWAStatus.NEW);
+	        audit.setUpdatedBy(userInfo.userId);
+	        audit.setUpdatedDate(new Date());
+	    }
+
+	    serviceRequestQuotationAuditRepository.save(audit);
 	    return savedQuotations;
 	}
 
@@ -218,7 +259,7 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 	        String requestId, List<ServiceRequestPaintQuotation> dtoList, RegSource regSource) {
 
 	    UserInfo userInfo = getLoggedInUserInfo(regSource);
-	    ServiceRequest serviceRequest = serviceRequestRepo.findByRequestId(requestId);
+	    SiteMeasurement serviceRequest = serviceRequestRepo.findByServiceRequestId(requestId);
 
 	    if (serviceRequest == null) {
 	        throw new RuntimeException("Service request not found with ID: " + requestId);
@@ -233,6 +274,11 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 	    List<ServiceRequestPaintQuotation> updatedQuotations = new ArrayList<>();
 
 	    for (ServiceRequestPaintQuotation dto : dtoList) {
+	    	String lineRequestIdPrefix = dto.getRequestLineId().split("_")[0];
+	        if (!lineRequestIdPrefix.equals(requestId)) {
+	            throw new IllegalArgumentException("Invalid requestLineId: " + dto.getRequestLineId() +
+	                " does not match requestId: " + requestId);
+	        }
 	        ServiceRequestPaintQuotation existing = existingMap.get(dto.getRequestLineId());
 
 	        if (existing != null) {
@@ -251,7 +297,34 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 	        }
 	        // else: skip as it's not an existing record
 	    }
+	    Integer totalQuotationAmount = serviceRequestPaintQuotationRepository.findByRequestId(requestId).stream()
+	            .map(ServiceRequestPaintQuotation::getQuotationAmount)
+	            .filter(Objects::nonNull)
+	            .reduce(0, Integer::sum);
 
+	    // Step 3: Update or create ServiceRequestQuotation header
+	    List<ServiceRequestQuotation>  optionalHeader = serviceRequestQuotationAuditRepository.findByRequestIds(requestId);
+
+	    ServiceRequestQuotation header;
+	    SPWAStatus status = !dtoList.isEmpty() ? dtoList.get(0).getStatus() : null;
+
+	    if (!optionalHeader.isEmpty()) {
+	        header = optionalHeader.get(0);
+	        header.setQuotationAmount(totalQuotationAmount);
+	        header.setUpdatedBy(userInfo.userId);
+	        header.setUpdatedDate(new Date());
+	        header.setStatus(status);
+	    } else {
+	        header = new ServiceRequestQuotation();
+	        header.setRequestId(requestId);
+	        header.setQuotationAmount(totalQuotationAmount);
+	        header.setQuotedDate(new Date());
+	        header.setQuotatedBy(userInfo.userId);
+	        header.setUpdatedBy(userInfo.userId);
+	        header.setUpdatedDate(new Date());
+	        header.setStatus(status);
+	    }
+	    serviceRequestQuotationAuditRepository.save(header);
 	    return updatedQuotations;
 	}
 

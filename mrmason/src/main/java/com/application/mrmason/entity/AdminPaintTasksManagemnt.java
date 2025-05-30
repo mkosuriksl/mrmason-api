@@ -42,12 +42,25 @@ public class AdminPaintTasksManagemnt {
 
 	@Column(name = "updated_date")
 	private Date updatedDate;
-
+	
 	@Column(name = "user_id")
 	private String userId;
+	
+	@Column(name = "measure_name")
+	private String measureName;
+	
+	@Column(name = "value")
+	private String value;
 	
 	@PrePersist
 	private void prePersist() {
 	    this.adminTaskId = "ADM" + UUID.randomUUID().toString().replace("-", "").substring(0, 20);
+	}
+
+	public AdminPaintTasksManagemnt(String serviceCategory, String taskName, String taskId) {
+		super();
+		this.serviceCategory = serviceCategory;
+		this.taskName = taskName;
+		this.taskId = taskId;
 	}
 }

@@ -6,12 +6,16 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.application.mrmason.dto.MeasureTaskDto;
 import com.application.mrmason.dto.SPBuildingConstructionTaskRequestDTO;
+import com.application.mrmason.dto.TaskResponseDto;
 import com.application.mrmason.entity.SPBuildingConstructionTasksManagment;
+import com.application.mrmason.entity.SPElectricalTasksManagemnt;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
@@ -113,4 +117,45 @@ public class SPBuildingConstructionTasksManagmentServiceImpl implements SPBuildi
         info.role = "Developer";
         return info;
     }
+    
+    @Override
+	public List<TaskResponseDto> getTaskDetails(String serviceCategory, String taskId, String taskName) {
+	    List<SPBuildingConstructionTasksManagment> records = repository.findByFilters(serviceCategory, taskId, taskName);
+
+	    // Group records by task identity: serviceCategory + taskId + taskName
+	    Map<String, List<SPBuildingConstructionTasksManagment>> grouped = records.stream()
+	        .collect(Collectors.groupingBy(record -> 
+	            record.getServiceCategory() + "|" + record.getTaskId() + "|" + record.getTaskName()
+	        ));
+
+	    List<TaskResponseDto> responseList = new ArrayList<>();
+
+	    for (Map.Entry<String, List<SPBuildingConstructionTasksManagment>> entry : grouped.entrySet()) {
+	        List<SPBuildingConstructionTasksManagment> groupRecords = entry.getValue();
+
+	        // Get first record as a template for serviceCategory, taskId, taskName
+	        SPBuildingConstructionTasksManagment first = groupRecords.get(0);
+
+	        TaskResponseDto dto = new TaskResponseDto();
+	        dto.setServiceCategory(first.getServiceCategory());
+	        dto.setTaskId(first.getTaskId());
+	        dto.setTaskName(first.getTaskName());
+
+	        // Collect distinct measure names for this task
+	        List<MeasureTaskDto> measures = groupRecords.stream()
+	            .map(r -> {
+	                MeasureTaskDto m = new MeasureTaskDto();
+	                m.setMeasureName(r.getMeasureName());
+	                return m;
+	            })
+	            .distinct()
+	            .collect(Collectors.toList());
+
+	        dto.setMeasureTasks(measures);
+
+	        responseList.add(dto);
+	    }
+
+	    return responseList;
+	}
 }

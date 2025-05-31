@@ -2,6 +2,7 @@ package com.application.mrmason.controller;
 
 import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.SPBuildingConstructionTaskRequestDTO;
+import com.application.mrmason.dto.TaskResponseDto;
 import com.application.mrmason.entity.SPBuildingConstructionTasksManagment;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.service.SPBuildingConstructionTasksManagmentService;
@@ -33,4 +34,14 @@ public class SPBuildingConstructionTasksManagmentController {
         GenericResponse<List<SPBuildingConstructionTasksManagment>> response = new GenericResponse<>("SP Building Construction Task Updated successfully", true, savedTasks);
         return ResponseEntity.ok(response);
     }
+    
+    @GetMapping("/get-building-construction-tasks-measureNames")
+   	public ResponseEntity<List<TaskResponseDto>> getTaskDetails(
+   	        @RequestParam(required = false) String serviceCategory,
+   	        @RequestParam(required = false) String taskId,
+   	        @RequestParam(required = false) String taskName)   {
+
+   	    List<TaskResponseDto> result = service.getTaskDetails(serviceCategory, taskId, taskName);
+   	    return ResponseEntity.ok(result);
+   	}
 }

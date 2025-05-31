@@ -19,8 +19,8 @@ import lombok.Setter;
 @AllArgsConstructor
 @Entity
 @Builder
-@Table(name = "sp_paint_tasks_managemnt")
-public class SPPaintTasksManagemnt {
+@Table(name = "sp_plumbing_tasks_managemnt")
+public class SPPlumbingTasksManagemnt{
 
 	@Id
 	@Column(name = "userId_taskId")

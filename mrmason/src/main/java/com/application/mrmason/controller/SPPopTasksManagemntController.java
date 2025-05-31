@@ -19,7 +19,7 @@ import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.service.SPPopTasksManagemntService;
 
 @RestController
-@RequestMapping("/sppoptasks")
+@RequestMapping("/sptasks")
 public class SPPopTasksManagemntController {
 
     @Autowired

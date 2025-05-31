@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.SPPaintTaskRequestDTO;
+import com.application.mrmason.dto.TaskResponseDto;
 import com.application.mrmason.entity.SPPaintTasksManagemnt;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.service.SPPaintTasksManagemntService;
@@ -47,6 +49,16 @@ public class SPPaintTasksManagemntController {
 				true, savedTasks);
 
 		return ResponseEntity.ok(response);
+	}
+	
+	@GetMapping("/get-paint-tasks-measureNames")
+	public ResponseEntity<List<TaskResponseDto>> getTaskDetails(
+	        @RequestParam(required = false) String serviceCategory,
+	        @RequestParam(required = false) String taskId,
+	        @RequestParam(required = false) String taskName)   {
+
+	    List<TaskResponseDto> result = service.getTaskDetails(serviceCategory, taskId, taskName);
+	    return ResponseEntity.ok(result);
 	}
 
 }

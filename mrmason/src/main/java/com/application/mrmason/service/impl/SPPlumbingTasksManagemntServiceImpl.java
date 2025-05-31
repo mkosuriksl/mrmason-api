@@ -148,8 +148,12 @@ public class SPPlumbingTasksManagemntServiceImpl implements SPPlumbingTasksManag
 	}
 	
 	@Override
-	public List<TaskResponseDto> getTaskDetails(String serviceCategory, String taskId, String taskName) {
-	    List<SPPlumbingTasksManagemnt> records = repository.findByFilters(serviceCategory, taskId, taskName);
+	public List<TaskResponseDto> getTaskDetails(String serviceCategory, String taskId, String taskName,RegSource regSource)throws AccessDeniedException {
+		UserInfo userInfo = getLoggedInSPInfo(regSource);
+	    if (!UserType.Developer.name().equals(userInfo.role)) {
+	        throw new AccessDeniedException("Only Developer users can access this API.");
+	    }
+		List<SPPlumbingTasksManagemnt> records = repository.findByFilters(serviceCategory, taskId, taskName);
 
 	    // Group records by task identity: serviceCategory + taskId + taskName
 	    Map<String, List<SPPlumbingTasksManagemnt>> grouped = records.stream()

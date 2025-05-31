@@ -17,7 +17,6 @@ import com.application.mrmason.dto.MeasureTaskDto;
 import com.application.mrmason.dto.SPElectricalTaskRequestDTO;
 import com.application.mrmason.dto.TaskResponseDto;
 import com.application.mrmason.entity.SPElectricalTasksManagemnt;
-import com.application.mrmason.entity.SPPaintTasksManagemnt;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
@@ -148,8 +147,12 @@ public class SPElectricalTasksManagemntServiceImpl implements SPElectricalTasksM
     }
 
     @Override
-	public List<TaskResponseDto> getTaskDetails(String serviceCategory, String taskId, String taskName) {
-	    List<SPElectricalTasksManagemnt> records = repository.findByFilters(serviceCategory, taskId, taskName);
+	public List<TaskResponseDto> getTaskDetails(String serviceCategory, String taskId, String taskName,RegSource regSource) throws AccessDeniedException{
+    	UserInfo userInfo = getLoggedInSPInfo(regSource);
+	    if (!UserType.Developer.name().equals(userInfo.role)) {
+	        throw new AccessDeniedException("Only Developer users can access this API.");
+	    }
+    	List<SPElectricalTasksManagemnt> records = repository.findByFilters(serviceCategory, taskId, taskName);
 
 	    // Group records by task identity: serviceCategory + taskId + taskName
 	    Map<String, List<SPElectricalTasksManagemnt>> grouped = records.stream()

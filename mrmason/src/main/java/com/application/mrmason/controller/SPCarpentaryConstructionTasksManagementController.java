@@ -55,9 +55,9 @@ public class SPCarpentaryConstructionTasksManagementController {
 	public ResponseEntity<List<TaskResponseDto>> getTaskDetails(
 	        @RequestParam(required = false) String serviceCategory,
 	        @RequestParam(required = false) String taskId,
-	        @RequestParam(required = false) String taskName)   {
+	        @RequestParam(required = false) String taskName,@RequestParam RegSource regSource) throws AccessDeniedException  {
 
-	    List<TaskResponseDto> result = service.getTaskDetails(serviceCategory, taskId, taskName);
+	    List<TaskResponseDto> result = service.getTaskDetails(serviceCategory, taskId, taskName,regSource);
 	    return ResponseEntity.ok(result);
 	}
 }

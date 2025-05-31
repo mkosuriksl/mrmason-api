@@ -15,10 +15,8 @@ import org.springframework.stereotype.Service;
 
 import com.application.mrmason.dto.MeasureTaskDto;
 import com.application.mrmason.dto.SPCarpentaryConstructionTaskRequestDto;
-import com.application.mrmason.dto.SPPaintTaskRequestDTO;
 import com.application.mrmason.dto.TaskResponseDto;
 import com.application.mrmason.entity.SPCarpentaryConstructionTasksManagement;
-import com.application.mrmason.entity.SPPaintTasksManagemnt;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
@@ -125,7 +123,11 @@ public class SPCarpentaryConstructionTasksManagementServiceImpl implements SPCar
 	}
 	
 	@Override
-	public List<TaskResponseDto> getTaskDetails(String serviceCategory, String taskId, String taskName) {
+	public List<TaskResponseDto> getTaskDetails(String serviceCategory, String taskId, String taskName,RegSource regSource)throws AccessDeniedException {
+		UserInfo userInfo = getLoggedInSPInfo(regSource);
+	    if (!UserType.Developer.name().equals(userInfo.role)) {
+	        throw new AccessDeniedException("Only Developer users can access this API.");
+	    }
 	    List<SPCarpentaryConstructionTasksManagement> records = repository.findByFilters(serviceCategory, taskId, taskName);
 
 	    // Group records by task identity: serviceCategory + taskId + taskName

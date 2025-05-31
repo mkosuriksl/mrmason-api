@@ -70,24 +70,12 @@ public class ServiceRequestPlumbingQuotationServiceImpl implements ServiceReques
 			String requestId,List<ServiceRequestPlumbingQuotation> dtoList, RegSource regSource) {
 		UserInfo userInfo = getLoggedInUserInfo(regSource);
 
-//		SiteMeasurement serviceRequest = serviceRequestRepo.findByServiceRequestId(requestId);
-//
-//	    if (serviceRequest == null) {
-//	        throw new RuntimeException("Service request not found with ID: " + requestId);
-//	    }
-//	    List<String> existingLineIds = plumbingQuotationRepository
-//	            .findByRequestId(requestId)
-//	            .stream()
-//	            .map(ServiceRequestPlumbingQuotation::getRequestLineId)
-//	            .collect(Collectors.toList());
-//
-//	    // Step 2: Extract the highest counter
-//	    int maxCounter = existingLineIds.stream()
-//	            .map(id -> id.substring(id.lastIndexOf("_") + 1))
-//	            .mapToInt(Integer::parseInt)
-//	            .max()
-//	            .orElse(0); // If no entries exist, start at 0
-		int maxCounter=0;
+		int maxCounter = plumbingQuotationRepository.findByRequestId(requestId).stream()
+			    .map(ServiceRequestPlumbingQuotation::getRequestLineId)
+			    .map(id -> id.substring(id.lastIndexOf("_") + 1))
+			    .mapToInt(Integer::parseInt)
+			    .max()
+			    .orElse(0);
 
 	    List<ServiceRequestPlumbingQuotation> savedQuotations = new ArrayList<>();
 
@@ -254,11 +242,11 @@ public class ServiceRequestPlumbingQuotationServiceImpl implements ServiceReques
 	public List<ServiceRequestPlumbingQuotation> updateServiceRequestPlumbingQuotation(String requestId,
 			List<ServiceRequestPlumbingQuotation> dtoList, RegSource regSource) {
 		UserInfo userInfo = getLoggedInUserInfo(regSource);
-		SiteMeasurement serviceRequest = serviceRequestRepo.findByServiceRequestId(requestId);
-
-	    if (serviceRequest == null) {
-	        throw new RuntimeException("Service request not found with ID: " + requestId);
-	    }
+//		SiteMeasurement serviceRequest = serviceRequestRepo.findByServiceRequestId(requestId);
+//
+//	    if (serviceRequest == null) {
+//	        throw new RuntimeException("Service request not found with ID: " + requestId);
+//	    }
 
 	    // Step 1: Get existing records and map them by requestLineId
 	    Map<String, ServiceRequestPlumbingQuotation> existingMap = plumbingQuotationRepository

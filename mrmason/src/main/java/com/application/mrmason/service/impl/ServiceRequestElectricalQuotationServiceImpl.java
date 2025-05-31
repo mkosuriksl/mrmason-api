@@ -71,21 +71,13 @@ public class ServiceRequestElectricalQuotationServiceImpl implements ServiceRequ
 			List<ServiceRequestElectricalQuotation> dtoList, RegSource regSource) {
 
 		UserInfo userInfo = getLoggedInUserInfo(regSource);
-//		SiteMeasurement serviceRequest = serviceRequestRepo.findByServiceRequestId(requestId);
-//
-//		if (serviceRequest == null) {
-//			throw new RuntimeException("Service request not found with ID: " + requestId);
-//		}
-//
-//		// Step 1: Fetch existing line IDs for this requestId
-//		List<String> existingLineIds = electricalQuotationRepository.findByRequestId(requestId).stream()
-//				.map(ServiceRequestElectricalQuotation::getRequestLineId).collect(Collectors.toList());
-//
-//		// Step 2: Extract the highest counter
-//		int maxCounter = existingLineIds.stream().map(id -> id.substring(id.lastIndexOf("_") + 1))
-//				.mapToInt(Integer::parseInt).max().orElse(0); // If no entries exist, start at 0
 
-		int maxCounter=0;
+		int maxCounter = electricalQuotationRepository.findByRequestId(requestId).stream()
+			    .map(ServiceRequestElectricalQuotation::getRequestLineId)
+			    .map(id -> id.substring(id.lastIndexOf("_") + 1))
+			    .mapToInt(Integer::parseInt)
+			    .max()
+			    .orElse(0);
 		List<ServiceRequestElectricalQuotation> savedQuotations = new ArrayList<>();
 
 		Integer totalQuotationAmount = 0;
@@ -253,11 +245,11 @@ public class ServiceRequestElectricalQuotationServiceImpl implements ServiceRequ
 	        String requestId, List<ServiceRequestElectricalQuotation> dtoList, RegSource regSource) {
 
 	    UserInfo userInfo = getLoggedInUserInfo(regSource);
-	    SiteMeasurement serviceRequest = serviceRequestRepo.findByServiceRequestId(requestId);
-
-	    if (serviceRequest == null) {
-	        throw new RuntimeException("Service request not found with ID: " + requestId);
-	    }
+//	    SiteMeasurement serviceRequest = serviceRequestRepo.findByServiceRequestId(requestId);
+//
+//	    if (serviceRequest == null) {
+//	        throw new RuntimeException("Service request not found with ID: " + requestId);
+//	    }
 
 	    // Step 1: Delete existing quotations for the requestId
 	    Map<String, ServiceRequestElectricalQuotation> existingMap = electricalQuotationRepository

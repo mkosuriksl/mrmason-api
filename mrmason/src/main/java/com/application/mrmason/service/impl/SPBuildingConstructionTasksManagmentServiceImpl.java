@@ -2,6 +2,7 @@ package com.application.mrmason.service.impl;
 
 import java.nio.file.AccessDeniedException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -9,18 +10,20 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.dto.MeasureTaskDto;
 import com.application.mrmason.dto.SPBuildingConstructionTaskRequestDTO;
 import com.application.mrmason.dto.TaskResponseDto;
 import com.application.mrmason.entity.SPBuildingConstructionTasksManagment;
-import com.application.mrmason.entity.SPElectricalTasksManagemnt;
+import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.SPBuildingConstructionTasksManagmentRepository;
 import com.application.mrmason.repository.UserDAO;
+import com.application.mrmason.security.AuthDetailsProvider;
 import com.application.mrmason.service.SPBuildingConstructionTasksManagmentService;
 
 import jakarta.persistence.EntityManager;
@@ -105,22 +108,37 @@ public class SPBuildingConstructionTasksManagmentServiceImpl implements SPBuildi
     }
 
     private static class UserInfo {
-        String userId;
-        String role;
-    }
+		String userId;
+		String role;
+		UserInfo(String userId, String role) {
+			this.userId = userId;
+			this.role = role;
+		}
+	}
 
-    private UserInfo getLoggedInSPInfo(RegSource regSource) {
-        // Implement logic to fetch logged-in SP info based on regSource
-        // This is a placeholder, adapt as per your authentication logic
-        UserInfo info = new UserInfo();
-        info.userId = "demoUserId";
-        info.role = "Developer";
-        return info;
-    }
+	private UserInfo getLoggedInSPInfo(RegSource regSource) {
+		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
+		Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
+		List<String> roleNames = loggedInRole.stream().map(GrantedAuthority::getAuthority)
+				.map(role -> role.replace("ROLE_", "")).collect(Collectors.toList());
+		String userId = null;
+		String role = roleNames.get(0);
+		UserType userType = UserType.valueOf(role);
+		if (userType == UserType.Developer) {
+			User user = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource)
+					.orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
+			userId = user.getBodSeqNo();
+		} 
+		return new UserInfo(userId, role);
+	}
     
     @Override
-	public List<TaskResponseDto> getTaskDetails(String serviceCategory, String taskId, String taskName) {
-	    List<SPBuildingConstructionTasksManagment> records = repository.findByFilters(serviceCategory, taskId, taskName);
+	public List<TaskResponseDto> getTaskDetails(String serviceCategory, String taskId, String taskName,RegSource regSource)throws AccessDeniedException {
+    	UserInfo userInfo = getLoggedInSPInfo(regSource);
+	    if (!UserType.Developer.name().equals(userInfo.role)) {
+	        throw new AccessDeniedException("Only Developer users can access this API.");
+	    }
+    	List<SPBuildingConstructionTasksManagment> records = repository.findByFilters(serviceCategory, taskId, taskName);
 
 	    // Group records by task identity: serviceCategory + taskId + taskName
 	    Map<String, List<SPBuildingConstructionTasksManagment>> grouped = records.stream()

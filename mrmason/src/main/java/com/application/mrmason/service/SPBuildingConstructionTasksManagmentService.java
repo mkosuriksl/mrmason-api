@@ -10,5 +10,5 @@ import java.util.List;
 public interface SPBuildingConstructionTasksManagmentService {
     List<SPBuildingConstructionTasksManagment> createAdmin(RegSource regSource, SPBuildingConstructionTaskRequestDTO requestDTO) throws AccessDeniedException;
     List<SPBuildingConstructionTasksManagment> updateAdmin(RegSource regSource, List<SPBuildingConstructionTasksManagment> taskList) throws AccessDeniedException;
-	public List<TaskResponseDto> getTaskDetails(String serviceCategory, String taskId, String taskName);
+	public List<TaskResponseDto> getTaskDetails(String serviceCategory, String taskId, String taskName,RegSource regSource)throws AccessDeniedException ;
 }

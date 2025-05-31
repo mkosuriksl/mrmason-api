@@ -1,16 +1,24 @@
 package com.application.mrmason.controller;
 
+import java.nio.file.AccessDeniedException;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.SPBuildingConstructionTaskRequestDTO;
 import com.application.mrmason.dto.TaskResponseDto;
 import com.application.mrmason.entity.SPBuildingConstructionTasksManagment;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.service.SPBuildingConstructionTasksManagmentService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import java.nio.file.AccessDeniedException;
-import java.util.List;
 
 @RestController
 @RequestMapping("/sptasks")
@@ -35,13 +43,14 @@ public class SPBuildingConstructionTasksManagmentController {
         return ResponseEntity.ok(response);
     }
     
-    @GetMapping("/get-building-construction-tasks-measureNames")
+	@GetMapping("/get-building-construction-tasks-measureNames")
    	public ResponseEntity<List<TaskResponseDto>> getTaskDetails(
    	        @RequestParam(required = false) String serviceCategory,
    	        @RequestParam(required = false) String taskId,
-   	        @RequestParam(required = false) String taskName)   {
+   	        @RequestParam(required = false) String taskName,
+   	     @RequestParam RegSource regSource) throws AccessDeniedException   {
 
-   	    List<TaskResponseDto> result = service.getTaskDetails(serviceCategory, taskId, taskName);
+   	    List<TaskResponseDto> result = service.getTaskDetails(serviceCategory, taskId, taskName,regSource);
    	    return ResponseEntity.ok(result);
    	}
 }

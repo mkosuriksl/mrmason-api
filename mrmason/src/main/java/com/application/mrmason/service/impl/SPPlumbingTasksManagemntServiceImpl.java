@@ -13,7 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
+import com.application.mrmason.dto.MeasureTaskDto;
 import com.application.mrmason.dto.SPPlumbingTaskRequestDTO;
+import com.application.mrmason.dto.TaskResponseDto;
 import com.application.mrmason.entity.SPPlumbingTasksManagemnt;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
@@ -143,6 +145,47 @@ public class SPPlumbingTasksManagemntServiceImpl implements SPPlumbingTasksManag
 			userId = user.getBodSeqNo();
 		} 
 		return new UserInfo(userId, role);
+	}
+	
+	@Override
+	public List<TaskResponseDto> getTaskDetails(String serviceCategory, String taskId, String taskName) {
+	    List<SPPlumbingTasksManagemnt> records = repository.findByFilters(serviceCategory, taskId, taskName);
+
+	    // Group records by task identity: serviceCategory + taskId + taskName
+	    Map<String, List<SPPlumbingTasksManagemnt>> grouped = records.stream()
+	        .collect(Collectors.groupingBy(record -> 
+	            record.getServiceCategory() + "|" + record.getTaskId() + "|" + record.getTaskName()
+	        ));
+
+	    List<TaskResponseDto> responseList = new ArrayList<>();
+
+	    for (Map.Entry<String, List<SPPlumbingTasksManagemnt>> entry : grouped.entrySet()) {
+	        List<SPPlumbingTasksManagemnt> groupRecords = entry.getValue();
+
+	        // Get first record as a template for serviceCategory, taskId, taskName
+	        SPPlumbingTasksManagemnt first = groupRecords.get(0);
+
+	        TaskResponseDto dto = new TaskResponseDto();
+	        dto.setServiceCategory(first.getServiceCategory());
+	        dto.setTaskId(first.getTaskId());
+	        dto.setTaskName(first.getTaskName());
+
+	        // Collect distinct measure names for this task
+	        List<MeasureTaskDto> measures = groupRecords.stream()
+	            .map(r -> {
+	                MeasureTaskDto m = new MeasureTaskDto();
+	                m.setMeasureName(r.getMeasureName());
+	                return m;
+	            })
+	            .distinct()
+	            .collect(Collectors.toList());
+
+	        dto.setMeasureTasks(measures);
+
+	        responseList.add(dto);
+	    }
+
+	    return responseList;
 	}
 
 }

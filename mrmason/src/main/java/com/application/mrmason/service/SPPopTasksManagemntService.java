@@ -10,5 +10,5 @@ import com.application.mrmason.enums.RegSource;
 public interface SPPopTasksManagemntService {
     List<SPPopTasksManagemnt> createAdmin(RegSource regSource, SPPopTaskRequestDTO requestDTO) throws AccessDeniedException;
     List<SPPopTasksManagemnt> updateAdmin(RegSource regSource, List<SPPopTasksManagemnt> taskList) throws AccessDeniedException;
-    public List<TaskResponseDto> getTaskDetails(String serviceCategory, String taskId, String taskName);
+    public List<TaskResponseDto> getTaskDetails(String serviceCategory, String taskId, String taskName,RegSource regSource)throws AccessDeniedException ;
 }

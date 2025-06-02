@@ -52,10 +52,10 @@ public class AdminPaintTasksManagemnt {
 	@Column(name = "value")
 	private String value;
 	
-	@PrePersist
-	private void prePersist() {
-	    this.adminTaskId = "ADM" + UUID.randomUUID().toString().replace("-", "").substring(0, 20);
-	}
+//	@PrePersist
+//	private void prePersist() {
+//	    this.adminTaskId = "ADM" + UUID.randomUUID().toString().replace("-", "").substring(0, 20);
+//	}
 
 	public AdminPaintTasksManagemnt(String serviceCategory, String taskName, String taskId) {
 		super();

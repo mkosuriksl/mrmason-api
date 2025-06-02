@@ -57,12 +57,19 @@ public class AdminDetails implements UserDetails {
 	private String regDate;
 	@Column(name = "otp")
 	private String otp;
-
+	@Column(name = "adminId", nullable = false, unique = true)
+	private String adminId;
+	
 	@PrePersist
 	public void prePresist() {
 		LocalDate now = LocalDate.now();
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		this.regDate = now.format(formatter);
+		
+		if (this.adminId == null || this.adminId.isEmpty()) {
+			int randomNum = (int)(Math.random() * 900000) + 100000; // generates a number between 100000 and 999999
+			this.adminId = "Adm" + randomNum;
+		}
 	}
 
 	@Override

@@ -4,6 +4,7 @@ import java.nio.file.AccessDeniedException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -56,10 +57,27 @@ public class AdminPaintTasksManagemntServiceImpl implements AdminPaintTasksManag
 	@Override
 	public List<AdminPaintTasksManagemnt> createAdmin(AdminPaintTaskRequestDTO requestDTO) {
 		AdminInfo userInfo = getLoggedInAdminInfo();
+		  Map<String, Long> prefixCounter = new HashMap<>();
 		for (AdminPaintTasksManagemnt task : requestDTO.getTasks()) {
+			String shortServiceCategory = task.getServiceCategory() != null && task.getServiceCategory().length() > 4
+	                ? task.getServiceCategory().substring(0, 4)
+	                : task.getServiceCategory();
+
+	        String prefix = userInfo.adminId + "_" + shortServiceCategory + "_" + task.getTaskId() + "_";
+
+	        // Get current count from DB (only once per prefix)
+	        long currentCount = prefixCounter.computeIfAbsent(prefix, k -> repository.countByPrefix(k));
+
+	        // Increment and generate new ID
+	        currentCount++;
+	        prefixCounter.put(prefix, currentCount); // Update counter for next one
+
+	        String generatedId = prefix + String.format("%04d", currentCount);
+	        task.setAdminTaskId(generatedId);
+//			task.setAdminTaskId(userInfo.adminId+"_");
 			task.setUserId(requestDTO.getUserId()); // Set common userId
 			task.setUpdatedDate(new Date());
-			task.setUpdatedBy(userInfo.userId);
+			task.setUpdatedBy(userInfo.userEmail);
 		}
 
 		return repository.saveAll(requestDTO.getTasks());
@@ -67,10 +85,11 @@ public class AdminPaintTasksManagemntServiceImpl implements AdminPaintTasksManag
 
 	private static class AdminInfo {
 
-		String userId;
-
-		AdminInfo(String userId) {
-			this.userId = userId;
+		String userEmail;
+		String adminId;
+		AdminInfo(String userEmail,String adminId) {
+			this.userEmail = userEmail;
+			this.adminId=adminId;
 		}
 	}
 
@@ -90,9 +109,10 @@ public class AdminPaintTasksManagemntServiceImpl implements AdminPaintTasksManag
 		AdminDetails admin = adminRepo.findByEmailAndUserType(loggedInUserEmail, UserType.Adm)
 				.orElseThrow(() -> new ResourceNotFoundException("Admin not found: " + loggedInUserEmail));
 
-		String userId = admin.getEmail(); // Or admin.getId() based on your logic
+		String userEmail = admin.getEmail(); 
+		String adminId=admin.getAdminId();
 
-		return new AdminInfo(userId);
+		return new AdminInfo(userEmail,adminId);
 	}
 
 	@Override
@@ -109,9 +129,9 @@ public class AdminPaintTasksManagemntServiceImpl implements AdminPaintTasksManag
 				throw new ResourceNotFoundException("Task not found for adminTaskId: " + task.getAdminTaskId());
 			}
 
-			task.setUserId(userInfo.userId);
+			task.setUserId(userInfo.userEmail);
 			task.setUpdatedDate(new Date());
-			task.setUpdatedBy(userInfo.userId);
+			task.setUpdatedBy(userInfo.userEmail);
 		}
 
 		return repository.saveAll(taskList);

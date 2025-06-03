@@ -13,15 +13,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.application.mrmason.config.AWSConfig;
+import com.application.mrmason.dto.ResponseModel;
 import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.AdminMaterialMaster;
+import com.application.mrmason.entity.UploadMatericalMasterImages;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.AdminMaterialMasterRepository;
+import com.application.mrmason.repository.UploadMatericalMasterImagesRepository;
 import com.application.mrmason.security.AuthDetailsProvider;
 import com.application.mrmason.service.AdminMaterialMasterService;
 
@@ -32,6 +39,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import jakarta.transaction.Transactional;
 
 @Service
 public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterService{
@@ -44,6 +52,12 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 	
 	@PersistenceContext
 	private EntityManager entityManager;
+	
+	@Autowired
+	private AWSConfig awsConfig;
+	
+	@Autowired
+	private UploadMatericalMasterImagesRepository uploadMatericalMasterImagesRepository;
 
 	@Override
     public List<AdminMaterialMaster> createAdminMaterialMaster(List<AdminMaterialMaster> requestDTO) throws AccessDeniedException {
@@ -199,5 +213,73 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 
 		return new PageImpl<>(typedQuery.getResultList(), pageable, total);
 	}
-}
 
+
+		@Transactional
+		@Override
+		public ResponseEntity<ResponseModel> uploadDoc(String skuId, MultipartFile materialMasterImage1,
+		                                               MultipartFile materialMasterImage2,
+		                                               MultipartFile materialMasterImage3,
+		                                               MultipartFile materialMasterImage4,
+		                                               MultipartFile materialMasterImage5) throws AccessDeniedException {
+
+		    AdminInfo userInfo = getLoggedInAdminInfo();
+		    ResponseModel response = new ResponseModel();
+
+		    // 1. Check if skuId exists in AdminMaterialMaster
+		    Optional<AdminMaterialMaster> adminMaterial = adminMaterialMasterRepository.findBySkuId(skuId);
+		    if (adminMaterial.isEmpty()) {
+		        response.setError("true");
+		        response.setMsg("SKU ID not found in AdminMaterialMaster.");
+		        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+		    }
+
+		    // 2. Directory for S3
+		    String directoryPath = "adminMaterialMaster/" + skuId + "/";
+
+		    // 3. Prepare new UploadMatericalMasterImages entity
+		    UploadMatericalMasterImages uploadEntity = new UploadMatericalMasterImages();
+		    uploadEntity.setSkuId(skuId);
+		    uploadEntity.setUpdatedBy(userInfo.adminId);
+		    uploadEntity.setUpdatedDate(new Date());
+
+		    if (materialMasterImage1 != null && !materialMasterImage1.isEmpty()) {
+		        String path1 = directoryPath + materialMasterImage1.getOriginalFilename();
+		        String link1 = awsConfig.uploadFileToS3Bucket(path1, materialMasterImage1);
+		        uploadEntity.setMaterialMasterImage1(link1);
+		    }
+
+		    if (materialMasterImage2 != null && !materialMasterImage2.isEmpty()) {
+		        String path2 = directoryPath + materialMasterImage2.getOriginalFilename();
+		        String link2 = awsConfig.uploadFileToS3Bucket(path2, materialMasterImage2);
+		        uploadEntity.setMaterialMasterImage2(link2);
+		    }
+
+		    if (materialMasterImage3 != null && !materialMasterImage3.isEmpty()) {
+		        String path3 = directoryPath + materialMasterImage3.getOriginalFilename();
+		        String link3 = awsConfig.uploadFileToS3Bucket(path3, materialMasterImage3);
+		        uploadEntity.setMaterialMasterImage3(link3);
+		    }
+
+		    if (materialMasterImage4 != null && !materialMasterImage4.isEmpty()) {
+		        String path4 = directoryPath + materialMasterImage4.getOriginalFilename();
+		        String link4 = awsConfig.uploadFileToS3Bucket(path4, materialMasterImage4);
+		        uploadEntity.setMaterialMasterImage4(link4);
+		    }
+
+		    if (materialMasterImage5 != null && !materialMasterImage5.isEmpty()) {
+		        String path5 = directoryPath + materialMasterImage5.getOriginalFilename();
+		        String link5 = awsConfig.uploadFileToS3Bucket(path5, materialMasterImage5);
+		        uploadEntity.setMaterialMasterImage5(link5);
+		    }
+
+		    // 4. Save to UploadMatericalMasterImages table
+		    uploadMatericalMasterImagesRepository.save(uploadEntity);
+
+		    // 5. Response
+		    response.setError("false");
+		    response.setMsg("Admin Material images uploaded and stored successfully.");
+		    return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+}

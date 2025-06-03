@@ -63,4 +63,5 @@ public class AdminMaterialMaster {
 
 	@Column(name = "updated_date")
 	private Date updatedDate;
+
 }

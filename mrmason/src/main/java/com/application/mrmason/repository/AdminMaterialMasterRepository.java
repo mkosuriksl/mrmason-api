@@ -10,7 +10,8 @@ public interface AdminMaterialMasterRepository extends JpaRepository<AdminMateri
 
 	Optional<AdminMaterialMaster> findBySkuId(String skuId);
 	
-
+	
+	
 	
 }
 

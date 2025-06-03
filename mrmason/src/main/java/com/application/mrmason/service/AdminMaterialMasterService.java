@@ -5,7 +5,10 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.application.mrmason.dto.ResponseModel;
 import com.application.mrmason.entity.AdminMaterialMaster;
 
 public interface AdminMaterialMasterService{
@@ -15,6 +18,8 @@ public interface AdminMaterialMasterService{
 	public Page<AdminMaterialMaster> getAdminMaterialMaster(String materialCategory,
 			String materialSubCategory, String brand, String modelNo, String size,String shape, Pageable pageable)
 			throws AccessDeniedException;
-
+	public ResponseEntity<ResponseModel > uploadDoc(String skuId, MultipartFile materialMasterImage1, MultipartFile materialMasterImage2,
+			MultipartFile materialMasterImage3,MultipartFile materialMasterImage4,
+            MultipartFile materialMasterImage5)throws AccessDeniedException;
 }
 

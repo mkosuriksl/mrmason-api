@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.application.mrmason.dto.AdminMaterialMasterRequestDTO;
 import com.application.mrmason.dto.GenericResponse;
@@ -76,6 +77,17 @@ public class AdminMaterialMasterController {
 		response.setTotalPages(srpqPage.getTotalPages());
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+    
+    @PostMapping("upload_images")
+	public ResponseEntity<?> uploadCabDocs(@RequestParam("skuId") String skuId,
+			@RequestParam(value = "materialMasterImage1", required = false) MultipartFile materialMasterImage1,
+			@RequestParam(value = "materialMasterImage2", required = false) MultipartFile materialMasterImage2,
+			@RequestParam(value = "materialMasterImage3", required = false) MultipartFile materialMasterImage3,
+			@RequestParam(value = "materialMasterImage4", required = false) MultipartFile materialMasterImage4,
+			@RequestParam(value = "materialMasterImage5", required = false) MultipartFile materialMasterImage5) throws AccessDeniedException{
+		return adminMaterialMasterService.uploadDoc(skuId, materialMasterImage1, materialMasterImage2, materialMasterImage3,materialMasterImage4,
+				materialMasterImage5);
 	}
 }
 

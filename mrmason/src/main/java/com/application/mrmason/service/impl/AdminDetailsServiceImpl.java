@@ -58,6 +58,7 @@ public class AdminDetailsServiceImpl implements AdminDetailsService {
 			adminDto.setMobile(adminDetails.getMobile());
 			adminDto.setStatus(adminDetails.getStatus());
 			adminDto.setRegDate(adminDetails.getRegDate());
+			adminDto.setAdminId(adminDetails.getAdminId());
 
 			return adminDto;
 		}

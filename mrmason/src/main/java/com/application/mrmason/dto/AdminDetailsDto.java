@@ -13,4 +13,5 @@ public class AdminDetailsDto {
 	private String email;	
 	private String status;
 	private String regDate;
+	private String adminId;
 }

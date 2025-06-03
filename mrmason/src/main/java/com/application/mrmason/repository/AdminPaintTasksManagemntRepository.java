@@ -18,5 +18,9 @@ public interface AdminPaintTasksManagemntRepository extends JpaRepository<AdminP
 		    @Param("serviceCategory") String serviceCategory,
 		    @Param("taskId") String taskId,
 		    @Param("taskName") String taskName);
+	
+	@Query("SELECT COUNT(e) FROM AdminPaintTasksManagemnt e WHERE e.adminTaskId LIKE :prefix%")
+	long countByPrefix(@Param("prefix") String prefix);
+	
 
 }

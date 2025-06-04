@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.application.mrmason.entity.SPWAStatus;
 import com.application.mrmason.entity.ServiceRequestQuotation;
 
 public interface ServiceRequestQuotationRepository extends JpaRepository<ServiceRequestQuotation,String>{
@@ -14,5 +15,7 @@ public interface ServiceRequestQuotationRepository extends JpaRepository<Service
 	List<ServiceRequestQuotation> findByRequestId(String requestId);
 	@Query("SELECT q FROM ServiceRequestQuotation q WHERE q.requestId = :requestId")
 	List<ServiceRequestQuotation> findByRequestIds(@Param("requestId") String requestId);
+	Optional<ServiceRequestQuotation> findByQuotationIdAndStatus(String quotationId, SPWAStatus status);
+
 
 }

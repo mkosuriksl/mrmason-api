@@ -2,14 +2,10 @@ package com.application.mrmason.entity;
 
 import java.util.Date;
 
-import org.hibernate.annotations.CreationTimestamp;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
@@ -25,34 +21,37 @@ import lombok.Setter;
 @AllArgsConstructor
 @Entity
 @Builder
-@Table(name = "service_request_paint_quotation")
+@Table(name = "service_request_all_quotation")
 public class ServiceRequestPaintQuotation {
 	
 	@Id
-	@Column(name = "request_lineid")
-	private String requestLineId;
+	@Column(name = "admin_task_lineId")
+	private String admintasklineId;
+	
+	@Column(name = "service_category")
+	private String serviceCategory;
 
 	@Column(name = "request_lineid_description")
-	private String requestLineIdDescription;
+	private String taskDescription;
 
 	@Column(name = "request_id")
 	private String requestId;
-
-	@Column(name = "areas_in_sqft")
-	private String areasInSqft;
-
-	@Column(name = "quotation_amount")
-	private Integer quotationAmount;
+	
+	@Column(name = "task_id")
+	private String taskId;
 
 	@Column(name = "quoted_date")
 	private Date quotedDate;
+	
+	@Column(name = "measurenames")
+	private String measureNames;
+	
+	@Column(name = "value")
+	private String value;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name="status")
 	private SPWAStatus status;
-
-	@Column(name = "no_of_days")
-	private Integer noOfDays;
 
 	@Column(name = "updated_by")
 	private String updatedBy;
@@ -62,16 +61,5 @@ public class ServiceRequestPaintQuotation {
 
 	@Column(name = "sp_id")
 	private String spId;
-
-	@Column(name = "no_of_resources")
-	private String noOfResources;
-
-	@PrePersist
-	private void prePersist() {
-		if (this.requestLineId == null) {
-			this.requestLineId = this.requestId + "_0001";
-		}
-
-	}
 
 }

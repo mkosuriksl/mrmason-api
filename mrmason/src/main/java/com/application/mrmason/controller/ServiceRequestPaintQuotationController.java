@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.ResponseGetServiceRequestPaintQuotationDto;
+import com.application.mrmason.dto.ServiceRequestItem;
 import com.application.mrmason.dto.ServiceRequestPaintQuotationWrapper;
 import com.application.mrmason.entity.ServiceRequestPaintQuotation;
 import com.application.mrmason.enums.RegSource;
@@ -28,35 +29,48 @@ public class ServiceRequestPaintQuotationController {
 	@Autowired
 	private ServiceRequestPaintQuotationService serviceRequestPaintQuotationService;
 
-	@PostMapping("/add-serviceRequestPaintquotation")
+	@PostMapping("/add-serviceRequestAllquotation")
 	public ResponseEntity<GenericResponse<List<ServiceRequestPaintQuotation>>> createWorkAssignment(
-			@RequestBody ServiceRequestPaintQuotationWrapper requestWrapper, @RequestParam RegSource regSource) {
+	        @RequestBody ServiceRequestPaintQuotationWrapper requestWrapper,
+	        @RequestParam RegSource regSource) {
 
-		List<ServiceRequestPaintQuotation> savedAssignments = serviceRequestPaintQuotationService
-				.createServiceRequestPaintQuotationService(requestWrapper.getRequestId(), requestWrapper.getItems(),
-						regSource);
+	    // Extract requestId and items from wrapper
+	    String requestId = requestWrapper.getRequestId();
+	    String serviceCategory=requestWrapper.getServiceCategory();
+	    List<ServiceRequestItem> items = requestWrapper.getItems();
 
-		GenericResponse<List<ServiceRequestPaintQuotation>> response = new GenericResponse<>(
-				"Service Request Paint Quotation created successfully", true, savedAssignments);
+	    // Validate input
+	    if (requestId == null || requestId.isEmpty() || items == null || items.isEmpty()) {
+	        return ResponseEntity.badRequest().body(
+	                new GenericResponse<>("requestId or items must not be empty", false, null));
+	    }
 
-		return ResponseEntity.ok(response);
+	    // Call service method
+	    List<ServiceRequestPaintQuotation> savedItems =
+	            serviceRequestPaintQuotationService.createServiceRequestPaintQuotationService(requestId,serviceCategory, items, regSource);
+
+	    // Build response
+	    GenericResponse<List<ServiceRequestPaintQuotation>> response = new GenericResponse<>(
+	            "Service Request BCEPP Quotation created successfully", true, savedItems);
+
+	    return ResponseEntity.ok(response);
 	}
 
-	@GetMapping("/get-serviceRequestPaintquotation")
+	@GetMapping("/get-serviceRequestAllquotation")
 	public ResponseEntity<ResponseGetServiceRequestPaintQuotationDto> getServiceRequestPaintQuotationService(
 			@RequestParam(required = false) String requestLineId,
-			@RequestParam(required = false) String requestLineIdDescription,
-			@RequestParam(required = false) String requestId, @RequestParam(required = false) Integer quotationAmount,
+			@RequestParam(required = false) String taskDescription,@RequestParam(required = false) String serviceCategory,
+			@RequestParam(required = false) String requestId, @RequestParam(required = false) String measureNames,
 			@RequestParam(required = false) String status, @RequestParam(required = false) String spId,
 			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
 
 		Pageable pageable = PageRequest.of(page, size);
 		Page<ServiceRequestPaintQuotation> srpqPage = serviceRequestPaintQuotationService
-				.getServiceRequestPaintQuotationService( requestLineId, requestLineIdDescription,
-						requestId, quotationAmount, status, spId, pageable);
+				.getServiceRequestPaintQuotationService( requestLineId, taskDescription,
+						requestId, serviceCategory,measureNames, status, spId, pageable);
 		ResponseGetServiceRequestPaintQuotationDto response = new ResponseGetServiceRequestPaintQuotationDto();
 
-		response.setMessage("Service Request Paint Quotation details retrieved successfully.");
+		response.setMessage("Service Request BCEPP Quotation details retrieved successfully.");
 		response.setStatus(true);
 		response.setServiceRequestPaintQuotation(srpqPage.getContent());
 
@@ -69,19 +83,35 @@ public class ServiceRequestPaintQuotationController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	
-	@PutMapping("/update-serviceRequestPaintQuotation")
-	public ResponseEntity<GenericResponse<List<ServiceRequestPaintQuotation>>> updateWorkAssignment(
-	        @RequestBody ServiceRequestPaintQuotationWrapper requestWrapper,
+	@PutMapping("/update-serviceRequestAllquotation")
+	public ResponseEntity<GenericResponse<List<ServiceRequestPaintQuotation>>> updateServiceRequestQuotation(
+	        @RequestParam String taskId,
+	        @RequestBody List<ServiceRequestPaintQuotation> dtoList,
 	        @RequestParam RegSource regSource) {
 
-	    List<ServiceRequestPaintQuotation> updatedAssignments = serviceRequestPaintQuotationService
-	            .updateServiceRequestPaintQuotationService(requestWrapper.getRequestId(), requestWrapper.getItems(),
-	                    regSource);
+	    // Validate input
+	    if (taskId == null || taskId.isEmpty()) {
+	        return ResponseEntity.badRequest().body(
+	                new GenericResponse<>("Task ID must not be empty", false, null));
+	    }
+	    if (dtoList == null || dtoList.isEmpty()) {
+	        return ResponseEntity.badRequest().body(
+	                new GenericResponse<>("Update list must not be empty", false, null));
+	    }
 
-	    GenericResponse<List<ServiceRequestPaintQuotation>> response = new GenericResponse<>(
-	            "Service Request Paint Quotation updated successfully", true, updatedAssignments);
+	    try {
+	        List<ServiceRequestPaintQuotation> updatedList =
+	                serviceRequestPaintQuotationService.updateServiceRequestQuotation(taskId, dtoList, regSource);
 
-	    return ResponseEntity.ok(response);
+	        return ResponseEntity.ok(new GenericResponse<>(
+	                "Service Request Quotations updated successfully", true, updatedList));
+	    } catch (IllegalArgumentException e) {
+	        return ResponseEntity.badRequest().body(
+	                new GenericResponse<>(e.getMessage(), false, null));
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+	                new GenericResponse<>("An unexpected error occurred: " + e.getMessage(), false, null));
+	    }
 	}
 
 

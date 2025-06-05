@@ -16,10 +16,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.application.mrmason.dto.ResponseSpServiceDetailsDto;
 import com.application.mrmason.dto.ResponseSpServiceGetDto;
 import com.application.mrmason.dto.ResponseUserUserServicesDto;
+import com.application.mrmason.dto.SpServiceDetailsDto;
 import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.AddServices;
 import com.application.mrmason.entity.AdminServiceName;
 import com.application.mrmason.entity.SpServiceDetails;
+import com.application.mrmason.entity.SpServiceWithNoOfProject;
 import com.application.mrmason.service.SpServiceDetailsService;
 
 @RestController
@@ -31,7 +33,7 @@ public class SpServiceDetailsController {
 	ResponseSpServiceGetDto response2 = new ResponseSpServiceGetDto();
 
 	@PostMapping("/addSpService")
-	public ResponseEntity<ResponseSpServiceDetailsDto> newAdminAsset(@RequestBody SpServiceDetails sevice) {
+	public ResponseEntity<ResponseSpServiceDetailsDto> newAdminAsset(@RequestBody SpServiceDetailsDto sevice) {
 		try {
 			ResponseSpServiceDetailsDto data = spService.addServiceRequest(sevice);
 			if (data != null) {
@@ -63,7 +65,7 @@ public class SpServiceDetailsController {
 	}
 
 	@PutMapping("/updateSpService")
-	public ResponseEntity<ResponseSpServiceDetailsDto> updateAssetDetails(@RequestBody SpServiceDetails service) {
+	public ResponseEntity<ResponseSpServiceDetailsDto> updateAssetDetails(@RequestBody SpServiceDetailsDto service) {
 		try {
 			ResponseSpServiceDetailsDto data = spService.updateServiceRequest(service);
 			if (data != null) {
@@ -88,7 +90,7 @@ public class SpServiceDetailsController {
 		List<SpServiceDetails> userServices = spService.getUserService(serviceType, location);
 		List<AddServices> userIndetail = spService.getUserInDetails(serviceType, location);
 		List<AdminServiceName> serviceNames = spService.getServiceNames(serviceType, location);
-
+		List<SpServiceWithNoOfProject> noOfProjects=spService.getByUserServicesId(userServices.get(0).getUserServicesId());
 		ResponseUserUserServicesDto response = new ResponseUserUserServicesDto();
 		try {
 			if (!userServices.isEmpty()) {
@@ -98,6 +100,7 @@ public class SpServiceDetailsController {
 				response.setUserData(users);
 				response.setUserServiceInDetail(userIndetail);
 				response.setServiceNames(serviceNames);
+				response.setNoOfProjects(noOfProjects);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			} else {
 				response.setMessage("No details found. Check your serviceType/location");

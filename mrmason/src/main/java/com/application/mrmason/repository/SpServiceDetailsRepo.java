@@ -4,9 +4,11 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.application.mrmason.entity.SpServiceDetails;
+import com.application.mrmason.entity.SpServiceWithNoOfProject;
 
 @Repository
 public interface SpServiceDetailsRepo extends JpaRepository<SpServiceDetails, String> {
@@ -21,6 +23,10 @@ public interface SpServiceDetailsRepo extends JpaRepository<SpServiceDetails, St
 			String userServiceId);
 
 	SpServiceDetails findByUserServicesId(String userServiceId);
+	
+	@Query("SELECT s FROM SpServiceWithNoOfProject s WHERE s.userServicesId = :userServicesId")
+	List<SpServiceWithNoOfProject> findAllByUserServicesId(@Param("userServicesId") String userServicesId);
+
 
 //	AddServicesDto save(AddServicesDto dto);
 	List<SpServiceDetails> findByServiceType(String serviceType);

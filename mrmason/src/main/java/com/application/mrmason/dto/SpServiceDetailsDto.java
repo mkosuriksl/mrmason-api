@@ -16,4 +16,6 @@ public class SpServiceDetailsDto {
 	private String availableWithinRange;
 	private String location;
 	private String city;
+	private String projectsCompleted;
+	private String ongoingProjects;
 }

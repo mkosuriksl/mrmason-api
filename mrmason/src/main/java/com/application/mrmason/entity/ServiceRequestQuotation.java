@@ -33,8 +33,11 @@ public class ServiceRequestQuotation {
 	@Column(name = "request_id")
 	private String requestId;
 
-	@Column(name = "quotation_amount")
-	private Integer quotationAmount;
+	@Column(name = "measurenames")
+	private String measureNames;
+	
+	@Column(name = "value")
+	private String value;
 
 	@Column(name = "quoted_date")
 	private Date quotedDate;

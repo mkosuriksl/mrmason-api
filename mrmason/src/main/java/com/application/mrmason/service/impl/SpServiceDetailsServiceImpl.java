@@ -18,10 +18,12 @@ import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.AddServices;
 import com.application.mrmason.entity.AdminServiceName;
 import com.application.mrmason.entity.SpServiceDetails;
+import com.application.mrmason.entity.SpServiceWithNoOfProject;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.repository.AddServiceRepo;
 import com.application.mrmason.repository.AdminServiceNameRepo;
 import com.application.mrmason.repository.SpServiceDetailsRepo;
+import com.application.mrmason.repository.SpServiceWithNoOfProjectRepository;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.SpServiceDetailsService;
 
@@ -45,14 +47,45 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 	ResponseSpServiceGetDto response2 = new ResponseSpServiceGetDto();
 	@Autowired
 	UserDAO userRepo;
+	
+	@Autowired
+	private SpServiceWithNoOfProjectRepository projectRepo;
 
+//	@Override
+//	public ResponseSpServiceDetailsDto addServiceRequest(SpServiceDetails service) {
+//		if (serviceRepo.findByUserServicesId(service.getUserServicesId()) == null) {
+//			if (userRepo.findByBodSeqNo(service.getUserId()) != null) {
+//				SpServiceDetails data = serviceRepo.save(service);
+//				SpServiceDetailsDto serviceDto = model.map(data, SpServiceDetailsDto.class);
+//				response.setMessage("SpServiceDeatails added successfully.");
+//				response.setStatus(true);
+//				response.setData(serviceDto);
+//				return response;
+//			}
+//		}
+//		return null;
+//	}
 	@Override
-	public ResponseSpServiceDetailsDto addServiceRequest(SpServiceDetails service) {
+	public ResponseSpServiceDetailsDto addServiceRequest(SpServiceDetailsDto requestDto) {
+		// Map requestDto to entity
+		SpServiceDetails service = model.map(requestDto, SpServiceDetails.class);
+
 		if (serviceRepo.findByUserServicesId(service.getUserServicesId()) == null) {
 			if (userRepo.findByBodSeqNo(service.getUserId()) != null) {
 				SpServiceDetails data = serviceRepo.save(service);
+
+				SpServiceWithNoOfProject  project = SpServiceWithNoOfProject.builder()
+					.userServicesId(data.getUserServicesId())
+					.projectsCompleted(requestDto.getProjectsCompleted())
+					.ongoingProjects(requestDto.getOngoingProjects())
+					.build();
+				projectRepo.save(project);
+
 				SpServiceDetailsDto serviceDto = model.map(data, SpServiceDetailsDto.class);
-				response.setMessage("SpServiceDeatails added successfully.");
+				serviceDto.setProjectsCompleted(requestDto.getProjectsCompleted());
+				serviceDto.setOngoingProjects(requestDto.getOngoingProjects());
+
+				response.setMessage("SpServiceDetails added successfully.");
 				response.setStatus(true);
 				response.setData(serviceDto);
 				return response;
@@ -60,6 +93,7 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 		}
 		return null;
 	}
+
 
 	@Override
 	public ResponseSpServiceGetDto getServiceRequest(String userId, String serviceType, String serviceId) {
@@ -96,26 +130,67 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 	}
 
 	@Override
-	public ResponseSpServiceDetailsDto updateServiceRequest(SpServiceDetails service) {
-		SpServiceDetails data = serviceRepo.findByUserServicesId(service.getUserServicesId());
-		if (data != null) {
-			data.setAvailableWithinRange(service.getAvailableWithinRange());
-			data.setCharge(service.getCharge());
-//			data.setPincode(service.getPincode());
-			data.setLocation(service.getLocation());
-			data.setCity(service.getCity());
-			data.setExperience(service.getExperience());
-			data.setQualification(service.getQualification());
-			data.setServiceType(service.getServiceType());
-			SpServiceDetails details = serviceRepo.save(service);
-			SpServiceDetailsDto serviceDto = model.map(details, SpServiceDetailsDto.class);
-			response.setMessage("SpServiceDeatails updated successfully.");
-			response.setStatus(true);
-			response.setData(serviceDto);
-			return response;
-		}
-		return null;
+	public ResponseSpServiceDetailsDto updateServiceRequest(SpServiceDetailsDto service) {
+	    SpServiceDetails data = serviceRepo.findByUserServicesId(service.getUserServicesId());
+
+	    if (data != null) {
+	        data.setAvailableWithinRange(service.getAvailableWithinRange());
+	        data.setCharge(service.getCharge());
+	        data.setLocation(service.getLocation());
+	        data.setCity(service.getCity());
+	        data.setExperience(service.getExperience());
+	        data.setQualification(service.getQualification());
+	        data.setServiceType(service.getServiceType());
+
+	        // Save SpServiceDetails
+	        SpServiceDetails updatedData = serviceRepo.save(data);
+
+	        // Now update project info
+	        SpServiceWithNoOfProject projectInfo = projectRepo.findByUserServicesId(service.getUserServicesId());
+	        if (projectInfo != null) {
+	            projectInfo.setProjectsCompleted(service.getProjectsCompleted());
+	            projectInfo.setOngoingProjects(service.getOngoingProjects());
+	            projectRepo.save(projectInfo);
+	        }
+
+	        // Prepare response
+	        SpServiceDetailsDto serviceDto = model.map(updatedData, SpServiceDetailsDto.class);
+	        serviceDto.setProjectsCompleted(service.getProjectsCompleted());
+	        serviceDto.setOngoingProjects(service.getOngoingProjects());
+
+	        response.setMessage("SpServiceDetails updated successfully.");
+	        response.setStatus(true);
+	        response.setData(serviceDto);
+	    } else {
+	        response.setMessage("SpServiceDetails not found with the given ID.");
+	        response.setStatus(false);
+	        response.setData(null);
+	    }
+
+	    return response;
 	}
+
+//	@Override
+//	public ResponseSpServiceDetailsDto updateServiceRequest(SpServiceDetails service) {
+//		SpServiceDetails data = serviceRepo.findByUserServicesId(service.getUserServicesId());
+//		if (data != null) {
+//			data.setAvailableWithinRange(service.getAvailableWithinRange());
+//			data.setCharge(service.getCharge());
+////			data.setPincode(service.getPincode());
+//			data.setLocation(service.getLocation());
+//			data.setCity(service.getCity());
+//			data.setExperience(service.getExperience());
+//			data.setQualification(service.getQualification());
+//			data.setServiceType(service.getServiceType());
+//			SpServiceDetails details = serviceRepo.save(service);
+//			SpServiceDetailsDto serviceDto = model.map(details, SpServiceDetailsDto.class);
+//			response.setMessage("SpServiceDeatails updated successfully.");
+//			response.setStatus(true);
+//			response.setData(serviceDto);
+//			return response;
+//		}
+//		return null;
+//	}
 
 	@Override
 	public SpServiceDetailsDto getDto(String userServicesId) {
@@ -180,6 +255,14 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 		} else {
 			return Collections.emptyList();
 		}
+	}
+	
+	@Override
+	public List<SpServiceWithNoOfProject> getByUserServicesId(String userServicesId) {
+	    if (userServicesId == null || userServicesId.trim().isEmpty()) {
+	        return Collections.emptyList();
+	    }
+	    return serviceRepo.findAllByUserServicesId(userServicesId);
 	}
 
 	@Override
@@ -252,5 +335,8 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 
 		return serviceNames;
 	}
+
+
+	
 
 }

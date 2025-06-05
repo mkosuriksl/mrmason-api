@@ -1,10 +1,13 @@
 package com.application.mrmason.controller;
 
 import java.nio.file.AccessDeniedException;
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.GenericResponse;
+import com.application.mrmason.dto.QuotationFullResponseDTO;
 import com.application.mrmason.dto.QuotationWorkOrderRequestDTO;
 import com.application.mrmason.dto.QuotationWorkOrderResponseDTO;
 import com.application.mrmason.enums.RegSource;
@@ -36,6 +40,18 @@ public class QuotationWorkOrderController {
         List<QuotationWorkOrderResponseDTO> response = service.update(requestDTO,regSource);
         return ResponseEntity.ok(new GenericResponse<>("Updated successfully", true, response));
     }
+    
+    @GetMapping
+    public ResponseEntity<GenericResponse<List<QuotationFullResponseDTO>>> getWorkOrderDetails(
+            @RequestParam(required = false) String quotationWorkOrder,
+            @RequestParam(required = false) String quotationId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date toDate) {
+
+        List<QuotationFullResponseDTO> data = service.getWorkOrderDetails(quotationWorkOrder, quotationId, fromDate, toDate);
+        return ResponseEntity.ok(new GenericResponse<>("Success", true, data));
+    }
+
 
 //    @GetMapping
 //	public ResponseEntity<ResponseGetPaymentSPTasksDto> getTask(

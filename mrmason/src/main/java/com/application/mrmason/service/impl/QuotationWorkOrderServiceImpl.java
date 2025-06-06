@@ -5,13 +5,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
@@ -125,8 +124,41 @@ public class QuotationWorkOrderServiceImpl implements QuotationWorkOrderService 
 	@Override
 	public List<QuotationWorkOrderResponseDTO> update(List<QuotationWorkOrderRequestDTO> requestDTOList,
 			RegSource regSource) throws AccessDeniedException {
-		// TODO Auto-generated method stub
-		return null;
+		
+		UserInfo userInfo = getLoggedInSPInfo(regSource);
+		if (!UserType.Developer.name().equals(userInfo.role)) {
+			throw new AccessDeniedException("Only Developer users can access this API.");
+		}
+
+		
+		List<QuotationWorkOrderResponseDTO> updatedList = new ArrayList<>();
+
+	    for (QuotationWorkOrderRequestDTO requestDTO : requestDTOList) {
+	        // Fetch existing entity
+	        Optional<QuotationWorkOrder> optional = repository.findById(requestDTO.getQuotationWorkOrder());
+
+	        if (optional.isEmpty()) {
+	            throw new IllegalArgumentException("QuotationWorkOrder not found: " + requestDTO.getQuotationWorkOrder());
+	        }
+
+	        QuotationWorkOrder existing = optional.get();
+
+	        existing.setExpectedStartDate(requestDTO.getExpectedStartDate());
+	        existing.setExpectedEndDate(requestDTO.getExpectedEndDate());
+	        existing.setSpId(userInfo.userId);
+	        existing.setStatus(requestDTO.getStatus());
+	        existing.setUpdatedBy(userInfo.userId);
+	        existing.setUpdatedDate(new Date()); // current timestamp
+
+	        // Save updated entity
+	        repository.save(existing);
+
+	        // Map to response DTO
+	        QuotationWorkOrderResponseDTO responseDTO = modelMapper.map(existing, QuotationWorkOrderResponseDTO.class);
+	        updatedList.add(responseDTO);
+	    }
+
+	    return updatedList;
 	}
 
 	@Override
@@ -146,8 +178,11 @@ public class QuotationWorkOrderServiceImpl implements QuotationWorkOrderService 
 			}
 
 			if (fromDate != null && toDate != null) {
-				predicates.add(cb.between(root.get("woGenerateDate"), new java.sql.Date(fromDate.getTime()),
-						new java.sql.Date(toDate.getTime())));
+				predicates.add(cb.between(root.get("woGenerateDate"), fromDate, toDate));
+			} else if (fromDate != null) {
+				predicates.add(cb.greaterThanOrEqualTo(root.get("woGenerateDate"), fromDate));
+			} else if (toDate != null) {
+				predicates.add(cb.lessThanOrEqualTo(root.get("woGenerateDate"), toDate));
 			}
 
 			return cb.and(predicates.toArray(new Predicate[0]));
@@ -170,14 +205,6 @@ public class QuotationWorkOrderServiceImpl implements QuotationWorkOrderService 
 		}
 
 		return result;
-	}
-
-	@Override
-	public Page<QuotationWorkOrder> getPayment(String requestLineId, String taskName, Integer amount,
-			Integer workPersentage, Integer amountPersentage, String dailylaborPay, String advancedPayment,
-			RegSource regSource, Pageable pageable) throws AccessDeniedException {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 }

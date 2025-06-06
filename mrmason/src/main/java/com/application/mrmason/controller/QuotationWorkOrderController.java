@@ -26,57 +26,35 @@ import com.application.mrmason.service.QuotationWorkOrderService;
 @RequestMapping("/quotation-work-order")
 public class QuotationWorkOrderController {
 
-    @Autowired
-    private QuotationWorkOrderService service;
-    
-    @PostMapping
-    public ResponseEntity<GenericResponse<List<QuotationWorkOrderResponseDTO>>> create(@RequestBody List<QuotationWorkOrderRequestDTO> requestDTOList,@RequestParam(required = false) RegSource regSource)throws AccessDeniedException {
-        List<QuotationWorkOrderResponseDTO> response = service.create(requestDTOList,regSource);
-        return ResponseEntity.ok(new GenericResponse<>("Created successfully", true, response));
-    }
+	@Autowired
+	private QuotationWorkOrderService service;
 
-    @PutMapping
-    public ResponseEntity<GenericResponse<List<QuotationWorkOrderResponseDTO>>> update(@RequestBody List<QuotationWorkOrderRequestDTO> requestDTO,RegSource regSource)throws AccessDeniedException{
-        List<QuotationWorkOrderResponseDTO> response = service.update(requestDTO,regSource);
-        return ResponseEntity.ok(new GenericResponse<>("Updated successfully", true, response));
-    }
-    
-    @GetMapping
-    public ResponseEntity<GenericResponse<List<QuotationFullResponseDTO>>> getWorkOrderDetails(
-            @RequestParam(required = false) String quotationWorkOrder,
-            @RequestParam(required = false) String quotationId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date fromDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date toDate) {
+	@PostMapping
+	public ResponseEntity<GenericResponse<List<QuotationWorkOrderResponseDTO>>> create(
+			@RequestBody List<QuotationWorkOrderRequestDTO> requestDTOList,
+			@RequestParam(required = false) RegSource regSource) throws AccessDeniedException {
+		List<QuotationWorkOrderResponseDTO> response = service.create(requestDTOList, regSource);
+		return ResponseEntity.ok(new GenericResponse<>("Created successfully", true, response));
+	}
 
-        List<QuotationFullResponseDTO> data = service.getWorkOrderDetails(quotationWorkOrder, quotationId, fromDate, toDate);
-        return ResponseEntity.ok(new GenericResponse<>("Success", true, data));
-    }
+	@PutMapping
+	public ResponseEntity<GenericResponse<List<QuotationWorkOrderResponseDTO>>> update(
+			@RequestBody List<QuotationWorkOrderRequestDTO> requestDTO, RegSource regSource)
+			throws AccessDeniedException {
+		List<QuotationWorkOrderResponseDTO> response = service.update(requestDTO, regSource);
+		return ResponseEntity.ok(new GenericResponse<>("Updated successfully", true, response));
+	}
 
+	@GetMapping
+	public ResponseEntity<GenericResponse<List<QuotationFullResponseDTO>>> getWorkOrderDetails(
+			@RequestParam(required = false) String quotationWorkOrder,
+			@RequestParam(required = false) String quotationId,
+			 @RequestParam(required = false)@DateTimeFormat(pattern = "dd-MM-yyyy") Date fromDate,
+			@RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") Date toDate) {
 
-//    @GetMapping
-//	public ResponseEntity<ResponseGetPaymentSPTasksDto> getTask(
-//			@RequestParam(required = false) String requestLineId, @RequestParam(required = false) String taskName,
-//			@RequestParam(required = false) Integer amount, @RequestParam(required = false) Integer workPersentage,
-//			@RequestParam(required = false) Integer amountPersentage, @RequestParam(required = false) String dailylaborPay,
-//			@RequestParam(required = false) String advancedPayment,
-//			@RequestParam(required = false) RegSource regSource, @RequestParam(defaultValue = "0") int page,
-//			@RequestParam(defaultValue = "10") int size) throws AccessDeniedException {
-//
-//		Pageable pageable = PageRequest.of(page, size);
-//		Page<PaymentSPTasksManagment> srpqPage = service.getPayment(requestLineId, taskName, amount, workPersentage,amountPersentage,dailylaborPay,advancedPayment,
-//				regSource, pageable);
-//		ResponseGetPaymentSPTasksDto response = new ResponseGetPaymentSPTasksDto();
-//
-//		response.setMessage("Payment Task  details retrieved successfully.");
-//		response.setStatus(true);
-//		response.setPaymentSPTasksManagment(srpqPage.getContent());
-//
-//		// Set pagination fields
-//		response.setCurrentPage(srpqPage.getNumber());
-//		response.setPageSize(srpqPage.getSize());
-//		response.setTotalElements(srpqPage.getTotalElements());
-//		response.setTotalPages(srpqPage.getTotalPages());
-//
-//		return new ResponseEntity<>(response, HttpStatus.OK);
-//	}
+		List<QuotationFullResponseDTO> data = service.getWorkOrderDetails(quotationWorkOrder, quotationId, fromDate,
+				toDate);
+		return ResponseEntity.ok(new GenericResponse<>("Success", true, data));
+	}
+
 }

@@ -19,10 +19,6 @@ public interface QuotationWorkOrderService {
 
 	public List<QuotationWorkOrderResponseDTO> update(List<QuotationWorkOrderRequestDTO> requestDTOList,
 			RegSource regSource) throws AccessDeniedException;
-
-	public Page<QuotationWorkOrder> getPayment(String requestLineId, String taskName, Integer amount,
-			Integer workPersentage, Integer amountPersentage, String dailylaborPay, String advancedPayment,
-			RegSource regSource, Pageable pageable) throws AccessDeniedException;
 	
 	public List<QuotationFullResponseDTO> getWorkOrderDetails(String quotationWorkOrder, String quotationId, Date fromDate, Date toDate);
 }

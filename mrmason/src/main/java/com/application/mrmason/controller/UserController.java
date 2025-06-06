@@ -1,5 +1,6 @@
 package com.application.mrmason.controller;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.application.mrmason.dto.ChangeForfotdto;
 import com.application.mrmason.dto.DeleteAccountRequest;
@@ -99,6 +101,12 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.OK).body(e.getMessage());
 		}
 	}
+
+	 @PostMapping("upload_photo")
+		public ResponseEntity<?> uploadCabDocs(@RequestParam("bodSeqNo") String bodSeqNo,
+				@RequestParam(value = "photo", required = false) MultipartFile photo, @RequestParam RegSource regSource) throws AccessDeniedException{
+			return userService.uploadprofileimage(bodSeqNo, photo,regSource);
+		}
 
 	@PostMapping("/change-password")
 	public ResponseEntity<ResponseMessageDto> changeCustomerPassword(@RequestBody ChangeForfotdto cfPwd) {

@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -19,21 +18,18 @@ import org.springframework.stereotype.Service;
 
 import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.SPWAStatus;
-import com.application.mrmason.entity.SiteMeasurement;
-import com.application.mrmason.entity.ServiceRequestBuildingConstructionQuotation;
-import com.application.mrmason.entity.ServiceRequestPaintQuotation;
+import com.application.mrmason.entity.ServiceRequestPaintOnlyQuotation;
 import com.application.mrmason.entity.ServiceRequestQuotation;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.AdminDetailsRepo;
-import com.application.mrmason.repository.ServiceRequestBuildingConstructionQuotationRepository;
+import com.application.mrmason.repository.ServiceRequestPaintOnlyQuotationRepository;
 import com.application.mrmason.repository.ServiceRequestQuotationRepository;
-import com.application.mrmason.repository.SiteMeasurementRepository;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.AuthDetailsProvider;
-import com.application.mrmason.service.ServiceRequestBuildingConstructionQuotationService;
+import com.application.mrmason.service.ServiceRequestPaintOnlyQuotationService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -44,8 +40,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 @Service
-public class ServiceRequestBuildingConstructionQuotationServiceImpl
-		implements ServiceRequestBuildingConstructionQuotationService {
+public class ServiceRequestPaintOnlyQuotationServiceImpl implements ServiceRequestPaintOnlyQuotationService {
 
 	@Autowired
 	public AdminDetailsRepo adminRepo;
@@ -57,35 +52,30 @@ public class ServiceRequestBuildingConstructionQuotationServiceImpl
 	private EntityManager entityManager;
 
 	@Autowired
-	private SiteMeasurementRepository serviceRequestRepo;
+	private ServiceRequestPaintOnlyQuotationRepository serviceRequestPaintOnlyQuotationRepository;
 
-	@Autowired
-	private ServiceRequestBuildingConstructionQuotationRepository buildingConstructionQuotationRepository ;
-	
 	@Autowired
 	ServiceRequestQuotationRepository serviceRequestQuotationAuditRepository;
 
 	@Override
-	public List<ServiceRequestBuildingConstructionQuotation> createServiceRequestBuildingConstructionQuotation(
-			String requestId, List<ServiceRequestBuildingConstructionQuotation> dtoList, RegSource regSource) {
+	public List<ServiceRequestPaintOnlyQuotation> createServiceRequestPaintOnlyQuotation(String requestId,
+			List<ServiceRequestPaintOnlyQuotation> dtoList, RegSource regSource) {
 		UserInfo userInfo = getLoggedInUserInfo(regSource);
 
-		 int maxCounter = buildingConstructionQuotationRepository.findByRequestId(requestId).stream()
-				    .map(ServiceRequestBuildingConstructionQuotation::getRequestLineId)
-				    .map(id -> id.substring(id.lastIndexOf("_") + 1))
-				    .mapToInt(Integer::parseInt)
-				    .max()
-				    .orElse(0);
-		List<ServiceRequestBuildingConstructionQuotation> savedQuotations = new ArrayList<>();
+		int maxCounter = serviceRequestPaintOnlyQuotationRepository.findByRequestId(requestId).stream()
+				.map(ServiceRequestPaintOnlyQuotation::getRequestLineId)
+				.map(id -> id.substring(id.lastIndexOf("_") + 1)).mapToInt(Integer::parseInt).max().orElse(0);
 
-		
-		for (ServiceRequestBuildingConstructionQuotation dto : dtoList) {
+		List<ServiceRequestPaintOnlyQuotation> savedQuotations = new ArrayList<>();
+
+		Integer totalQuotationAmount = 0;
+		for (ServiceRequestPaintOnlyQuotation dto : dtoList) {
 			// Generate next lineId
 			int nextCounter = ++maxCounter;
 			String lineId = requestId + "_" + String.format("%04d", nextCounter);
 
 			// Create new entry
-			ServiceRequestBuildingConstructionQuotation sRPQ = new ServiceRequestBuildingConstructionQuotation();
+			ServiceRequestPaintOnlyQuotation sRPQ = new ServiceRequestPaintOnlyQuotation();
 			sRPQ.setRequestId(requestId);
 			sRPQ.setRequestLineId(lineId);
 			sRPQ.setRequestLineIdDescription(dto.getRequestLineIdDescription());
@@ -99,43 +89,45 @@ public class ServiceRequestBuildingConstructionQuotationServiceImpl
 			sRPQ.setUpdatedBy(userInfo.userId);
 			sRPQ.setUpdatedDate(new Date());
 
-			ServiceRequestBuildingConstructionQuotation saved = buildingConstructionQuotationRepository.save(sRPQ);
+			ServiceRequestPaintOnlyQuotation saved = serviceRequestPaintOnlyQuotationRepository.save(sRPQ);
 			savedQuotations.add(saved);
-			
+			totalQuotationAmount += dto.getQuotationAmount();
+
 		}
-		Collection<ServiceRequestBuildingConstructionQuotation> allQuotationsForRequest = buildingConstructionQuotationRepository.findByRequestId(requestId);
 
-	    Integer totalQuotationAmountFromDb = allQuotationsForRequest.stream()
-	            .map(ServiceRequestBuildingConstructionQuotation::getQuotationAmount)
-	            .filter(Objects::nonNull)
-	            .reduce(0, Integer::sum);
+		Collection<ServiceRequestPaintOnlyQuotation> allQuotationsForRequest = serviceRequestPaintOnlyQuotationRepository
+				.findByRequestId(requestId);
 
-	    // ✅ Step 3: Update or insert into ServiceRequestQuotation header
-	    List<ServiceRequestQuotation> existingAuditOpt = serviceRequestQuotationAuditRepository.findByRequestId(requestId);
+		Integer totalQuotationAmountFromDb = allQuotationsForRequest.stream()
+				.map(ServiceRequestPaintOnlyQuotation::getQuotationAmount).filter(Objects::nonNull)
+				.reduce(0, Integer::sum);
 
-	    ServiceRequestQuotation audit;
-	    if (!existingAuditOpt.isEmpty()) {
-	        // Update existing
-	        audit = existingAuditOpt.get(0);
-	        audit.setQuotationAmount(totalQuotationAmountFromDb);
-	        audit.setUpdatedBy(userInfo.userId);
-	        audit.setUpdatedDate(new Date());
-	    } else {
-	        // Create new
-	        audit = new ServiceRequestQuotation();
-	        audit.setRequestId(requestId);
-	        audit.setQuotationAmount(totalQuotationAmountFromDb);
-	        audit.setQuotedDate(new Date());
-	        audit.setQuotatedBy(userInfo.userId);
-	        audit.setStatus(SPWAStatus.NEW);
-	        audit.setUpdatedBy(userInfo.userId);
-	        audit.setUpdatedDate(new Date());
-	    }
-	    serviceRequestQuotationAuditRepository.save(audit);
+		// ✅ Step 3: Update or insert into ServiceRequestQuotation header
+		List<ServiceRequestQuotation> existingAuditOpt = serviceRequestQuotationAuditRepository
+				.findByRequestId(requestId);
 
-
+		ServiceRequestQuotation audit;
+		if (!existingAuditOpt.isEmpty()) {
+			// Update existing
+			audit = existingAuditOpt.get(0);
+			audit.setQuotationAmount(totalQuotationAmountFromDb);
+			audit.setUpdatedBy(userInfo.userId);
+			audit.setUpdatedDate(new Date());
+		} else {
+			// Create new
+			audit = new ServiceRequestQuotation();
+			audit.setRequestId(requestId);
+			audit.setQuotationAmount(totalQuotationAmountFromDb);
+			audit.setQuotedDate(new Date());
+			audit.setQuotatedBy(userInfo.userId);
+			audit.setStatus(SPWAStatus.NEW);
+			audit.setUpdatedBy(userInfo.userId);
+			audit.setUpdatedDate(new Date());
+		}
+		serviceRequestQuotationAuditRepository.save(audit);
 		return savedQuotations;
 	}
+
 	private static class UserInfo {
 
 		String userId;
@@ -171,16 +163,16 @@ public class ServiceRequestBuildingConstructionQuotationServiceImpl
 
 		return new UserInfo(userId);
 	}
+
 	@Override
-	public Page<ServiceRequestBuildingConstructionQuotation> getServiceRequestBuildingConstructionQuotation(
-			String requestLineId, String requestLineIdDescription, String requestId, Integer quotationAmount,
-			String status, String spId, Pageable pageable) {
+	public Page<ServiceRequestPaintOnlyQuotation> getServiceRequestPaintOnlyQuotation(String requestLineId,
+			String requestLineIdDescription, String requestId, Integer quotationAmount, String status, String spId,
+			Pageable pageable) {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
 		// === Main query ===
-		CriteriaQuery<ServiceRequestBuildingConstructionQuotation> query = cb
-				.createQuery(ServiceRequestBuildingConstructionQuotation.class);
-		Root<ServiceRequestBuildingConstructionQuotation> root = query.from(ServiceRequestBuildingConstructionQuotation.class);
+		CriteriaQuery<ServiceRequestPaintOnlyQuotation> query = cb.createQuery(ServiceRequestPaintOnlyQuotation.class);
+		Root<ServiceRequestPaintOnlyQuotation> root = query.from(ServiceRequestPaintOnlyQuotation.class);
 		List<Predicate> predicates = new ArrayList<>();
 
 		if (requestLineId != null && !requestLineId.trim().isEmpty()) {
@@ -203,13 +195,13 @@ public class ServiceRequestBuildingConstructionQuotationServiceImpl
 		}
 
 		query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
-		TypedQuery<ServiceRequestBuildingConstructionQuotation> typedQuery = entityManager.createQuery(query);
+		TypedQuery<ServiceRequestPaintOnlyQuotation> typedQuery = entityManager.createQuery(query);
 		typedQuery.setFirstResult((int) pageable.getOffset());
 		typedQuery.setMaxResults(pageable.getPageSize());
 
 		// === Count query ===
 		CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
-		Root<ServiceRequestBuildingConstructionQuotation> countRoot = countQuery.from(ServiceRequestBuildingConstructionQuotation.class);
+		Root<ServiceRequestPaintOnlyQuotation> countRoot = countQuery.from(ServiceRequestPaintOnlyQuotation.class);
 		List<Predicate> countPredicates = new ArrayList<>();
 
 		if (requestLineId != null && !requestLineId.trim().isEmpty()) {
@@ -237,68 +229,62 @@ public class ServiceRequestBuildingConstructionQuotationServiceImpl
 	}
 
 	@Override
-	public List<ServiceRequestBuildingConstructionQuotation> updateServiceRequestBuildingConstructionQuotation(
-			String requestId, List<ServiceRequestBuildingConstructionQuotation> dtoList, RegSource regSource) {
+	public List<ServiceRequestPaintOnlyQuotation> updateServiceRequestPaintOnlyQuotation(String requestId,
+			List<ServiceRequestPaintOnlyQuotation> dtoList, RegSource regSource) {
 		UserInfo userInfo = getLoggedInUserInfo(regSource);
-//		SiteMeasurement serviceRequest = serviceRequestRepo.findByServiceRequestId(requestId);
-//
-//		if (serviceRequest == null) {
-//			throw new RuntimeException("Service request not found with ID: " + requestId);
-//		}
+	    // Step 1: Get existing records and map them by requestLineId
+	    Map<String, ServiceRequestPaintOnlyQuotation> existingMap = serviceRequestPaintOnlyQuotationRepository
+	            .findByRequestId(requestId)
+	            .stream()
+	            .collect(Collectors.toMap(ServiceRequestPaintOnlyQuotation::getRequestLineId, Function.identity()));
 
-		// Step 1: Get existing records and map them by requestLineId
-		Map<String, ServiceRequestBuildingConstructionQuotation> existingMap = buildingConstructionQuotationRepository
-				.findByRequestId(requestId).stream()
-				.collect(Collectors.toMap(ServiceRequestBuildingConstructionQuotation::getRequestLineId, Function.identity()));
+	    List<ServiceRequestPaintOnlyQuotation> updatedQuotations = new ArrayList<>();
 
-		List<ServiceRequestBuildingConstructionQuotation> updatedQuotations = new ArrayList<>();
-
-		for (ServiceRequestBuildingConstructionQuotation dto : dtoList) {
-			String lineRequestIdPrefix = dto.getRequestLineId().split("_")[0];
+	    for (ServiceRequestPaintOnlyQuotation dto : dtoList) {
+	    	String lineRequestIdPrefix = dto.getRequestLineId().split("_")[0];
 	        if (!lineRequestIdPrefix.equals(requestId)) {
 	            throw new IllegalArgumentException("Invalid requestLineId: " + dto.getRequestLineId() +
 	                " does not match requestId: " + requestId);
 	        }
-			ServiceRequestBuildingConstructionQuotation existing = existingMap.get(dto.getRequestLineId());
+	        ServiceRequestPaintOnlyQuotation existing = existingMap.get(dto.getRequestLineId());
 
-			if (existing != null) {
-				existing.setRequestLineIdDescription(dto.getRequestLineIdDescription());
-				existing.setAreasInSqft(dto.getAreasInSqft());
-				existing.setQuotationAmount(dto.getQuotationAmount());
-				existing.setQuotedDate(new Date());
-				existing.setStatus(dto.getStatus()); // Optional: mark as updated
-				existing.setNoOfDays(dto.getNoOfDays());
-				existing.setNoOfResources(dto.getNoOfResources());
-				existing.setUpdatedBy(userInfo.userId);
-				existing.setUpdatedDate(new Date());
+	        if (existing != null) {
+	            existing.setRequestLineIdDescription(dto.getRequestLineIdDescription());
+	            existing.setAreasInSqft(dto.getAreasInSqft());
+	            existing.setQuotationAmount(dto.getQuotationAmount());
+	            existing.setQuotedDate(new Date());
+	            existing.setStatus(dto.getStatus()); // Optional: mark as updated
+	            existing.setNoOfDays(dto.getNoOfDays());
+	            existing.setNoOfResources(dto.getNoOfResources());
+	            existing.setUpdatedBy(userInfo.userId);
+	            existing.setUpdatedDate(new Date());
 
-				ServiceRequestBuildingConstructionQuotation saved = buildingConstructionQuotationRepository.save(existing);
-				updatedQuotations.add(saved);
-			}
-			// else: skip as it's not an existing record
-		}
-		Integer totalQuotationAmount = buildingConstructionQuotationRepository.findByRequestId(requestId).stream()
-	            .map(ServiceRequestBuildingConstructionQuotation::getQuotationAmount)
+	            ServiceRequestPaintOnlyQuotation saved = serviceRequestPaintOnlyQuotationRepository.save(existing);
+	            updatedQuotations.add(saved);
+	        }
+	        // else: skip as it's not an existing record
+	    }
+	    Integer totalQuotationAmount = serviceRequestPaintOnlyQuotationRepository.findByRequestId(requestId).stream()
+	            .map(ServiceRequestPaintOnlyQuotation::getQuotationAmount)
 	            .filter(Objects::nonNull)
 	            .reduce(0, Integer::sum);
 
 	    // Step 3: Update or create ServiceRequestQuotation header
-		List<ServiceRequestQuotation> existingHeaders = serviceRequestQuotationAuditRepository.findByRequestIds(requestId);
-
-	    SPWAStatus status = !dtoList.isEmpty() ? dtoList.get(0).getStatus() : null;
+	    List<ServiceRequestQuotation>  optionalHeader = serviceRequestQuotationAuditRepository.findByRequestIds(requestId);
 
 	    ServiceRequestQuotation header;
-	    if (!existingHeaders.isEmpty()) {
-	        header = existingHeaders.get(0);
-//	        header.setQuotationAmount(totalQuotationAmount);
+	    SPWAStatus status = !dtoList.isEmpty() ? dtoList.get(0).getStatus() : null;
+
+	    if (!optionalHeader.isEmpty()) {
+	        header = optionalHeader.get(0);
+	        header.setQuotationAmount(totalQuotationAmount);
 	        header.setUpdatedBy(userInfo.userId);
 	        header.setUpdatedDate(new Date());
 	        header.setStatus(status);
-	        serviceRequestQuotationAuditRepository.save(header);
 	    } else {
 	        header = new ServiceRequestQuotation();
 	        header.setRequestId(requestId);
-//	        header.setQuotationAmount(totalQuotationAmount);
+	        header.setQuotationAmount(totalQuotationAmount);
 	        header.setQuotedDate(new Date());
 	        header.setQuotatedBy(userInfo.userId);
 	        header.setUpdatedBy(userInfo.userId);
@@ -306,7 +292,7 @@ public class ServiceRequestBuildingConstructionQuotationServiceImpl
 	        header.setStatus(status);
 	    }
 	    serviceRequestQuotationAuditRepository.save(header);
-		return updatedQuotations;
+	    return updatedQuotations;
 	}
 
 }

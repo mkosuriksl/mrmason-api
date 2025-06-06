@@ -23,47 +23,53 @@ import lombok.Setter;
 @AllArgsConstructor
 @Entity
 @Builder
-@Table(name = "header_quotation")
-public class ServiceRequestQuotation {
-	
+@Table(name = "service request_paint_quotation")
+public class ServiceRequestPaintOnlyQuotation {
+
 	@Id
-    @Column(name = "quotation_id", unique = true)
-    private String quotationId;
-	
+	@Column(name = "request_lineid")
+	private String requestLineId;
+
+	@Column(name = "request_lineid_description")
+	private String requestLineIdDescription;
+
 	@Column(name = "request_id")
 	private String requestId;
 
-	@Column(name = "measurenames")
-	private String measureNames;
-	
-	@Column(name = "value")
-	private String value;
+	@Column(name = "areas_in_sqft")
+	private String areasInSqft;
+
+	@Column(name = "quotation_amount")
+	private Integer quotationAmount;
 
 	@Column(name = "quoted_date")
 	private Date quotedDate;
-	
-	@Column(name = "quotated_by")
-	private String quotatedBy;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name="status")
+	@Column(name = "status")
 	private SPWAStatus status;
+
+	@Column(name = "no_of_days")
+	private Integer noOfDays;
 
 	@Column(name = "updated_by")
 	private String updatedBy;
 
 	@Column(name = "updated_date")
 	private Date updatedDate;
-	
-	@Column(name = "quotation_amount")
-	private Integer quotationAmount;
+
+	@Column(name = "sp_id")
+	private String spId;
+
+	@Column(name = "no_of_resources")
+	private String noOfResources;
 
 	@PrePersist
 	private void prePersist() {
-		
-		 if (this.quotationId == null) {
-			 this.quotationId = "QT" + System.currentTimeMillis();
-		    }
+		if (this.requestLineId == null) {
+			this.requestLineId = this.requestId + "_0001";
+		}
+
 	}
 
 }

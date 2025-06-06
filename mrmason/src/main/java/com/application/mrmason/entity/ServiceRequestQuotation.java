@@ -54,6 +54,9 @@ public class ServiceRequestQuotation {
 
 	@Column(name = "updated_date")
 	private Date updatedDate;
+	
+	@Column(name = "quotation_amount")
+	private Integer quotationAmount;
 
 	@PrePersist
 	private void prePersist() {

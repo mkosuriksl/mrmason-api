@@ -35,6 +35,7 @@ public interface CustomerRegistrationRepo extends JpaRepository<CustomerRegistra
 	Optional<CustomerRegistration> findByUserEmailOne(String userEmail);
 	@Query("SELECT c FROM CustomerRegistration c WHERE c.userMobile = :userMobile")
     Optional<CustomerRegistration> findByUserMobileOne(String userMobile);
+	List<CustomerRegistration> findByUserTown(String trim);
 
 
 }

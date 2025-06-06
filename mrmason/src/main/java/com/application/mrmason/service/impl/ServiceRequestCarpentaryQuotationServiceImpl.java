@@ -117,14 +117,14 @@ public class ServiceRequestCarpentaryQuotationServiceImpl implements ServiceRequ
 	    if (!existingAuditOpt.isEmpty()) {
 	        // Update existing
 	        audit = existingAuditOpt.get(0);
-//	        audit.setQuotationAmount(totalQuotationAmountFromDb);
+	        audit.setQuotationAmount(totalQuotationAmountFromDb);
 	        audit.setUpdatedBy(userInfo.userId);
 	        audit.setUpdatedDate(new Date());
 	    } else {
 	        // Create new
 	        audit = new ServiceRequestQuotation();
 	        audit.setRequestId(requestId);
-//	        audit.setQuotationAmount(totalQuotationAmountFromDb);
+	        audit.setQuotationAmount(totalQuotationAmountFromDb);
 	        audit.setQuotedDate(new Date());
 	        audit.setQuotatedBy(userInfo.userId);
 	        audit.setStatus(SPWAStatus.NEW);
@@ -291,14 +291,14 @@ public class ServiceRequestCarpentaryQuotationServiceImpl implements ServiceRequ
 
 		    if (!optionalHeader.isEmpty()) {
 		        header = optionalHeader.get(0);
-//		        header.setQuotationAmount(totalQuotationAmount);
+		        header.setQuotationAmount(totalQuotationAmount);
 		        header.setUpdatedBy(userInfo.userId);
 		        header.setUpdatedDate(new Date());
 		        header.setStatus(status);
 		    } else {
 		        header = new ServiceRequestQuotation();
 		        header.setRequestId(requestId);
-//		        header.setQuotationAmount(totalQuotationAmount);
+		        header.setQuotationAmount(totalQuotationAmount);
 		        header.setQuotedDate(new Date());
 		        header.setQuotatedBy(userInfo.userId);
 		        header.setUpdatedBy(userInfo.userId);

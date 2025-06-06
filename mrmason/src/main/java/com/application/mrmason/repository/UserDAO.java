@@ -74,7 +74,7 @@ public interface UserDAO extends JpaRepository<User, String> {
 	@Query("SELECT s FROM User s WHERE s.email = :email AND s.userType = :userType")
 	Optional<User> findByEmailAndUserType(@Param("email") String email, @Param("userType") UserType userType);
 
-
-
+	@Query("SELECT u FROM User u WHERE u.bodSeqNo = :bodSeqNo")
+	Optional<User> findByBodSeqNoUploadImage(@Param("bodSeqNo") String bodSeqNo);
 
 }

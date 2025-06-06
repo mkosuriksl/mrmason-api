@@ -1,30 +1,45 @@
 package com.application.mrmason.service.impl;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.application.mrmason.config.AWSConfig;
 import com.application.mrmason.dto.DeleteAccountRequest;
 import com.application.mrmason.dto.LoginRequest;
 import com.application.mrmason.dto.ResponseMessageDto;
+import com.application.mrmason.dto.ResponseModel;
 import com.application.mrmason.dto.ResponseSpLoginDto;
 import com.application.mrmason.dto.UpdateProfileRequest;
 import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.DeleteUser;
 import com.application.mrmason.entity.ServicePersonLogin;
 import com.application.mrmason.entity.SpServiceDetails;
+import com.application.mrmason.entity.UploadUserProfileImage;
 import com.application.mrmason.entity.User;
+import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
+import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.DeleteUserRepo;
 import com.application.mrmason.repository.ServicePersonLoginDAO;
 import com.application.mrmason.repository.SpServiceDetailsRepo;
+import com.application.mrmason.repository.UploadUserProfilemageRepository;
 import com.application.mrmason.repository.UserDAO;
+import com.application.mrmason.security.AuthDetailsProvider;
 import com.application.mrmason.security.JwtService;
 
 @Service
@@ -35,6 +50,12 @@ public class UserService {
 
 	@Autowired
 	ServicePersonLoginDAO emailLoginRepo;
+	
+	@Autowired
+	private AWSConfig awsConfig;
+	
+	@Autowired
+	private UploadUserProfilemageRepository userProfilemageRepository;
 
 	@Autowired
 	UserDAO userDAO;
@@ -155,6 +176,67 @@ public class UserService {
 			return userDAO.save(existedByEmail.get());
 		}
 		return null;
+	}
+	private static class UserInfo {
+		String userId;
+		String role;
+		UserInfo(String userId, String role) {
+			this.userId = userId;
+			this.role = role;
+		}
+	}
+
+	private UserInfo getLoggedInSPInfo(RegSource regSource) {
+		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
+		Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
+		List<String> roleNames = loggedInRole.stream().map(GrantedAuthority::getAuthority)
+				.map(role -> role.replace("ROLE_", "")).collect(Collectors.toList());
+		String userId = null;
+		String role = roleNames.get(0);
+		UserType userType = UserType.valueOf(role);
+		if (userType == UserType.Developer) {
+			User user = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource)
+					.orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
+			userId = user.getBodSeqNo();
+		} 
+		return new UserInfo(userId, role);
+	}
+	@Transactional
+	public ResponseEntity<ResponseModel> uploadprofileimage(String bodSeqNo, MultipartFile photo,RegSource regSource) throws AccessDeniedException{
+	                        
+		UserInfo userInfo = getLoggedInSPInfo(regSource);
+        if (!UserType.Developer.name().equals(userInfo.role)) {
+            throw new AccessDeniedException("Only Developer users can access this API.");
+        }
+
+	    ResponseModel response = new ResponseModel();
+
+	    // 1. Check if skuId exists in AdminMaterialMaster
+	    Optional<User> adminMaterial = userDAO.findByBodSeqNoUploadImage(bodSeqNo);
+	    if (adminMaterial.isEmpty()) {
+	        response.setError("true");
+	        response.setMsg("bodSeqNo ID not found in AdminMaterialMaster.");
+	        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+	    }
+
+	    // 2. Directory for S3
+	    String directoryPath = "uploadphoto/" + bodSeqNo + "/";
+
+	    // 3. Prepare new UploadMatericalMasterImages entity
+	    UploadUserProfileImage uploadEntity = new UploadUserProfileImage();
+	    uploadEntity.setBodSeqNo(bodSeqNo);
+	    uploadEntity.setUpdatedBy(userInfo.userId);
+	    uploadEntity.setUpdatedDate(new Date());
+
+	    if (photo != null && !photo.isEmpty()) {
+	        String path1 = directoryPath + photo.getOriginalFilename();
+	        String link1 = awsConfig.uploadFileToS3Bucket(path1, photo);
+	        uploadEntity.setPhoto(link1);
+	    }
+	    userProfilemageRepository.save(uploadEntity);
+	    response.setError("false");
+	    response.setMsg("Profile photo uploaded successfully.");
+	    return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	public String changePassword(String email, String oldPassword, String newPassword, String confirmPassword,

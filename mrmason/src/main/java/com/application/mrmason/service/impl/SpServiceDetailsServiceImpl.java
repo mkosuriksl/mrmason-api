@@ -19,6 +19,7 @@ import com.application.mrmason.entity.AddServices;
 import com.application.mrmason.entity.AdminServiceName;
 import com.application.mrmason.entity.SpServiceDetails;
 import com.application.mrmason.entity.SpServiceWithNoOfProject;
+import com.application.mrmason.entity.UploadUserProfileImage;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.repository.AddServiceRepo;
 import com.application.mrmason.repository.AdminServiceNameRepo;
@@ -264,7 +265,14 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 	    }
 	    return serviceRepo.findAllByUserServicesId(userServicesId);
 	}
-
+	
+	@Override
+	public List<UploadUserProfileImage> getByBodSeqNo(String bodSeqNo) {
+	    if (bodSeqNo == null || bodSeqNo.trim().isEmpty()) {
+	        return Collections.emptyList();
+	    }
+	    return serviceRepo.findAllBybodSeqNo(bodSeqNo);
+	}
 	@Override
 	public List<AddServices> getUserInDetails(String serviceType, String location) {
 		List<SpServiceDetails> serviceDetails;

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import com.application.mrmason.entity.SpServiceDetails;
 import com.application.mrmason.entity.SpServiceWithNoOfProject;
+import com.application.mrmason.entity.UploadUserProfileImage;
 
 @Repository
 public interface SpServiceDetailsRepo extends JpaRepository<SpServiceDetails, String> {
@@ -26,6 +27,9 @@ public interface SpServiceDetailsRepo extends JpaRepository<SpServiceDetails, St
 	
 	@Query("SELECT s FROM SpServiceWithNoOfProject s WHERE s.userServicesId = :userServicesId")
 	List<SpServiceWithNoOfProject> findAllByUserServicesId(@Param("userServicesId") String userServicesId);
+	
+	@Query("SELECT s FROM UploadUserProfileImage s WHERE s.bodSeqNo = :bodSeqNo")
+	List<UploadUserProfileImage> findAllBybodSeqNo(@Param("bodSeqNo") String bodSeqNo);
 
 
 //	AddServicesDto save(AddServicesDto dto);

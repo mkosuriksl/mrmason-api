@@ -22,6 +22,7 @@ import com.application.mrmason.entity.AddServices;
 import com.application.mrmason.entity.AdminServiceName;
 import com.application.mrmason.entity.SpServiceDetails;
 import com.application.mrmason.entity.SpServiceWithNoOfProject;
+import com.application.mrmason.entity.UploadUserProfileImage;
 import com.application.mrmason.service.SpServiceDetailsService;
 
 @RestController
@@ -91,6 +92,7 @@ public class SpServiceDetailsController {
 		List<AddServices> userIndetail = spService.getUserInDetails(serviceType, location);
 		List<AdminServiceName> serviceNames = spService.getServiceNames(serviceType, location);
 		List<SpServiceWithNoOfProject> noOfProjects=spService.getByUserServicesId(userServices.get(0).getUserServicesId());
+		List<UploadUserProfileImage> profileImage=spService.getByBodSeqNo(users.get(0).getBodSeqNo());
 		ResponseUserUserServicesDto response = new ResponseUserUserServicesDto();
 		try {
 			if (!userServices.isEmpty()) {
@@ -101,6 +103,7 @@ public class SpServiceDetailsController {
 				response.setUserServiceInDetail(userIndetail);
 				response.setServiceNames(serviceNames);
 				response.setNoOfProjects(noOfProjects);
+				response.setProfilePhoto(profileImage);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			} else {
 				response.setMessage("No details found. Check your serviceType/location");

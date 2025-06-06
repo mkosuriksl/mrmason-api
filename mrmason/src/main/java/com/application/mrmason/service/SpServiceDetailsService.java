@@ -10,6 +10,7 @@ import com.application.mrmason.entity.AddServices;
 import com.application.mrmason.entity.AdminServiceName;
 import com.application.mrmason.entity.SpServiceDetails;
 import com.application.mrmason.entity.SpServiceWithNoOfProject;
+import com.application.mrmason.entity.UploadUserProfileImage;
 
 public interface SpServiceDetailsService {
 //	ResponseSpServiceDetailsDto addServiceRequest(SpServiceDetails service);
@@ -35,6 +36,8 @@ public interface SpServiceDetailsService {
 	List<AddServices> getUserInDetails(String serviceType, String location);
 	
 	List<AdminServiceName> getServiceNames(String serviceType, String location);
+	
+	public List<UploadUserProfileImage> getByBodSeqNo(String bodSeqNo);
 
 	
 	

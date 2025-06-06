@@ -105,12 +105,25 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
 	    if (assetId != null) {
 	        predicates.add(cb.equal(root.get("assetId"), assetId));
 	    }
-	    if (location != null) {
-	        predicates.add(cb.equal(root.get("location"), location));
+	    if ((location != null && !location.trim().isEmpty()) && userId == null) {
+	        List<CustomerRegistration> matchingCustomers = repo.findByUserTown(location.trim());
+
+	        if (!matchingCustomers.isEmpty()) {
+	            List<String> userIds = matchingCustomers.stream().map(CustomerRegistration::getUserid).toList();
+	            predicates.add(root.get("requestedBy").in(userIds));
+	        } else {
+	            return new ArrayList<>(); // no match
+	        }
 	    }
+
+	    System.out.println("Received location param: '" + location + "'");
+
 	    if (serviceSubCategory != null) {
-	        predicates.add(cb.equal(root.get("serviceSubCategory"), serviceSubCategory));
+	        predicates.add(cb.equal(root.get("serviceName"), serviceSubCategory));
 	    }
+//	    if (serviceSubCategory != null) {
+//	        predicates.add(cb.equal(cb.lower(root.get("serviceName")), serviceSubCategory.toLowerCase()));
+//	    }
 	    if (status != null) {
 	        predicates.add(cb.equal(root.get("status"), status));
 	    }

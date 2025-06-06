@@ -117,14 +117,14 @@ public class ServiceRequestBuildingConstructionQuotationServiceImpl
 	    if (!existingAuditOpt.isEmpty()) {
 	        // Update existing
 	        audit = existingAuditOpt.get(0);
-//	        audit.setQuotationAmount(totalQuotationAmountFromDb);
+	        audit.setQuotationAmount(totalQuotationAmountFromDb);
 	        audit.setUpdatedBy(userInfo.userId);
 	        audit.setUpdatedDate(new Date());
 	    } else {
 	        // Create new
 	        audit = new ServiceRequestQuotation();
 	        audit.setRequestId(requestId);
-//	        audit.setQuotationAmount(totalQuotationAmountFromDb);
+	        audit.setQuotationAmount(totalQuotationAmountFromDb);
 	        audit.setQuotedDate(new Date());
 	        audit.setQuotatedBy(userInfo.userId);
 	        audit.setStatus(SPWAStatus.NEW);

@@ -26,4 +26,5 @@ public class Userdto {
     private String userType;
 	private String status;
 	private String regSource;
+	private String photo;
 }

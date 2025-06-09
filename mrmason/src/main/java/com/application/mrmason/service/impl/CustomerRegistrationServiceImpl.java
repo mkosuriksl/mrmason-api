@@ -1,19 +1,23 @@
 package com.application.mrmason.service.impl;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.dto.CustomerRegistrationDto;
+import com.application.mrmason.dto.CustomerResponseDTO;
 import com.application.mrmason.dto.ResponseLoginDto;
 import com.application.mrmason.entity.CustomerEmailOtp;
 import com.application.mrmason.entity.CustomerLogin;
 import com.application.mrmason.entity.CustomerMobileOtp;
 import com.application.mrmason.entity.CustomerRegistration;
-import com.application.mrmason.entity.UserType;
 import com.application.mrmason.repository.CustomerEmailOtpRepo;
 import com.application.mrmason.repository.CustomerLoginRepo;
 import com.application.mrmason.repository.CustomerMobileOtpRepo;
@@ -21,10 +25,19 @@ import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.security.JwtService;
 import com.application.mrmason.service.CustomerRegistrationService;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+
 
 @Service
 public class CustomerRegistrationServiceImpl implements CustomerRegistrationService {
 
+	@PersistenceContext
+	private EntityManager entityManager;
 	@Autowired
 	CustomerEmailOtpRepo emailRepo;
 	@Autowired
@@ -91,13 +104,74 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 	}
 
 	@Override
-	public List<CustomerRegistration> getCustomerData(String userEmail, String userMobile, String userState, String fromDate,
-			String toDate) {
-		if (fromDate == null && toDate == null && userEmail != null || userMobile != null || userState != null) {
-			return repo.findAllByUserEmailOrUserMobileOrUserState(userEmail, userMobile, userState);
-		} else {
-			return repo.findByRegDateBetween(fromDate, toDate);
-		}
+//	public List<CustomerRegistration> getCustomerData(String userEmail, String userMobile, String userState, String fromDate,
+//			String toDate) {
+//		if (fromDate == null && toDate == null && userEmail != null || userMobile != null || userState != null) {
+//			return repo.findAllByUserEmailOrUserMobileOrUserState(userEmail, userMobile, userState);
+//		} else {
+//			return repo.findByRegDateBetween(fromDate, toDate);
+//		}
+//	}
+	
+	 public List<CustomerResponseDTO> getCustomerData(
+	            String userEmail, String userMobile, String userState, String fromDate,
+	            String toDate,
+	            Map<String, String> requestParams) {
+
+	        List<String> expectedParams = Arrays.asList(
+	                "userEmail", "userMobile", "userState", "fromDate", "toDate"
+	        );
+
+	        for (String paramName : requestParams.keySet()) {
+	            if (!expectedParams.contains(paramName)) {
+	                throw new IllegalArgumentException("Unexpected parameter '" + paramName + "' is not allowed.");
+	            }
+	        }
+
+	        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+	        CriteriaQuery<CustomerRegistration> query = cb.createQuery(CustomerRegistration.class);
+	        Root<CustomerRegistration> root = query.from(CustomerRegistration.class);
+
+	        List<Predicate> predicates = new ArrayList<>();
+
+	        if (userEmail != null) {
+	            predicates.add(cb.equal(root.get("userEmail"), userEmail));
+	        }
+	        if (userMobile != null) {
+	            predicates.add(cb.equal(root.get("userMobile"), userMobile));
+	        }
+	        if (userState != null) {
+	            predicates.add(cb.equal(root.get("userState"), userState));
+	        }
+	        if (fromDate != null && toDate != null) {
+				predicates.add(cb.between(root.get("regDate"), fromDate, toDate));
+			} else if (fromDate != null) {
+				predicates.add(cb.greaterThanOrEqualTo(root.get("regDate"), fromDate));
+			} else if (toDate != null) {
+				predicates.add(cb.lessThanOrEqualTo(root.get("regDate"), toDate));
+			}
+	        query.where(predicates.toArray(new Predicate[0]));
+
+	        List<CustomerRegistration> users = entityManager.createQuery(query).getResultList();
+
+	        return users.stream().map(this::convertToDto).collect(Collectors.toList());
+	    }
+
+	    private CustomerResponseDTO convertToDto(CustomerRegistration user) {
+	    	CustomerResponseDTO dto = new CustomerResponseDTO();
+	        dto.setId(user.getId());
+	        dto.setUserid(user.getUserid());
+	        dto.setUserEmail(user.getUserEmail());
+	        dto.setUserMobile(user.getUserMobile());
+	        dto.setUserType(user.getUserType());
+	        dto.setUserName(user.getUsername());
+	        dto.setUserTown(user.getUserTown());
+	        dto.setUserDistrict(user.getUserDistrict());
+	        dto.setUserState(user.getUserState());
+	        dto.setUserPincode(user.getUserPincode());
+	        dto.setRegDate(user.getRegDate());
+	        return dto;
+	    
 	}
 
 	@Override

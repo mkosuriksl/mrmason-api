@@ -10,5 +10,5 @@ import lombok.Data;
 public class ResponseListCustomerData {
 	private String message;
 	private boolean status;
-	private List<CustomerRegistration> data;
+	private List<CustomerResponseDTO> data;
 }

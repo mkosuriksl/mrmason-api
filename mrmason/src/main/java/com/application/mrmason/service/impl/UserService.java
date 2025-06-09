@@ -480,9 +480,13 @@ public class UserService {
 	        if (city != null) {
 	            predicates.add(cb.equal(root.get("city"), city));
 	        }
-	        if(fromDate !=null && toDate!=null) {
-	        	userDAO.findByRegisteredDateBetween(fromDate, toDate);
-	        }
+	        if (fromDate != null && toDate != null) {
+				predicates.add(cb.between(root.get("registeredDate"), fromDate, toDate));
+			} else if (fromDate != null) {
+				predicates.add(cb.greaterThanOrEqualTo(root.get("registeredDate"), fromDate));
+			} else if (toDate != null) {
+				predicates.add(cb.lessThanOrEqualTo(root.get("registeredDate"), toDate));
+			}
 	        query.where(predicates.toArray(new Predicate[0]));
 
 	        List<User> users = entityManager.createQuery(query).getResultList();

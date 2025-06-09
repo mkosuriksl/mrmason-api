@@ -1,6 +1,7 @@
 package com.application.mrmason.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import com.application.mrmason.dto.ChangePasswordDto;
+import com.application.mrmason.dto.CustomerResponseDTO;
 import com.application.mrmason.dto.FilterCustomerAndUser;
 import com.application.mrmason.dto.Logindto;
 import com.application.mrmason.dto.ResponseCustomerRegDto;
@@ -48,11 +50,12 @@ public class CustomerRegistrationController {
 			@RequestParam(value = "userMobile", required = false) String userMobile,
 			@RequestParam(value = "userState", required = false) String userState,
 			@RequestParam(value = "fromDate", required = false) String fromDate,
-			@RequestParam(value = "toDate", required = false) String toDate) {
+			@RequestParam(value = "toDate", required = false) String toDate,
+			@RequestParam Map<String, String> requestParams) {
 
 		ResponseListCustomerData response = new ResponseListCustomerData();
 		try {
-			List<CustomerRegistration> entity = service.getCustomerData(userEmail, userMobile,userState, fromDate, toDate);
+			List<CustomerResponseDTO> entity = service.getCustomerData(userEmail, userMobile,userState, fromDate, toDate,requestParams);
 			if (!entity.isEmpty()) {
 				response.setMessage("Fetched users successfully.");
 				response.setStatus(true);

@@ -346,6 +346,7 @@ public class UserService {
 			}
 
 //			dto.setPincodeNo(userdb.getPincodeNo());
+			
 			dto.setVerified(userdb.getVerified());
 			dto.setUserType(String.valueOf(userdb.getUserType()));
 			dto.setStatus(userdb.getStatus());
@@ -354,6 +355,8 @@ public class UserService {
 			dto.setRegisteredDate(userdb.getRegisteredDate());
 			dto.setUpdatedDate(userdb.getUpdatedDate());
 			dto.setServiceCategory(userdb.getServiceCategory());
+			userProfilemageRepository.findByBodSeqNo(bodSeqNo).ifPresent(upload -> dto.setPhoto(upload.getPhoto()));
+
 			return dto;
 		}
 

@@ -2,9 +2,13 @@ package com.application.mrmason.service.impl;
 
 import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -25,6 +29,7 @@ import com.application.mrmason.dto.ResponseMessageDto;
 import com.application.mrmason.dto.ResponseModel;
 import com.application.mrmason.dto.ResponseSpLoginDto;
 import com.application.mrmason.dto.UpdateProfileRequest;
+import com.application.mrmason.dto.UserResponseDTO;
 import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.DeleteUser;
 import com.application.mrmason.entity.ServicePersonLogin;
@@ -42,18 +47,28 @@ import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.AuthDetailsProvider;
 import com.application.mrmason.security.JwtService;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+
 @Service
 public class UserService {
+
+	@PersistenceContext
+	private EntityManager entityManager;
 
 	@Autowired
 	OtpGenerationServiceImpl otpService;
 
 	@Autowired
 	ServicePersonLoginDAO emailLoginRepo;
-	
+
 	@Autowired
 	private AWSConfig awsConfig;
-	
+
 	@Autowired
 	private UploadUserProfilemageRepository userProfilemageRepository;
 
@@ -177,9 +192,11 @@ public class UserService {
 		}
 		return null;
 	}
+
 	private static class UserInfo {
 		String userId;
 		String role;
+
 		UserInfo(String userId, String role) {
 			this.userId = userId;
 			this.role = role;
@@ -198,45 +215,47 @@ public class UserService {
 			User user = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource)
 					.orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
 			userId = user.getBodSeqNo();
-		} 
+		}
 		return new UserInfo(userId, role);
 	}
+
 	@Transactional
-	public ResponseEntity<ResponseModel> uploadprofileimage(String bodSeqNo, MultipartFile photo,RegSource regSource) throws AccessDeniedException{
-	                        
+	public ResponseEntity<ResponseModel> uploadprofileimage(String bodSeqNo, MultipartFile photo, RegSource regSource)
+			throws AccessDeniedException {
+
 		UserInfo userInfo = getLoggedInSPInfo(regSource);
-        if (!UserType.Developer.name().equals(userInfo.role)) {
-            throw new AccessDeniedException("Only Developer users can access this API.");
-        }
+		if (!UserType.Developer.name().equals(userInfo.role)) {
+			throw new AccessDeniedException("Only Developer users can access this API.");
+		}
 
-	    ResponseModel response = new ResponseModel();
+		ResponseModel response = new ResponseModel();
 
-	    // 1. Check if skuId exists in AdminMaterialMaster
-	    Optional<User> adminMaterial = userDAO.findByBodSeqNoUploadImage(bodSeqNo);
-	    if (adminMaterial.isEmpty()) {
-	        response.setError("true");
-	        response.setMsg("bodSeqNo ID not found in AdminMaterialMaster.");
-	        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-	    }
+		// 1. Check if skuId exists in AdminMaterialMaster
+		Optional<User> adminMaterial = userDAO.findByBodSeqNoUploadImage(bodSeqNo);
+		if (adminMaterial.isEmpty()) {
+			response.setError("true");
+			response.setMsg("bodSeqNo ID not found in AdminMaterialMaster.");
+			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+		}
 
-	    // 2. Directory for S3
-	    String directoryPath = "uploadphoto/" + bodSeqNo + "/";
+		// 2. Directory for S3
+		String directoryPath = "uploadphoto/" + bodSeqNo + "/";
 
-	    // 3. Prepare new UploadMatericalMasterImages entity
-	    UploadUserProfileImage uploadEntity = new UploadUserProfileImage();
-	    uploadEntity.setBodSeqNo(bodSeqNo);
-	    uploadEntity.setUpdatedBy(userInfo.userId);
-	    uploadEntity.setUpdatedDate(new Date());
+		// 3. Prepare new UploadMatericalMasterImages entity
+		UploadUserProfileImage uploadEntity = new UploadUserProfileImage();
+		uploadEntity.setBodSeqNo(bodSeqNo);
+		uploadEntity.setUpdatedBy(userInfo.userId);
+		uploadEntity.setUpdatedDate(new Date());
 
-	    if (photo != null && !photo.isEmpty()) {
-	        String path1 = directoryPath + photo.getOriginalFilename();
-	        String link1 = awsConfig.uploadFileToS3Bucket(path1, photo);
-	        uploadEntity.setPhoto(link1);
-	    }
-	    userProfilemageRepository.save(uploadEntity);
-	    response.setError("false");
-	    response.setMsg("Profile photo uploaded successfully.");
-	    return new ResponseEntity<>(response, HttpStatus.OK);
+		if (photo != null && !photo.isEmpty()) {
+			String path1 = directoryPath + photo.getOriginalFilename();
+			String link1 = awsConfig.uploadFileToS3Bucket(path1, photo);
+			uploadEntity.setPhoto(link1);
+		}
+		userProfilemageRepository.save(uploadEntity);
+		response.setError("false");
+		response.setMsg("Profile photo uploaded successfully.");
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	public String changePassword(String email, String oldPassword, String newPassword, String confirmPassword,
@@ -278,8 +297,8 @@ public class UserService {
 		if (userOp.isPresent()) {
 			User user = userOp.get();
 			if ("active".equalsIgnoreCase(user.getStatus())) {
-			otpService.generateMobileOtp(mobile, regSource);
-			return "otp";
+				otpService.generateMobileOtp(mobile, regSource);
+				return "otp";
 			}
 		}
 		return null;
@@ -346,7 +365,7 @@ public class UserService {
 			}
 
 //			dto.setPincodeNo(userdb.getPincodeNo());
-			
+
 			dto.setVerified(userdb.getVerified());
 			dto.setUserType(String.valueOf(userdb.getUserType()));
 			dto.setStatus(userdb.getStatus());
@@ -403,20 +422,108 @@ public class UserService {
 
 	}
 
-	public List<User> getServicePersonData(String email, String mobile, String location, String status, String category,
-			String fromDate, String toDate) {
-		if (fromDate == null && toDate == null && location == null && category == null && status != null
-				|| email != null || mobile != null) {
-			return userDAO.findByEmailOrMobileOrStatusOrderByRegisteredDateDesc(email, mobile, status);
-		} else if (category != null) {
-			return userDAO.findByServiceCategory(category);
-		} else if (location != null) {
-			return userDAO.findByLocation(location);
-		} else {
-			return userDAO.findByRegisteredDateBetween(fromDate, toDate);
-		}
+//	public List<User> getServicePersonData(String email, String mobile, String location, String status, String category,
+//			String fromDate, String toDate) {
+//		if (fromDate == null && toDate == null && location == null && category == null && status != null
+//				|| email != null || mobile != null) {
+//			return userDAO.findByEmailOrMobileOrStatusOrderByRegisteredDateDesc(email, mobile, status);
+//		} else if (category != null) {
+//			return userDAO.findByServiceCategory(category);
+//		} else if (location != null) {
+//			return userDAO.findByLocation(location);
+//		} else {
+//			return userDAO.findByRegisteredDateBetween(fromDate, toDate);
+//		}
+//
+//	}
+	    public List<UserResponseDTO> getServicePersonData(
+	            String email, String mobile, String location, String status,
+	            String category, String fromDate, String toDate,
+	            String state, String city,
+	            Map<String, String> requestParams) {
 
+	        List<String> expectedParams = Arrays.asList(
+	                "email", "mobile", "location", "status", "category",
+	                "fromDate", "toDate", "state", "city"
+	        );
+
+	        for (String paramName : requestParams.keySet()) {
+	            if (!expectedParams.contains(paramName)) {
+	                throw new IllegalArgumentException("Unexpected parameter '" + paramName + "' is not allowed.");
+	            }
+	        }
+
+	        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+	        CriteriaQuery<User> query = cb.createQuery(User.class);
+	        Root<User> root = query.from(User.class);
+
+	        List<Predicate> predicates = new ArrayList<>();
+
+	        if (email != null) {
+	            predicates.add(cb.equal(root.get("email"), email));
+	        }
+	        if (mobile != null) {
+	            predicates.add(cb.equal(root.get("mobile"), mobile));
+	        }
+	        if (location != null) {
+	            predicates.add(cb.equal(root.get("location"), location));
+	        }
+	        if (status != null) {
+	            predicates.add(cb.equal(root.get("status"), status));
+	        }
+	        if (category != null) {
+	            predicates.add(cb.equal(root.get("serviceCategory"), category));
+	        }
+	        if (state != null) {
+	            predicates.add(cb.equal(root.get("state"), state));
+	        }
+	        if (city != null) {
+	            predicates.add(cb.equal(root.get("city"), city));
+	        }
+	        if(fromDate !=null && toDate!=null) {
+	        	userDAO.findByRegisteredDateBetween(fromDate, toDate);
+	        }
+	        query.where(predicates.toArray(new Predicate[0]));
+
+	        List<User> users = entityManager.createQuery(query).getResultList();
+
+	        return users.stream().map(this::convertToDto).collect(Collectors.toList());
+	    }
+
+	    private UserResponseDTO convertToDto(User user) {
+	        UserResponseDTO dto = new UserResponseDTO();
+	        dto.setBodSeqNo(user.getBodSeqNo());
+	        dto.setName(user.getName());
+	        dto.setBusinessName(user.getBusinessName());
+	        dto.setMobile(user.getMobile());
+	        dto.setEmail(user.getEmail());
+	        dto.setAddress(user.getAddress());
+	        dto.setCity(user.getCity());
+	        dto.setDistrict(user.getDistrict());
+	        dto.setState(user.getState());
+	        dto.setLocation(user.getLocation());
+	        dto.setRegisteredDate(user.getRegisteredDate());
+	        dto.setVerified(user.getVerified());
+	        dto.setServiceCategory(user.getServiceCategory());
+	        dto.setStatus(user.getStatus());
+	        dto.setRegSource(user.getRegSource() != null ? user.getRegSource().name() : null);
+	        dto.setEnabled(user.isEnabled());
+	        dto.setAccountNonExpired(user.isAccountNonExpired());
+	        dto.setAccountNonLocked(user.isAccountNonLocked());
+	        dto.setCredentialsNonExpired(user.isCredentialsNonExpired());
+	        dto.setUsername(user.getUsername());
+
+	        // Set authority strings directly
+	        dto.setAuthorities(
+	                user.getAuthorities().stream()
+	                        .map(GrantedAuthority::getAuthority)
+	                        .collect(Collectors.toList())
+	        );
+
+	        return dto;
+	    
 	}
+
 
 	public ResponseSpLoginDto loginDetails(LoginRequest login) {
 

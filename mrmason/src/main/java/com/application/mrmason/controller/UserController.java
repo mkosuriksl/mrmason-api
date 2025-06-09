@@ -2,6 +2,7 @@ package com.application.mrmason.controller;
 
 import java.nio.file.AccessDeniedException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,7 @@ import com.application.mrmason.dto.ResponseSpLoginDto;
 import com.application.mrmason.dto.ResponseUserDTO;
 import com.application.mrmason.dto.ResponseUserUpdateDto;
 import com.application.mrmason.dto.UpdateProfileRequest;
+import com.application.mrmason.dto.UserResponseDTO;
 import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.enums.RegSource;
@@ -269,12 +271,13 @@ public class UserController {
 			@RequestParam(value = "fromDate", required = false) String fromDate,
 			@RequestParam(value = "toDate", required = false) String toDate,
 			@RequestParam(value = "state", required = false) String state,
-			@RequestParam(value = "city", required = false) String city) {
+			@RequestParam(value = "city", required = false) String city,
+			 @RequestParam Map<String, String> requestParams) {
 		ResponseListUserDto response3 = new ResponseListUserDto();
 
 		try {
-			List<User> entity = userService.getServicePersonData(email, mobile, location, status, category, fromDate,
-					toDate);
+			List<UserResponseDTO> entity = userService.getServicePersonData(email, mobile, location, status, category, fromDate,toDate,state,city,
+					requestParams);
 			if (!entity.isEmpty()) {
 				response3.setMessage("Service person details fetched successfully.!");
 				response3.setStatus(true);
@@ -293,6 +296,7 @@ public class UserController {
 
 	}
 
+	
 	@GetMapping("/getData")
 	public ResponseEntity<User> get(@RequestParam(name = "email") String email) {
 

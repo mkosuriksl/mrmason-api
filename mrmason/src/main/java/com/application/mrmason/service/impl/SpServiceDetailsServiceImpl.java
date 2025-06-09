@@ -258,21 +258,51 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 		}
 	}
 	
+//	@Override
+//	public List<SpServiceWithNoOfProject> getByUserServicesId(String userServicesId) {
+//	    if (userServicesId == null || userServicesId.trim().isEmpty()) {
+//	        return Collections.emptyList();
+//	    }
+//	    return serviceRepo.findAllByUserServicesId(userServicesId);
+//	}
+	
 	@Override
-	public List<SpServiceWithNoOfProject> getByUserServicesId(String userServicesId) {
+	public List<SpServiceWithNoOfProject> getByUserServicesId(List<SpServiceDetails> userServices) {
+	    if (userServices == null || userServices.isEmpty()) {
+	        return Collections.emptyList();
+	    }
+
+	    String userServicesId = userServices.get(0).getUserServicesId();
 	    if (userServicesId == null || userServicesId.trim().isEmpty()) {
 	        return Collections.emptyList();
 	    }
+
 	    return serviceRepo.findAllByUserServicesId(userServicesId);
 	}
+
+	
+//	@Override
+//	public List<UploadUserProfileImage> getByBodSeqNo(String bodSeqNo) {
+//	    if (bodSeqNo == null || bodSeqNo.trim().isEmpty()) {
+//	        return Collections.emptyList();
+//	    }
+//	    return serviceRepo.findAllBybodSeqNo(bodSeqNo);
+//	}
 	
 	@Override
-	public List<UploadUserProfileImage> getByBodSeqNo(String bodSeqNo) {
+	public List<UploadUserProfileImage> getByBodSeqNo(List<Userdto> users) {
+	    if (users == null || users.isEmpty()) {
+	        return Collections.emptyList();
+	    }
+
+	    String bodSeqNo = users.get(0).getBodSeqNo();
 	    if (bodSeqNo == null || bodSeqNo.trim().isEmpty()) {
 	        return Collections.emptyList();
 	    }
+
 	    return serviceRepo.findAllBybodSeqNo(bodSeqNo);
 	}
+
 	@Override
 	public List<AddServices> getUserInDetails(String serviceType, String location) {
 		List<SpServiceDetails> serviceDetails;

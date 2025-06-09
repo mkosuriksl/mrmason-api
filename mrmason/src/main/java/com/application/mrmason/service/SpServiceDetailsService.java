@@ -29,7 +29,7 @@ public interface SpServiceDetailsService {
 	
 	List<SpServiceDetails> getUserService(String serviceType,String location);
 	
-	public List<SpServiceWithNoOfProject> getByUserServicesId(String userServicesId);
+	public List<SpServiceWithNoOfProject> getByUserServicesId(List<SpServiceDetails> userServices);
 
     List<Userdto> getServicePersonDetails(String serviceType, String location);
 	
@@ -37,7 +37,7 @@ public interface SpServiceDetailsService {
 	
 	List<AdminServiceName> getServiceNames(String serviceType, String location);
 	
-	public List<UploadUserProfileImage> getByBodSeqNo(String bodSeqNo);
+	public List<UploadUserProfileImage> getByBodSeqNo(List<Userdto> users);
 
 	
 	

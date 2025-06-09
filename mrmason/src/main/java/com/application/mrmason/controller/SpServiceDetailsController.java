@@ -91,8 +91,8 @@ public class SpServiceDetailsController {
 		List<SpServiceDetails> userServices = spService.getUserService(serviceType, location);
 		List<AddServices> userIndetail = spService.getUserInDetails(serviceType, location);
 		List<AdminServiceName> serviceNames = spService.getServiceNames(serviceType, location);
-		List<SpServiceWithNoOfProject> noOfProjects=spService.getByUserServicesId(userServices.get(0).getUserServicesId());
-		List<UploadUserProfileImage> profileImage=spService.getByBodSeqNo(users.get(0).getBodSeqNo());
+	    List<SpServiceWithNoOfProject> noOfProjects = spService.getByUserServicesId(userServices);
+	    List<UploadUserProfileImage> profileImage = spService.getByBodSeqNo(users);
 		ResponseUserUserServicesDto response = new ResponseUserUserServicesDto();
 		try {
 			if (!userServices.isEmpty()) {

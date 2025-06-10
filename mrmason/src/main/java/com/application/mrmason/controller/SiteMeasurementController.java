@@ -1,9 +1,11 @@
 package com.application.mrmason.controller;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -141,58 +143,69 @@ public class SiteMeasurementController {
 	        @RequestParam(required = false)@DateTimeFormat(pattern = "dd-MM-yyyy") Date fromRequestDate,
 	        @RequestParam(required = false)@DateTimeFormat(pattern = "dd-MM-yyyy") Date toRequestDate, 
 	        @RequestParam(required = false) String expectedFromMonth,
-	        @RequestParam(required = false) String expectedToMonth,@RequestParam(defaultValue = "0") int page,
+	        @RequestParam(required = false) String expectedToMonth,
+	        @RequestParam(required = false) String email,
+	        @RequestParam(required = false) String mobileNumber,@RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "10") int size) {
 
 		ResponseGetSiteMeasurementDTO response = new ResponseGetSiteMeasurementDTO();
 
 		try {
-			Pageable pageable = PageRequest.of(page, size);
-			Page<SiteMeasurement> smPage = siteMeasurementService.getSiteMeasurement(serviceRequestId, eastSiteLength,
-					location, userId,fromRequestDate,toRequestDate,expectedFromMonth,expectedToMonth, pageable);
+		        // 🟡 Step 1: Get matching customerIds by email/mobile
+		        List<CustomerRegistration> matchedCustomers = new ArrayList<>();
+		        if (email != null || mobileNumber != null) {
+		            matchedCustomers = customerRegistrationRepo.findByUserEmailOrMobileNumberCustom(email, mobileNumber);
+		        }
 
-			if (!smPage.isEmpty()) {
-				List<SiteMeasurement> siteMeasurements = smPage.getContent();
+		        List<String> customerIds = matchedCustomers.stream()
+		                .map(CustomerRegistration::getUserid)
+		                .collect(Collectors.toList());
 
-	            // Extract customerIds
-	            List<String> customerIds = siteMeasurements.stream()
-	                .map(SiteMeasurement::getCustomerId)
-	                .filter(Objects::nonNull)
-	                .distinct()
-	                .collect(Collectors.toList());
+		        // 🟡 Step 2: Call service method, pass filtered customerIds
+		        Pageable pageable = PageRequest.of(page, size);
+		        Page<SiteMeasurement> smPage = siteMeasurementService.getSiteMeasurement(
+		                serviceRequestId, eastSiteLength, location, userId,
+		                fromRequestDate, toRequestDate, expectedFromMonth, expectedToMonth,
+		                customerIds, // <=== filter SiteMeasurement by these customerIds
+		                pageable
+		        );
 
-	            // Fetch all customers by these IDs (you need to add this method in your CustomerRegistrationRepository)
-	            List<CustomerRegistration> customers = customerRegistrationRepo.findByUserIds(customerIds);
+		        if (!smPage.isEmpty()) {
+		            List<SiteMeasurement> siteMeasurements = smPage.getContent();
 
-	            // Now map customerId to CustomerRegistration for easy lookup
-	            Map<String, CustomerRegistration> customerMap = customers.stream()
-	                .collect(Collectors.toMap(CustomerRegistration::getUserid, Function.identity()));
+		            // 🟡 Step 3: Get related customer data
+		            Set<String> smCustomerIds = siteMeasurements.stream()
+		                    .map(SiteMeasurement::getCustomerId)
+		                    .filter(Objects::nonNull)
+		                    .collect(Collectors.toSet());
 
-	            // Create combined DTO list
-	            List<SiteMeasurementWithCustomerDTO> combinedList = siteMeasurements.stream()
-	                .map(sm -> new SiteMeasurementWithCustomerDTO(sm, customerMap.get(sm.getCustomerId())))
-	                .collect(Collectors.toList());
+		            List<CustomerRegistration> customers = customerRegistrationRepo.findByUserIds(new ArrayList<>(smCustomerIds));
+		            Map<String, CustomerRegistration> customerMap = customers.stream()
+		                    .collect(Collectors.toMap(CustomerRegistration::getUserid, Function.identity()));
 
-	            response.setMessage("Site Measurement Details with Customer Info");
-	            response.setStatus(true);
-	            response.setData(combinedList);
-			} else {
-				response.setMessage("No details found for given parameters/check your parameters");
-				response.setStatus(false);
-				response.setData(List.of());
-			}
+		            List<SiteMeasurementWithCustomerDTO> combinedList = siteMeasurements.stream()
+		                    .map(sm -> new SiteMeasurementWithCustomerDTO(sm, customerMap.get(sm.getCustomerId())))
+		                    .collect(Collectors.toList());
 
-			// Optional: Add pagination metadata to response DTO
-			response.setCurrentPage(smPage.getNumber());
-			response.setPageSize(smPage.getSize());
-			response.setTotalElements(smPage.getTotalElements());
-			response.setTotalPages(smPage.getTotalPages());
+		            response.setMessage("Site Measurement Details with Customer Info");
+		            response.setStatus(true);
+		            response.setData(combinedList);
+		        } else {
+		            response.setMessage("No details found for given parameters/check your parameters");
+		            response.setStatus(false);
+		            response.setData(List.of());
+		        }
 
-			return ResponseEntity.ok(response);
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+		        response.setCurrentPage(smPage.getNumber());
+		        response.setPageSize(smPage.getSize());
+		        response.setTotalElements(smPage.getTotalElements());
+		        response.setTotalPages(smPage.getTotalPages());
+
+		        return ResponseEntity.ok(response);
+		    } catch (Exception e) {
+		        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+		    }
 		}
-	}
 	
 	@PutMapping("/update-status")
     public ResponseEntity<GenericResponse<UpdateSiteMeasurementStatusResponseDTO>> updateStatus(

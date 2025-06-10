@@ -40,6 +40,9 @@ public interface CustomerRegistrationRepo extends JpaRepository<CustomerRegistra
 	
 	@Query("SELECT cr FROM CustomerRegistration cr WHERE cr.regDate BETWEEN :startDate AND :endDate")
 	List<CustomerRegistration> findByRegisteredDateBetween(String startDate, String endDate);
+	
+	@Query("SELECT c FROM CustomerRegistration c WHERE c.userEmail = :userEmail OR c.userMobile = :userMobile")
+	List<CustomerRegistration> findByUserEmailOrMobileNumberCustom(@Param("userEmail") String userEmail, @Param("userMobile") String userMobile);
 
 
 }

@@ -373,7 +373,7 @@ public class SiteMeasurementServiceImpl implements SiteMeasurementService {
 	@Override
 	public Page<SiteMeasurement> getSiteMeasurement(String serviceRequestId, String eastSiteLegth, String location,
 			String userId, Date fromRequestDate, Date toRequestDate,String expectedFromMonth,
-	        String expectedToMonth, Pageable pageable) {
+	        String expectedToMonth, List<String> customerIds,Pageable pageable) {
 		// Step 4: Build Criteria Query
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<SiteMeasurement> query = cb.createQuery(SiteMeasurement.class);
@@ -396,6 +396,10 @@ public class SiteMeasurementServiceImpl implements SiteMeasurementService {
 		if (userId != null && !userId.trim().isEmpty()) {
 			predicates.add(cb.equal(root.get("customerId"), userId));
 		}
+		if (customerIds != null && !customerIds.isEmpty()) {
+		    predicates.add(root.get("customerId").in(customerIds));
+		}
+
 		if (fromRequestDate != null && toRequestDate != null) {
 			predicates.add(cb.between(root.get("requestDate"), fromRequestDate, toRequestDate));
 		} else if (fromRequestDate != null) {

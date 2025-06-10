@@ -405,7 +405,11 @@ public class UserService {
 				SpServiceDetails sd = serviceDetails.get(0);
 				dto.setAvailableLocation(sd.getCity());
 			}
-
+			List<SpServiceDetails> serviceDetail= detailsRepo.findByUserIdAndStatus(user.get().getBodSeqNo(), "active");
+		    List<String> serviceTypes = serviceDetail.stream()
+		        .map(SpServiceDetails::getServiceType)
+		        .toList();
+		    dto.setServiceType(serviceTypes);
 //			dto.setPincodeNo(userdb.getPincodeNo());
 			dto.setVerified(userdb.getVerified());
 			dto.setUserType(String.valueOf(userdb.getUserType()));

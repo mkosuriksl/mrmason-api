@@ -50,4 +50,6 @@ public interface SpServiceDetailsRepo extends JpaRepository<SpServiceDetails, St
 	List<SpServiceDetails> findByUserIdAndServiceTypesAndUserServiceId(String userId, List<String> serviceTypes,
 			String serviceId);
 
+	List<SpServiceDetails> findByUserIdAndStatus(String bodSeqNo, String string);
+
 }

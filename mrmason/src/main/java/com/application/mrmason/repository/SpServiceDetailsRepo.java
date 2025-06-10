@@ -51,5 +51,10 @@ public interface SpServiceDetailsRepo extends JpaRepository<SpServiceDetails, St
 			String serviceId);
 
 	List<SpServiceDetails> findByUserIdAndStatus(String bodSeqNo, String string);
+	
+	@Query("SELECT u FROM UploadUserProfileImage u WHERE u.bodSeqNo IN :bodSeqNos")
+	List<UploadUserProfileImage> findAllByBodSeqNoIn(@Param("bodSeqNos") List<String> bodSeqNos);
+
+
 
 }

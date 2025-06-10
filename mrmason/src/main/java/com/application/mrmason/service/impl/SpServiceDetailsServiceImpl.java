@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -289,18 +290,33 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 //	    return serviceRepo.findAllBybodSeqNo(bodSeqNo);
 //	}
 	
+//	public List<UploadUserProfileImage> getByBodSeqNo(List<Userdto> users) {
+//	    if (users == null || users.isEmpty()) {
+//	        return Collections.emptyList();
+//	    }
+//
+//	    String bodSeqNo = users.get(0).getBodSeqNo();
+//	    if (bodSeqNo == null || bodSeqNo.trim().isEmpty()) {
+//	        return Collections.emptyList();
+//	    }
+//
+//	    return serviceRepo.findAllBybodSeqNo(bodSeqNo);
+//	}
+
 	@Override
 	public List<UploadUserProfileImage> getByBodSeqNo(List<Userdto> users) {
 	    if (users == null || users.isEmpty()) {
 	        return Collections.emptyList();
 	    }
 
-	    String bodSeqNo = users.get(0).getBodSeqNo();
-	    if (bodSeqNo == null || bodSeqNo.trim().isEmpty()) {
-	        return Collections.emptyList();
-	    }
+	    // Get all bodSeqNos from the users list
+	    List<String> bodSeqNos = users.stream()
+	        .map(Userdto::getBodSeqNo)
+	        .filter(Objects::nonNull)
+	        .collect(Collectors.toList());
 
-	    return serviceRepo.findAllBybodSeqNo(bodSeqNo);
+	    // Fetch profile photos for all matching bodSeqNos
+	    return serviceRepo.findAllByBodSeqNoIn(bodSeqNos);
 	}
 
 	@Override

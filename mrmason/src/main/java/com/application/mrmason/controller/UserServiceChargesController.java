@@ -41,7 +41,8 @@ public class UserServiceChargesController {
 				response.setServiceChargesData(savedCharges);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			} else {
-				response.setMessage("No new charges were added/failed to add charges");
+//				response.setMessage("No new charges were added/failed to add charges");
+				response.setMessage("Same fields/locations are already record in User Service Charges");
 				response.setStatus(false);
 				response.setServiceChargesData(savedCharges);
 				return new ResponseEntity<>(response, HttpStatus.OK);

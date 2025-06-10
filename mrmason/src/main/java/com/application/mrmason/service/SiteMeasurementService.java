@@ -1,6 +1,7 @@
 package com.application.mrmason.service;
 
 import java.util.Date;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +17,6 @@ public interface SiteMeasurementService {
     SiteMeasurement findByServiceRequestId(String serviceRequestId);
 //    public List<SiteMeasurement> getSiteMeasurement(String serviceRequestId, String eastSiteLegth, String location);
     public Page<SiteMeasurement> getSiteMeasurement(String serviceRequestId, String eastSiteLegth, String location,String userId,Date fromRequestDate, Date toRequestDate,String expectedFromMonth,
-            String expectedToMonth, Pageable pageable);
+            String expectedToMonth,List<String> customerIds, Pageable pageable);
     public UpdateSiteMeasurementStatusResponseDTO updateStatus(UpdateSiteMeasurementStatusRequestDTO dto,RegSource regSource);
 }

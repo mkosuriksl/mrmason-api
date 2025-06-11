@@ -29,4 +29,5 @@ public class Userdto {
 	private String regSource;
 	private String photo;
 	private List<String> serviceType;
+	private String VerifiedStatus;
 }

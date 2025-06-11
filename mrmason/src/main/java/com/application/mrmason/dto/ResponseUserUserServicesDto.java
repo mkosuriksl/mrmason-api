@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.application.mrmason.entity.AddServices;
 import com.application.mrmason.entity.AdminServiceName;
+import com.application.mrmason.entity.AdminSpVerification;
 import com.application.mrmason.entity.SpServiceDetails;
 import com.application.mrmason.entity.SpServiceWithNoOfProject;
 import com.application.mrmason.entity.UploadUserProfileImage;
@@ -22,4 +23,5 @@ public class ResponseUserUserServicesDto {
 	private List<AdminServiceName> serviceNames;
 	private List<SpServiceWithNoOfProject> noOfProjects;
 	private List<UploadUserProfileImage> profilePhoto;
+	private List<AdminSpVerification>adminSPVerification;
 }

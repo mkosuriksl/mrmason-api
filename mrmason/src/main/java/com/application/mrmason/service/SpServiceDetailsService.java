@@ -8,6 +8,7 @@ import com.application.mrmason.dto.SpServiceDetailsDto;
 import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.AddServices;
 import com.application.mrmason.entity.AdminServiceName;
+import com.application.mrmason.entity.AdminSpVerification;
 import com.application.mrmason.entity.SpServiceDetails;
 import com.application.mrmason.entity.SpServiceWithNoOfProject;
 import com.application.mrmason.entity.UploadUserProfileImage;
@@ -38,6 +39,8 @@ public interface SpServiceDetailsService {
 	List<AdminServiceName> getServiceNames(String serviceType, String location);
 	
 	public List<UploadUserProfileImage> getByBodSeqNo(List<Userdto> users);
+	
+	public List<AdminSpVerification> getByVerifiedStatus(List<Userdto> users);
 
 	
 	

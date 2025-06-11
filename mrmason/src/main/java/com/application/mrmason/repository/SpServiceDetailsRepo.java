@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.application.mrmason.entity.AdminSpVerification;
 import com.application.mrmason.entity.SpServiceDetails;
 import com.application.mrmason.entity.SpServiceWithNoOfProject;
 import com.application.mrmason.entity.UploadUserProfileImage;
@@ -55,6 +56,7 @@ public interface SpServiceDetailsRepo extends JpaRepository<SpServiceDetails, St
 	@Query("SELECT u FROM UploadUserProfileImage u WHERE u.bodSeqNo IN :bodSeqNos")
 	List<UploadUserProfileImage> findAllByBodSeqNoIn(@Param("bodSeqNos") List<String> bodSeqNos);
 
-
+	@Query("SELECT u FROM AdminSpVerification u WHERE u.bodSeqNo IN :bodSeqNos")
+	List<AdminSpVerification> findAllBodSeqNo(@Param("bodSeqNos") List<String> bodSeqNos);
 
 }

@@ -18,12 +18,14 @@ import com.application.mrmason.dto.SpServiceDetailsDto;
 import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.AddServices;
 import com.application.mrmason.entity.AdminServiceName;
+import com.application.mrmason.entity.AdminSpVerification;
 import com.application.mrmason.entity.SpServiceDetails;
 import com.application.mrmason.entity.SpServiceWithNoOfProject;
 import com.application.mrmason.entity.UploadUserProfileImage;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.repository.AddServiceRepo;
 import com.application.mrmason.repository.AdminServiceNameRepo;
+import com.application.mrmason.repository.AdminSpVerificationRepository;
 import com.application.mrmason.repository.SpServiceDetailsRepo;
 import com.application.mrmason.repository.SpServiceWithNoOfProjectRepository;
 import com.application.mrmason.repository.UserDAO;
@@ -31,6 +33,9 @@ import com.application.mrmason.service.SpServiceDetailsService;
 
 @Service
 public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
+	
+	@Autowired
+	private AdminSpVerificationRepository verificationRepo;
 	@Autowired
 	SpServiceDetailsRepo serviceRepo;
 	@Autowired
@@ -317,6 +322,22 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 
 	    // Fetch profile photos for all matching bodSeqNos
 	    return serviceRepo.findAllByBodSeqNoIn(bodSeqNos);
+	}
+	
+	@Override
+	public List<AdminSpVerification> getByVerifiedStatus(List<Userdto> users) {
+	    if (users == null || users.isEmpty()) {
+	        return Collections.emptyList();
+	    }
+
+	    // Get all bodSeqNos from the users list
+	    List<String> bodSeqNos = users.stream()
+	        .map(Userdto::getBodSeqNo)
+	        .filter(Objects::nonNull)
+	        .collect(Collectors.toList());
+
+	    // Fetch profile photos for all matching bodSeqNos
+	    return verificationRepo.findAllBodSeqNo(bodSeqNos);
 	}
 
 	@Override

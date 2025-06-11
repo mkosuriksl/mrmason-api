@@ -31,6 +31,7 @@ import com.application.mrmason.dto.ResponseSpLoginDto;
 import com.application.mrmason.dto.UpdateProfileRequest;
 import com.application.mrmason.dto.UserResponseDTO;
 import com.application.mrmason.dto.Userdto;
+import com.application.mrmason.entity.AdminSpVerification;
 import com.application.mrmason.entity.DeleteUser;
 import com.application.mrmason.entity.ServicePersonLogin;
 import com.application.mrmason.entity.SpServiceDetails;
@@ -39,6 +40,7 @@ import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
+import com.application.mrmason.repository.AdminSpVerificationRepository;
 import com.application.mrmason.repository.DeleteUserRepo;
 import com.application.mrmason.repository.ServicePersonLoginDAO;
 import com.application.mrmason.repository.SpServiceDetailsRepo;
@@ -56,6 +58,9 @@ import jakarta.persistence.criteria.Root;
 
 @Service
 public class UserService {
+	
+	@Autowired
+	private AdminSpVerificationRepository adminSpVerificationRepository;
 
 	@PersistenceContext
 	private EntityManager entityManager;
@@ -133,6 +138,14 @@ public class UserService {
 		service.setEVerify("no");
 		service.setRegSource(user.getRegSource());
 		serviceLoginRepo.save(service);
+		
+		AdminSpVerification verification = new AdminSpVerification();
+	    verification.setBodSeqNo(data.getBodSeqNo());
+	    verification.setStatus("new");
+	    verification.setComment("");
+	    verification.setUpdateBy(data.getBodSeqNo()); // or pass admin if available
+	    verification.setUpdatedDate(new Date());
+	    adminSpVerificationRepository.save(verification);
 
 		Userdto dto = new Userdto();
 		dto.setName(user.getName());
@@ -375,7 +388,8 @@ public class UserService {
 			dto.setUpdatedDate(userdb.getUpdatedDate());
 			dto.setServiceCategory(userdb.getServiceCategory());
 			userProfilemageRepository.findByBodSeqNo(bodSeqNo).ifPresent(upload -> dto.setPhoto(upload.getPhoto()));
-
+			
+			adminSpVerificationRepository.findByBodSeqNo(bodSeqNo).ifPresent(status -> dto.setVerifiedStatus(status.getStatus()));
 			return dto;
 		}
 
@@ -409,7 +423,11 @@ public class UserService {
 		    List<String> serviceTypes = serviceDetail.stream()
 		        .map(SpServiceDetails::getServiceType)
 		        .toList();
+		    
 		    dto.setServiceType(serviceTypes);
+		    userProfilemageRepository.findByBodSeqNo(user.get().getBodSeqNo()).ifPresent(upload -> dto.setPhoto(upload.getPhoto()));
+			
+			adminSpVerificationRepository.findByBodSeqNo(user.get().getBodSeqNo()).ifPresent(status -> dto.setVerifiedStatus(status.getStatus()));
 //			dto.setPincodeNo(userdb.getPincodeNo());
 			dto.setVerified(userdb.getVerified());
 			dto.setUserType(String.valueOf(userdb.getUserType()));

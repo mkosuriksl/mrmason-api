@@ -20,9 +20,11 @@ import com.application.mrmason.dto.SpServiceDetailsDto;
 import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.AddServices;
 import com.application.mrmason.entity.AdminServiceName;
+import com.application.mrmason.entity.AdminSpVerification;
 import com.application.mrmason.entity.SpServiceDetails;
 import com.application.mrmason.entity.SpServiceWithNoOfProject;
 import com.application.mrmason.entity.UploadUserProfileImage;
+import com.application.mrmason.repository.AdminSpVerificationRepository;
 import com.application.mrmason.service.SpServiceDetailsService;
 
 @RestController
@@ -30,6 +32,9 @@ import com.application.mrmason.service.SpServiceDetailsService;
 public class SpServiceDetailsController {
 	@Autowired
 	SpServiceDetailsService spService;
+	
+	@Autowired
+	private AdminSpVerificationRepository verificationRepo;
 	ResponseSpServiceDetailsDto response = new ResponseSpServiceDetailsDto();
 	ResponseSpServiceGetDto response2 = new ResponseSpServiceGetDto();
 
@@ -93,6 +98,7 @@ public class SpServiceDetailsController {
 		List<AdminServiceName> serviceNames = spService.getServiceNames(serviceType, location);
 	    List<SpServiceWithNoOfProject> noOfProjects = spService.getByUserServicesId(userServices);
 	    List<UploadUserProfileImage> profileImage = spService.getByBodSeqNo(users);
+	    List<AdminSpVerification>adminSpVerification=spService.getByVerifiedStatus(users);
 		ResponseUserUserServicesDto response = new ResponseUserUserServicesDto();
 		try {
 			if (!userServices.isEmpty()) {
@@ -104,6 +110,7 @@ public class SpServiceDetailsController {
 				response.setServiceNames(serviceNames);
 				response.setNoOfProjects(noOfProjects);
 				response.setProfilePhoto(profileImage);
+				response.setAdminSPVerification(adminSpVerification);
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			} else {
 				response.setMessage("No details found. Check your serviceType/location");

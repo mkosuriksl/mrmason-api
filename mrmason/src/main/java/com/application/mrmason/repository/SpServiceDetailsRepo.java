@@ -59,4 +59,7 @@ public interface SpServiceDetailsRepo extends JpaRepository<SpServiceDetails, St
 	@Query("SELECT u FROM AdminSpVerification u WHERE u.bodSeqNo IN :bodSeqNos")
 	List<AdminSpVerification> findAllBodSeqNo(@Param("bodSeqNos") List<String> bodSeqNos);
 
+	@Query("SELECT u FROM SpServiceWithNoOfProject u WHERE u.userServicesId IN :userServicesId")
+	List<SpServiceWithNoOfProject> findAllByUserServicesId(List<String> userServicesId);
+
 }

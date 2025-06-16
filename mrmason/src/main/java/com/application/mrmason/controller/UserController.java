@@ -267,17 +267,18 @@ public class UserController {
 			@RequestParam(value = "mobile", required = false) String mobile,
 			@RequestParam(value = "location", required = false) String location,
 			@RequestParam(value = "status", required = false) String status,
-			@RequestParam(value = "category", required = false) String category,
+			@RequestParam(value = "serviceCategory", required = false) String serviceCategory,
 			@RequestParam(value = "fromDate", required = false) String fromDate,
 			@RequestParam(value = "toDate", required = false) String toDate,
 			@RequestParam(value = "state", required = false) String state,
 			@RequestParam(value = "city", required = false) String city,
+			@RequestParam(value = "serviceSubCategory", required = false) String serviceSubCategory,
 			 @RequestParam Map<String, String> requestParams) {
 		ResponseListUserDto response3 = new ResponseListUserDto();
 
 		try {
-			List<UserResponseDTO> entity = userService.getServicePersonData(email, mobile, location, status, category, fromDate,toDate,state,city,
-					requestParams);
+			List<UserResponseDTO> entity = userService.getServicePersonData(email, mobile, location, status, serviceCategory, fromDate,toDate,state,city,
+					serviceSubCategory,requestParams);
 			if (!entity.isEmpty()) {
 				response3.setMessage("Service person details fetched successfully.!");
 				response3.setStatus(true);

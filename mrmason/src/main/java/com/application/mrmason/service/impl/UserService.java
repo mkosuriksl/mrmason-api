@@ -461,12 +461,12 @@ public class UserService {
 	    public List<UserResponseDTO> getServicePersonData(
 	            String email, String mobile, String location, String status,
 	            String category, String fromDate, String toDate,
-	            String state, String city,
+	            String state, String city,String serviceType,
 	            Map<String, String> requestParams) {
 
 	        List<String> expectedParams = Arrays.asList(
-	                "email", "mobile", "location", "status", "category",
-	                "fromDate", "toDate", "state", "city"
+	                "email", "mobile", "location", "status", "serviceCategory",
+	                "fromDate", "toDate", "state", "city" , "serviceSubCategory"
 	        );
 
 	        for (String paramName : requestParams.keySet()) {
@@ -509,10 +509,20 @@ public class UserService {
 			} else if (toDate != null) {
 				predicates.add(cb.lessThanOrEqualTo(root.get("registeredDate"), toDate));
 			}
+	        
 	        query.where(predicates.toArray(new Predicate[0]));
 
 	        List<User> users = entityManager.createQuery(query).getResultList();
-
+	     // 🔍 Apply additional serviceType filter if present
+	     if (serviceType != null && !serviceType.isEmpty()) {
+	         users = users.stream()
+	             .filter(user -> {
+	                 List<SpServiceDetails> serviceDetails = detailsRepo.findByUserId(user.getBodSeqNo());
+	                 return serviceDetails.stream()
+	                         .anyMatch(s -> serviceType.equalsIgnoreCase(s.getServiceType()));
+	             })
+	             .collect(Collectors.toList());
+	     }
 	        return users.stream().map(this::convertToDto).collect(Collectors.toList());
 	    }
 
@@ -546,6 +556,11 @@ public class UserService {
 	                        .collect(Collectors.toList())
 	        );
 
+	        	List<SpServiceDetails> serviceDetailsList = detailsRepo.findByUserId(user.getBodSeqNo());
+	            List<String> serviceTypes = serviceDetailsList.stream()
+	                .map(SpServiceDetails::getServiceType)
+	                .collect(Collectors.toList());
+	            dto.setServiceType(serviceTypes);
 	        return dto;
 	    
 	}

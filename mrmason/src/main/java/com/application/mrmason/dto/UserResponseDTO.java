@@ -26,6 +26,7 @@ public class UserResponseDTO {
     private boolean accountNonLocked;
     private boolean credentialsNonExpired;
     private String username;
-    private List<String> authorities; 
+    private List<String> authorities;
+    private List<String> serviceType; 
 }
 

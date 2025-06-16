@@ -58,16 +58,16 @@ public class ServiceRequestPaintQuotationController {
 
 	@GetMapping("/get-serviceRequestAllquotation")
 	public ResponseEntity<ResponseGetServiceRequestPaintQuotationDto> getServiceRequestPaintQuotationService(
-			@RequestParam(required = false) String requestLineId,
+			@RequestParam(required = false) String admintasklineId,
 			@RequestParam(required = false) String taskDescription,@RequestParam(required = false) String serviceCategory,
-			@RequestParam(required = false) String requestId, @RequestParam(required = false) String measureNames,
+			@RequestParam(required = false) String taskId, @RequestParam(required = false) String measureNames,
 			@RequestParam(required = false) String status, @RequestParam(required = false) String spId,
 			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
 
 		Pageable pageable = PageRequest.of(page, size);
 		Page<ServiceRequestPaintQuotation> srpqPage = serviceRequestPaintQuotationService
-				.getServiceRequestPaintQuotationService( requestLineId, taskDescription,
-						requestId, serviceCategory,measureNames, status, spId, pageable);
+				.getServiceRequestPaintQuotationService( admintasklineId, taskDescription,
+						taskId, serviceCategory,measureNames, status, spId, pageable);
 		ResponseGetServiceRequestPaintQuotationDto response = new ResponseGetServiceRequestPaintQuotationDto();
 
 		response.setMessage("Service Request BCEPP Quotation details retrieved successfully.");

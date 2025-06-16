@@ -14,7 +14,7 @@ public interface ServiceRequestPaintQuotationService {
 	public List<ServiceRequestPaintQuotation> createServiceRequestPaintQuotationService(
 	        String requestId,String serviceCategory, List<ServiceRequestItem> items, RegSource regSource) ;
 	public Page<ServiceRequestPaintQuotation> getServiceRequestPaintQuotationService(
-			 String requestLineId, String requestLineIdDescription, String requestId,String serviceCategory,
+			 String admintasklineId, String requestLineIdDescription, String taskId,String serviceCategory,
 			String measureNames,String status,String spId,Pageable pageable);
 	public List<ServiceRequestPaintQuotation> updateServiceRequestQuotation(String requestId,
 			List<ServiceRequestPaintQuotation> dtoList, RegSource regSource);

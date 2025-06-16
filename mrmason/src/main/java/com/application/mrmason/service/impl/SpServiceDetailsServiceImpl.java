@@ -273,18 +273,35 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 //	}
 	
 	@Override
+//	public List<SpServiceWithNoOfProject> getByUserServicesId(List<SpServiceDetails> userServices) {
+//	    if (userServices == null || userServices.isEmpty()) {
+//	        return Collections.emptyList();
+//	    }
+//
+//	    String userServicesId = userServices.get(0).getUserServicesId();
+//	    if (userServicesId == null || userServicesId.trim().isEmpty()) {
+//	        return Collections.emptyList();
+//	    }
+//
+//	    return serviceRepo.findAllByUserServicesId(userServicesId);
+//	}
+	
 	public List<SpServiceWithNoOfProject> getByUserServicesId(List<SpServiceDetails> userServices) {
-	    if (userServices == null || userServices.isEmpty()) {
+		if (userServices == null || userServices.isEmpty()) {
 	        return Collections.emptyList();
 	    }
 
-	    String userServicesId = userServices.get(0).getUserServicesId();
-	    if (userServicesId == null || userServicesId.trim().isEmpty()) {
-	        return Collections.emptyList();
-	    }
+	    // Get all bodSeqNos from the users list
+	    List<String> bodSeqNos = userServices.stream()
+	        .map(SpServiceDetails::getUserServicesId)
+	        .filter(Objects::nonNull)
+	        .collect(Collectors.toList());
 
-	    return serviceRepo.findAllByUserServicesId(userServicesId);
+	    // Fetch profile photos for all matching bodSeqNos
+	    return serviceRepo.findAllByUserServicesId(bodSeqNos);
+
 	}
+
 
 	
 //	@Override

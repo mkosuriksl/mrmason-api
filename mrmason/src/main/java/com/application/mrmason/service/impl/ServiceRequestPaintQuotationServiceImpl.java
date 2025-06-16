@@ -168,7 +168,7 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 	
 	@Override
 	public Page<ServiceRequestPaintQuotation> getServiceRequestPaintQuotationService(
-			String requestLineId, String taskDescription, String requestId,String serviceCategory,
+			String admintasklineId, String taskDescription, String taskId,String serviceCategory,
 			String measureNames,String status,String spId,Pageable pageable) {
 
 	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -178,14 +178,14 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 	    Root<ServiceRequestPaintQuotation> root = query.from(ServiceRequestPaintQuotation.class);
 	    List<Predicate> predicates = new ArrayList<>();
 
-	    if (requestLineId != null && !requestLineId.trim().isEmpty()) {
-	        predicates.add(cb.equal(root.get("requestLineId"), requestLineId));
+	    if (admintasklineId != null && !admintasklineId.trim().isEmpty()) {
+	        predicates.add(cb.equal(root.get("admintasklineId"), admintasklineId));
 	    }
 	    if (taskDescription != null && !taskDescription.trim().isEmpty()) {
 	        predicates.add(cb.equal(root.get("taskDescription"), taskDescription));
 	    }
-	    if (requestId != null && !requestId.trim().isEmpty()) {
-	        predicates.add(cb.equal(root.get("requestId"), requestId));
+	    if (taskId != null && !taskId.trim().isEmpty()) {
+	        predicates.add(cb.equal(root.get("taskId"), taskId));
 	    }
 	    if (measureNames != null ) {
 	        predicates.add(cb.equal(root.get("measureNames"), measureNames));
@@ -209,14 +209,14 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 	    Root<ServiceRequestPaintQuotation> countRoot = countQuery.from(ServiceRequestPaintQuotation.class);
 	    List<Predicate> countPredicates = new ArrayList<>();
 
-	    if (requestLineId != null && !requestLineId.trim().isEmpty()) {
-	    	countPredicates.add(cb.equal(countRoot.get("requestLineId"), requestLineId));
+	    if (admintasklineId != null && !admintasklineId.trim().isEmpty()) {
+	    	countPredicates.add(cb.equal(countRoot.get("admintasklineId"), admintasklineId));
 	    }
 	    if (taskDescription != null && !taskDescription.trim().isEmpty()) {
 	    	countPredicates.add(cb.equal(countRoot.get("taskDescription"), taskDescription));
 	    }
-	    if (requestId != null && !requestId.trim().isEmpty()) {
-	    	countPredicates.add(cb.equal(countRoot.get("requestId"), requestId));
+	    if (taskId != null && !taskId.trim().isEmpty()) {
+	    	countPredicates.add(cb.equal(countRoot.get("taskId"), taskId));
 	    }
 	    if (measureNames != null ) {
 	    	countPredicates.add(cb.equal(countRoot.get("measureNames"), measureNames));

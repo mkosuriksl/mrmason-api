@@ -94,6 +94,12 @@ public class User implements UserDetails {
 
 	@Enumerated(EnumType.STRING)
 	private RegSource regSource;
+	
+	@Column(name = "linkedin_url")
+	private String linkedInURL;
+	
+	@Column(name = "highest_qualification")
+	private String highestQualification;
 
 	@PrePersist
 	private void prePersist() {

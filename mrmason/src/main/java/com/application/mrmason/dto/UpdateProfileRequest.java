@@ -14,4 +14,6 @@ public class UpdateProfileRequest {
 	private String district;
 	private String address;
 	private String city;
+	private String linkedInURL;
+	private String highestQualification;
 }

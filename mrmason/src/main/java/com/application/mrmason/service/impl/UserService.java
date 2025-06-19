@@ -165,6 +165,8 @@ public class UserService {
 		dto.setUpdatedDate(user.getUpdatedDate());
 		dto.setServiceCategory(user.getServiceCategory());
 		dto.setRegSource(user.getRegSource().toString());
+		dto.setLinkedInURL(user.getLinkedInURL());
+		dto.setHighestQualification(user.getHighestQualification());
 
 		return dto;
 
@@ -200,7 +202,9 @@ public class UserService {
 			existedByEmail.get().setDistrict(registrationDetails.getDistrict());
 			existedByEmail.get().setAddress(registrationDetails.getAddress());
 			existedByEmail.get().setCity(registrationDetails.getCity());
-
+			existedByEmail.get().setLinkedInURL(registrationDetails.getLinkedInURL());
+			existedByEmail.get().setHighestQualification(registrationDetails.getHighestQualification());
+			
 			return userDAO.save(existedByEmail.get());
 		}
 		return null;
@@ -390,6 +394,9 @@ public class UserService {
 			userProfilemageRepository.findByBodSeqNo(bodSeqNo).ifPresent(upload -> dto.setPhoto(upload.getPhoto()));
 			
 			adminSpVerificationRepository.findByBodSeqNo(bodSeqNo).ifPresent(status -> dto.setVerifiedStatus(status.getStatus()));
+			
+			dto.setLinkedInURL(userdb.getLinkedInURL());
+			dto.setHighestQualification(userdb.getHighestQualification());
 			return dto;
 		}
 
@@ -413,6 +420,8 @@ public class UserService {
 			dto.setCity(userdb.getCity());
 			dto.setDistrict(userdb.getDistrict());
 			dto.setState(userdb.getState());
+			dto.setLinkedInURL(userdb.getLinkedInURL());
+			dto.setHighestQualification(userdb.getHighestQualification());
 			dto.setLocation(userdb.getLocation());
 			dto.setRegSource(userdb.getRegSource().toString());
 			if (!serviceDetails.isEmpty()) {

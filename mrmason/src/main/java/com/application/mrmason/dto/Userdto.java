@@ -30,4 +30,6 @@ public class Userdto {
 	private String photo;
 	private List<String> serviceType;
 	private String VerifiedStatus;
+	private String linkedInURL;
+	private String highestQualification;
 }

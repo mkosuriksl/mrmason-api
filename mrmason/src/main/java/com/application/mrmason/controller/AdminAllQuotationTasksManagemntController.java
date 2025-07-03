@@ -27,7 +27,7 @@ import com.application.mrmason.service.AdminPaintTasksManagemntService;
 
 @RestController
 @RequestMapping("/admin-all-quotation-task")
-public class AdminPaintTasksManagemntController {
+public class AdminAllQuotationTasksManagemntController {
 
 	@Autowired
 	private AdminPaintTasksManagemntService service;

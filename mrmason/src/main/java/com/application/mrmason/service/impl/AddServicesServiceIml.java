@@ -11,6 +11,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.dto.AddServiceGetDto;
@@ -19,7 +22,6 @@ import com.application.mrmason.dto.AddServicesDto1;
 import com.application.mrmason.dto.AdminServiceNameDto;
 import com.application.mrmason.entity.AddServices;
 import com.application.mrmason.entity.AdminServiceName;
-import com.application.mrmason.entity.SpServiceDetails;
 import com.application.mrmason.repository.AddServiceRepo;
 import com.application.mrmason.repository.AdminServiceNameRepo;
 import com.application.mrmason.repository.SpServiceDetailsRepo;
@@ -27,6 +29,7 @@ import com.application.mrmason.repository.UserDAO;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
@@ -115,8 +118,86 @@ public class AddServicesServiceIml {
 	
 
 	
-	public List<AddServicesDto> getAddServicesWithServiceNames(String bodSeqNo, String serviceSubCategory, String userIdServiceId) {
+//	public List<AddServicesDto> getAddServicesWithServiceNames(String bodSeqNo, String serviceSubCategory, String userIdServiceId) {
+//	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+//	    CriteriaQuery<AddServices> query = cb.createQuery(AddServices.class);
+//	    Root<AddServices> root = query.from(AddServices.class);
+//	    List<Predicate> predicates = new ArrayList<>();
+//
+//	    if (bodSeqNo != null) {
+//	        predicates.add(cb.equal(root.get("bodSeqNo"), bodSeqNo));
+//	    }
+//	    if (serviceSubCategory != null) {
+//	        predicates.add(cb.equal(root.get("serviceSubCategory"), serviceSubCategory));
+//	    }
+//	    if (userIdServiceId != null) {
+//	        predicates.add(cb.equal(root.get("userIdServiceId"), userIdServiceId));
+//	    }
+//
+//	    query.where(predicates.toArray(new Predicate[0]));
+//
+//	    List<AddServices> servicesList = entityManager.createQuery(query).getResultList();
+//	    System.out.println("servicelist: " + servicesList);
+//
+//	    if (!servicesList.isEmpty()) {
+//	        Set<String> serviceIds = new HashSet<>();
+//	        for (AddServices service : servicesList) {
+//	            if (service.getServiceId() != null) {
+//	                String[] ids = service.getServiceId().split(",");
+//	                Collections.addAll(serviceIds, ids);
+//	            }
+//	        }
+//
+//	        List<AdminServiceNameDto> serviceNameDtos = getServiceNamesByIds(new ArrayList<>(serviceIds));
+//	        System.out.println("serviceNameDtos: " + serviceNameDtos);
+//
+//	        Map<String, String> serviceIdToNameMap = serviceNameDtos.stream()
+//	            .collect(Collectors.toMap(AdminServiceNameDto::getServiceId, AdminServiceNameDto::getServiceName));
+//
+//	        return servicesList.stream().map(service -> {
+//	            AddServicesDto dto = new AddServicesDto();
+//	            dto.setUserIdServiceId(service.getUserIdServiceId());
+//	            dto.setServiceId(service.getServiceId());
+//	            dto.setServiceSubCategory(service.getServiceSubCategory());
+//	            dto.setStatus(service.getStatus());
+//	            dto.setBodSeqNo(service.getBodSeqNo());
+//	            dto.setUpdatedBy(service.getUpdatedBy());
+//	            dto.setUpdatedDate(service.getUpdatedDate());
+//	            dto.setUpdateDateFormat(service.getUpdateDateFormat());
+//
+//	            if (service.getServiceId() != null) {
+//	                List<String> serviceIdList = Arrays.asList(service.getServiceId().split(","));
+//	                dto.setServiceIdList(serviceIdList);
+//
+//	                // Filter out any service ID that does not have a corresponding name
+//	                List<String> validEntries = serviceIdList.stream()
+//	                    .filter(id -> serviceIdToNameMap.containsKey(id) && serviceIdToNameMap.get(id) != null)
+//	                    .map(id -> id + ":" + serviceIdToNameMap.get(id))
+//	                    .collect(Collectors.toList());
+//
+//	                if (validEntries.isEmpty()) {
+//	                    dto.setServiceIdServiceName(""); // Case 1: All names are null
+//	                } else {
+//	                    dto.setServiceIdServiceName(String.join(", ", validEntries)); // Case 2 & 3: Some or all names are present
+//	                }
+//	            } else {
+//	                dto.setServiceIdList(Collections.emptyList());
+//	                dto.setServiceIdServiceName("");
+//	            }
+//
+//	            return dto;
+//	        }).collect(Collectors.toList());
+//	    }
+//
+//	    return Collections.emptyList();
+//	}
+	
+	public Page<AddServicesDto> getAddServicesWithServiceNames(
+	        String bodSeqNo, String serviceSubCategory, String userIdServiceId, Pageable pageable) {
+
 	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+
+	    // ----- Main Query -----
 	    CriteriaQuery<AddServices> query = cb.createQuery(AddServices.class);
 	    Root<AddServices> root = query.from(AddServices.class);
 	    List<Predicate> predicates = new ArrayList<>();
@@ -133,61 +214,76 @@ public class AddServicesServiceIml {
 
 	    query.where(predicates.toArray(new Predicate[0]));
 
-	    List<AddServices> servicesList = entityManager.createQuery(query).getResultList();
-	    System.out.println("servicelist: " + servicesList);
+	    TypedQuery<AddServices> typedQuery = entityManager.createQuery(query);
+	    typedQuery.setFirstResult((int) pageable.getOffset());
+	    typedQuery.setMaxResults(pageable.getPageSize());
 
-	    if (!servicesList.isEmpty()) {
-	        Set<String> serviceIds = new HashSet<>();
-	        for (AddServices service : servicesList) {
-	            if (service.getServiceId() != null) {
-	                String[] ids = service.getServiceId().split(",");
-	                Collections.addAll(serviceIds, ids);
-	            }
+	    List<AddServices> servicesList = typedQuery.getResultList();
+
+	    // ----- Count Query (with new Root and predicates) -----
+	    CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+	    Root<AddServices> countRoot = countQuery.from(AddServices.class);
+	    List<Predicate> countPredicates = new ArrayList<>();
+
+	    if (bodSeqNo != null) {
+	        countPredicates.add(cb.equal(countRoot.get("bodSeqNo"), bodSeqNo));
+	    }
+	    if (serviceSubCategory != null) {
+	        countPredicates.add(cb.equal(countRoot.get("serviceSubCategory"), serviceSubCategory));
+	    }
+	    if (userIdServiceId != null) {
+	        countPredicates.add(cb.equal(countRoot.get("userIdServiceId"), userIdServiceId));
+	    }
+
+	    countQuery.select(cb.count(countRoot)).where(countPredicates.toArray(new Predicate[0]));
+	    Long totalCount = entityManager.createQuery(countQuery).getSingleResult();
+
+	    // ----- Map Entity to DTO and enrich with Service Names -----
+	    Set<String> serviceIds = new HashSet<>();
+	    for (AddServices service : servicesList) {
+	        if (service.getServiceId() != null) {
+	            String[] ids = service.getServiceId().split(",");
+	            Collections.addAll(serviceIds, ids);
 	        }
+	    }
 
-	        List<AdminServiceNameDto> serviceNameDtos = getServiceNamesByIds(new ArrayList<>(serviceIds));
-	        System.out.println("serviceNameDtos: " + serviceNameDtos);
-
-	        Map<String, String> serviceIdToNameMap = serviceNameDtos.stream()
+	    List<AdminServiceNameDto> serviceNameDtos = getServiceNamesByIds(new ArrayList<>(serviceIds));
+	    Map<String, String> serviceIdToNameMap = serviceNameDtos.stream()
 	            .collect(Collectors.toMap(AdminServiceNameDto::getServiceId, AdminServiceNameDto::getServiceName));
 
-	        return servicesList.stream().map(service -> {
-	            AddServicesDto dto = new AddServicesDto();
-	            dto.setUserIdServiceId(service.getUserIdServiceId());
-	            dto.setServiceId(service.getServiceId());
-	            dto.setServiceSubCategory(service.getServiceSubCategory());
-	            dto.setStatus(service.getStatus());
-	            dto.setBodSeqNo(service.getBodSeqNo());
-	            dto.setUpdatedBy(service.getUpdatedBy());
-	            dto.setUpdatedDate(service.getUpdatedDate());
-	            dto.setUpdateDateFormat(service.getUpdateDateFormat());
+	    List<AddServicesDto> dtoList = servicesList.stream().map(service -> {
+	        AddServicesDto dto = new AddServicesDto();
+	        dto.setUserIdServiceId(service.getUserIdServiceId());
+	        dto.setServiceId(service.getServiceId());
+	        dto.setServiceSubCategory(service.getServiceSubCategory());
+	        dto.setStatus(service.getStatus());
+	        dto.setBodSeqNo(service.getBodSeqNo());
+	        dto.setUpdatedBy(service.getUpdatedBy());
+	        dto.setUpdatedDate(service.getUpdatedDate());
+	        dto.setUpdateDateFormat(service.getUpdateDateFormat());
 
-	            if (service.getServiceId() != null) {
-	                List<String> serviceIdList = Arrays.asList(service.getServiceId().split(","));
-	                dto.setServiceIdList(serviceIdList);
+	        if (service.getServiceId() != null) {
+	            List<String> serviceIdList = Arrays.asList(service.getServiceId().split(","));
+	            dto.setServiceIdList(serviceIdList);
 
-	                // Filter out any service ID that does not have a corresponding name
-	                List<String> validEntries = serviceIdList.stream()
+	            List<String> validEntries = serviceIdList.stream()
 	                    .filter(id -> serviceIdToNameMap.containsKey(id) && serviceIdToNameMap.get(id) != null)
 	                    .map(id -> id + ":" + serviceIdToNameMap.get(id))
 	                    .collect(Collectors.toList());
 
-	                if (validEntries.isEmpty()) {
-	                    dto.setServiceIdServiceName(""); // Case 1: All names are null
-	                } else {
-	                    dto.setServiceIdServiceName(String.join(", ", validEntries)); // Case 2 & 3: Some or all names are present
-	                }
-	            } else {
-	                dto.setServiceIdList(Collections.emptyList());
-	                dto.setServiceIdServiceName("");
-	            }
+	            dto.setServiceIdServiceName(validEntries.isEmpty() ? "" : String.join(", ", validEntries));
+	        } else {
+	            dto.setServiceIdList(Collections.emptyList());
+	            dto.setServiceIdServiceName("");
+	        }
 
-	            return dto;
-	        }).collect(Collectors.toList());
-	    }
+	        return dto;
+	    }).collect(Collectors.toList());
 
-	    return Collections.emptyList();
+	    return new PageImpl<>(dtoList, pageable, totalCount);
 	}
+
+
 
 	public List<AdminServiceNameDto> getServiceNamesByIds(List<String> serviceIds) {
 	    if (serviceIds == null || serviceIds.isEmpty()) {

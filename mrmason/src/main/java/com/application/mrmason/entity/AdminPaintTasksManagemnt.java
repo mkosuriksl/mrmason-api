@@ -21,7 +21,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Entity
 @Builder
-@Table(name = "admin_paint_tasks_managemnt")
+@Table(name = "admin_all_quotation_task")
 public class AdminPaintTasksManagemnt {
 
 	@Id

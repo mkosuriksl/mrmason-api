@@ -26,13 +26,13 @@ import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.service.AdminPaintTasksManagemntService;
 
 @RestController
-@RequestMapping("/admintasks")
-public class AdminPaintTasksManagemntController {
+@RequestMapping("/admin-all-quotation-task")
+public class AdminAllQuotationTasksManagemntController {
 
 	@Autowired
 	private AdminPaintTasksManagemntService service;
 
-	@PostMapping("/add-paint-tasks")
+	@PostMapping("/add")
 	public ResponseEntity<GenericResponse<List<AdminPaintTasksManagemnt>>> addTasks(
 			@RequestBody AdminPaintTaskRequestDTO requestDTO) {
 
@@ -44,7 +44,7 @@ public class AdminPaintTasksManagemntController {
 		return ResponseEntity.ok(response);
 	}
 
-	@PutMapping("/update-paint-tasks")
+	@PutMapping("/update")
 	public ResponseEntity<GenericResponse<List<AdminPaintTasksManagemnt>>> addTasks(
 			@RequestBody List<AdminPaintTasksManagemnt> requestList) {
 
@@ -56,7 +56,7 @@ public class AdminPaintTasksManagemntController {
 		return ResponseEntity.ok(response);
 	}
 
-	@GetMapping("/get-paint-tasks")
+	@GetMapping("/get")
 	public ResponseEntity<ResponseGetAdminPaintTasksManagemntDto> getServiceRequestPaintQuotationService(
 			@RequestParam(required = false) String serviceCategory, @RequestParam(required = false) String taskName,
 			@RequestParam(required = false) String taskId, @RequestParam(required = false) String adminTaskId,

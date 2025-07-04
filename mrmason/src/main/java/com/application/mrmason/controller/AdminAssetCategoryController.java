@@ -99,23 +99,52 @@ public class AdminAssetCategoryController {
 	    }
 	}
 
+//	@GetMapping("/getAssetCategory/nonCivil/{assetCategory}")
+//	public ResponseEntity<?> getAssetCategoryNonCivil(@PathVariable String assetCategory) {
+//		ResponseAdminAssetCatDto response = new ResponseAdminAssetCatDto();
+//		try {
+//			List<AdminAssetCategory> asset = service.getAssetCategoryNonCivil(assetCategory);
+//
+//			response.setMessage("Non-Civil related admin asset category fetched successfully");
+//			response.setStatus(true);
+//			response.setData(asset);
+//			return new ResponseEntity<>(response, HttpStatus.OK);
+//
+//		} catch (Exception e) {
+//			response.setMessage(e.getMessage());
+//			response.setStatus(false);
+//			return new ResponseEntity<>(response, HttpStatus.OK);
+//		}
+//
+//	}
+
 	@GetMapping("/getAssetCategory/nonCivil/{assetCategory}")
-	public ResponseEntity<?> getAssetCategoryNonCivil(@PathVariable String assetCategory) {
-		ResponseAdminAssetCatDto response = new ResponseAdminAssetCatDto();
-		try {
-			List<AdminAssetCategory> asset = service.getAssetCategoryNonCivil(assetCategory);
+	public ResponseEntity<ResponseList<AdminAssetCategory>> getAssetCategoryNonCivil(
+	        @PathVariable String assetCategory,
+	        @RequestParam(defaultValue = "0") int page,
+	        @RequestParam(defaultValue = "10") int size) {
 
-			response.setMessage("Non-Civil related admin asset category fetched successfully");
-			response.setStatus(true);
-			response.setData(asset);
-			return new ResponseEntity<>(response, HttpStatus.OK);
+	    try {
+	        Pageable pageable = PageRequest.of(page, size, Sort.by("createDate").descending());
+	        Page<AdminAssetCategory> assetPage = service.getAssetCategoryNonCivil(assetCategory, pageable);
 
-		} catch (Exception e) {
-			response.setMessage(e.getMessage());
-			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.OK);
-		}
+	        ResponseList<AdminAssetCategory> response = new ResponseList<>();
+	        response.setMessage("Non-Civil related admin asset category fetched successfully.");
+	        response.setStatus(true);
+	        response.setData(assetPage.getContent());
+	        response.setCurrentPage(assetPage.getNumber());
+	        response.setPageSize(assetPage.getSize());
+	        response.setTotalElements(assetPage.getTotalElements());
+	        response.setTotalPages(assetPage.getTotalPages());
 
+	        return new ResponseEntity<>(response, HttpStatus.OK);
+
+	    } catch (Exception e) {
+	        ResponseList<AdminAssetCategory> response = new ResponseList<>();
+	        response.setMessage(e.getMessage());
+	        response.setStatus(false);
+	        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+	    }
 	}
 
 }

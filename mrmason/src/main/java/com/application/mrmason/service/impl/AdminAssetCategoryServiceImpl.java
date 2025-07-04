@@ -39,11 +39,17 @@ public class AdminAssetCategoryServiceImpl implements AdminAssetCategoryService 
 	}
 
 
+//	@Override
+//	public List<AdminAssetCategory> getAssetCategoryNonCivil(String assetCategory) {
+//
+//		List<AdminAssetCategory> assets = (repo.findByAssetCategoryNotOrderByCreateDateDesc(assetCategory));
+//		return assets;
+//	}
+	
 	@Override
-	public List<AdminAssetCategory> getAssetCategoryNonCivil(String assetCategory) {
-
-		List<AdminAssetCategory> assets = (repo.findByAssetCategoryNotOrderByCreateDateDesc(assetCategory));
-		return assets;
+	public Page<AdminAssetCategory> getAssetCategoryNonCivil(String assetCategory, Pageable pageable) {
+	    return repo.findByAssetCategoryNot(assetCategory, pageable);
 	}
+
 
 }

@@ -17,5 +17,8 @@ public interface AdminAssetCategoryRepo extends JpaRepository<AdminAssetCategory
 	Page<AdminAssetCategory> findByAssetCategory(String assetCategory, Pageable pageable);
 
 	List<AdminAssetCategory> findByAssetCategoryNotOrderByCreateDateDesc(String assetCategory);
+	
+	Page<AdminAssetCategory> findByAssetCategoryNot(String assetCategory, Pageable pageable);
+
 
 }

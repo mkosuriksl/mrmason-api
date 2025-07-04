@@ -72,11 +72,6 @@ public class AdminAmcRateServiceImpl implements AdminAmcRateService {
 		if (assetBrand != null) {
 			predicates.add(cb.equal(root.get("assetBrand"), assetBrand));
 		}
-
-//		query.where(predicates.toArray(new Predicate[0]));
-//
-//		List<AdminAmcRate> result = entityManager.createQuery(query).getResultList();
-//		return result != null ? result : new ArrayList<>();
 		
 		query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
 		TypedQuery<AdminAmcRate> typedQuery = entityManager.createQuery(query);

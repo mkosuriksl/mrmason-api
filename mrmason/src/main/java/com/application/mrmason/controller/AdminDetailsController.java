@@ -3,6 +3,7 @@ package com.application.mrmason.controller;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,8 +18,10 @@ import com.application.mrmason.dto.AdminDetailsDto;
 import com.application.mrmason.dto.ChangePasswordDto;
 import com.application.mrmason.dto.Logindto;
 import com.application.mrmason.dto.ResponceAdminDetailsDto;
+import com.application.mrmason.dto.ResponseAdminAssetDto;
 import com.application.mrmason.dto.ResponseListAdminDetailsDto;
 import com.application.mrmason.dto.ResponseMessageDto;
+import com.application.mrmason.entity.AdminAsset;
 import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.service.AdminDetailsService;
 
@@ -74,29 +77,60 @@ public class AdminDetailsController {
 		}
 
 	}
+//	@PreAuthorize("hasAuthority('Adm')")
+//	@GetMapping("/getAdminDetails")
+//	public ResponseEntity<?> getAdminDetails(@RequestParam(required = false)String email,@RequestParam(required = false) String mobile) {
+//		try {
+//			AdminDetailsDto entity = adminService.getAdminDetails(email, mobile);
+//			if (entity == null) {
+//				response.setMessage("Invalid User.!");
+//				response.setStatus(false);
+//				return new ResponseEntity<>(response, HttpStatus.OK);
+//			}
+//			response.setData(entity);
+//			response.setMessage("Admin data fetched successfully..");
+//			response.setStatus(true);
+//			return ResponseEntity.ok(response);
+//
+//		} catch (Exception e) {
+//			response.setMessage(e.getMessage());
+//			response.setStatus(false);
+//			return new ResponseEntity<>(response, HttpStatus.OK);
+//		}
+//
+//	}
+//	
 	@PreAuthorize("hasAuthority('Adm')")
 	@GetMapping("/getAdminDetails")
-	public ResponseEntity<?> getAdminDetails(@RequestParam(required = false)String email,@RequestParam(required = false) String mobile) {
-		try {
-			AdminDetailsDto entity = adminService.getAdminDetails(email, mobile);
-			if (entity == null) {
-				response.setMessage("Invalid User.!");
-				response.setStatus(false);
-				return new ResponseEntity<>(response, HttpStatus.OK);
-			}
-			response.setData(entity);
-			response.setMessage("Admin data fetched successfully..");
-			response.setStatus(true);
-			return ResponseEntity.ok(response);
+	public ResponseEntity<?> getAdminDetails(
+	        @RequestParam(required = false) String email,
+	        @RequestParam(required = false) String mobile,
+	        @RequestParam(defaultValue = "0") int pageNo,
+	        @RequestParam(defaultValue = "10") int pageSize) {
 
-		} catch (Exception e) {
-			response.setMessage(e.getMessage());
-			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.OK);
-		}
+	    ResponseAdminAssetDto response = new ResponseAdminAssetDto();
+	    try {
+	        Page<AdminAsset> page = adminService.getAdminDetails(email, mobile, pageNo, pageSize);
 
+	        if (page.isEmpty()) {
+	            response.setMessage("No data found.");
+	            response.setStatus(true);
+	            response.setData(page.getContent());
+	            return new ResponseEntity<>(response, HttpStatus.OK);
+	        }
+
+	        response.setMessage("Admin data fetched successfully.");
+	        response.setStatus(true);
+	        response.setData(page.getContent());
+	        return ResponseEntity.ok(response);
+
+	    } catch (Exception e) {
+	        response.setMessage("Error: " + e.getMessage());
+	        response.setStatus(false);
+	        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+	    }
 	}
-	
+
 	@PostMapping("/adminLoginWithPass")
 	public ResponseEntity<?> login(@RequestBody Logindto login) {
 		String userEmail = login.getEmail();

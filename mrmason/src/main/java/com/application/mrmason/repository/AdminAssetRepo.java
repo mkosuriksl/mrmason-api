@@ -1,6 +1,9 @@
 package com.application.mrmason.repository;
 
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import com.application.mrmason.entity.AdminAsset;
@@ -21,4 +24,9 @@ public interface AdminAssetRepo extends JpaRepository<AdminAsset, String>{
 //	List<AdminAsset> findByAssetCatNotOrderByCreateDateDesc(String assetCat);
 	
 	 List<AdminAsset> findByAssetCat(String assetCat);
+	Page<AdminAsset> findByAssetId(String assetId, Pageable pageable);
+	Page<AdminAsset> findByAssetCat(String assetCat, Pageable pageable);
+	Page<AdminAsset> findByAssetSubCat(String assetSubCat, Pageable pageable);
+	Page<AdminAsset> findByAssetModel(String assetModel, Pageable pageable);
+	Page<AdminAsset> findByAssetBrand(String assetBrand, Pageable pageable);
 }

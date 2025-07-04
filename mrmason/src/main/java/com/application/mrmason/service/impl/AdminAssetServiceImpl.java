@@ -142,15 +142,47 @@ public class AdminAssetServiceImpl implements AdminAssetService {
 	}
 
 
+//	@Override
+//	public List<AdminAsset> getAssetCivil(String assetCat) {
+//
+//		if ("CIVIL".equalsIgnoreCase(assetCat)) {
+//			return adminAssetRepo.findByAssetCat(assetCat);
+//		} else {
+//			return List.of();
+//		}
+//
+//	}
+
 	@Override
-	public List<AdminAsset> getAssetCivil(String assetCat) {
+	public Page<AdminAsset> getAssetCivil(String assetCat, int pageNo, int pageSize) {
+	    if (!"CIVIL".equalsIgnoreCase(assetCat)) {
+	        return Page.empty();
+	    }
 
-		if ("CIVIL".equalsIgnoreCase(assetCat)) {
-			return adminAssetRepo.findByAssetCat(assetCat);
-		} else {
-			return List.of();
-		}
+	    Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by("addedDate").descending());
+	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
+	    // Main query
+	    CriteriaQuery<AdminAsset> cq = cb.createQuery(AdminAsset.class);
+	    Root<AdminAsset> root = cq.from(AdminAsset.class);
+
+	    Predicate predicate = cb.equal(cb.upper(root.get("assetCat")), assetCat.toUpperCase());
+	    cq.where(predicate);
+	    cq.orderBy(cb.desc(root.get("addedDate")));
+
+	    TypedQuery<AdminAsset> query = entityManager.createQuery(cq);
+	    query.setFirstResult((int) pageable.getOffset());
+	    query.setMaxResults(pageable.getPageSize());
+
+	    // Count query
+	    CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+	    Root<AdminAsset> countRoot = countQuery.from(AdminAsset.class);
+	    countQuery.select(cb.count(countRoot));
+	    countQuery.where(cb.equal(cb.upper(countRoot.get("assetCat")), assetCat.toUpperCase()));
+
+	    Long total = entityManager.createQuery(countQuery).getSingleResult();
+
+	    return new PageImpl<>(query.getResultList(), pageable, total);
 	}
 
 	@Override

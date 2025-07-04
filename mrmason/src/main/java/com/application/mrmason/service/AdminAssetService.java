@@ -13,9 +13,9 @@ public interface AdminAssetService {
 //	List<AdminAsset> getAssets(String assetId,String assetCat,String assetSubCat,String assetModel,String assetBrand);
 	AdminAsset updateAssets(UpdateAssetDto asset);
 	
-	public List<AdminAsset> getAssetCivil(String assetCat);
+//	public List<AdminAsset> getAssetCivil(String assetCat);
 	public List<AdminAsset> getAssetNonCivil(String assetCat);
-	
+	public Page<AdminAsset> getAssetCivil(String assetCat, int pageNo, int pageSize);
 	public Page<AdminAsset> getAssets(String assetId, String assetCat, String assetSubCat, String assetModel,
             String assetBrand, int pageNo, int pageSize);
 }

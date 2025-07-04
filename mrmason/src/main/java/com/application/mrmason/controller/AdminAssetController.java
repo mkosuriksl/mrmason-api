@@ -114,24 +114,44 @@ public class AdminAssetController {
 	}
 
 	
+//	@GetMapping("/getAdminAsset/civil/{assetCat}")
+//	public ResponseEntity<?> getAdminAssetCivilDetails(@PathVariable String assetCat) {
+//		ResponseAdminAssetDto response = new ResponseAdminAssetDto();
+//		try {
+//			List<AdminAsset> assets = adminService.getAssetCivil(assetCat);
+//			response.setMessage("Civil related admin asset categories fetched successfully");
+//			response.setStatus(true);
+//			response.setData(assets);
+//			return new ResponseEntity<>(response, HttpStatus.OK);
+//
+//		} catch (Exception e) {
+//			response.setMessage(e.getMessage());
+//			response.setStatus(false);
+//			return new ResponseEntity<>(response, HttpStatus.OK);
+//		}
+//
+//	}
+//	
 	@GetMapping("/getAdminAsset/civil/{assetCat}")
-	public ResponseEntity<?> getAdminAssetCivilDetails(@PathVariable String assetCat) {
-		ResponseAdminAssetDto response = new ResponseAdminAssetDto();
-		try {
-			List<AdminAsset> assets = adminService.getAssetCivil(assetCat);
-			response.setMessage("Civil related admin asset categories fetched successfully");
-			response.setStatus(true);
-			response.setData(assets);
-			return new ResponseEntity<>(response, HttpStatus.OK);
+	public ResponseEntity<?> getAdminAssetCivilDetails(
+	        @RequestParam(defaultValue = "0") int pageNo,
+	        @RequestParam(defaultValue = "10") int pageSize,
+	        @PathVariable String assetCat) {
 
-		} catch (Exception e) {
-			response.setMessage(e.getMessage());
-			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.OK);
-		}
-
+	    ResponseAdminAssetDto response = new ResponseAdminAssetDto();
+	    try {
+	        Page<AdminAsset> page = adminService.getAssetCivil(assetCat, pageNo, pageSize);
+	        response.setMessage("Civil related admin asset categories fetched successfully");
+	        response.setStatus(true);
+	        response.setData(page.getContent());
+	        return ResponseEntity.ok(response);
+	    } catch (Exception e) {
+	        response.setMessage(e.getMessage());
+	        response.setStatus(false);
+	        return new ResponseEntity<>(response, HttpStatus.OK);
+	    }
 	}
-	
+
 	@GetMapping("/getAdminAsset/nonCivil/{assetCat}")
 	public ResponseEntity<?> getAdminAssetNonCivil(@PathVariable String assetCat) {
 		ResponseAdminAssetDto response = new ResponseAdminAssetDto();

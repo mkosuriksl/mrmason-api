@@ -5,17 +5,20 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.entity.AdminServiceCharges;
 import com.application.mrmason.entity.User;
-import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.AdminServiceChargesRepo;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.AdminServiceChargesService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
@@ -97,8 +100,8 @@ public class AdminServiceChargesServiceImpl implements AdminServiceChargesServic
 
 	
 	@Override
-	public List<AdminServiceCharges> getAdminServiceCharges(String serviceChargeKey, String serviceId, String location,
-			String brand, String model,String updatedBy,String subcategory) {
+	public Page<AdminServiceCharges> getAdminServiceCharges(String serviceChargeKey, String serviceId, String location,
+			String brand, String model,String updatedBy,String subcategory,Pageable pageable) {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<AdminServiceCharges> query = cb.createQuery(AdminServiceCharges.class);
 		Root<AdminServiceCharges> root = query.from(AdminServiceCharges.class);
@@ -127,7 +130,18 @@ public class AdminServiceChargesServiceImpl implements AdminServiceChargesServic
 		}
 		query.where(predicates.toArray(new Predicate[0]));
 
-		return entityManager.createQuery(query).getResultList();
+		query.where(predicates.toArray(new Predicate[0]));
+	    TypedQuery<AdminServiceCharges> typedQuery = entityManager.createQuery(query);
+	    typedQuery.setFirstResult((int) pageable.getOffset());
+	    typedQuery.setMaxResults(pageable.getPageSize());
+
+	    // Count query
+	    CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+	    Root<AdminServiceCharges> countRoot = countQuery.from(AdminServiceCharges.class);
+	    countQuery.select(cb.count(countRoot)).where(predicates.toArray(new Predicate[0]));
+	    Long total = entityManager.createQuery(countQuery).getSingleResult();
+
+	    return new PageImpl<>(typedQuery.getResultList(), pageable, total);
 	}
 
 	@Override

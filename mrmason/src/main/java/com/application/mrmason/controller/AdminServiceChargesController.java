@@ -3,6 +3,9 @@ package com.application.mrmason.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -56,22 +59,28 @@ public class AdminServiceChargesController {
 	@GetMapping("/adminServiceCharegs")
 	public ResponseEntity<?> getAdminCharges(@RequestParam(required = false) String serviceChargeKey,
 			@RequestParam(required = false) String serviceId, @RequestParam(required = false) String location,
-			@RequestParam(required = false) String brand, @RequestParam(required = false) String model,@RequestParam(required = false) String updatedBy,@RequestParam(required = false) String subcategory) {
+			@RequestParam(required = false) String brand, @RequestParam(required = false) String model,@RequestParam(required = false) String updatedBy,@RequestParam(required = false) String subcategory,
+	        @RequestParam(defaultValue = "0") int page,
+	        @RequestParam(defaultValue = "10") int size) {
 
 		ResponseAdminServiceChargesDto1 response = new ResponseAdminServiceChargesDto1();
 		try {
-
-			List<AdminServiceCharges> serviceCharges = service.getAdminServiceCharges(serviceChargeKey, serviceId,
-					location, brand, model,updatedBy,subcategory);
+			Pageable pageable = PageRequest.of(page, size);
+			Page<AdminServiceCharges> serviceCharges = service.getAdminServiceCharges(serviceChargeKey, serviceId,
+					location, brand, model,updatedBy,subcategory,pageable);
 			if (serviceCharges != null && !serviceCharges.isEmpty()) {
 				response.setMessage("User service charges details");
 				response.setStatus(true);
-				response.setGetData(serviceCharges);
+				response.setGetData(serviceCharges.getContent());
+		        response.setCurrentPage(serviceCharges.getNumber());
+		        response.setPageSize(serviceCharges.getSize());
+		        response.setTotalElements(serviceCharges.getTotalElements());
+		        response.setTotalPages(serviceCharges.getTotalPages());
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			} else {
 				response.setMessage("No details found for given parameters/check your parameters");
 				response.setStatus(false);
-				response.setGetData(serviceCharges);
+				response.setGetData(serviceCharges.getContent());
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 		} catch (Exception e) {

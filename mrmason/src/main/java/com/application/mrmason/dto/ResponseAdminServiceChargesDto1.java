@@ -12,4 +12,8 @@ public class ResponseAdminServiceChargesDto1 {
 	private String message;
 	private boolean status;
 	private List<AdminServiceCharges> getData;
+	private int currentPage;
+    private int pageSize;
+    private long totalElements;
+    private int totalPages;
 }

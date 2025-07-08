@@ -1,6 +1,7 @@
 package com.application.mrmason.service;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import com.application.mrmason.entity.CMaterialRequestHeaderEntity;
 
@@ -9,5 +10,8 @@ public interface CMaterialRequestHeaderService {
 
     CMaterialRequestHeaderEntity updateMaterialRequest(String id, CMaterialRequestHeaderEntity request);
 
-    List<CMaterialRequestHeaderEntity> getAllMaterialRequests();
+//    List<CMaterialRequestHeaderEntity> getAllMaterialRequests();
+
+    Page<CMaterialRequestHeaderEntity> getAllMaterialRequests(Pageable pageable);
+
 }

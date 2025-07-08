@@ -10,7 +10,12 @@ public interface AdminStoreVerificationService {
 
         AdminStoreVerificationResponseDTO verifyStore(AdminStoreVerificationRequestDTO requestDTO);
 
-        AdminStoreVerificationResponse<List<AdminStoreVerificationResponseDTO>> getVerificationsByParams(
-                        String storeId, String bodSeqNo, String bodSeqNoStoreId, String verificationStatus,
-                        String updatedBy);
+//        AdminStoreVerificationResponse<List<AdminStoreVerificationResponseDTO>> getVerificationsByParams(
+//                        String storeId, String bodSeqNo, String bodSeqNoStoreId, String verificationStatus,
+//                        String updatedBy);
+        
+        public AdminStoreVerificationResponse<List<AdminStoreVerificationResponseDTO>> getVerificationsByParams(
+                String storeId, String bodSeqNo, String bodSeqNoStoreId, String verificationStatus,
+                String updatedBy, int page, int size);
+
 }

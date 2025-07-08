@@ -13,12 +13,20 @@ import com.application.mrmason.repository.ServicePersonStoreDetailsRepo;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.AdminStoreVerificationService;
 
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -41,6 +49,9 @@ public class AdminStoreVerificationServiceImpl implements AdminStoreVerification
 
     @Autowired
     private EmailServiceImpl emailService;
+    
+	@PersistenceContext
+	private EntityManager entityManager;
 
     @Override
     public AdminStoreVerificationResponseDTO verifyStore(AdminStoreVerificationRequestDTO requestDTO) {
@@ -127,30 +138,80 @@ public class AdminStoreVerificationServiceImpl implements AdminStoreVerification
         return responseDTO;
     }
 
+//    public AdminStoreVerificationResponse<List<AdminStoreVerificationResponseDTO>> getVerificationsByParams(
+//            String storeId, String bodSeqNo, String bodSeqNoStoreId, String verificationStatus, String updatedBy) {
+//
+//        log.info(
+//                "Fetching verifications with parameters - storeId: {}, bodSeqNo: {}, bodSeqNoStoreId:{}, verificationStatus: {}, updatedBy: {}",
+//                storeId, bodSeqNo, bodSeqNoStoreId, verificationStatus, updatedBy);
+//
+//        try {
+//            List<AdminStoreVerificationEntity> entities = repository.findByOptionalParams(storeId, bodSeqNo,
+//                    bodSeqNoStoreId, verificationStatus, updatedBy);
+//            log.debug("Found {} verification records", entities.size());
+//
+//            List<AdminStoreVerificationResponseDTO> responseDTOs = entities.stream().map(entity -> {
+//                AdminStoreVerificationResponseDTO dto = new AdminStoreVerificationResponseDTO();
+//                BeanUtils.copyProperties(entity, dto);
+//                return dto;
+//            }).collect(Collectors.toList());
+//
+//            return new AdminStoreVerificationResponse<>("Status of Store verifications fetched successfully", "SUCCESS",
+//                    responseDTOs);
+//
+//        } catch (Exception e) {
+//            log.error("Error fetching verifications: {}", e.getMessage(), e);
+//            return new AdminStoreVerificationResponse<>("Error fetching store verifications", "FAILURE", null);
+//        }
+//    }
+    
     public AdminStoreVerificationResponse<List<AdminStoreVerificationResponseDTO>> getVerificationsByParams(
-            String storeId, String bodSeqNo, String bodSeqNoStoreId, String verificationStatus, String updatedBy) {
-
-        log.info(
-                "Fetching verifications with parameters - storeId: {}, bodSeqNo: {}, bodSeqNoStoreId:{}, verificationStatus: {}, updatedBy: {}",
-                storeId, bodSeqNo, bodSeqNoStoreId, verificationStatus, updatedBy);
+            String storeId, String bodSeqNo, String bodSeqNoStoreId, String verificationStatus,
+            String updatedBy, int page, int size) {
 
         try {
-            List<AdminStoreVerificationEntity> entities = repository.findByOptionalParams(storeId, bodSeqNo,
-                    bodSeqNoStoreId, verificationStatus, updatedBy);
-            log.debug("Found {} verification records", entities.size());
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<AdminStoreVerificationEntity> query = cb.createQuery(AdminStoreVerificationEntity.class);
+            Root<AdminStoreVerificationEntity> root = query.from(AdminStoreVerificationEntity.class);
 
-            List<AdminStoreVerificationResponseDTO> responseDTOs = entities.stream().map(entity -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (storeId != null) predicates.add(cb.equal(root.get("storeId"), storeId));
+            if (bodSeqNo != null) predicates.add(cb.equal(root.get("bodSeqNo"), bodSeqNo));
+            if (bodSeqNoStoreId != null) predicates.add(cb.equal(root.get("bodSeqNoStoreId"), bodSeqNoStoreId));
+            if (verificationStatus != null) predicates.add(cb.equal(root.get("verificationStatus"), verificationStatus));
+            if (updatedBy != null) predicates.add(cb.equal(root.get("updatedBy"), updatedBy));
+
+            query.where(cb.and(predicates.toArray(new Predicate[0])));
+            query.orderBy(cb.desc(root.get("updatedDate")));
+
+            // Apply pagination
+            TypedQuery<AdminStoreVerificationEntity> typedQuery = entityManager.createQuery(query);
+            typedQuery.setFirstResult(page * size);
+            typedQuery.setMaxResults(size);
+
+            List<AdminStoreVerificationEntity> resultList = typedQuery.getResultList();
+
+            // Total count query
+            CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+            Root<AdminStoreVerificationEntity> countRoot = countQuery.from(AdminStoreVerificationEntity.class);
+            countQuery.select(cb.count(countRoot)).where(cb.and(predicates.toArray(new Predicate[0])));
+            Long totalElements = entityManager.createQuery(countQuery).getSingleResult();
+
+            List<AdminStoreVerificationResponseDTO> dtos = resultList.stream().map(entity -> {
                 AdminStoreVerificationResponseDTO dto = new AdminStoreVerificationResponseDTO();
                 BeanUtils.copyProperties(entity, dto);
                 return dto;
             }).collect(Collectors.toList());
 
-            return new AdminStoreVerificationResponse<>("Status of Store verifications fetched successfully", "SUCCESS",
-                    responseDTOs);
+            return new AdminStoreVerificationResponse<>("Status of Store verifications fetched successfully", "SUCCESS", dtos,
+                    page, size, totalElements, (int) Math.ceil((double) totalElements / size));
 
         } catch (Exception e) {
             log.error("Error fetching verifications: {}", e.getMessage(), e);
             return new AdminStoreVerificationResponse<>("Error fetching store verifications", "FAILURE", null);
         }
     }
+
+
 }

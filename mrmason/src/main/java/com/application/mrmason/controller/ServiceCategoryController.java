@@ -3,6 +3,7 @@ package com.application.mrmason.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -96,24 +97,51 @@ public class ServiceCategoryController {
 
 	}
 
+//	@GetMapping("/getServiceCategory/nonCivil/{serviceCategory}")
+//	public ResponseEntity<ResponseListServiceCatDto> getServiceCategoryNonCivil(@PathVariable String serviceCategory) {
+//		try {
+//			List<ServiceCategory> entity = categoryService.getServiceCategoryNonCivil(serviceCategory);
+//
+//			response2.setMessage("Non-Civil service data fetched successfully.!");
+//			response2.setStatus(true);
+//			response2.setData(entity);
+//			return new ResponseEntity<>(response2, HttpStatus.OK);
+//
+//		} catch (Exception e) {
+//			response2.setMessage(e.getMessage());
+//			response2.setStatus(false);
+//			return new ResponseEntity<>(response2, HttpStatus.OK);
+//		}
+//
+//	}
+
 	@GetMapping("/getServiceCategory/nonCivil/{serviceCategory}")
-	public ResponseEntity<ResponseListServiceCatDto> getServiceCategoryNonCivil(@PathVariable String serviceCategory) {
-		try {
-			List<ServiceCategory> entity = categoryService.getServiceCategoryNonCivil(serviceCategory);
+	public ResponseEntity<ResponseListServiceCatDto> getServiceCategoryNonCivil(
+	        @PathVariable String serviceCategory,
+	        @RequestParam(defaultValue = "0") int page,
+	        @RequestParam(defaultValue = "10") int size) {
 
-			response2.setMessage("Non-Civil service data fetched successfully.!");
-			response2.setStatus(true);
-			response2.setData(entity);
-			return new ResponseEntity<>(response2, HttpStatus.OK);
+	    ResponseListServiceCatDto response2 = new ResponseListServiceCatDto();
+	    try {
+	        Page<ServiceCategory> entityPage = categoryService.getServiceCategoryNonCivil(serviceCategory, page, size);
 
-		} catch (Exception e) {
-			response2.setMessage(e.getMessage());
-			response2.setStatus(false);
-			return new ResponseEntity<>(response2, HttpStatus.OK);
-		}
+	        response2.setMessage("Non-Civil service data fetched successfully.!");
+	        response2.setStatus(true);
+	        response2.setData(entityPage.getContent());
+	        response2.setCurrentPage(entityPage.getNumber());
+	        response2.setPageSize(entityPage.getSize());
+	        response2.setTotalElements(entityPage.getTotalElements());
+	        response2.setTotalPages(entityPage.getTotalPages());
 
+	        return new ResponseEntity<>(response2, HttpStatus.OK);
+	    } catch (Exception e) {
+	        response2.setMessage(e.getMessage());
+	        response2.setStatus(false);
+	        return new ResponseEntity<>(response2, HttpStatus.OK);
+	    }
 	}
 
+	
 	@PreAuthorize("hasAuthority('Adm')")
 	@PutMapping("/updateServiceCategory")
 	public ResponseEntity<?> updateServiceCategory(@RequestBody ServiceCategory service) {

@@ -4,6 +4,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.dto.ServiceCategoryDto;
@@ -90,12 +94,19 @@ public class ServiceCategoryServiceImpl implements ServiceCategoryService {
 
 	}
 
+//	@Override
+//	public List<ServiceCategory> getServiceCategoryNonCivil(String category) {
+//
+//		List<ServiceCategory> user = (serviceRepo.findByServiceCategoryNotOrderByCreateDateDesc(category));
+//		return user;
+//	}
+	
 	@Override
-	public List<ServiceCategory> getServiceCategoryNonCivil(String category) {
-
-		List<ServiceCategory> user = (serviceRepo.findByServiceCategoryNotOrderByCreateDateDesc(category));
-		return user;
+	public Page<ServiceCategory> getServiceCategoryNonCivil(String category, int page, int size) {
+	    Pageable pageable = PageRequest.of(page, size, Sort.by("createDate").descending());
+	    return serviceRepo.findByServiceCategoryNot(category, pageable);
 	}
+
 
 	@Override
 	public ServiceCategory deleteRecord(String id) {

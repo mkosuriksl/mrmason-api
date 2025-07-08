@@ -74,28 +74,55 @@ public class RentalServiceImpl implements RentalService {
 		return null;
 	}
 
+//	@Override
+//	public List<Rental> getRentalAssets(String assetCat, String assetSubCat, String assetBrand, String assetModel,
+//			String userId) {
+//		List<CustomerAssets> assets;
+//
+//		if (assetBrand != null && !assetBrand.isEmpty() && assetModel != null && !assetModel.isEmpty()) {
+//			assets = assetRepo.findByAssetCatAndAssetSubCatAndAssetBrandAndAssetModelAndUserId(assetCat, assetSubCat,
+//					assetBrand, assetModel, userId);
+//		} else if (assetBrand != null && !assetBrand.isEmpty()) {
+//			assets = assetRepo.findByAssetCatAndAssetSubCatAndAssetBrandAndUserId(assetCat, assetSubCat, assetBrand,
+//					userId);
+//		} else if (assetModel != null && !assetModel.isEmpty()) {
+//			assets = assetRepo.findByAssetCatAndAssetSubCatAndAssetModelAndUserId(assetCat, assetSubCat, assetModel,
+//					userId);
+//		} else {
+//			assets = assetRepo.findByAssetCatAndAssetSubCatAndUserId(assetCat, assetSubCat, userId);
+//		}
+//		List<String> assetIds = assets.stream()
+//				.map(CustomerAssets::getAssetId)
+//				.toList();
+//		return rentRepo.findByAssetIdIn(assetIds);
+//	}
+	
 	@Override
-	public List<Rental> getRentalAssets(String assetCat, String assetSubCat, String assetBrand, String assetModel,
-			String userId) {
-		List<CustomerAssets> assets;
+	public Page<Rental> getRentalAssets(String assetCat, String assetSubCat, String assetBrand, String assetModel,
+	                                    String userId, int page, int size) {
+	    Pageable pageable = PageRequest.of(page, size, Sort.by("assetId").descending());
 
-		if (assetBrand != null && !assetBrand.isEmpty() && assetModel != null && !assetModel.isEmpty()) {
-			assets = assetRepo.findByAssetCatAndAssetSubCatAndAssetBrandAndAssetModelAndUserId(assetCat, assetSubCat,
-					assetBrand, assetModel, userId);
-		} else if (assetBrand != null && !assetBrand.isEmpty()) {
-			assets = assetRepo.findByAssetCatAndAssetSubCatAndAssetBrandAndUserId(assetCat, assetSubCat, assetBrand,
-					userId);
-		} else if (assetModel != null && !assetModel.isEmpty()) {
-			assets = assetRepo.findByAssetCatAndAssetSubCatAndAssetModelAndUserId(assetCat, assetSubCat, assetModel,
-					userId);
-		} else {
-			assets = assetRepo.findByAssetCatAndAssetSubCatAndUserId(assetCat, assetSubCat, userId);
-		}
-		List<String> assetIds = assets.stream()
-				.map(CustomerAssets::getAssetId)
-				.toList();
-		return rentRepo.findByAssetIdIn(assetIds);
+	    List<CustomerAssets> assets;
+	    if (assetBrand != null && !assetBrand.isEmpty() && assetModel != null && !assetModel.isEmpty()) {
+	        assets = assetRepo.findByAssetCatAndAssetSubCatAndAssetBrandAndAssetModelAndUserId(
+	                assetCat, assetSubCat, assetBrand, assetModel, userId);
+	    } else if (assetBrand != null && !assetBrand.isEmpty()) {
+	        assets = assetRepo.findByAssetCatAndAssetSubCatAndAssetBrandAndUserId(
+	                assetCat, assetSubCat, assetBrand, userId);
+	    } else if (assetModel != null && !assetModel.isEmpty()) {
+	        assets = assetRepo.findByAssetCatAndAssetSubCatAndAssetModelAndUserId(
+	                assetCat, assetSubCat, assetModel, userId);
+	    } else {
+	        assets = assetRepo.findByAssetCatAndAssetSubCatAndUserId(assetCat, assetSubCat, userId);
+	    }
+
+	    List<String> assetIds = assets.stream()
+	            .map(CustomerAssets::getAssetId)
+	            .toList();
+
+	    return rentRepo.findByAssetIdIn(assetIds, pageable);
 	}
+
 
 	@Override
 	public Rental updateRentalAssetCharge(String assetId, String userId, String isAvailRent, String amountPerDay,

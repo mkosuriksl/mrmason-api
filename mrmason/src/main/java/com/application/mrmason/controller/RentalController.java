@@ -124,29 +124,62 @@ public class RentalController {
 		}
 	}
 
+//	@GetMapping("/getRentalAssets")
+//	public ResponseEntity<ResponseRentalDto> getRentalAssets(
+//			@RequestParam String assetCat,
+//			@RequestParam String assetSubCat,
+//			@RequestParam(required = false) String assetBrand,
+//			@RequestParam(required = false) String assetModel,
+//			@RequestParam String userId) {
+//
+//		List<Rental> rentalAssets = rentService.getRentalAssets(assetCat, assetSubCat, assetBrand, assetModel, userId);
+//
+//		ResponseRentalDto response = new ResponseRentalDto();
+//
+//		if (rentalAssets.isEmpty()) {
+//			response.setMessage("No assets found for the given criteria.");
+//			response.setStatus(false);
+//			return new ResponseEntity<>(response, HttpStatus.OK);
+//		}
+//
+//		response.setMessage("Rental AssetIds retrieved successfully.");
+//		response.setStatus(true);
+//		response.setRentalData(rentalAssets);
+//		return new ResponseEntity<>(response, HttpStatus.OK);
+//	}
+	
 	@GetMapping("/getRentalAssets")
 	public ResponseEntity<ResponseRentalDto> getRentalAssets(
-			@RequestParam String assetCat,
-			@RequestParam String assetSubCat,
-			@RequestParam(required = false) String assetBrand,
-			@RequestParam(required = false) String assetModel,
-			@RequestParam String userId) {
+	        @RequestParam String assetCat,
+	        @RequestParam String assetSubCat,
+	        @RequestParam(required = false) String assetBrand,
+	        @RequestParam(required = false) String assetModel,
+	        @RequestParam String userId,
+	        @RequestParam(defaultValue = "0") int page,
+	        @RequestParam(defaultValue = "10") int size) {
 
-		List<Rental> rentalAssets = rentService.getRentalAssets(assetCat, assetSubCat, assetBrand, assetModel, userId);
+	    ResponseRentalDto response = new ResponseRentalDto();
 
-		ResponseRentalDto response = new ResponseRentalDto();
+	    Page<Rental> rentalPage = rentService.getRentalAssets(assetCat, assetSubCat, assetBrand, assetModel, userId, page, size);
 
-		if (rentalAssets.isEmpty()) {
-			response.setMessage("No assets found for the given criteria.");
-			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.OK);
-		}
+	    if (rentalPage.isEmpty()) {
+	        response.setMessage("No assets found for the given criteria.");
+	        response.setStatus(false);
+	        response.setRentalData(List.of());
+	        return new ResponseEntity<>(response, HttpStatus.OK);
+	    }
 
-		response.setMessage("Rental AssetIds retrieved successfully.");
-		response.setStatus(true);
-		response.setRentalData(rentalAssets);
-		return new ResponseEntity<>(response, HttpStatus.OK);
+	    response.setMessage("Rental AssetIds retrieved successfully.");
+	    response.setStatus(true);
+	    response.setRentalData(rentalPage.getContent());
+	    response.setCurrentPage(rentalPage.getNumber());
+	    response.setPageSize(rentalPage.getSize());
+	    response.setTotalElements(rentalPage.getTotalElements());
+	    response.setTotalPages(rentalPage.getTotalPages());
+
+	    return new ResponseEntity<>(response, HttpStatus.OK);
 	}
+
 
 	@PutMapping("/updateAssetRentalCharge")
 	public ResponseEntity<ResponseRentalDto> updateAssetRentalCharge(

@@ -14,8 +14,8 @@ public interface RentalRepo extends JpaRepository<Rental, String>{
 	Rental findByAssetIdAndUserId(String assetId,String userId);
 	List<Rental> findByAssetIdOrUserId(String assetId,String userId);
 
-	List<Rental> findByAssetIdIn(List<String> assetIds);
-	
+//	List<Rental> findByAssetIdIn(List<String> assetIds);
+	Page<Rental> findByAssetIdIn(List<String> assetIds, Pageable pageable);
 	Page<Rental> findByAssetId(String assetId, Pageable pageable);
     Page<Rental> findByUserId(String userId, Pageable pageable);
     Page<Rental> findByAssetIdAndUserId(String assetId, String userId, Pageable pageable);

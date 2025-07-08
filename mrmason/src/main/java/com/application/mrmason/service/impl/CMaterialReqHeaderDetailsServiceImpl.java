@@ -6,20 +6,22 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.application.mrmason.dto.CMaterialReqHeaderDetailsDTO;
 import com.application.mrmason.dto.CMaterialReqHeaderDetailsResponseDTO;
 import com.application.mrmason.dto.CommonMaterialRequestDto;
 import com.application.mrmason.dto.ResponseCMaterialReqHeaderDetailsDto;
-
 import com.application.mrmason.entity.CMaterialReqHeaderDetailsEntity;
 import com.application.mrmason.entity.CMaterialRequestHeaderEntity;
 import com.application.mrmason.entity.CustomerRegistration;
@@ -30,6 +32,13 @@ import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.CMaterialReqHeaderDetailsService;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -50,6 +59,10 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
 
     @Autowired
     private UserDAO userDAO;
+    
+
+	@PersistenceContext
+	private EntityManager entityManager;
 
     @Transactional
     @Override
@@ -271,30 +284,76 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
         return mapToResponseDTO(updatedEntity);
     }
 
+//    @Override
+//    public List<CMaterialReqHeaderDetailsResponseDTO> getAllMaterialRequestHeaderDetails(
+//            String cMatRequestIdLineid, String cMatRequestId, String materialCategory, String brand, String itemName,
+//            String itemSize, Integer qty, LocalDate orderDate, String requestedBy, LocalDate updatedDate) {
+//
+//        try {
+//            List<CMaterialReqHeaderDetailsEntity> entities = detailsRepo.findMaterialRequestsByFilters(
+//                    cMatRequestIdLineid, cMatRequestId, materialCategory, brand, itemName, itemSize, qty, orderDate,
+//                    requestedBy,
+//                    updatedDate);
+//
+//            if (entities.isEmpty()) {
+//                log.warn("No material requests found for the given filters.");
+//                return new ArrayList<>();
+//            }
+//
+//            return entities.stream()
+//                    .map(this::mapToResponseDTO)
+//                    .collect(Collectors.toList());
+//        } catch (Exception e) {
+//            log.error("Error fetching material requests: {}", e.getMessage(), e);
+//            return new ArrayList<>();
+//        }
+//    }
+    
     @Override
-    public List<CMaterialReqHeaderDetailsResponseDTO> getAllMaterialRequestHeaderDetails(
+    public Page<CMaterialReqHeaderDetailsResponseDTO> getAllMaterialRequestHeaderDetails(
             String cMatRequestIdLineid, String cMatRequestId, String materialCategory, String brand, String itemName,
-            String itemSize, Integer qty, LocalDate orderDate, String requestedBy, LocalDate updatedDate) {
+            String itemSize, Integer qty, LocalDate orderDate, String requestedBy, LocalDate updatedDate,
+            int page, int size) {
 
-        try {
-            List<CMaterialReqHeaderDetailsEntity> entities = detailsRepo.findMaterialRequestsByFilters(
-                    cMatRequestIdLineid, cMatRequestId, materialCategory, brand, itemName, itemSize, qty, orderDate,
-                    requestedBy,
-                    updatedDate);
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<CMaterialReqHeaderDetailsEntity> query = cb.createQuery(CMaterialReqHeaderDetailsEntity.class);
+        Root<CMaterialReqHeaderDetailsEntity> root = query.from(CMaterialReqHeaderDetailsEntity.class);
 
-            if (entities.isEmpty()) {
-                log.warn("No material requests found for the given filters.");
-                return new ArrayList<>();
-            }
+        List<Predicate> predicates = new ArrayList<>();
 
-            return entities.stream()
-                    .map(this::mapToResponseDTO)
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            log.error("Error fetching material requests: {}", e.getMessage(), e);
-            return new ArrayList<>();
-        }
+        if (cMatRequestIdLineid != null) predicates.add(cb.equal(root.get("cMatRequestIdLineid"), cMatRequestIdLineid));
+        if (cMatRequestId != null) predicates.add(cb.equal(root.get("cMatRequestId"), cMatRequestId));
+        if (materialCategory != null) predicates.add(cb.equal(root.get("materialCategory"), materialCategory));
+        if (brand != null) predicates.add(cb.equal(root.get("brand"), brand));
+        if (itemName != null) predicates.add(cb.equal(root.get("itemName"), itemName));
+        if (itemSize != null) predicates.add(cb.equal(root.get("itemSize"), itemSize));
+        if (qty != null) predicates.add(cb.equal(root.get("qty"), qty));
+        if (orderDate != null) predicates.add(cb.equal(root.get("orderDate"), orderDate));
+        if (requestedBy != null) predicates.add(cb.equal(root.get("requestedBy"), requestedBy));
+        if (updatedDate != null) predicates.add(cb.equal(root.get("updatedDate"), updatedDate));
+
+        query.where(predicates.toArray(new Predicate[0]));
+        query.orderBy(cb.desc(root.get("orderDate"))); // optional sort
+
+        TypedQuery<CMaterialReqHeaderDetailsEntity> typedQuery = entityManager.createQuery(query);
+        typedQuery.setFirstResult(page * size);
+        typedQuery.setMaxResults(size);
+
+        List<CMaterialReqHeaderDetailsEntity> results = typedQuery.getResultList();
+
+        // Count query
+        CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+        Root<CMaterialReqHeaderDetailsEntity> countRoot = countQuery.from(CMaterialReqHeaderDetailsEntity.class);
+        countQuery.select(cb.count(countRoot)).where(predicates.toArray(new Predicate[0]));
+        Long totalCount = entityManager.createQuery(countQuery).getSingleResult();
+
+        List<CMaterialReqHeaderDetailsResponseDTO> dtoList = results.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(dtoList, PageRequest.of(page, size), totalCount);
     }
+
 
     private CMaterialReqHeaderDetailsResponseDTO mapToResponseDTO(CMaterialReqHeaderDetailsEntity entity) {
         CMaterialReqHeaderDetailsResponseDTO responseDTO = new CMaterialReqHeaderDetailsResponseDTO();

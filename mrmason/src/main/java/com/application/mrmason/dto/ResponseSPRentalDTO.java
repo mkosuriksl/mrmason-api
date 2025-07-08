@@ -14,5 +14,8 @@ public class ResponseSPRentalDTO {
 	private boolean status;
 	private ServicePersonRentalEntity addRental;
 	private List<RentalAssetResponseDTO> rentalData;
-
+	private int currentPage;
+	private int pageSize;
+	private long totalElements;
+	private int totalPages;
 }

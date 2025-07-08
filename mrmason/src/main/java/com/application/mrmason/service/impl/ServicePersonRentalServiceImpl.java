@@ -6,6 +6,10 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.dto.RentalAssetResponseDTO;
@@ -37,39 +41,77 @@ public class ServicePersonRentalServiceImpl implements ServicePersonRentalServic
 		return null;
 	}
 
+//	@Override
+//	public List<RentalAssetResponseDTO> getRentalReq(String userId, String assetId, String assetCat,
+//			String assetSubCat, String assetBrand,
+//			String assetModel, String availableLocation) {
+//
+//		log.info(">>Service Logger getRentalReq()");
+//
+//		List<ServicePersonAssetsEntity> assets = fetchAssets(userId, assetId, assetCat, assetSubCat, assetBrand,
+//				assetModel);
+//
+//		if (assets.isEmpty()) {
+//			log.info("No assets found for the given criteria.");
+//			return Collections.emptyList();
+//		}
+//
+//		List<String> assetIds = assets.stream()
+//				.map(ServicePersonAssetsEntity::getAssetId)
+//				.collect(Collectors.toList());
+//
+//		List<ServicePersonRentalEntity> rentals = spRentRepo.searchRentals(userId, assetId, availableLocation,
+//				assetIds);
+//
+//		return rentals.stream()
+//				.map(rental -> {
+//					ServicePersonAssetsEntity asset = assets.stream()
+//							.filter(a -> a.getAssetId().equals(rental.getAssetId()))
+//							.findFirst()
+//							.orElseThrow(
+//									() -> new RuntimeException("Asset not found for rental: " + rental.getAssetId()));
+//
+//					return buildRentalAssetResponseDTO(rental, asset);
+//				})
+//				.collect(Collectors.toList());
+//	}
+
 	@Override
-	public List<RentalAssetResponseDTO> getRentalReq(String userId, String assetId, String assetCat,
-			String assetSubCat, String assetBrand,
-			String assetModel, String availableLocation) {
+	public Page<RentalAssetResponseDTO> getRentalReq(String userId, String assetId, String assetCat,
+	                                                 String assetSubCat, String assetBrand,
+	                                                 String assetModel, String availableLocation,
+	                                                 int page, int size) {
 
-		log.info(">>Service Logger getRentalReq()");
+	    Pageable pageable = PageRequest.of(page, size);
 
-		List<ServicePersonAssetsEntity> assets = fetchAssets(userId, assetId, assetCat, assetSubCat, assetBrand,
-				assetModel);
+	    List<ServicePersonAssetsEntity> assets = fetchAssets(userId, assetId, assetCat, assetSubCat, assetBrand, assetModel);
+	    if (assets.isEmpty()) {
+	        return new PageImpl<>(Collections.emptyList(), pageable, 0);
+	    }
 
-		if (assets.isEmpty()) {
-			log.info("No assets found for the given criteria.");
-			return Collections.emptyList();
-		}
+	    List<String> assetIds = assets.stream()
+	            .map(ServicePersonAssetsEntity::getAssetId)
+	            .collect(Collectors.toList());
 
-		List<String> assetIds = assets.stream()
-				.map(ServicePersonAssetsEntity::getAssetId)
-				.collect(Collectors.toList());
+	    List<ServicePersonRentalEntity> rentals = spRentRepo.searchRentals(userId, assetId, availableLocation, assetIds);
 
-		List<ServicePersonRentalEntity> rentals = spRentRepo.searchRentals(userId, assetId, availableLocation,
-				assetIds);
+	    List<RentalAssetResponseDTO> fullList = rentals.stream()
+	            .map(rental -> {
+	                ServicePersonAssetsEntity asset = assets.stream()
+	                        .filter(a -> a.getAssetId().equals(rental.getAssetId()))
+	                        .findFirst()
+	                        .orElseThrow(() -> new RuntimeException("Asset not found: " + rental.getAssetId()));
 
-		return rentals.stream()
-				.map(rental -> {
-					ServicePersonAssetsEntity asset = assets.stream()
-							.filter(a -> a.getAssetId().equals(rental.getAssetId()))
-							.findFirst()
-							.orElseThrow(
-									() -> new RuntimeException("Asset not found for rental: " + rental.getAssetId()));
+	                return buildRentalAssetResponseDTO(rental, asset);
+	            })
+	            .collect(Collectors.toList());
 
-					return buildRentalAssetResponseDTO(rental, asset);
-				})
-				.collect(Collectors.toList());
+	    // Manual pagination
+	    int start = Math.min((int) pageable.getOffset(), fullList.size());
+	    int end = Math.min((start + pageable.getPageSize()), fullList.size());
+	    List<RentalAssetResponseDTO> pagedList = fullList.subList(start, end);
+
+	    return new PageImpl<>(pagedList, pageable, fullList.size());
 	}
 
 	@Override

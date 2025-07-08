@@ -10,5 +10,9 @@ public class ResponseListServiceRequestDto {
 	private boolean status;
 //	private List<ServiceRequest> data;
 	List<ServiceRequestWithCustomerDTO> data;
+	private int currentPage;
+    private int pageSize;
+    private long totalElement;
+    private int totalPages;
 
 }

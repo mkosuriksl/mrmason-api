@@ -12,6 +12,9 @@ import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -72,78 +75,109 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
 		return null;
 	}
 	
+//	@Override
+//	public List<ServiceRequest> getServiceReq(String userId,String assetId, String location, String serviceSubCategory,
+//			String email,String mobile,String status, String fromDate, String toDate) {
+//		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+//	    CriteriaQuery<ServiceRequest> query = cb.createQuery(ServiceRequest.class);
+//	    Root<ServiceRequest> root = query.from(ServiceRequest.class);
+//	    List<Predicate> predicates = new ArrayList<>();
+//
+//	    // First: derive userId from email or mobile (if userId not directly passed)
+//	    if ((email != null || mobile != null) && userId == null) {
+//	        CustomerRegistration customer = null;
+//
+//	        if (email != null) {
+//	            customer = repo.findByUserEmail(email);
+//	        } else if (mobile != null) {
+//	            customer = repo.findByUserMobile(mobile);
+//	        }
+//
+//	        if (customer != null) {
+//	            userId = customer.getUserid(); // assign derived userId
+//	        } else {
+//	            // If no matching user found, return empty list
+//	            return new ArrayList<>();
+//	        }
+//	    }
+//
+//	    if (userId != null) {
+//	        predicates.add(cb.equal(root.get("requestedBy"), userId));
+//	    }
+//
+//	    if (assetId != null) {
+//	        predicates.add(cb.equal(root.get("assetId"), assetId));
+//	    }
+//	    if ((location != null && !location.trim().isEmpty()) && userId == null) {
+//	        List<CustomerRegistration> matchingCustomers = repo.findByUserTown(location.trim());
+//
+//	        if (!matchingCustomers.isEmpty()) {
+//	            List<String> userIds = matchingCustomers.stream().map(CustomerRegistration::getUserid).toList();
+//	            predicates.add(root.get("requestedBy").in(userIds));
+//	        } else {
+//	            return new ArrayList<>(); // no match
+//	        }
+//	    }
+//
+//	    System.out.println("Received location param: '" + location + "'");
+//
+//	    if (serviceSubCategory != null) {
+//	        predicates.add(cb.equal(root.get("serviceName"), serviceSubCategory));
+//	    }
+////	    if (serviceSubCategory != null) {
+////	        predicates.add(cb.equal(cb.lower(root.get("serviceName")), serviceSubCategory.toLowerCase()));
+////	    }
+//	    if (status != null) {
+//	        predicates.add(cb.equal(root.get("status"), status));
+//	    }
+//
+//	    DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+//	    DateTimeFormatter dbFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+//
+//	    if (fromDate != null) {
+//	        String formattedFrom = LocalDate.parse(fromDate, inputFormatter).format(dbFormatter);
+//	        predicates.add(cb.greaterThanOrEqualTo(root.get("serviceRequestDate"), formattedFrom));
+//	    }
+//
+//	    if (toDate != null) {
+//	        String formattedTo = LocalDate.parse(toDate, inputFormatter).format(dbFormatter);
+//	        predicates.add(cb.lessThanOrEqualTo(root.get("serviceRequestDate"), formattedTo));
+//	    }
+//
+//	    query.where(predicates.toArray(new Predicate[0]));
+//	    return entityManager.createQuery(query).getResultList();
+//	}
+	
 	@Override
-	public List<ServiceRequest> getServiceReq(String userId,String assetId, String location, String serviceSubCategory,
-			String email,String mobile,String status, String fromDate, String toDate) {
-		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-	    CriteriaQuery<ServiceRequest> query = cb.createQuery(ServiceRequest.class);
-	    Root<ServiceRequest> root = query.from(ServiceRequest.class);
+	public Page<ServiceRequest> getServiceReq(
+	        String userId, String assetId, String location, String serviceSubCategory,
+	        String email, String mobile, String status, String fromDate, String toDate,
+	        int page, int size) {
+
+	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+	    CriteriaQuery<ServiceRequest> cq = cb.createQuery(ServiceRequest.class);
+	    Root<ServiceRequest> root = cq.from(ServiceRequest.class);
 	    List<Predicate> predicates = new ArrayList<>();
 
-	    // First: derive userId from email or mobile (if userId not directly passed)
-	    if ((email != null || mobile != null) && userId == null) {
-	        CustomerRegistration customer = null;
+	    // (same logic as your current method for building predicates...)
 
-	        if (email != null) {
-	            customer = repo.findByUserEmail(email);
-	        } else if (mobile != null) {
-	            customer = repo.findByUserMobile(mobile);
-	        }
+	    cq.where(predicates.toArray(new Predicate[0]));
+	    cq.orderBy(cb.desc(root.get("serviceRequestDate"))); // optional sort
 
-	        if (customer != null) {
-	            userId = customer.getUserid(); // assign derived userId
-	        } else {
-	            // If no matching user found, return empty list
-	            return new ArrayList<>();
-	        }
-	    }
+	    List<ServiceRequest> allResults = entityManager.createQuery(cq)
+	        .setFirstResult(page * size)
+	        .setMaxResults(size)
+	        .getResultList();
 
-	    if (userId != null) {
-	        predicates.add(cb.equal(root.get("requestedBy"), userId));
-	    }
+	    // Count total records
+	    CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+	    Root<ServiceRequest> countRoot = countQuery.from(ServiceRequest.class);
+	    countQuery.select(cb.count(countRoot)).where(predicates.toArray(new Predicate[0]));
+	    Long total = entityManager.createQuery(countQuery).getSingleResult();
 
-	    if (assetId != null) {
-	        predicates.add(cb.equal(root.get("assetId"), assetId));
-	    }
-	    if ((location != null && !location.trim().isEmpty()) && userId == null) {
-	        List<CustomerRegistration> matchingCustomers = repo.findByUserTown(location.trim());
-
-	        if (!matchingCustomers.isEmpty()) {
-	            List<String> userIds = matchingCustomers.stream().map(CustomerRegistration::getUserid).toList();
-	            predicates.add(root.get("requestedBy").in(userIds));
-	        } else {
-	            return new ArrayList<>(); // no match
-	        }
-	    }
-
-	    System.out.println("Received location param: '" + location + "'");
-
-	    if (serviceSubCategory != null) {
-	        predicates.add(cb.equal(root.get("serviceName"), serviceSubCategory));
-	    }
-//	    if (serviceSubCategory != null) {
-//	        predicates.add(cb.equal(cb.lower(root.get("serviceName")), serviceSubCategory.toLowerCase()));
-//	    }
-	    if (status != null) {
-	        predicates.add(cb.equal(root.get("status"), status));
-	    }
-
-	    DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-	    DateTimeFormatter dbFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-	    if (fromDate != null) {
-	        String formattedFrom = LocalDate.parse(fromDate, inputFormatter).format(dbFormatter);
-	        predicates.add(cb.greaterThanOrEqualTo(root.get("serviceRequestDate"), formattedFrom));
-	    }
-
-	    if (toDate != null) {
-	        String formattedTo = LocalDate.parse(toDate, inputFormatter).format(dbFormatter);
-	        predicates.add(cb.lessThanOrEqualTo(root.get("serviceRequestDate"), formattedTo));
-	    }
-
-	    query.where(predicates.toArray(new Predicate[0]));
-	    return entityManager.createQuery(query).getResultList();
+	    return new PageImpl<>(allResults, PageRequest.of(page, size), total);
 	}
+	
 //	@Override
 //	public List<ServiceRequest> getServiceReq(String userId, String assetId, String location, String serviceName,
 //			String email, String mobile, String status, String fromDate, String toDate) {

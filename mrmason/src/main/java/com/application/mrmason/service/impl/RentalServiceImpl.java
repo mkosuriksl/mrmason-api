@@ -4,6 +4,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import com.application.mrmason.entity.CustomerAssets;
 import com.application.mrmason.entity.Rental;
@@ -27,15 +31,31 @@ public class RentalServiceImpl implements RentalService {
 		return null;
 	}
 
+//	@Override
+//	public List<Rental> getRentalReq(String assetId, String userId) {
+//		Optional<List<Rental>> rentUser = Optional.of(rentRepo.findByAssetIdOrUserId(assetId, userId));
+//		if (rentUser.isPresent()) {
+//
+//			return rentUser.get();
+//		}
+//		return null;
+//	}
+	
 	@Override
-	public List<Rental> getRentalReq(String assetId, String userId) {
-		Optional<List<Rental>> rentUser = Optional.of(rentRepo.findByAssetIdOrUserId(assetId, userId));
-		if (rentUser.isPresent()) {
+	public Page<Rental> getRentalReq(String assetId, String userId, int page, int size) {
+	    Pageable pageable = PageRequest.of(page, size, Sort.by("userId").descending());
 
-			return rentUser.get();
-		}
-		return null;
+	    if (assetId != null && userId != null) {
+	        return rentRepo.findByAssetIdAndUserId(assetId, userId, pageable);
+	    } else if (assetId != null) {
+	        return rentRepo.findByAssetId(assetId, pageable);
+	    } else if (userId != null) {
+	        return rentRepo.findByUserId(userId, pageable);
+	    } else {
+	        return rentRepo.findAll(pageable); // fallback to all data
+	    }
 	}
+
 
 	@Override
 	public Rental updateRentalReq(Rental rent) {

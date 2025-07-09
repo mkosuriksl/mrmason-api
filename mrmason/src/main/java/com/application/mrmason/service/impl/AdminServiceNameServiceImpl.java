@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.dto.AdminServiceNameDto;
@@ -25,15 +27,27 @@ public class AdminServiceNameServiceImpl implements AdminServiceNameService{
 		return null;
 
 	}
+//	@Override
+//	public List<AdminServiceName> getAdminServiceDetails(String serviceId,String serviceName,String serviceSubCat) {
+//
+//		if (serviceId != null || serviceName != null || serviceSubCat != null) {
+//			return serviceRepo.findByServiceIdOrServiceNameOrServiceSubCategoryOrderByAddedDateDesc(serviceId, serviceName, serviceSubCat);
+//		} else {
+//			return null;
+//		}
+//	}
+	
 	@Override
-	public List<AdminServiceName> getAdminServiceDetails(String serviceId,String serviceName,String serviceSubCat) {
-
-		if (serviceId != null || serviceName != null || serviceSubCat != null) {
-			return serviceRepo.findByServiceIdOrServiceNameOrServiceSubCategoryOrderByAddedDateDesc(serviceId, serviceName, serviceSubCat);
-		} else {
-			return null;
-		}
+	public Page<AdminServiceName> getAdminServiceDetails(String serviceId, String serviceName, String serviceSubCat, Pageable pageable) {
+	    if (serviceId != null || serviceName != null || serviceSubCat != null) {
+	        return serviceRepo.findByServiceIdOrServiceNameOrServiceSubCategoryOrderByAddedDateDesc(
+	            serviceId, serviceName, serviceSubCat, pageable
+	        );
+	    } else {
+	        return Page.empty();
+	    }
 	}
+
 
 	@Override
 	public AdminServiceNameDto updateAdminServiceDetails(AdminServiceName service) {

@@ -3,6 +3,9 @@ package com.application.mrmason.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -76,23 +79,28 @@ public class AdminSpQualificationController {
 	@GetMapping("/getAdminSpQualification")
 	public ResponseEntity<?> getAdminQualification(@RequestParam(required = false) String courseId,
 			@RequestParam(required = false) String educationId, @RequestParam(required = false) String name,
-			@RequestParam(required = false) String branchId, @RequestParam(required = false) String branchName) {
+			@RequestParam(required = false) String branchId, @RequestParam(required = false) String branchName,
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
 
 		ResponseAdminSpQualiDto2 response = new ResponseAdminSpQualiDto2();
 
 		try {
-
-			List<AdminSpQualification> get = service.getQualification(courseId, educationId, name, branchId,
-					branchName);
-			if (get != null && !get.isEmpty()) {
+			Pageable pageable = PageRequest.of(page, size);
+			Page<AdminSpQualification> adminSpQualification = service.getQualification(courseId, educationId, name, branchId,
+					branchName,pageable);
+			if (adminSpQualification != null && !adminSpQualification.isEmpty()) {
 				response.setMessage("Admin education & qualification details");
 				response.setStatus(true);
-				response.setGetData(get);
+				response.setGetData(adminSpQualification.getContent());
+				response.setCurrentPage(adminSpQualification.getNumber());
+				response.setPageSize(adminSpQualification.getSize());
+				response.setTotalElements(adminSpQualification.getTotalElements());
+				response.setTotalPages(adminSpQualification.getTotalPages());
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			} else {
 				response.setMessage("No details found for given parameters/check your parameters");
 				response.setStatus(false);
-				response.setGetData(get);
+				response.setGetData(adminSpQualification.getContent());
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 		} catch (Exception e) {

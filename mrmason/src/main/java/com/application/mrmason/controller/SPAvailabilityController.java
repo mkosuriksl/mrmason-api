@@ -1,8 +1,10 @@
 package com.application.mrmason.controller;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -51,28 +53,63 @@ public class SPAvailabilityController {
 		
 	}
 
+//	@GetMapping("/sp-get-update-availability")
+//	public ResponseEntity<?> getAddress(@RequestParam String bodSeqNo) {
+//		
+//		try {
+//			List<SPAvailability> availability = spAvailableService.getAvailability(bodSeqNo);
+//			if (availability==null) {
+//				response.setMessage("No data found for the given details.!");
+//				response.setStatus(true);
+//				response.setGetData(availability);
+//				return new ResponseEntity<>(response, HttpStatus.OK);
+//				
+//			} else {
+//				response.setMessage("Availability details.");
+//				response.setGetData(availability);
+//				response.setStatus(true);
+//				return new ResponseEntity<>(response, HttpStatus.OK);
+//			}
+//		} catch (Exception e) {
+//			response.setMessage(e.getMessage());
+//			response.setStatus(false);
+//			return new ResponseEntity<>(response, HttpStatus.OK);
+//		}
+//
+//	}
+	
 	@GetMapping("/sp-get-update-availability")
-	public ResponseEntity<?> getAddress(@RequestParam String bodSeqNo) {
-		
-		try {
-			List<SPAvailability> availability = spAvailableService.getAvailability(bodSeqNo);
-			if (availability==null) {
-				response.setMessage("No data found for the given details.!");
-				response.setStatus(true);
-				response.setGetData(availability);
-				return new ResponseEntity<>(response, HttpStatus.OK);
-				
-			} else {
-				response.setMessage("Availability details.");
-				response.setGetData(availability);
-				response.setStatus(true);
-				return new ResponseEntity<>(response, HttpStatus.OK);
-			}
-		} catch (Exception e) {
-			response.setMessage(e.getMessage());
-			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.OK);
-		}
+	public ResponseEntity<?> getAddress(
+	        @RequestParam String bodSeqNo,
+	        @RequestParam(defaultValue = "0") int page,
+	        @RequestParam(defaultValue = "10") int size) {
 
+	    try {
+	        Page<SPAvailability> availabilityPage = spAvailableService.getAvailability(bodSeqNo, page, size);
+
+	        if (availabilityPage.isEmpty()) {
+	            response.setMessage("No data found for the given details.!");
+	            response.setStatus(true);
+	            response.setGetData(Collections.emptyList());
+	        } else {
+	            response.setMessage("Availability details.");
+	            response.setStatus(true);
+	            response.setGetData(availabilityPage.getContent());
+	        }
+
+	        // Optional: include pagination metadata
+	        response.setCurrentPage(page);
+	        response.setPageSize(size);
+	        response.setTotalElements(availabilityPage.getTotalElements());
+	        response.setTotalPages(availabilityPage.getTotalPages());
+
+	        return new ResponseEntity<>(response, HttpStatus.OK);
+
+	    } catch (Exception e) {
+	        response.setMessage(e.getMessage());
+	        response.setStatus(false);
+	        return new ResponseEntity<>(response, HttpStatus.OK);
+	    }
 	}
+
 }

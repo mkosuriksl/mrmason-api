@@ -11,4 +11,8 @@ public class ResponseListAdminServiceDto {
 	private String message;
 	private boolean status;
 	private List<AdminServiceName> data;
+	private int currentPage;
+    private int pageSize;
+    private long totalElements;
+    private int totalPages;
 }

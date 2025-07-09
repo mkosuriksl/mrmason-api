@@ -6,6 +6,9 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import com.application.mrmason.entity.AdminServiceCharges;
 import com.application.mrmason.entity.User;
@@ -16,6 +19,7 @@ import com.application.mrmason.service.AdminServiceChargesService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
@@ -96,39 +100,83 @@ public class AdminServiceChargesServiceImpl implements AdminServiceChargesServic
     }
 
 	
-	@Override
-	public List<AdminServiceCharges> getAdminServiceCharges(String serviceChargeKey, String serviceId, String location,
-			String brand, String model,String updatedBy,String subcategory) {
-		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		CriteriaQuery<AdminServiceCharges> query = cb.createQuery(AdminServiceCharges.class);
-		Root<AdminServiceCharges> root = query.from(AdminServiceCharges.class);
-		List<Predicate> predicates = new ArrayList<>();
+//	@Override
+//	public List<AdminServiceCharges> getAdminServiceCharges(String serviceChargeKey, String serviceId, String location,
+//			String brand, String model,String updatedBy,String subcategory) {
+//		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+//		CriteriaQuery<AdminServiceCharges> query = cb.createQuery(AdminServiceCharges.class);
+//		Root<AdminServiceCharges> root = query.from(AdminServiceCharges.class);
+//		List<Predicate> predicates = new ArrayList<>();
+//
+//		if (serviceChargeKey != null) {
+//			predicates.add(cb.equal(root.get("serviceChargeKey"), serviceChargeKey));
+//		}
+//		if (serviceId != null) {
+//			predicates.add(cb.equal(root.get("serviceId"), serviceId));
+//		}
+//		if (location != null) {
+//			predicates.add(cb.equal(root.get("location"), location));
+//		}
+//		if (brand != null) {
+//			predicates.add(cb.equal(root.get("brand"), brand));
+//		}
+//		if (model != null) {
+//			predicates.add(cb.equal(root.get("model"), model));
+//		}
+//		if (updatedBy != null) {
+//			predicates.add(cb.equal(root.get("updatedBy"), updatedBy));
+//		}
+//		if (subcategory != null) {
+//			predicates.add(cb.equal(root.get("subcategory"), subcategory));
+//		}
+//		query.where(predicates.toArray(new Predicate[0]));
+//
+//		return entityManager.createQuery(query).getResultList();
+//	}
+    
+    @Override
+    public Page<AdminServiceCharges> getAdminServiceCharges(String serviceChargeKey, String serviceId,
+            String location, String brand, String model, String updatedBy, String subcategory, Pageable pageable) {
 
-		if (serviceChargeKey != null) {
-			predicates.add(cb.equal(root.get("serviceChargeKey"), serviceChargeKey));
-		}
-		if (serviceId != null) {
-			predicates.add(cb.equal(root.get("serviceId"), serviceId));
-		}
-		if (location != null) {
-			predicates.add(cb.equal(root.get("location"), location));
-		}
-		if (brand != null) {
-			predicates.add(cb.equal(root.get("brand"), brand));
-		}
-		if (model != null) {
-			predicates.add(cb.equal(root.get("model"), model));
-		}
-		if (updatedBy != null) {
-			predicates.add(cb.equal(root.get("updatedBy"), updatedBy));
-		}
-		if (subcategory != null) {
-			predicates.add(cb.equal(root.get("subcategory"), subcategory));
-		}
-		query.where(predicates.toArray(new Predicate[0]));
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
-		return entityManager.createQuery(query).getResultList();
-	}
+        // MAIN QUERY
+        CriteriaQuery<AdminServiceCharges> query = cb.createQuery(AdminServiceCharges.class);
+        Root<AdminServiceCharges> root = query.from(AdminServiceCharges.class);
+        List<Predicate> predicates = new ArrayList<>();
+
+        if (serviceChargeKey != null) predicates.add(cb.equal(root.get("serviceChargeKey"), serviceChargeKey));
+        if (serviceId != null) predicates.add(cb.equal(root.get("serviceId"), serviceId));
+        if (location != null) predicates.add(cb.equal(root.get("location"), location));
+        if (brand != null) predicates.add(cb.equal(root.get("brand"), brand));
+        if (model != null) predicates.add(cb.equal(root.get("model"), model));
+        if (updatedBy != null) predicates.add(cb.equal(root.get("updatedBy"), updatedBy));
+        if (subcategory != null) predicates.add(cb.equal(root.get("subcategory"), subcategory));
+
+        query.where(cb.and(predicates.toArray(new Predicate[0])));
+        TypedQuery<AdminServiceCharges> typedQuery = entityManager.createQuery(query);
+        typedQuery.setFirstResult((int) pageable.getOffset());
+        typedQuery.setMaxResults(pageable.getPageSize());
+
+        // COUNT QUERY — new root & new predicates list
+        CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+        Root<AdminServiceCharges> countRoot = countQuery.from(AdminServiceCharges.class);
+        List<Predicate> countPredicates = new ArrayList<>();
+
+        if (serviceChargeKey != null) countPredicates.add(cb.equal(countRoot.get("serviceChargeKey"), serviceChargeKey));
+        if (serviceId != null) countPredicates.add(cb.equal(countRoot.get("serviceId"), serviceId));
+        if (location != null) countPredicates.add(cb.equal(countRoot.get("location"), location));
+        if (brand != null) countPredicates.add(cb.equal(countRoot.get("brand"), brand));
+        if (model != null) countPredicates.add(cb.equal(countRoot.get("model"), model));
+        if (updatedBy != null) countPredicates.add(cb.equal(countRoot.get("updatedBy"), updatedBy));
+        if (subcategory != null) countPredicates.add(cb.equal(countRoot.get("subcategory"), subcategory));
+
+        countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
+        Long total = entityManager.createQuery(countQuery).getSingleResult();
+
+        return new PageImpl<>(typedQuery.getResultList(), pageable, total);
+    }
+
 
 	@Override
 	public AdminServiceCharges updateCharges(AdminServiceCharges charges) {

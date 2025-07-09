@@ -4,10 +4,15 @@ import java.util.Optional;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.application.mrmason.dto.AdminDetailsDto;
 import com.application.mrmason.dto.ResponceAdminDetailsDto;
+import com.application.mrmason.entity.AdminAsset;
 import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.repository.AdminDetailsRepo;
@@ -65,26 +70,37 @@ public class AdminDetailsServiceImpl implements AdminDetailsService {
 		return null;
 	}
 
+//	@Override
+//	public AdminDetailsDto getAdminDetails(String email, String mobile) {
+//
+//		Optional<AdminDetails> user = Optional.ofNullable(adminRepo.findByEmailOrMobile(email, mobile));
+//		AdminDetails adminDetails = user.get();
+//		if (user.isPresent()) {
+//			AdminDetailsDto adminDto = new AdminDetailsDto();
+////			admin.setId(adminDetails.getId());
+////			admin.setAdminName(adminDetails.getAdminName());
+////			admin.setAdminType(String.valueOf(adminDetails.getUserType()));
+////			admin.setEmail(adminDetails.getEmail());
+////			admin.setMobile(adminDetails.getMobile());
+////			admin.setStatus(adminDetails.getStatus());
+////			admin.setRegDate(adminDetails.getRegDate());
+//			AdminDetailsDto admin = model.map(adminDetails, adminDto.getClass());
+//			return admin;
+//		}
+//
+//		return null;
+//	}
 	@Override
-	public AdminDetailsDto getAdminDetails(String email, String mobile) {
+	public Page<AdminAsset> getAdminDetails(String email, String mobile, int pageNo, int pageSize) {
+	    Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by("regDate").descending());
 
-		Optional<AdminDetails> user = Optional.ofNullable(adminRepo.findByEmailOrMobile(email, mobile));
-		AdminDetails adminDetails = user.get();
-		if (user.isPresent()) {
-			AdminDetailsDto adminDto = new AdminDetailsDto();
-//			admin.setId(adminDetails.getId());
-//			admin.setAdminName(adminDetails.getAdminName());
-//			admin.setAdminType(String.valueOf(adminDetails.getUserType()));
-//			admin.setEmail(adminDetails.getEmail());
-//			admin.setMobile(adminDetails.getMobile());
-//			admin.setStatus(adminDetails.getStatus());
-//			admin.setRegDate(adminDetails.getRegDate());
-			AdminDetailsDto admin = model.map(adminDetails, adminDto.getClass());
-			return admin;
-		}
+	    Page<AdminDetails> page = adminRepo.findByEmailOrMobile(
+	        email != null ? email : "", mobile != null ? mobile : "", pageable
+	    );
 
-		return null;
+	    return page.map(admin -> model.map(admin, AdminAsset.class));
 	}
+
 
 	@Override
 	public String updateAdminData(AdminDetails admin) {

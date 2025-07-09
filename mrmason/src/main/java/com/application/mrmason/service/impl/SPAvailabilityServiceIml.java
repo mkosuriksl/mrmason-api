@@ -3,6 +3,9 @@ package com.application.mrmason.service.impl;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.entity.SPAvailability;
@@ -34,7 +37,7 @@ public class SPAvailabilityServiceIml {
 
 	}
 
-	public List<SPAvailability> getAvailability(String bodSeqNo) {
+	public List<SPAvailability> getAvailabilitys(String bodSeqNo) {
 		Optional<User> userExists = userDAO.findById(bodSeqNo);
 
 		if (userExists.isPresent()) {
@@ -49,5 +52,16 @@ public class SPAvailabilityServiceIml {
 		}
 		return null;
 	}
+	
+	public Page<SPAvailability> getAvailability(String bodSeqNo, int page, int size) {
+	    Optional<User> userExists = userDAO.findById(bodSeqNo);
+
+	    if (userExists.isPresent()) {
+	        PageRequest pageable = PageRequest.of(page, size, Sort.by("id").descending());
+	        return availabilityReo.findByBodSeqNo(userExists.get().getBodSeqNo(), pageable);
+	    }
+	    return Page.empty();
+	}
+
 
 }

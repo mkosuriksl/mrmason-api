@@ -13,4 +13,8 @@ public class ResponseRentalDto {
 	private boolean status;
 	private Rental addRental; 
 	private List<Rental> rentalData;
+	private int currentPage;
+    private int pageSize;
+    private long totalElements;
+    private int totalPages;
 }

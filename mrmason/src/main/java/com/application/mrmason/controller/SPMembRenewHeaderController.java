@@ -1,6 +1,7 @@
 package com.application.mrmason.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -38,16 +39,40 @@ public class SPMembRenewHeaderController {
         return ResponseEntity.ok(new ResponseSPMembRenewHeader<>("Order updated successfully", "SUCCESS", responseDTO));
     }
 
+//    @GetMapping("/get-sp-store-memb-renewal-headers")
+//    public ResponseEntity<ResponseSPMembRenewHeader<List<SPMembRenewHeaderResponseDTO>>> getAllMembershipOrders(
+//            String membershipOrderId, String orderPlacedBy) {
+//        log.info("Fetching all membership orders");
+//        List<SPMembRenewHeaderResponseDTO> responseDTOList = service.getAllMembershipOrders(membershipOrderId,
+//                orderPlacedBy);
+//        return ResponseEntity
+//                .ok(new ResponseSPMembRenewHeader<>("Orders retrieved successfully", "SUCCESS", responseDTOList));
+//    }
+
     @GetMapping("/get-sp-store-memb-renewal-headers")
     public ResponseEntity<ResponseSPMembRenewHeader<List<SPMembRenewHeaderResponseDTO>>> getAllMembershipOrders(
-            String membershipOrderId, String orderPlacedBy) {
+            @RequestParam(required = false) String membershipOrderId,
+            @RequestParam(required = false) String orderPlacedBy,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
         log.info("Fetching all membership orders");
-        List<SPMembRenewHeaderResponseDTO> responseDTOList = service.getAllMembershipOrders(membershipOrderId,
-                orderPlacedBy);
-        return ResponseEntity
-                .ok(new ResponseSPMembRenewHeader<>("Orders retrieved successfully", "SUCCESS", responseDTOList));
+
+        Page<SPMembRenewHeaderResponseDTO> pagedResult = service.getAllMembershipOrders(
+                membershipOrderId, orderPlacedBy, page, size);
+
+        ResponseSPMembRenewHeader<List<SPMembRenewHeaderResponseDTO>> response =
+                new ResponseSPMembRenewHeader<>("Orders retrieved successfully", "SUCCESS", pagedResult.getContent());
+
+        // Optional: include pagination metadata
+        response.setCurrentPage(pagedResult.getNumber());
+        response.setTotalPages(pagedResult.getTotalPages());
+        response.setTotalElements(pagedResult.getTotalElements());
+
+        return ResponseEntity.ok(response);
     }
 
+    
     @DeleteMapping("/del-sp-store-memb-renewal-header")
     public ResponseEntity<ResponseSPMembRenewHeader<Void>> deleteMembershipOrder(
             @RequestParam String membershipOrderId) {

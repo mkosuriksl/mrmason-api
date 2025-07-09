@@ -14,7 +14,8 @@ public class ResponseServiceReportDto {
 	Userdto regData;
 	List<AddServices> servData;
 	List<SPAvailability> availData;
-	 
-	  
-}
+	private int currentPage;
+	private int totalPages;
+	private long totalItems;
 
+}

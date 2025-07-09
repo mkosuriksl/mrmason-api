@@ -1,9 +1,12 @@
 package com.application.mrmason.controller;
 
 import java.nio.file.AccessDeniedException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,15 +46,36 @@ public class SPPopTasksManagemntController {
         return ResponseEntity.ok(response);
     }
     
+//    @GetMapping("/get-pop-tasks-measureNames")
+//	public ResponseEntity<List<TaskResponseDto>> getTaskDetails(
+//	        @RequestParam(required = false) String serviceCategory,
+//	        @RequestParam(required = false) String taskId,
+//	        @RequestParam(required = false) String taskName,
+//	        @RequestParam RegSource regSource)  throws AccessDeniedException  {
+//
+//	    List<TaskResponseDto> result = service.getTaskDetails(serviceCategory, taskId, taskName,regSource);
+//	    return ResponseEntity.ok(result);
+//	}
+    
     @GetMapping("/get-pop-tasks-measureNames")
-	public ResponseEntity<List<TaskResponseDto>> getTaskDetails(
-	        @RequestParam(required = false) String serviceCategory,
-	        @RequestParam(required = false) String taskId,
-	        @RequestParam(required = false) String taskName,
-	        @RequestParam RegSource regSource)  throws AccessDeniedException  {
+    public ResponseEntity<Map<String, Object>> getTaskDetails(
+            @RequestParam(required = false) String serviceCategory,
+            @RequestParam(required = false) String taskId,
+            @RequestParam(required = false) String taskName,
+            @RequestParam RegSource regSource,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) throws AccessDeniedException {
 
-	    List<TaskResponseDto> result = service.getTaskDetails(serviceCategory, taskId, taskName,regSource);
-	    return ResponseEntity.ok(result);
-	}
+        Page<TaskResponseDto> paginatedResult = service.getTaskDetails(serviceCategory, taskId, taskName, regSource, page, size);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("data", paginatedResult.getContent());
+        response.put("currentPage", paginatedResult.getNumber());
+        response.put("totalItems", paginatedResult.getTotalElements());
+        response.put("totalPages", paginatedResult.getTotalPages());
+
+        return ResponseEntity.ok(response);
+    }
+
 
 }

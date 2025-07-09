@@ -1,6 +1,8 @@
 package com.application.mrmason.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.entity.CMaterialRequestHeaderEntity;
@@ -42,8 +44,14 @@ public class CMaterialRequestHeaderServiceImpl implements CMaterialRequestHeader
         }
     }
 
+//    @Override
+//    public List<CMaterialRequestHeaderEntity> getAllMaterialRequests() {
+//        return repository.findAll();
+//    }
+    
     @Override
-    public List<CMaterialRequestHeaderEntity> getAllMaterialRequests() {
-        return repository.findAll();
+    public Page<CMaterialRequestHeaderEntity> getAllMaterialRequests(Pageable pageable) {
+        return repository.findAll(pageable);
     }
+
 }

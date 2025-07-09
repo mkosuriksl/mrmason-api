@@ -11,4 +11,9 @@ public class ResponseSPAvailabilityDto {
 	private String message;
 	private boolean status;
 	private List<SPAvailability> getData;
+	private int currentPage;
+	private int pageSize;
+	private long totalElements;
+	private int totalPages;
+
 }

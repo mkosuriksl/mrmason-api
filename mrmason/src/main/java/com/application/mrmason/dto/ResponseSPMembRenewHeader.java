@@ -10,6 +10,10 @@ public class ResponseSPMembRenewHeader<T> {
     private String status;
     private T data;
 
+    private int currentPage;
+    private int totalPages;
+    private long totalElements;
+    
     public ResponseSPMembRenewHeader(String message, String status, T data) {
         this.message = message;
         this.status = status;

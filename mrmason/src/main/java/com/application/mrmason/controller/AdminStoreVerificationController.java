@@ -35,21 +35,42 @@ public class AdminStoreVerificationController {
         return ResponseEntity.ok(response);
     }
 
+//    @GetMapping("/get_stores_verification_status")
+//    public ResponseEntity<AdminStoreVerificationResponse<List<AdminStoreVerificationResponseDTO>>> getVerifications(
+//            @RequestParam(required = false) String storeId,
+//            @RequestParam(required = false) String bodSeqNo,
+//            @RequestParam(required = false) String bodSeqNoStoreId,
+//            @RequestParam(required = false) String verificationStatus,
+//            @RequestParam(required = false) String updatedBy) {
+//
+//        log.info("Received request to fetch store verifications");
+//
+//        AdminStoreVerificationResponse<List<AdminStoreVerificationResponseDTO>> response = verificationService
+//                .getVerificationsByParams(storeId, bodSeqNo, bodSeqNoStoreId, verificationStatus, updatedBy);
+//
+//        log.info("Returning response: {}", response.getMessage());
+//
+//        return ResponseEntity.ok(response);
+//    }
+    
     @GetMapping("/get_stores_verification_status")
     public ResponseEntity<AdminStoreVerificationResponse<List<AdminStoreVerificationResponseDTO>>> getVerifications(
             @RequestParam(required = false) String storeId,
             @RequestParam(required = false) String bodSeqNo,
             @RequestParam(required = false) String bodSeqNoStoreId,
             @RequestParam(required = false) String verificationStatus,
-            @RequestParam(required = false) String updatedBy) {
+            @RequestParam(required = false) String updatedBy,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         log.info("Received request to fetch store verifications");
 
         AdminStoreVerificationResponse<List<AdminStoreVerificationResponseDTO>> response = verificationService
-                .getVerificationsByParams(storeId, bodSeqNo, bodSeqNoStoreId, verificationStatus, updatedBy);
+                .getVerificationsByParams(storeId, bodSeqNo, bodSeqNoStoreId, verificationStatus, updatedBy, page, size);
 
         log.info("Returning response: {}", response.getMessage());
 
         return ResponseEntity.ok(response);
     }
+
 }

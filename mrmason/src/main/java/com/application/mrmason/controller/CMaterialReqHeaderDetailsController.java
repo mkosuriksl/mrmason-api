@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Collection;
 
 @Slf4j
@@ -99,6 +101,60 @@ public class CMaterialReqHeaderDetailsController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+//    @GetMapping("/get-material-request-header-details")
+//    public ResponseEntity<ResponseCMaterialReqHeaderDetailsDto> getAllMaterialRequestHeaderDetails(
+//            @RequestParam(required = false) String cMatRequestIdLineid,
+//            @RequestParam(required = false) String cMatRequestId,
+//            @RequestParam(required = false) String materialCategory,
+//            @RequestParam(required = false) String brand,
+//            @RequestParam(required = false) String itemName,
+//            @RequestParam(required = false) String itemSize,
+//            @RequestParam(required = false) Integer qty,
+//            @RequestParam(required = false) LocalDate orderDate,
+//            @RequestParam(required = false) String requestedBy,
+//            @RequestParam(required = false) LocalDate updatedDate) {
+//
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+//
+//        boolean isDeveloper = authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_Developer"));
+//
+//        if (isDeveloper) {
+//            ResponseCMaterialReqHeaderDetailsDto response = new ResponseCMaterialReqHeaderDetailsDto();
+//            response.setMessage("Service Persons have no access to this resource.");
+//            response.setStatus(false);
+//            response.setMaterialRequestDetailsList(null);
+//            return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+//        }
+//
+//        ResponseCMaterialReqHeaderDetailsDto response = new ResponseCMaterialReqHeaderDetailsDto();
+//        try {
+//            List<CMaterialReqHeaderDetailsResponseDTO> materialRequests = service.getAllMaterialRequestHeaderDetails(
+//                    cMatRequestIdLineid, cMatRequestId, materialCategory, brand, itemName, itemSize, qty, orderDate,
+//                    requestedBy, updatedDate);
+//
+//            if (materialRequests != null && !materialRequests.isEmpty()) {
+//                response.setMessage("Found material request header details");
+//                response.setStatus(true);
+//                response.setMaterialRequestDetailsList(materialRequests);
+//                log.info("Found material request header details for the given parameters.");
+//                return new ResponseEntity<>(response, HttpStatus.OK);
+//            } else {
+//                response.setMessage("No material request header details found for the given parameters.");
+//                response.setStatus(false);
+//                response.setMaterialRequestDetailsList(materialRequests);
+//                log.warn("No material request header details found for the given parameters.");
+//                return new ResponseEntity<>(response, HttpStatus.OK);
+//            }
+//        } catch (Exception e) {
+//            log.error("Exception while fetching material request header details: {}", e.getMessage());
+//            response.setMessage("An error occurred while fetching material request header details");
+//            response.setStatus(false);
+//            response.setMaterialRequestDetailsList(null);
+//            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+//    }
+    
     @GetMapping("/get-material-request-header-details")
     public ResponseEntity<ResponseCMaterialReqHeaderDetailsDto> getAllMaterialRequestHeaderDetails(
             @RequestParam(required = false) String cMatRequestIdLineid,
@@ -110,40 +166,45 @@ public class CMaterialReqHeaderDetailsController {
             @RequestParam(required = false) Integer qty,
             @RequestParam(required = false) LocalDate orderDate,
             @RequestParam(required = false) String requestedBy,
-            @RequestParam(required = false) LocalDate updatedDate) {
+            @RequestParam(required = false) LocalDate updatedDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
 
         boolean isDeveloper = authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_Developer"));
 
+        ResponseCMaterialReqHeaderDetailsDto response = new ResponseCMaterialReqHeaderDetailsDto();
+
         if (isDeveloper) {
-            ResponseCMaterialReqHeaderDetailsDto response = new ResponseCMaterialReqHeaderDetailsDto();
             response.setMessage("Service Persons have no access to this resource.");
             response.setStatus(false);
             response.setMaterialRequestDetailsList(null);
             return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
         }
 
-        ResponseCMaterialReqHeaderDetailsDto response = new ResponseCMaterialReqHeaderDetailsDto();
         try {
-            List<CMaterialReqHeaderDetailsResponseDTO> materialRequests = service.getAllMaterialRequestHeaderDetails(
+            Page<CMaterialReqHeaderDetailsResponseDTO> pagedResult = service.getAllMaterialRequestHeaderDetails(
                     cMatRequestIdLineid, cMatRequestId, materialCategory, brand, itemName, itemSize, qty, orderDate,
-                    requestedBy, updatedDate);
+                    requestedBy, updatedDate, page, size);
 
-            if (materialRequests != null && !materialRequests.isEmpty()) {
+            if (!pagedResult.isEmpty()) {
                 response.setMessage("Found material request header details");
                 response.setStatus(true);
-                response.setMaterialRequestDetailsList(materialRequests);
-                log.info("Found material request header details for the given parameters.");
-                return new ResponseEntity<>(response, HttpStatus.OK);
+                response.setMaterialRequestDetailsList(pagedResult.getContent());
+                response.setCurrentPage(pagedResult.getNumber());
+                response.setPageSize(pagedResult.getSize());
+                response.setTotalElements(pagedResult.getTotalElements());
+                response.setTotalPages(pagedResult.getTotalPages());
             } else {
                 response.setMessage("No material request header details found for the given parameters.");
                 response.setStatus(false);
-                response.setMaterialRequestDetailsList(materialRequests);
-                log.warn("No material request header details found for the given parameters.");
-                return new ResponseEntity<>(response, HttpStatus.OK);
+                response.setMaterialRequestDetailsList(new ArrayList<>());
             }
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
         } catch (Exception e) {
             log.error("Exception while fetching material request header details: {}", e.getMessage());
             response.setMessage("An error occurred while fetching material request header details");
@@ -152,5 +213,6 @@ public class CMaterialReqHeaderDetailsController {
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 
 }

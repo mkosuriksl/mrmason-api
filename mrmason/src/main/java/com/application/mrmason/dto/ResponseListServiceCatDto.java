@@ -10,4 +10,8 @@ public class ResponseListServiceCatDto {
 	private String message;
 	private boolean status;
 	private List<ServiceCategory> data;
+	private int currentPage;
+    private int pageSize;
+    private long totalElements;
+    private int totalPages;
 }

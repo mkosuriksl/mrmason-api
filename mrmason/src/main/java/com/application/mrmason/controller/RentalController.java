@@ -3,6 +3,7 @@ package com.application.mrmason.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -48,25 +49,59 @@ public class RentalController {
 		}
 	}
 
-	@GetMapping("/getRentalData")
-	public ResponseEntity<?> getRentRequest(@RequestParam(required = false) String assetId,
-			@RequestParam(required = false) String userId) {
-		try {
-			if (rentService.getRentalReq(assetId, userId).isEmpty()) {
-				response.setMessage("No data found for the given details.!");
-				response.setStatus(true);
-				return new ResponseEntity<>(response, HttpStatus.OK);
-			}
-			response.setMessage("Rental data fetched successfully.");
-			response.setStatus(true);
-			response.setData(rentService.getRentalReq(assetId, userId));
-			return new ResponseEntity<>(response, HttpStatus.OK);
+//	@GetMapping("/getRentalData")
+//	public ResponseEntity<?> getRentRequest(@RequestParam(required = false) String assetId,
+//			@RequestParam(required = false) String userId) {
+//		try {
+//			if (rentService.getRentalReq(assetId, userId).isEmpty()) {
+//				response.setMessage("No data found for the given details.!");
+//				response.setStatus(true);
+//				return new ResponseEntity<>(response, HttpStatus.OK);
+//			}
+//			response.setMessage("Rental data fetched successfully.");
+//			response.setStatus(true);
+//			response.setData(rentService.getRentalReq(assetId, userId));
+//			return new ResponseEntity<>(response, HttpStatus.OK);
+//
+//		} catch (Exception e) {
+//			response.setMessage(e.getMessage());
+//			response.setStatus(false);
+//			return new ResponseEntity<>(response, HttpStatus.OK);
+//		}
+//	}
 
-		} catch (Exception e) {
-			response.setMessage(e.getMessage());
-			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.OK);
-		}
+	@GetMapping("/getRentalData")
+	public ResponseEntity<?> getRentRequest(
+	        @RequestParam(required = false) String assetId,
+	        @RequestParam(required = false) String userId,
+	        @RequestParam(defaultValue = "0") int page,
+	        @RequestParam(defaultValue = "10") int size) {
+
+	    try {
+	        Page<Rental> rentalPage = rentService.getRentalReq(assetId, userId, page, size);
+	        if (rentalPage.isEmpty()) {
+	            response.setMessage("No data found for the given details.!");
+	            response.setStatus(true);
+	            response.setData(List.of());
+	            return new ResponseEntity<>(response, HttpStatus.OK);
+	        }
+
+	        response.setMessage("Rental data fetched successfully.");
+	        response.setStatus(true);
+	        response.setData(rentalPage.getContent());  // actual data list
+	        // Optionally include pagination info
+	        response.setCurrentPage(rentalPage.getNumber());
+	        response.setPageSize(rentalPage.getSize());
+	        response.setTotalElements(rentalPage.getTotalElements());
+	        response.setTotalPages(rentalPage.getTotalPages());
+
+	        return new ResponseEntity<>(response, HttpStatus.OK);
+
+	    } catch (Exception e) {
+	        response.setMessage(e.getMessage());
+	        response.setStatus(false);
+	        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+	    }
 	}
 
 	@PutMapping("/updateRentalData")
@@ -89,29 +124,62 @@ public class RentalController {
 		}
 	}
 
+//	@GetMapping("/getRentalAssets")
+//	public ResponseEntity<ResponseRentalDto> getRentalAssets(
+//			@RequestParam String assetCat,
+//			@RequestParam String assetSubCat,
+//			@RequestParam(required = false) String assetBrand,
+//			@RequestParam(required = false) String assetModel,
+//			@RequestParam String userId) {
+//
+//		List<Rental> rentalAssets = rentService.getRentalAssets(assetCat, assetSubCat, assetBrand, assetModel, userId);
+//
+//		ResponseRentalDto response = new ResponseRentalDto();
+//
+//		if (rentalAssets.isEmpty()) {
+//			response.setMessage("No assets found for the given criteria.");
+//			response.setStatus(false);
+//			return new ResponseEntity<>(response, HttpStatus.OK);
+//		}
+//
+//		response.setMessage("Rental AssetIds retrieved successfully.");
+//		response.setStatus(true);
+//		response.setRentalData(rentalAssets);
+//		return new ResponseEntity<>(response, HttpStatus.OK);
+//	}
+	
 	@GetMapping("/getRentalAssets")
 	public ResponseEntity<ResponseRentalDto> getRentalAssets(
-			@RequestParam String assetCat,
-			@RequestParam String assetSubCat,
-			@RequestParam(required = false) String assetBrand,
-			@RequestParam(required = false) String assetModel,
-			@RequestParam String userId) {
+	        @RequestParam String assetCat,
+	        @RequestParam String assetSubCat,
+	        @RequestParam(required = false) String assetBrand,
+	        @RequestParam(required = false) String assetModel,
+	        @RequestParam String userId,
+	        @RequestParam(defaultValue = "0") int page,
+	        @RequestParam(defaultValue = "10") int size) {
 
-		List<Rental> rentalAssets = rentService.getRentalAssets(assetCat, assetSubCat, assetBrand, assetModel, userId);
+	    ResponseRentalDto response = new ResponseRentalDto();
 
-		ResponseRentalDto response = new ResponseRentalDto();
+	    Page<Rental> rentalPage = rentService.getRentalAssets(assetCat, assetSubCat, assetBrand, assetModel, userId, page, size);
 
-		if (rentalAssets.isEmpty()) {
-			response.setMessage("No assets found for the given criteria.");
-			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.OK);
-		}
+	    if (rentalPage.isEmpty()) {
+	        response.setMessage("No assets found for the given criteria.");
+	        response.setStatus(false);
+	        response.setRentalData(List.of());
+	        return new ResponseEntity<>(response, HttpStatus.OK);
+	    }
 
-		response.setMessage("Rental AssetIds retrieved successfully.");
-		response.setStatus(true);
-		response.setRentalData(rentalAssets);
-		return new ResponseEntity<>(response, HttpStatus.OK);
+	    response.setMessage("Rental AssetIds retrieved successfully.");
+	    response.setStatus(true);
+	    response.setRentalData(rentalPage.getContent());
+	    response.setCurrentPage(rentalPage.getNumber());
+	    response.setPageSize(rentalPage.getSize());
+	    response.setTotalElements(rentalPage.getTotalElements());
+	    response.setTotalPages(rentalPage.getTotalPages());
+
+	    return new ResponseEntity<>(response, HttpStatus.OK);
 	}
+
 
 	@PutMapping("/updateAssetRentalCharge")
 	public ResponseEntity<ResponseRentalDto> updateAssetRentalCharge(

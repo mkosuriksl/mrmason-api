@@ -8,6 +8,8 @@ import com.application.mrmason.dto.ResponseCMaterialReqHeaderDetailsDto;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+
 public interface CMaterialReqHeaderDetailsService {
 
         ResponseCMaterialReqHeaderDetailsDto addMaterialRequest(CommonMaterialRequestDto request);
@@ -15,15 +17,19 @@ public interface CMaterialReqHeaderDetailsService {
         CMaterialReqHeaderDetailsResponseDTO updateMaterialRequestHeaderDetails(String cMatRequestIdLineid,
                         CMaterialReqHeaderDetailsDTO requestDTO);
 
-        List<CMaterialReqHeaderDetailsResponseDTO> getAllMaterialRequestHeaderDetails(
-                        String cMatRequestIdLineid,
-                        String cMatRequestId,
-                        String materialCategory,
-                        String brand,
-                        String itemName,
-                        String itemSize,
-                        Integer qty,
-                        LocalDate orderDate,
-                        String requestedBy,
-                        LocalDate updatedDate);
+//        List<CMaterialReqHeaderDetailsResponseDTO> getAllMaterialRequestHeaderDetails(
+//                        String cMatRequestIdLineid,
+//                        String cMatRequestId,
+//                        String materialCategory,
+//                        String brand,
+//                        String itemName,
+//                        String itemSize,
+//                        Integer qty,
+//                        LocalDate orderDate,
+//                        String requestedBy,
+//                        LocalDate updatedDate);
+        public Page<CMaterialReqHeaderDetailsResponseDTO> getAllMaterialRequestHeaderDetails(
+                String cMatRequestIdLineid, String cMatRequestId, String materialCategory, String brand, String itemName,
+                String itemSize, Integer qty, LocalDate orderDate, String requestedBy, LocalDate updatedDate,
+                int page, int size);
 }

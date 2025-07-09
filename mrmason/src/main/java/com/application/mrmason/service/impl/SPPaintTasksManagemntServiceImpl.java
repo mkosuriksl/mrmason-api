@@ -10,6 +10,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
@@ -146,48 +150,85 @@ public class SPPaintTasksManagemntServiceImpl implements SPPaintTasksManagemntSe
 		return new UserInfo(userId, role);
 	}
 
+//	@Override
+//	public List<TaskResponseDto> getTaskDetails(String serviceCategory, String taskId, String taskName,RegSource regSource) throws AccessDeniedException {
+//		UserInfo userInfo = getLoggedInSPInfo(regSource);
+//	    if (!UserType.Developer.name().equals(userInfo.role)) {
+//	        throw new AccessDeniedException("Only Developer users can access this API.");
+//	    }
+//	    List<SPPaintTasksManagemnt> records = repository.findByFilters(serviceCategory, taskId, taskName);
+//
+//	    // Group records by task identity: serviceCategory + taskId + taskName
+//	    Map<String, List<SPPaintTasksManagemnt>> grouped = records.stream()
+//	        .collect(Collectors.groupingBy(record -> 
+//	            record.getServiceCategory() + "|" + record.getTaskId() + "|" + record.getTaskName()
+//	        ));
+//
+//	    List<TaskResponseDto> responseList = new ArrayList<>();
+//
+//	    for (Map.Entry<String, List<SPPaintTasksManagemnt>> entry : grouped.entrySet()) {
+//	        List<SPPaintTasksManagemnt> groupRecords = entry.getValue();
+//
+//	        // Get first record as a template for serviceCategory, taskId, taskName
+//	        SPPaintTasksManagemnt first = groupRecords.get(0);
+//
+//	        TaskResponseDto dto = new TaskResponseDto();
+//	        dto.setServiceCategory(first.getServiceCategory());
+//	        dto.setTaskId(first.getTaskId());
+//	        dto.setTaskName(first.getTaskName());
+//
+//	        // Collect distinct measure names for this task
+//	        List<MeasureTaskDto> measures = groupRecords.stream()
+//	            .map(r -> {
+//	                MeasureTaskDto m = new MeasureTaskDto();
+//	                m.setMeasureName(r.getMeasureName());
+//	                return m;
+//	            })
+//	            .distinct()
+//	            .collect(Collectors.toList());
+//
+//	        dto.setMeasureTasks(measures);
+//
+//	        responseList.add(dto);
+//	    }
+//
+//	    return responseList;
+//	}
+	
 	@Override
-	public List<TaskResponseDto> getTaskDetails(String serviceCategory, String taskId, String taskName,RegSource regSource) throws AccessDeniedException {
-		UserInfo userInfo = getLoggedInSPInfo(regSource);
+	public Page<TaskResponseDto> getTaskDetails(String serviceCategory, String taskId, String taskName,
+	                                            RegSource regSource, int page, int size) throws AccessDeniedException {
+	    UserInfo userInfo = getLoggedInSPInfo(regSource);
 	    if (!UserType.Developer.name().equals(userInfo.role)) {
 	        throw new AccessDeniedException("Only Developer users can access this API.");
 	    }
-	    List<SPPaintTasksManagemnt> records = repository.findByFilters(serviceCategory, taskId, taskName);
 
-	    // Group records by task identity: serviceCategory + taskId + taskName
-	    Map<String, List<SPPaintTasksManagemnt>> grouped = records.stream()
-	        .collect(Collectors.groupingBy(record -> 
-	            record.getServiceCategory() + "|" + record.getTaskId() + "|" + record.getTaskName()
-	        ));
+	    Pageable pageable = PageRequest.of(page, size);
 
-	    List<TaskResponseDto> responseList = new ArrayList<>();
+	    Page<SPPaintTasksManagemnt> records = repository.findByFilters(serviceCategory, taskId, taskName, pageable);
 
-	    for (Map.Entry<String, List<SPPaintTasksManagemnt>> entry : grouped.entrySet()) {
-	        List<SPPaintTasksManagemnt> groupRecords = entry.getValue();
+	    // Grouping based on taskId
+	    Map<String, List<SPPaintTasksManagemnt>> grouped = records.getContent().stream()
+	            .collect(Collectors.groupingBy(r -> r.getServiceCategory() + "|" + r.getTaskId() + "|" + r.getTaskName()));
 
-	        // Get first record as a template for serviceCategory, taskId, taskName
-	        SPPaintTasksManagemnt first = groupRecords.get(0);
-
+	    List<TaskResponseDto> dtoList = grouped.entrySet().stream().map(entry -> {
+	        SPPaintTasksManagemnt first = entry.getValue().get(0);
 	        TaskResponseDto dto = new TaskResponseDto();
 	        dto.setServiceCategory(first.getServiceCategory());
 	        dto.setTaskId(first.getTaskId());
 	        dto.setTaskName(first.getTaskName());
 
-	        // Collect distinct measure names for this task
-	        List<MeasureTaskDto> measures = groupRecords.stream()
-	            .map(r -> {
-	                MeasureTaskDto m = new MeasureTaskDto();
-	                m.setMeasureName(r.getMeasureName());
-	                return m;
-	            })
-	            .distinct()
-	            .collect(Collectors.toList());
+	        List<MeasureTaskDto> measures = entry.getValue().stream()
+	                .map(r -> new MeasureTaskDto(r.getMeasureName()))
+	                .distinct()
+	                .collect(Collectors.toList());
 
 	        dto.setMeasureTasks(measures);
+	        return dto;
+	    }).toList();
 
-	        responseList.add(dto);
-	    }
-
-	    return responseList;
+	    // Wrap result in Page manually
+	    return new PageImpl<>(dtoList, pageable, records.getTotalElements());
 	}
+
 }

@@ -5,6 +5,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -108,45 +111,88 @@ public class AddServiceController {
 
 	}
 
+//	@GetMapping("/sp-user-services-get")
+//	public ResponseEntity<ResponseAddServiceGetDto> getServices(@RequestParam(required = false) String bodSeqNo,
+//			@RequestParam(required = false) String serviceSubCategory,
+//			@RequestParam(required = false) String userIdServiceId) {
+//
+//		ResponseAddServiceGetDto responseGet = new ResponseAddServiceGetDto();
+//
+//		try {
+//			List<AddServicesDto> getService = service.getAddServicesWithServiceNames(bodSeqNo, serviceSubCategory,
+//					userIdServiceId);
+//
+//			if (!getService.isEmpty()) {
+//				List<String> serviceIds = new ArrayList<>();
+//				for (AddServicesDto addServiceDto : getService) {
+//					if (addServiceDto.getServiceId() != null) {
+//						String[] ids = addServiceDto.getServiceId().split(",");
+//						Collections.addAll(serviceIds, ids);
+//					}
+//				}
+//
+//				List<AdminServiceNameDto> serviceIdList = service.getServiceNamesByIds(serviceIds);
+//
+//				responseGet.setMessage("Service details fetched successfully.");
+//				responseGet.setStatus(true);
+//				responseGet.setGetAddServicesData(getService);
+//				responseGet.setGetServiceId(serviceIdList);
+//				return new ResponseEntity<>(responseGet, HttpStatus.OK);
+//			} else {
+//				responseGet.setMessage("No services found for the given parameters.");
+//				responseGet.setStatus(true);
+//				return new ResponseEntity<>(responseGet, HttpStatus.OK);
+//			}
+//
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//			responseGet.setMessage("Error: " + e.getMessage());
+//			responseGet.setStatus(false);
+//			return new ResponseEntity<>(responseGet, HttpStatus.OK);
+//		}
+//	}
+
 	@GetMapping("/sp-user-services-get")
-	public ResponseEntity<ResponseAddServiceGetDto> getServices(@RequestParam(required = false) String bodSeqNo,
-			@RequestParam(required = false) String serviceSubCategory,
-			@RequestParam(required = false) String userIdServiceId) {
+	public ResponseEntity<ResponseAddServiceGetDto> getServices(
+	        @RequestParam(required = false) String bodSeqNo,
+	        @RequestParam(required = false) String serviceSubCategory,
+	        @RequestParam(required = false) String userIdServiceId,
+	        @RequestParam(defaultValue = "0") int page,
+	        @RequestParam(defaultValue = "10") int size) {
 
-		ResponseAddServiceGetDto responseGet = new ResponseAddServiceGetDto();
+	    ResponseAddServiceGetDto responseGet = new ResponseAddServiceGetDto();
 
-		try {
-			List<AddServicesDto> getService = service.getAddServicesWithServiceNames(bodSeqNo, serviceSubCategory,
-					userIdServiceId);
+	    try {
+	        Pageable pageable = PageRequest.of(page, size);
+	        Page<AddServicesDto> pagedServices = service.getAddServicesWithServiceNames(bodSeqNo, serviceSubCategory, userIdServiceId, pageable);
 
-			if (!getService.isEmpty()) {
-				List<String> serviceIds = new ArrayList<>();
-				for (AddServicesDto addServiceDto : getService) {
-					if (addServiceDto.getServiceId() != null) {
-						String[] ids = addServiceDto.getServiceId().split(",");
-						Collections.addAll(serviceIds, ids);
-					}
-				}
+	        List<String> serviceIds = new ArrayList<>();
+	        for (AddServicesDto dto : pagedServices.getContent()) {
+	            if (dto.getServiceId() != null) {
+	                String[] ids = dto.getServiceId().split(",");
+	                Collections.addAll(serviceIds, ids);
+	            }
+	        }
 
-				List<AdminServiceNameDto> serviceIdList = service.getServiceNamesByIds(serviceIds);
+	        List<AdminServiceNameDto> serviceIdList = service.getServiceNamesByIds(serviceIds);
 
-				responseGet.setMessage("Service details fetched successfully.");
-				responseGet.setStatus(true);
-				responseGet.setGetAddServicesData(getService);
-				responseGet.setGetServiceId(serviceIdList);
-				return new ResponseEntity<>(responseGet, HttpStatus.OK);
-			} else {
-				responseGet.setMessage("No services found for the given parameters.");
-				responseGet.setStatus(true);
-				return new ResponseEntity<>(responseGet, HttpStatus.OK);
-			}
+	        responseGet.setMessage("Service details fetched successfully.");
+	        responseGet.setStatus(true);
+	        responseGet.setGetAddServicesData(pagedServices.getContent());
+	        responseGet.setGetServiceId(serviceIdList);
+	        responseGet.setCurrentPage(pagedServices.getNumber());
+	        responseGet.setPageSize(pagedServices.getSize());
+	        responseGet.setTotalElements(pagedServices.getTotalElements());
+	        responseGet.setTotalPages(pagedServices.getTotalPages());
 
-		} catch (Exception e) {
-			e.printStackTrace();
-			responseGet.setMessage("Error: " + e.getMessage());
-			responseGet.setStatus(false);
-			return new ResponseEntity<>(responseGet, HttpStatus.OK);
-		}
+	        return new ResponseEntity<>(responseGet, HttpStatus.OK);
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        responseGet.setMessage("Error: " + e.getMessage());
+	        responseGet.setStatus(false);
+	        return new ResponseEntity<>(responseGet, HttpStatus.OK);
+	    }
 	}
 
 	@GetMapping("/sp-user-report")
@@ -155,12 +201,12 @@ public class AddServiceController {
 		ResponseServiceReportDto serviceReport = new ResponseServiceReportDto();
 		Optional<User> user = Optional.ofNullable(userDAO.findByBodSeqNo(bodSeqNo));
 		try {
-			if (userService.getServiceProfile(user.get().getEmail()) != null) {
+			if (userService.getServiceProfile(user.get().getBodSeqNo()) != null) {
 				serviceReport.setRegData(userService.getServiceProfile(user.get().getEmail()));
 				serviceReport.setMessage("success");
 				serviceReport.setStatus(true);
 				serviceReport.setServData(service.getPerson(bodSeqNo, null, null));
-				serviceReport.setAvailData(spAvailibilityImpl.getAvailability(bodSeqNo));
+				serviceReport.setAvailData(spAvailibilityImpl.getAvailabilitys(bodSeqNo));
 				return new ResponseEntity<>(serviceReport, HttpStatus.OK);
 			}
 			serviceReport.setMessage("No services found for the given parameters");

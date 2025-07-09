@@ -1,6 +1,6 @@
 package com.application.mrmason.service;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
 
 import com.application.mrmason.dto.SPMembRenewHeaderRequestDTO;
 import com.application.mrmason.dto.SPMembRenewHeaderResponseDTO;
@@ -10,7 +10,10 @@ public interface SPMembRenewHeaderService {
 
     SPMembRenewHeaderResponseDTO updateMembershipOrder(String membershipOrderId, SPMembRenewHeaderRequestDTO dto);
 
-    List<SPMembRenewHeaderResponseDTO> getAllMembershipOrders(String membershipOrderId,String orderPlacedBy);
+//    List<SPMembRenewHeaderResponseDTO> getAllMembershipOrders(String membershipOrderId,String orderPlacedBy);
 
+    public Page<SPMembRenewHeaderResponseDTO> getAllMembershipOrders(String membershipOrderId,
+            String orderPlacedBy,
+            int page, int size) ;
     void deleteMembershipOrder(String membershipOrderId);
 }

@@ -4,6 +4,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.dto.SPMembRenewHeaderRequestDTO;
@@ -68,17 +72,28 @@ public class SPMembRenewHeaderServiceImpl implements SPMembRenewHeaderService {
         return mapToResponseDTO(updatedEntity);
     }
 
+//    @Override
+//    public List<SPMembRenewHeaderResponseDTO> getAllMembershipOrders(String membershipOrderId, String orderPlacedBy) {
+//        log.info("Fetching all membership orders with filters - membershipOrderId: {}, orderPlacedBy: {}",
+//                membershipOrderId, orderPlacedBy);
+//
+//        List<SPMembRenewHeaderEntity> entities = repo.findByMembershipOrderIdOrOrderPlacedBy(membershipOrderId,
+//                orderPlacedBy);
+//
+//        return entities.stream()
+//                .map(this::mapToResponseDTO)
+//                .collect(Collectors.toList());
+//    }
+
     @Override
-    public List<SPMembRenewHeaderResponseDTO> getAllMembershipOrders(String membershipOrderId, String orderPlacedBy) {
-        log.info("Fetching all membership orders with filters - membershipOrderId: {}, orderPlacedBy: {}",
-                membershipOrderId, orderPlacedBy);
+    public Page<SPMembRenewHeaderResponseDTO> getAllMembershipOrders(String membershipOrderId,
+                                                                     String orderPlacedBy,
+                                                                     int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("orderDate").descending());
 
-        List<SPMembRenewHeaderEntity> entities = repo.findByMembershipOrderIdOrOrderPlacedBy(membershipOrderId,
-                orderPlacedBy);
+        Page<SPMembRenewHeaderEntity> entities = repo.findByFilters(membershipOrderId, orderPlacedBy, pageable);
 
-        return entities.stream()
-                .map(this::mapToResponseDTO)
-                .collect(Collectors.toList());
+        return entities.map(this::mapToResponseDTO);
     }
 
     @Override

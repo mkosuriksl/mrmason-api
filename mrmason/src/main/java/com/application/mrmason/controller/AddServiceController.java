@@ -201,12 +201,12 @@ public class AddServiceController {
 		ResponseServiceReportDto serviceReport = new ResponseServiceReportDto();
 		Optional<User> user = Optional.ofNullable(userDAO.findByBodSeqNo(bodSeqNo));
 		try {
-			if (userService.getServiceProfile(user.get().getEmail()) != null) {
+			if (userService.getServiceProfile(user.get().getBodSeqNo()) != null) {
 				serviceReport.setRegData(userService.getServiceProfile(user.get().getEmail()));
 				serviceReport.setMessage("success");
 				serviceReport.setStatus(true);
 				serviceReport.setServData(service.getPerson(bodSeqNo, null, null));
-				serviceReport.setAvailData(spAvailibilityImpl.getAvailability(bodSeqNo));
+				serviceReport.setAvailData(spAvailibilityImpl.getAvailabilitys(bodSeqNo));
 				return new ResponseEntity<>(serviceReport, HttpStatus.OK);
 			}
 			serviceReport.setMessage("No services found for the given parameters");

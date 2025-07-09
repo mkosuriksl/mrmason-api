@@ -37,21 +37,21 @@ public class SPAvailabilityServiceIml {
 
 	}
 
-//	public List<SPAvailability> getAvailability(String bodSeqNo) {
-//		Optional<User> userExists = userDAO.findById(bodSeqNo);
-//
-//		if (userExists.isPresent()) {
-//			Optional<List<SPAvailability>> bodSeqNoExists = Optional
-//					.ofNullable(availabilityReo.findByBodSeqNo(userExists.get().getBodSeqNo()));
-//			if (!bodSeqNoExists.get().isEmpty()) {
-//				return bodSeqNoExists.get();
-//			} else {
-//				return null;
-//			}
-//
-//		}
-//		return null;
-//	}
+	public List<SPAvailability> getAvailabilitys(String bodSeqNo) {
+		Optional<User> userExists = userDAO.findById(bodSeqNo);
+
+		if (userExists.isPresent()) {
+			Optional<List<SPAvailability>> bodSeqNoExists = Optional
+					.ofNullable(availabilityReo.findByBodSeqNo(userExists.get().getBodSeqNo()));
+			if (!bodSeqNoExists.get().isEmpty()) {
+				return bodSeqNoExists.get();
+			} else {
+				return null;
+			}
+
+		}
+		return null;
+	}
 	
 	public Page<SPAvailability> getAvailability(String bodSeqNo, int page, int size) {
 	    Optional<User> userExists = userDAO.findById(bodSeqNo);

@@ -13,8 +13,8 @@ import com.application.mrmason.entity.SPAvailability;
 @Repository
 public interface SPAvailabilityRepo extends JpaRepository<SPAvailability, Integer> {
 
-//	@Query("SELECT s FROM SPAvailability s WHERE s.bodSeqNo = :bodSeqNo AND s.availability = 'yes'")
-//	List<SPAvailability> findByBodSeqNo(String bodSeqNo);
+	@Query("SELECT s FROM SPAvailability s WHERE s.bodSeqNo = :bodSeqNo AND s.availability = 'yes'")
+	List<SPAvailability> findByBodSeqNo(String bodSeqNo);
 
 	@Query("SELECT s FROM SPAvailability s WHERE s.bodSeqNo = :bodSeqNo AND s.availability = 'yes'")
 	Page<SPAvailability> findByBodSeqNo(String bodSeqNo, Pageable pageable);

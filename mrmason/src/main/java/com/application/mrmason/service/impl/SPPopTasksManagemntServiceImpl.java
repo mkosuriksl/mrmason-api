@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
@@ -120,48 +123,89 @@ public class SPPopTasksManagemntServiceImpl implements SPPopTasksManagemntServic
         return new UserInfo(userId, role);
     }
     
+//    @Override
+//	public List<TaskResponseDto> getTaskDetails(String serviceCategory, String taskId, String taskName,RegSource regSource) throws AccessDeniedException {
+//    	UserInfo userInfo = getLoggedInSPInfo(regSource);
+//	    if (!UserType.Developer.name().equals(userInfo.role)) {
+//	        throw new AccessDeniedException("Only Developer users can access this API.");
+//	    }
+//    	List<SPPopTasksManagemnt> records = repository.findByFilters(serviceCategory, taskId, taskName);
+//
+//	    // Group records by task identity: serviceCategory + taskId + taskName
+//	    Map<String, List<SPPopTasksManagemnt>> grouped = records.stream()
+//	        .collect(Collectors.groupingBy(record -> 
+//	            record.getServiceCategory() + "|" + record.getTaskId() + "|" + record.getTaskName()
+//	        ));
+//
+//	    List<TaskResponseDto> responseList = new ArrayList<>();
+//
+//	    for (Map.Entry<String, List<SPPopTasksManagemnt>> entry : grouped.entrySet()) {
+//	        List<SPPopTasksManagemnt> groupRecords = entry.getValue();
+//
+//	        // Get first record as a template for serviceCategory, taskId, taskName
+//	        SPPopTasksManagemnt first = groupRecords.get(0);
+//
+//	        TaskResponseDto dto = new TaskResponseDto();
+//	        dto.setServiceCategory(first.getServiceCategory());
+//	        dto.setTaskId(first.getTaskId());
+//	        dto.setTaskName(first.getTaskName());
+//
+//	        // Collect distinct measure names for this task
+//	        List<MeasureTaskDto> measures = groupRecords.stream()
+//	            .map(r -> {
+//	                MeasureTaskDto m = new MeasureTaskDto();
+//	                m.setMeasureName(r.getMeasureName());
+//	                return m;
+//	            })
+//	            .distinct()
+//	            .collect(Collectors.toList());
+//
+//	        dto.setMeasureTasks(measures);
+//
+//	        responseList.add(dto);
+//	    }
+//
+//	    return responseList;
+//	}
+    
     @Override
-	public List<TaskResponseDto> getTaskDetails(String serviceCategory, String taskId, String taskName,RegSource regSource) throws AccessDeniedException {
-    	UserInfo userInfo = getLoggedInSPInfo(regSource);
-	    if (!UserType.Developer.name().equals(userInfo.role)) {
-	        throw new AccessDeniedException("Only Developer users can access this API.");
-	    }
-    	List<SPPopTasksManagemnt> records = repository.findByFilters(serviceCategory, taskId, taskName);
+    public Page<TaskResponseDto> getTaskDetails(String serviceCategory, String taskId, String taskName,
+                                                RegSource regSource, int page, int size) throws AccessDeniedException {
+        UserInfo userInfo = getLoggedInSPInfo(regSource);
+        if (!UserType.Developer.name().equals(userInfo.role)) {
+            throw new AccessDeniedException("Only Developer users can access this API.");
+        }
 
-	    // Group records by task identity: serviceCategory + taskId + taskName
-	    Map<String, List<SPPopTasksManagemnt>> grouped = records.stream()
-	        .collect(Collectors.groupingBy(record -> 
-	            record.getServiceCategory() + "|" + record.getTaskId() + "|" + record.getTaskName()
-	        ));
+        List<SPPopTasksManagemnt> records = repository.findByFilters(serviceCategory, taskId, taskName);
 
-	    List<TaskResponseDto> responseList = new ArrayList<>();
+        // Group by unique task identity
+        Map<String, List<SPPopTasksManagemnt>> grouped = records.stream()
+            .collect(Collectors.groupingBy(r -> r.getServiceCategory() + "|" + r.getTaskId() + "|" + r.getTaskName()));
 
-	    for (Map.Entry<String, List<SPPopTasksManagemnt>> entry : grouped.entrySet()) {
-	        List<SPPopTasksManagemnt> groupRecords = entry.getValue();
+        List<TaskResponseDto> allGroupedDtos = grouped.entrySet().stream().map(entry -> {
+            List<SPPopTasksManagemnt> group = entry.getValue();
+            SPPopTasksManagemnt first = group.get(0);
 
-	        // Get first record as a template for serviceCategory, taskId, taskName
-	        SPPopTasksManagemnt first = groupRecords.get(0);
+            TaskResponseDto dto = new TaskResponseDto();
+            dto.setServiceCategory(first.getServiceCategory());
+            dto.setTaskId(first.getTaskId());
+            dto.setTaskName(first.getTaskName());
 
-	        TaskResponseDto dto = new TaskResponseDto();
-	        dto.setServiceCategory(first.getServiceCategory());
-	        dto.setTaskId(first.getTaskId());
-	        dto.setTaskName(first.getTaskName());
+            List<MeasureTaskDto> measures = group.stream()
+                    .map(r -> new MeasureTaskDto(r.getMeasureName()))
+                    .distinct()
+                    .collect(Collectors.toList());
 
-	        // Collect distinct measure names for this task
-	        List<MeasureTaskDto> measures = groupRecords.stream()
-	            .map(r -> {
-	                MeasureTaskDto m = new MeasureTaskDto();
-	                m.setMeasureName(r.getMeasureName());
-	                return m;
-	            })
-	            .distinct()
-	            .collect(Collectors.toList());
+            dto.setMeasureTasks(measures);
+            return dto;
+        }).toList();
 
-	        dto.setMeasureTasks(measures);
+        // Manual pagination
+        int start = Math.min(page * size, allGroupedDtos.size());
+        int end = Math.min(start + size, allGroupedDtos.size());
 
-	        responseList.add(dto);
-	    }
+        List<TaskResponseDto> paginatedList = allGroupedDtos.subList(start, end);
+        return new PageImpl<>(paginatedList, PageRequest.of(page, size), allGroupedDtos.size());
+    }
 
-	    return responseList;
-	}
 }

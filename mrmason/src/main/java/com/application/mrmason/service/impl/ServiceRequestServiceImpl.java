@@ -2,6 +2,7 @@ package com.application.mrmason.service.impl;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -154,30 +155,114 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
 	        String email, String mobile, String status, String fromDate, String toDate,
 	        int page, int size) {
 
+	    // Derive userId from email or mobile if userId is not provided
+	    if ((email != null || mobile != null) && userId == null) {
+	        CustomerRegistration customer = null;
+	        if (email != null) {
+	            customer = repo.findByUserEmail(email);
+	        } else if (mobile != null) {
+	            customer = repo.findByUserMobile(mobile);
+	        }
+
+	        if (customer != null) {
+	            userId = customer.getUserid(); // assign derived userId
+	        } else {
+	            return Page.empty(); // no matching user found
+	        }
+	    }
+
 	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+
+	    // Main query
 	    CriteriaQuery<ServiceRequest> cq = cb.createQuery(ServiceRequest.class);
 	    Root<ServiceRequest> root = cq.from(ServiceRequest.class);
-	    List<Predicate> predicates = new ArrayList<>();
+	    List<Predicate> mainPredicates = buildPredicates(cb, root, userId, assetId, location,
+	            serviceSubCategory, status, fromDate, toDate);
 
-	    // (same logic as your current method for building predicates...)
-
-	    cq.where(predicates.toArray(new Predicate[0]));
-	    cq.orderBy(cb.desc(root.get("serviceRequestDate"))); // optional sort
+	    cq.where(mainPredicates.toArray(new Predicate[0]));
+	    cq.orderBy(cb.desc(root.get("serviceRequestDate")));
 
 	    List<ServiceRequest> allResults = entityManager.createQuery(cq)
-	        .setFirstResult(page * size)
-	        .setMaxResults(size)
-	        .getResultList();
+	            .setFirstResult(page * size)
+	            .setMaxResults(size)
+	            .getResultList();
 
-	    // Count total records
+	    // Count query
 	    CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
 	    Root<ServiceRequest> countRoot = countQuery.from(ServiceRequest.class);
-	    countQuery.select(cb.count(countRoot)).where(predicates.toArray(new Predicate[0]));
+	    List<Predicate> countPredicates = buildPredicates(cb, countRoot, userId, assetId, location,
+	            serviceSubCategory, status, fromDate, toDate);
+	    countQuery.select(cb.count(countRoot)).where(countPredicates.toArray(new Predicate[0]));
 	    Long total = entityManager.createQuery(countQuery).getSingleResult();
 
 	    return new PageImpl<>(allResults, PageRequest.of(page, size), total);
 	}
-	
+
+	private List<Predicate> buildPredicates(
+	        CriteriaBuilder cb,
+	        Root<ServiceRequest> root,
+	        String userId,
+	        String assetId,
+	        String location,
+	        String serviceSubCategory,
+	        String status,
+	        String fromDate,
+	        String toDate) {
+
+	    List<Predicate> predicates = new ArrayList<>();
+
+	    if (userId != null && !userId.isEmpty()) {
+	        predicates.add(cb.equal(root.get("requestedBy"), userId));
+	    }
+
+	    if (assetId != null && !assetId.isEmpty()) {
+	        predicates.add(cb.equal(root.get("assetId"), assetId));
+	    }
+
+	    if (location != null && !location.trim().isEmpty() && (userId == null || userId.isEmpty())) {
+	        List<CustomerRegistration> matchingCustomers = repo.findByUserTown(location.trim());
+	        if (!matchingCustomers.isEmpty()) {
+	            List<String> userIds = matchingCustomers.stream()
+	                    .map(CustomerRegistration::getUserid)
+	                    .toList();
+	            predicates.add(root.get("requestedBy").in(userIds));
+	        } else {
+	            predicates.add(cb.disjunction()); // no match, return empty
+	        }
+	    }
+
+	    if (serviceSubCategory != null && !serviceSubCategory.isEmpty()) {
+	        predicates.add(cb.equal(root.get("serviceName"), serviceSubCategory));
+	    }
+
+	    if (status != null && !status.isEmpty()) {
+	        predicates.add(cb.equal(root.get("status"), status));
+	    }
+
+	    DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+	    DateTimeFormatter timestampFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+	    try {
+	        if (fromDate != null && !fromDate.isEmpty()) {
+	            LocalDate from = LocalDate.parse(fromDate, inputFormatter);
+	            String fromTimestamp = from.atStartOfDay().format(timestampFormatter); // "2024-10-19 00:00:00"
+	            predicates.add(cb.greaterThanOrEqualTo(root.get("serviceRequestDate"), fromTimestamp));
+	        }
+
+	        if (toDate != null && !toDate.isEmpty()) {
+	            LocalDate to = LocalDate.parse(toDate, inputFormatter);
+	            String toTimestamp = to.atTime(23, 59, 59).format(timestampFormatter); // "2024-11-19 23:59:59"
+	            predicates.add(cb.lessThanOrEqualTo(root.get("serviceRequestDate"), toTimestamp));
+	        }
+	    } catch (DateTimeParseException e) {
+	        System.err.println("Invalid date format: " + e.getMessage());
+	    }
+
+
+
+	    return predicates;
+	}
+
 //	@Override
 //	public List<ServiceRequest> getServiceReq(String userId, String assetId, String location, String serviceName,
 //			String email, String mobile, String status, String fromDate, String toDate) {

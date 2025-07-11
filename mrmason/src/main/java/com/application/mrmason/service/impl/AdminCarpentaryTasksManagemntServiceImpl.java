@@ -87,31 +87,52 @@ public class AdminCarpentaryTasksManagemntServiceImpl implements AdminCarpentary
 		AdminDetails admin = adminRepo.findByEmailAndUserType(loggedInUserEmail, UserType.Adm)
 				.orElseThrow(() -> new ResourceNotFoundException("Admin not found: " + loggedInUserEmail));
 
-		String userId = admin.getEmail(); // Or admin.getId() based on your logic
+		String userId = admin.getAdminId(); // Or admin.getId() based on your logic
 
 		return new AdminInfo(userId);
 	}
 
+//	@Override
+//	public List<AdminCarpentaryTasksManagemnt> updateAdmin(List<AdminCarpentaryTasksManagemnt> taskList) {
+//		AdminInfo userInfo = getLoggedInAdminInfo();
+//
+//		for (AdminCarpentaryTasksManagemnt task : taskList) {
+//			if (task.getAdminTaskId() == null || task.getAdminTaskId().isEmpty()) {
+//				throw new ResourceNotFoundException("adminTaskId is required for update.");
+//			}
+//
+//			boolean exists = repository.existsById(task.getAdminTaskId());
+//			if (!exists) {
+//				throw new ResourceNotFoundException("Task not found for adminTaskId: " + task.getAdminTaskId());
+//			}
+//
+//			task.setUserId(userInfo.userId);
+//			task.setUpdatedDate(new Date());
+//			task.setUpdatedBy(userInfo.userId);
+//		}
+//
+//		return repository.saveAll(taskList);
+//	}
+	
 	@Override
 	public List<AdminCarpentaryTasksManagemnt> updateAdmin(List<AdminCarpentaryTasksManagemnt> taskList) {
 		AdminInfo userInfo = getLoggedInAdminInfo();
+		List<AdminCarpentaryTasksManagemnt> updatedTasks = new ArrayList<>();
 
-		for (AdminCarpentaryTasksManagemnt task : taskList) {
-			if (task.getAdminTaskId() == null || task.getAdminTaskId().isEmpty()) {
-				throw new ResourceNotFoundException("adminTaskId is required for update.");
-			}
+		for (AdminCarpentaryTasksManagemnt dto : taskList) {
+			AdminCarpentaryTasksManagemnt existing = repository.findById(dto.getAdminTaskId())
+					.orElseThrow(() -> new ResourceNotFoundException("Task not found for adminTaskId: " + dto.getAdminTaskId()));
 
-			boolean exists = repository.existsById(task.getAdminTaskId());
-			if (!exists) {
-				throw new ResourceNotFoundException("Task not found for adminTaskId: " + task.getAdminTaskId());
-			}
+			existing.setTaskName(dto.getTaskName());
+			existing.setTaskId(dto.getTaskId());
+			existing.setUserId(userInfo.userId);
+			existing.setUpdatedBy(userInfo.userId);
+			existing.setUpdatedDate(new Date());
 
-			task.setUserId(userInfo.userId);
-			task.setUpdatedDate(new Date());
-			task.setUpdatedBy(userInfo.userId);
+			updatedTasks.add(existing);
 		}
 
-		return repository.saveAll(taskList);
+		return repository.saveAll(updatedTasks);
 	}
 
 	@Override

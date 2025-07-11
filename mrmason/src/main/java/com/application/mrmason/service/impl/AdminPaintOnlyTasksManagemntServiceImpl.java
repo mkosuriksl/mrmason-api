@@ -1,6 +1,5 @@
 package com.application.mrmason.service.impl;
 
-import java.nio.file.AccessDeniedException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -11,21 +10,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
-import com.application.mrmason.dto.AdminPlumbingTasksManagemntRequestDTO;
+import com.application.mrmason.dto.AdminPaintOnlyTaskRequestDTO;
 import com.application.mrmason.entity.AdminDetails;
-import com.application.mrmason.entity.AdminPlumbingTasksManagemnt;
+import com.application.mrmason.entity.AdminPaintOnlyTasksManagemnt;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.AdminDetailsRepo;
-import com.application.mrmason.repository.AdminPlumbingTasksManagemntRepository;
+import com.application.mrmason.repository.AdminPaintOnlyTasksManagemntRepository;
+import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.AuthDetailsProvider;
-import com.application.mrmason.service.AdminPlumbingTasksManagemntService;
+import com.application.mrmason.service.AdminPaintOnlyTasksManagemntService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -36,10 +37,10 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 @Service
-public class AdminPlumbingTasksManagemntServiceImpl implements AdminPlumbingTasksManagemntService {
+public class AdminPaintOnlyTasksManagemntServiceImpl implements AdminPaintOnlyTasksManagemntService {
 
 	@Autowired
-	private AdminPlumbingTasksManagemntRepository repository;
+	private AdminPaintOnlyTasksManagemntRepository repository;
 
 	@Autowired
 	public AdminDetailsRepo adminRepo;
@@ -50,10 +51,13 @@ public class AdminPlumbingTasksManagemntServiceImpl implements AdminPlumbingTask
 	@PersistenceContext
 	private EntityManager entityManager;
 
+	@Autowired
+	private CustomerRegistrationRepo customerRegistrationRepo;
+	
 	@Override
-	public List<AdminPlumbingTasksManagemnt> createAdmin(AdminPlumbingTasksManagemntRequestDTO requestDTO) {
+	public List<AdminPaintOnlyTasksManagemnt> createAdmin(AdminPaintOnlyTaskRequestDTO requestDTO) {
 		AdminInfo userInfo = getLoggedInAdminInfo();
-		for (AdminPlumbingTasksManagemnt task : requestDTO.getTasks()) {
+		for (AdminPaintOnlyTasksManagemnt task : requestDTO.getTasks()) {
 			task.setUserId(requestDTO.getUserId()); // Set common userId
 			task.setUpdatedDate(new Date());
 			task.setUpdatedBy(userInfo.userId);
@@ -93,10 +97,10 @@ public class AdminPlumbingTasksManagemntServiceImpl implements AdminPlumbingTask
 	}
 
 //	@Override
-//	public List<AdminPlumbingTasksManagemnt> updateAdmin(List<AdminPlumbingTasksManagemnt> taskList) {
+//	public List<AdminPaintOnlyTasksManagemnt> updateAdmin(List<AdminPaintOnlyTasksManagemnt> taskList) {
 //		AdminInfo userInfo = getLoggedInAdminInfo();
 //
-//		for (AdminPlumbingTasksManagemnt task : taskList) {
+//		for (AdminPaintOnlyTasksManagemnt task : taskList) {
 //			if (task.getAdminTaskId() == null || task.getAdminTaskId().isEmpty()) {
 //				throw new ResourceNotFoundException("adminTaskId is required for update.");
 //			}
@@ -113,14 +117,13 @@ public class AdminPlumbingTasksManagemntServiceImpl implements AdminPlumbingTask
 //
 //		return repository.saveAll(taskList);
 //	}
-	
-	@Override
-	public List<AdminPlumbingTasksManagemnt> updateAdmin(List<AdminPlumbingTasksManagemnt> taskList) {
-		AdminInfo userInfo = getLoggedInAdminInfo();
-		List<AdminPlumbingTasksManagemnt> updatedTasks = new ArrayList<>();
 
-		for (AdminPlumbingTasksManagemnt dto : taskList) {
-			AdminPlumbingTasksManagemnt existing = repository.findById(dto.getAdminTaskId())
+	public List<AdminPaintOnlyTasksManagemnt> updateAdmin(List<AdminPaintOnlyTasksManagemnt> taskList) {
+		AdminInfo userInfo = getLoggedInAdminInfo();
+		List<AdminPaintOnlyTasksManagemnt> updatedTasks = new ArrayList<>();
+
+		for (AdminPaintOnlyTasksManagemnt dto : taskList) {
+			AdminPaintOnlyTasksManagemnt existing = repository.findById(dto.getAdminTaskId())
 					.orElseThrow(() -> new ResourceNotFoundException("Task not found for adminTaskId: " + dto.getAdminTaskId()));
 
 			existing.setTaskName(dto.getTaskName());
@@ -136,8 +139,9 @@ public class AdminPlumbingTasksManagemntServiceImpl implements AdminPlumbingTask
 	}
 
 	@Override
-	public Page<AdminPlumbingTasksManagemnt> getAdmin(String serviceCategory, String taskName, String taskId,
-			String adminTaskId, RegSource regSource, Pageable pageable) throws AccessDeniedException {
+	public Page<AdminPaintOnlyTasksManagemnt> getServiceRequestPaintQuotationService(String serviceCategory,
+			String taskName, String taskId, String adminTaskId, RegSource regSource, Pageable pageable)
+			throws AccessDeniedException {
 		UserInfo userInfo = getLoggedInAdminSPInfo(regSource);
 
 		// ALLOW only Admin or Developer, block others
@@ -147,8 +151,8 @@ public class AdminPlumbingTasksManagemntServiceImpl implements AdminPlumbingTask
 		}
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		CriteriaQuery<AdminPlumbingTasksManagemnt> query = cb.createQuery(AdminPlumbingTasksManagemnt.class);
-		Root<AdminPlumbingTasksManagemnt> root = query.from(AdminPlumbingTasksManagemnt.class);
+		CriteriaQuery<AdminPaintOnlyTasksManagemnt> query = cb.createQuery(AdminPaintOnlyTasksManagemnt.class);
+		Root<AdminPaintOnlyTasksManagemnt> root = query.from(AdminPaintOnlyTasksManagemnt.class);
 		List<Predicate> predicates = new ArrayList<>();
 
 		if (serviceCategory != null && !serviceCategory.trim().isEmpty()) {
@@ -158,20 +162,20 @@ public class AdminPlumbingTasksManagemntServiceImpl implements AdminPlumbingTask
 			predicates.add(cb.equal(root.get("taskName"), taskName));
 		}
 		if (taskId != null && !taskId.trim().isEmpty()) {
-			predicates.add(cb.equal(root.get("taskId"), taskId));
+			predicates.add(cb.equal(root.get("requestId"), taskId));
 		}
 		if (adminTaskId != null && !adminTaskId.trim().isEmpty()) {
 			predicates.add(cb.equal(root.get("adminTaskId"), adminTaskId));
 		}
 
 		query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
-		TypedQuery<AdminPlumbingTasksManagemnt> typedQuery = entityManager.createQuery(query);
+		TypedQuery<AdminPaintOnlyTasksManagemnt> typedQuery = entityManager.createQuery(query);
 		typedQuery.setFirstResult((int) pageable.getOffset());
 		typedQuery.setMaxResults(pageable.getPageSize());
 
 		// Count query
 		CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
-		Root<AdminPlumbingTasksManagemnt> countRoot = countQuery.from(AdminPlumbingTasksManagemnt.class);
+		Root<AdminPaintOnlyTasksManagemnt> countRoot = countQuery.from(AdminPaintOnlyTasksManagemnt.class);
 		List<Predicate> countPredicates = new ArrayList<>();
 
 		if (serviceCategory != null && !serviceCategory.trim().isEmpty()) {
@@ -181,7 +185,7 @@ public class AdminPlumbingTasksManagemntServiceImpl implements AdminPlumbingTask
 			countPredicates.add(cb.equal(countRoot.get("taskName"), taskName));
 		}
 		if (taskId != null && !taskId.trim().isEmpty()) {
-			countPredicates.add(cb.equal(countRoot.get("taskId"), taskId));
+			countPredicates.add(cb.equal(countRoot.get("requestId"), taskId));
 		}
 		if (adminTaskId != null && !adminTaskId.trim().isEmpty()) {
 			countPredicates.add(cb.equal(countRoot.get("adminTaskId"), adminTaskId));
@@ -193,6 +197,7 @@ public class AdminPlumbingTasksManagemntServiceImpl implements AdminPlumbingTask
 		return new PageImpl<>(typedQuery.getResultList(), pageable, total);
 	}
 
+	
 	private static class UserInfo {
 		String userId;
 		String role;
@@ -227,5 +232,6 @@ public class AdminPlumbingTasksManagemntServiceImpl implements AdminPlumbingTask
 
 		return new UserInfo(userId, role);
 	}
+
 
 }

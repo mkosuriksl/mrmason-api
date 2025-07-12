@@ -10,7 +10,7 @@ import lombok.Data;
 public class ResponseGetAdminCarpentaryTasksManagemntManagementDto {
 	private String message;
 	private boolean status;
-	private List<AdminCarpentaryTasksManagemnt> adminPlumbingTasksManagemnt;
+	private List<AdminCarpentaryTasksManagemnt> serviceRequestCarpentaryQuotation;
 	private int currentPage;
 	private int pageSize;
 	private long totalElements;

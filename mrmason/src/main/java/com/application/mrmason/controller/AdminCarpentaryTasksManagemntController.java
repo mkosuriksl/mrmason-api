@@ -69,7 +69,7 @@ public class AdminCarpentaryTasksManagemntController {
 
 		response.setMessage("Admin Carpentary Task  details retrieved successfully.");
 		response.setStatus(true);
-		response.setAdminPlumbingTasksManagemnt(srpqPage.getContent());
+		response.setServiceRequestCarpentaryQuotation(srpqPage.getContent());
 
 		// Set pagination fields
 		response.setCurrentPage(srpqPage.getNumber());

@@ -4,6 +4,11 @@ import com.application.mrmason.dto.CMaterialReqHeaderDetailsDTO;
 import com.application.mrmason.dto.CMaterialReqHeaderDetailsResponseDTO;
 import com.application.mrmason.dto.CommonMaterialRequestDto;
 import com.application.mrmason.dto.ResponseCMaterialReqHeaderDetailsDto;
+import com.application.mrmason.dto.ResponseGetAdminPopTasksManagemntDto;
+import com.application.mrmason.dto.ResponseGetCMaterialRequestHeaderDto;
+import com.application.mrmason.entity.AdminPopTasksManagemnt;
+import com.application.mrmason.entity.CMaterialRequestHeaderEntity;
+import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.service.CMaterialReqHeaderDetailsService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +17,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -173,7 +181,7 @@ public class CMaterialReqHeaderDetailsController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
 
-        boolean isDeveloper = authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_Developer"));
+        boolean isDeveloper = authorities.stream().anyMatch(a -> a.getAuthority().equals("Developer"));
 
         ResponseCMaterialReqHeaderDetailsDto response = new ResponseCMaterialReqHeaderDetailsDto();
 
@@ -214,5 +222,39 @@ public class CMaterialReqHeaderDetailsController {
         }
     }
 
+    @GetMapping("/get-material-request-header")
+    public ResponseEntity<ResponseGetCMaterialRequestHeaderDto> getTask(
+            @RequestParam(required = false) String materialRequestId,
+            @RequestParam(required = false) String customerEmail,
+            @RequestParam(required = false) String customerName,
+            @RequestParam(required = false) String customerMobile,
+            @RequestParam(required = false) String userId,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate fromRequestDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate toRequstDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate fromDeliveryDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate toDeliveryDate,
+            @RequestParam(required = false) String deliveryLocation,
+            @RequestParam(required = false) RegSource regSource,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) throws AccessDeniedException {
+
+
+		Pageable pageable = PageRequest.of(page, size);
+		Page<CMaterialRequestHeaderEntity> srpqPage = service.getCMaterialRequestHeader(materialRequestId, customerEmail, customerName, customerMobile,
+				userId,fromRequestDate,toRequstDate,fromDeliveryDate,toDeliveryDate,deliveryLocation,regSource, pageable);
+		ResponseGetCMaterialRequestHeaderDto response = new ResponseGetCMaterialRequestHeaderDto();
+
+		response.setMessage("CMaterial Request Header data retrieved successfully.");
+		response.setStatus(true);
+		response.setRequestHeaderEntities(srpqPage.getContent());
+
+		// Set pagination fields
+		response.setCurrentPage(srpqPage.getNumber());
+		response.setPageSize(srpqPage.getSize());
+		response.setTotalElements(srpqPage.getTotalElements());
+		response.setTotalPages(srpqPage.getTotalPages());
+
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 
 }

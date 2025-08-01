@@ -7,11 +7,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.application.mrmason.dto.CMaterialReqHeaderDetailsDTO;
 import com.application.mrmason.dto.CMaterialReqHeaderDetailsResponseDTO;
+import com.application.mrmason.dto.CMaterialRequestHeaderDTO;
 import com.application.mrmason.dto.CommonMaterialRequestDto;
 import com.application.mrmason.dto.ResponseCMaterialReqHeaderDetailsDto;
 import com.application.mrmason.entity.AdminDetails;
@@ -72,7 +75,48 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
 
 	@PersistenceContext
 	private EntityManager entityManager;
+	
+	@Autowired
+	private ModelMapper modelMapper;
 
+	@Override
+	public Page<CMaterialRequestHeaderDTO> getMaterialRequestsWithDetails(
+            String materialRequestId, String customerEmail, String customerName, String customerMobile,
+            String deliveryLocation, LocalDate fromRequestDate, LocalDate toRequestDate,
+            LocalDate fromDeliveryDate, LocalDate toDeliveryDate,String cMatRequestIdLineid, Pageable pageable) {
+
+        Specification<CMaterialRequestHeaderEntity> spec = 
+            CMaterialRequestHeaderSpecification.filterByParams(
+                materialRequestId, customerEmail, customerName, customerMobile,
+                deliveryLocation, fromRequestDate, toRequestDate, fromDeliveryDate, toDeliveryDate
+            );
+
+        Page<CMaterialRequestHeaderEntity> entities = headerRepo.findAll(spec, pageable);
+        return entities.map(entity -> {
+            CMaterialRequestHeaderDTO dto = modelMapper.map(entity, CMaterialRequestHeaderDTO.class);
+
+            List<CMaterialReqHeaderDetailsEntity> details;
+
+            if (cMatRequestIdLineid != null && !cMatRequestIdLineid.isEmpty()) {
+                CMaterialReqHeaderDetailsEntity detail = detailsRepo.findById(cMatRequestIdLineid).orElse(null);
+                details = new ArrayList<>();
+                if (detail != null && detail.getCMatRequestId().equals(entity.getMaterialRequestId())) {
+                    details.add(detail);
+                }
+            } else {
+                details = detailsRepo.findByCMatRequestId(entity.getMaterialRequestId());
+            }
+
+            List<CMaterialReqHeaderDetailsDTO> detailDtos = details.stream()
+                    .map(d -> modelMapper.map(d, CMaterialReqHeaderDetailsDTO.class))
+                    .collect(Collectors.toList());
+
+            dto.setCMaterialReqHeaderDetailsEntity(detailDtos);
+            return dto;
+        });
+
+    }
+	
 	@Transactional
 	@Override
 	public ResponseCMaterialReqHeaderDetailsDto addMaterialRequest(CommonMaterialRequestDto request) {
@@ -522,4 +566,6 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
 
 		return new UserInfo(userId, role);
 	}
+	
+	
 }

@@ -2,6 +2,7 @@ package com.application.mrmason.controller;
 
 import com.application.mrmason.dto.CMaterialReqHeaderDetailsDTO;
 import com.application.mrmason.dto.CMaterialReqHeaderDetailsResponseDTO;
+import com.application.mrmason.dto.CMaterialRequestHeaderDTO;
 import com.application.mrmason.dto.CommonMaterialRequestDto;
 import com.application.mrmason.dto.ResponseCMaterialReqHeaderDetailsDto;
 import com.application.mrmason.dto.ResponseGetAdminPopTasksManagemntDto;
@@ -30,8 +31,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 
 @Slf4j
 @RestController
@@ -256,5 +259,39 @@ public class CMaterialReqHeaderDetailsController {
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
+
+    @GetMapping("/get-material-request-header-and-details")
+    public ResponseEntity<Map<String, Object>> getMaterialRequests(
+            @RequestParam(required = false) String materialRequestId,
+            @RequestParam(required = false) String customerEmail,
+            @RequestParam(required = false) String customerName,
+            @RequestParam(required = false) String customerMobile,
+            @RequestParam(required = false) String deliveryLocation,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate fromRequestDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate toRequestDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate fromDeliveryDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate toDeliveryDate,
+            @RequestParam(required = false) String cMatRequestIdLineid,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<CMaterialRequestHeaderDTO> pageData = service.getMaterialRequestsWithDetails(
+            materialRequestId, customerEmail, customerName, customerMobile,
+            deliveryLocation, fromRequestDate, toRequestDate,
+            fromDeliveryDate, toDeliveryDate,cMatRequestIdLineid,pageable
+        );
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Material request history retrieved successfully.");
+        response.put("status", true);
+        response.put("CMaterialRequestHeaderEntity", pageData.getContent());
+        response.put("currentPage", pageData.getNumber());
+        response.put("pageSize", pageData.getSize());
+        response.put("totalElements", pageData.getTotalElements());
+        response.put("totalPages", pageData.getTotalPages());
+
+        return ResponseEntity.ok(response);
+    }
 
 }

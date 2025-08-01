@@ -2,6 +2,7 @@ package com.application.mrmason.service;
 
 import com.application.mrmason.dto.CMaterialReqHeaderDetailsDTO;
 import com.application.mrmason.dto.CMaterialReqHeaderDetailsResponseDTO;
+import com.application.mrmason.dto.CMaterialRequestHeaderDTO;
 import com.application.mrmason.dto.CommonMaterialRequestDto;
 import com.application.mrmason.dto.ResponseCMaterialReqHeaderDetailsDto;
 import com.application.mrmason.entity.CMaterialRequestHeaderEntity;
@@ -40,4 +41,9 @@ public interface CMaterialReqHeaderDetailsService {
     	public Page<CMaterialRequestHeaderEntity> getCMaterialRequestHeader(String materialRequestId, String customerEmail,
     			String customerName, String customerMobile, String userId, LocalDate fromRequestDate,
     			LocalDate toRequstDate,LocalDate fromDeliveryDate,LocalDate toDeliveryDate,String deliveryLocation, RegSource regSource, Pageable pageable) throws AccessDeniedException ;
+    	
+    	public Page<CMaterialRequestHeaderDTO> getMaterialRequestsWithDetails(
+                String materialRequestId, String customerEmail, String customerName, String customerMobile,
+                String deliveryLocation, LocalDate fromRequestDate, LocalDate toRequestDate,
+                LocalDate fromDeliveryDate, LocalDate toDeliveryDate,String cMatRequestIdLineid, Pageable pageable);
 }

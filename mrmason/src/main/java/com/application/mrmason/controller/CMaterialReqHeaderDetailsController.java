@@ -327,6 +327,7 @@ public class CMaterialReqHeaderDetailsController {
 
     @GetMapping("/get-material-request-header-and-details")
     public ResponseEntity<Map<String, Object>> getMaterialRequests(
+    		@RequestParam(required = false)String userId,
             @RequestParam(required = false) String materialRequestId,
             @RequestParam(required = false) String customerEmail,
             @RequestParam(required = false) String customerName,
@@ -342,7 +343,7 @@ public class CMaterialReqHeaderDetailsController {
     ) {
         Pageable pageable = PageRequest.of(page, size);
         Page<CMaterialRequestHeaderDTO> pageData = service.getMaterialRequestsWithDetails(
-            materialRequestId, customerEmail, customerName, customerMobile,
+        		userId,materialRequestId, customerEmail, customerName, customerMobile,
             deliveryLocation, fromRequestDate, toRequestDate,
             fromDeliveryDate, toDeliveryDate,cMatRequestIdLineid,pageable
         );

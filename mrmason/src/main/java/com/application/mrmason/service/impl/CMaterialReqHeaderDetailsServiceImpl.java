@@ -81,12 +81,12 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
 
 	@Override
 	public Page<CMaterialRequestHeaderDTO> getMaterialRequestsWithDetails(
-            String materialRequestId, String customerEmail, String customerName, String customerMobile,
+			String requestedBy,String materialRequestId, String customerEmail, String customerName, String customerMobile,
             String deliveryLocation, LocalDate fromRequestDate, LocalDate toRequestDate,
             LocalDate fromDeliveryDate, LocalDate toDeliveryDate,String cMatRequestIdLineid, Pageable pageable) {
 
         Specification<CMaterialRequestHeaderEntity> spec = 
-            CMaterialRequestHeaderSpecification.filterByParams(
+            CMaterialRequestHeaderSpecification.filterByParams(requestedBy,
                 materialRequestId, customerEmail, customerName, customerMobile,
                 deliveryLocation, fromRequestDate, toRequestDate, fromDeliveryDate, toDeliveryDate
             );

@@ -9,7 +9,13 @@ import com.application.mrmason.dto.ResponseGetAdminPopTasksManagemntDto;
 import com.application.mrmason.dto.ResponseGetCMaterialRequestHeaderDto;
 import com.application.mrmason.entity.AdminPopTasksManagemnt;
 import com.application.mrmason.entity.CMaterialRequestHeaderEntity;
+import com.application.mrmason.entity.CustomerRegistration;
+import com.application.mrmason.entity.User;
+import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
+import com.application.mrmason.exceptions.ResourceNotFoundException;
+import com.application.mrmason.repository.CustomerRegistrationRepo;
+import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.CMaterialReqHeaderDetailsService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -43,31 +49,89 @@ public class CMaterialReqHeaderDetailsController {
 
     @Autowired
     private CMaterialReqHeaderDetailsService service;
-
+    
+    @Autowired
+    private CustomerRegistrationRepo customerRepo;
+    
+    @Autowired
+    private UserDAO userRepo;
+//    @PreAuthorize("hasAuthority('ROLE_EC') OR hasAuthority('ROLE_Developer')")
+//    @PostMapping("/add-material-request-details")
+//    public ResponseEntity<ResponseCMaterialReqHeaderDetailsDto> addMaterialRequestHeaderDetails(
+//            @RequestBody CommonMaterialRequestDto requestDto) {
+//
+//        log.info("Received material request - Category: {}, Requested By: {}, Number of Items: {}",
+//                requestDto.getMaterialCategory(),
+//                requestDto.getRequestedBy(),
+//                (requestDto.getMaterialRequests() != null ? requestDto.getMaterialRequests().size() : 0));
+//
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+//
+//        String role = null;
+//        if (authorities.contains(new SimpleGrantedAuthority("ROLE_EC"))) {
+//            role = "Customer";
+//        } else if (authorities.contains(new SimpleGrantedAuthority("ROLE_Developer"))) {
+//            role = "Service Person";
+//        } else {
+//            log.error("Unauthorized role attempting to process material request: {}", authorities);
+//            throw new AccessDeniedException("Unauthorized role");
+//        }
+//
+//        log.info("Processing material request as: {}", role);
+//
+//        ResponseCMaterialReqHeaderDetailsDto response = service.addMaterialRequest(requestDto);
+//
+//        if (response.isStatus()) {
+//            log.info("Material request processed successfully.");
+//            return ResponseEntity.ok(response);
+//        } else {
+//            log.warn("Material request processing failed.");
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+//        }
+//    }
     @PreAuthorize("hasAuthority('ROLE_EC') OR hasAuthority('ROLE_Developer')")
     @PostMapping("/add-material-request-details")
     public ResponseEntity<ResponseCMaterialReqHeaderDetailsDto> addMaterialRequestHeaderDetails(
             @RequestBody CommonMaterialRequestDto requestDto) {
 
-        log.info("Received material request - Category: {}, Requested By: {}, Number of Items: {}",
+        log.info("Received material request - Category: {}, Requested By (before token override): {}, Number of Items: {}",
                 requestDto.getMaterialCategory(),
                 requestDto.getRequestedBy(),
                 (requestDto.getMaterialRequests() != null ? requestDto.getMaterialRequests().size() : 0));
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String loggedEmail = authentication.getName(); // email from token
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
 
-        String role = null;
+        String userIdFromDb = null;
+
         if (authorities.contains(new SimpleGrantedAuthority("ROLE_EC"))) {
-            role = "Customer";
-        } else if (authorities.contains(new SimpleGrantedAuthority("ROLE_Developer"))) {
-            role = "Service Person";
-        } else {
+            // Get from CustomerRegistration
+            CustomerRegistration customer = customerRepo
+                    .findByUserEmailAndUserType(loggedEmail, UserType.EC)
+                    .orElseThrow(() -> new ResourceNotFoundException("Customer not found for email: " + loggedEmail));
+            userIdFromDb = customer.getUserid();
+            log.info("Found EC userId from CustomerRegistration: {}", userIdFromDb);
+        } 
+        else if (authorities.contains(new SimpleGrantedAuthority("ROLE_Developer"))) {
+            // Get from User
+        	User developer = userRepo
+        	        .findByEmailAndUserTypeAndRegSource(loggedEmail, UserType.Developer, RegSource.MRMASON)
+        	        .orElseThrow(() -> new ResourceNotFoundException(
+        	            "Developer not found for email: " + loggedEmail + " with RegSource: MRMASON"));
+            userIdFromDb = developer.getBodSeqNo();
+            log.info("Found Developer userId from User table: {}", userIdFromDb);
+        } 
+        else {
             log.error("Unauthorized role attempting to process material request: {}", authorities);
             throw new AccessDeniedException("Unauthorized role");
         }
 
-        log.info("Processing material request as: {}", role);
+        // Override requestedBy with ID from token lookup
+        requestDto.setRequestedBy(userIdFromDb);
+
+        log.info("Processing material request for userId: {}", userIdFromDb);
 
         ResponseCMaterialReqHeaderDetailsDto response = service.addMaterialRequest(requestDto);
 
@@ -79,6 +143,7 @@ public class CMaterialReqHeaderDetailsController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
+
 
     @PutMapping("/update-material-request-details")
     public ResponseEntity<ResponseCMaterialReqHeaderDetailsDto> updateMaterialRequestHeaderDetails(

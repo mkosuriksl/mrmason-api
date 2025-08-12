@@ -1,22 +1,17 @@
 package com.application.mrmason.service.impl;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
@@ -240,22 +235,15 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
 	    }
 
 	    DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-	    DateTimeFormatter timestampFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+//	    DateTimeFormatter timestampFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-	    try {
-	        if (fromDate != null && !fromDate.isEmpty()) {
-	            LocalDate from = LocalDate.parse(fromDate, inputFormatter);
-	            String fromTimestamp = from.atStartOfDay().format(timestampFormatter); // "2024-10-19 00:00:00"
-	            predicates.add(cb.greaterThanOrEqualTo(root.get("serviceRequestDate"), fromTimestamp));
-	        }
+	    if (fromDate != null && toDate != null) {
+	        LocalDate from = LocalDate.parse(fromDate, inputFormatter);
+	        LocalDate to = LocalDate.parse(toDate, inputFormatter);
+	        LocalDateTime fromDateTime = from.atStartOfDay();
+	        LocalDateTime toDateTime = to.atTime(23, 59, 59);
 
-	        if (toDate != null && !toDate.isEmpty()) {
-	            LocalDate to = LocalDate.parse(toDate, inputFormatter);
-	            String toTimestamp = to.atTime(23, 59, 59).format(timestampFormatter); // "2024-11-19 23:59:59"
-	            predicates.add(cb.lessThanOrEqualTo(root.get("serviceRequestDate"), toTimestamp));
-	        }
-	    } catch (DateTimeParseException e) {
-	        System.err.println("Invalid date format: " + e.getMessage());
+	        predicates.add(cb.between(root.get("serviceRequestDate"), fromDateTime, toDateTime));
 	    }
 
 

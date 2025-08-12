@@ -43,7 +43,7 @@ public interface CMaterialReqHeaderDetailsService {
     			LocalDate toRequstDate,LocalDate fromDeliveryDate,LocalDate toDeliveryDate,String deliveryLocation, RegSource regSource, Pageable pageable) throws AccessDeniedException ;
     	
     	public Page<CMaterialRequestHeaderDTO> getMaterialRequestsWithDetails(
-                String materialRequestId, String customerEmail, String customerName, String customerMobile,
+    			String requestedBy,String materialRequestId, String customerEmail, String customerName, String customerMobile,
                 String deliveryLocation, LocalDate fromRequestDate, LocalDate toRequestDate,
                 LocalDate fromDeliveryDate, LocalDate toDeliveryDate,String cMatRequestIdLineid, Pageable pageable);
 }

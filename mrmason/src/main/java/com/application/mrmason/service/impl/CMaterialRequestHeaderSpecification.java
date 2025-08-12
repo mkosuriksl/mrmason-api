@@ -13,6 +13,7 @@ import jakarta.persistence.criteria.Predicate;
 public class CMaterialRequestHeaderSpecification {
 
     public static Specification<CMaterialRequestHeaderEntity> filterByParams(
+    		String requestedBy,
             String materialRequestId,
             String customerEmail,
             String customerName,
@@ -26,6 +27,9 @@ public class CMaterialRequestHeaderSpecification {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
+            if (requestedBy != null && !requestedBy.isEmpty()) {
+                predicates.add(cb.equal(root.get("requestedBy"), requestedBy));
+            }
             if (materialRequestId != null && !materialRequestId.isEmpty()) {
                 predicates.add(cb.equal(root.get("materialRequestId"), materialRequestId));
             }

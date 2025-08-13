@@ -1,6 +1,7 @@
 package com.application.mrmason.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -56,6 +57,23 @@ public class EmailServiceImpl implements EmailService {
 	        throw new RuntimeException("Failed to send email with attachment", e);
 	    }
 	}
+	
+	  public void sendEmailWithPdfAttachment(String to, String subject, String body, byte[] attachmentData, String fileName) {
+	        try {
+	            MimeMessage message = mailsender.createMimeMessage();
+	            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+	            helper.setTo(to);
+	            helper.setSubject(subject);
+	            helper.setText(body);
+
+	            helper.addAttachment(fileName, new ByteArrayResource(attachmentData));
+
+	            mailsender.send(message);
+	        } catch (MessagingException e) {
+	            throw new RuntimeException("Failed to send email", e);
+	        }
+	    }
 
 
 	@Override

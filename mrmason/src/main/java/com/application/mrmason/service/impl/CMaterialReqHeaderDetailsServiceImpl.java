@@ -2,6 +2,7 @@ package com.application.mrmason.service.impl;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -41,6 +42,17 @@ import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.AuthDetailsProvider;
 import com.application.mrmason.service.CMaterialReqHeaderDetailsService;
+import com.itextpdf.io.IOException;
+import com.itextpdf.io.source.ByteArrayOutputStream;
+import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.property.TextAlignment;
+import com.itextpdf.layout.property.UnitValue;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -120,79 +132,185 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
 	@Transactional
 	@Override
 	public ResponseCMaterialReqHeaderDetailsDto addMaterialRequest(CommonMaterialRequestDto request) {
-		List<CMaterialReqHeaderDetailsResponseDTO> responseList = new ArrayList<>();
-		ResponseCMaterialReqHeaderDetailsDto response = new ResponseCMaterialReqHeaderDetailsDto();
+	    List<CMaterialReqHeaderDetailsResponseDTO> responseList = new ArrayList<>();
+	    ResponseCMaterialReqHeaderDetailsDto response = new ResponseCMaterialReqHeaderDetailsDto();
 
-		try {
-			String materialCategory = request.getMaterialCategory();
-			String requestedBy = request.getRequestedBy();
-			LocalDate deliveryDate = request.getDeliveryDate();
-			String deliveryLocation = request.getDeliveryLocation();
+	    try {
+	        String materialCategory = request.getMaterialCategory();
+	        String requestedBy = request.getRequestedBy();
+	        LocalDate deliveryDate = request.getDeliveryDate();
+	        String deliveryLocation = request.getDeliveryLocation();
 
-			String generatedRequestId = generateRequestId();
-			int totalQty = 0;
+	        String generatedRequestId = generateRequestId();
+	        int totalQty = 0;
 
-			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-			Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+	        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+	        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
 
-			boolean isCustomer = authorities.stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_EC"));
-			boolean isServicePerson = authorities.stream()
-					.anyMatch(auth -> auth.getAuthority().equals("ROLE_Developer"));
+	        boolean isCustomer = authorities.stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_EC"));
+	        boolean isServicePerson = authorities.stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_Developer"));
 
-			if (!isCustomer && !isServicePerson) {
-				throw new AccessDeniedException("Unauthorized role");
-			}
+	        if (!isCustomer && !isServicePerson) {
+	            throw new AccessDeniedException("Unauthorized role");
+	        }
 
-			List<CMaterialReqHeaderDetailsDTO> requestDTOList = request.getMaterialRequests();
-			for (int i = 0; i < requestDTOList.size(); i++) {
-				CMaterialReqHeaderDetailsDTO requestDTO = requestDTOList.get(i);
-				try {
-					String lineItemId = generateLineId(generatedRequestId, i + 1);
-					log.info("Generated Line Item ID: {}", lineItemId);
+	        // ✅ Fetch email based on token role
+	        String loggedEmail = authentication.getName();
+	        String recipientEmail;
+	        String recipientName;
+	        String recipientUserId;
 
-					CMaterialReqHeaderDetailsEntity entity = mapToEntity(requestDTO);
+	        if (isCustomer) {
+	            CustomerRegistration customer = customerRegistrationRepo
+	                    .findByUserEmailAndUserType(loggedEmail, UserType.EC)
+	                    .orElseThrow(() -> new ResourceNotFoundException("Customer not found for email: " + loggedEmail));
+	            recipientEmail = customer.getUserEmail();
+	            recipientName=customer.getUsername();
+	            recipientUserId=customer.getUserid();
+	        } else {
+	            User developer = userDAO
+	                    .findByEmailAndUserTypeAndRegSource(loggedEmail, UserType.Developer, RegSource.MRMASON)
+	                    .orElseThrow(() -> new ResourceNotFoundException(
+	                            "Developer not found for email: " + loggedEmail + " with RegSource: MRMASON"));
+	            recipientEmail = developer.getEmail();
+	            recipientName=developer.getUsername();
+	            recipientUserId=developer.getBodSeqNo();
 
-					entity.setCMatRequestId(generatedRequestId);
-					entity.setCMatRequestIdLineid(lineItemId);
-					entity.setMaterialCategory(materialCategory);
-					entity.setRequestedBy(requestedBy);
-					entity.setOrderDate(LocalDate.now());
-					entity.setUpdatedDate(LocalDate.now());
+	        }
 
-					CMaterialReqHeaderDetailsEntity savedEntity = detailsRepo.save(entity);
-					responseList.add(mapToResponseDTO(savedEntity));
+	        List<CMaterialReqHeaderDetailsDTO> requestDTOList = request.getMaterialRequests();
+	        for (int i = 0; i < requestDTOList.size(); i++) {
+	            CMaterialReqHeaderDetailsDTO requestDTO = requestDTOList.get(i);
+	            try {
+	                String lineItemId = generateLineId(generatedRequestId, i + 1);
+	                log.info("Generated Line Item ID: {}", lineItemId);
 
-					totalQty += requestDTO.getQty();
+	                CMaterialReqHeaderDetailsEntity entity = mapToEntity(requestDTO);
 
-				} catch (Exception e) {
-					log.error("Error processing material request for item {}: {}", requestDTO.getItemName(), e);
-					responseList.add(buildErrorResponse(requestDTO));
-				}
-			}
+	                entity.setCMatRequestId(generatedRequestId);
+	                entity.setCMatRequestIdLineid(lineItemId);
+	                entity.setMaterialCategory(materialCategory);
+	                entity.setRequestedBy(requestedBy);
+	                entity.setOrderDate(LocalDate.now());
+	                entity.setUpdatedDate(LocalDate.now());
 
-			CMaterialRequestHeaderEntity headerEntity;
-			if (isCustomer) {
-				headerEntity = createCustomerHeaderEntity(generatedRequestId, totalQty, requestedBy, deliveryDate,
-						deliveryLocation);
-			} else {
-				headerEntity = createServicePersonHeaderEntity(generatedRequestId, totalQty, requestedBy, deliveryDate,
-						deliveryLocation);
-			}
-			headerRepo.save(headerEntity);
+	                CMaterialReqHeaderDetailsEntity savedEntity = detailsRepo.save(entity);
+	                responseList.add(mapToResponseDTO(savedEntity));
 
-			sendMaterialRequestEmail(headerEntity);
+	                totalQty += requestDTO.getQty();
 
-			response.setStatus(!responseList.isEmpty());
-			response.setMessage("Material request details processed successfully.");
-			response.setMaterialRequestDetailsList(responseList);
+	            } catch (Exception e) {
+	                log.error("Error processing material request for item {}: {}", requestDTO.getItemName(), e);
+	                responseList.add(buildErrorResponse(requestDTO));
+	            }
+	        }
 
-		} catch (Exception e) {
-			log.error("Error processing material requests: {}", e.getMessage(), e);
-			response.setStatus(false);
-			response.setMessage("Failed to process material requests.");
-		}
+	        CMaterialRequestHeaderEntity headerEntity;
+	        if (isCustomer) {
+	            headerEntity = createCustomerHeaderEntity(generatedRequestId, totalQty, requestedBy, deliveryDate, deliveryLocation);
+	        } else {
+	            headerEntity = createServicePersonHeaderEntity(generatedRequestId, totalQty, requestedBy, deliveryDate, deliveryLocation);
+	        }
+	        headerRepo.save(headerEntity);
 
-		return response;
+	        // ✅ Prepare Response
+	        response.setStatus(!responseList.isEmpty());
+	        response.setMessage("Material request details processed successfully.");
+	        response.setMaterialRequestDetailsList(responseList);
+
+	        // ✅ Generate PDF
+	        byte[] pdfBytes = generateMaterialRequestPdf(responseList);
+	        
+	        String emailBody =
+	        	    "<p>Hello " + recipientName + ",</p>" +
+	        	    "<p>Your material request with ID <b>" + generatedRequestId + "</b> has been created successfully.</p>" +
+	        	    "<p><b>Request Details:</b></p>" +
+	        	    "<ul>" +
+	        	        "<li>Created By: " + recipientUserId + "</li>" +
+	        	        "<li>Created Date: " + headerEntity.getCreatedDate() + "</li>" +
+	        	        "<li>Total Quantity: " + headerEntity.getTotalQty() + "</li>" +
+	        	    "</ul>" +
+	        	    "<p>Please find the detailed request attached in PDF format.</p>" +
+	        	    "<p>Thank you for using our service!</p>";
+
+	        	emailService.sendEmailWithAttachment(
+	        	    recipientEmail,
+	        	    "Material Request Details - " + generatedRequestId,
+	        	    emailBody,  // HTML body
+	        	    pdfBytes,
+	        	    "material_request_" + generatedRequestId + ".pdf"
+	        	);
+
+
+
+	    } catch (Exception e) {
+	        log.error("Error processing material requests: {}", e.getMessage(), e);
+	        response.setStatus(false);
+	        response.setMessage("Failed to process material requests.");
+	    }
+
+	    return response;
+	}
+
+	private byte[] generateMaterialRequestPdf(List<CMaterialReqHeaderDetailsResponseDTO> requestList) throws IOException {
+	    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	    PdfWriter writer = new PdfWriter(baos);
+	    PdfDocument pdf = new PdfDocument(writer);
+	    Document document = new Document(pdf, PageSize.A4);
+	    document.setMargins(20, 20, 20, 20);
+
+	    // Title
+	    document.add(new Paragraph("Material Request Details")
+	            .setBold()
+	            .setFontSize(14)
+	            .setTextAlignment(TextAlignment.CENTER));
+	    document.add(new Paragraph("\n"));
+
+	    // Table column widths as percentages
+	    float[] columnWidths = {10, 10, 12, 10, 12, 8, 8, 10, 10, 10};
+	    Table table = new Table(UnitValue.createPercentArray(columnWidths));
+	    table.setWidth(UnitValue.createPercentValue(100));
+
+	    // Table header style
+	    String[] headers = {
+	        "cMatRequestIdLineid", "cMatRequestId", "Material Category", "Brand",
+	        "Item Name", "Item Size", "Qty", "Order Date", "Requested By", "Updated Date"
+	    };
+
+	    for (String header : headers) {
+	        table.addHeaderCell(new Cell()
+	                .add(new Paragraph(header))
+	                .setBold()
+	                .setFontSize(8)
+	                .setTextAlignment(TextAlignment.CENTER)
+	                .setBackgroundColor(com.itextpdf.kernel.colors.ColorConstants.LIGHT_GRAY));
+	    }
+
+	    // Table rows
+	    for (CMaterialReqHeaderDetailsResponseDTO dto : requestList) {
+	        table.addCell(new Cell().add(new Paragraph(dto.getCMatRequestIdLineid())).setFontSize(8));
+	        table.addCell(new Cell().add(new Paragraph(dto.getCMatRequestId())).setFontSize(8));
+	        table.addCell(new Cell().add(new Paragraph(dto.getMaterialCategory())).setFontSize(8));
+	        table.addCell(new Cell().add(new Paragraph(dto.getBrand())).setFontSize(8));
+	        table.addCell(new Cell().add(new Paragraph(dto.getItemName())).setFontSize(8));
+	        table.addCell(new Cell().add(new Paragraph(dto.getItemSize())).setFontSize(8));
+	        table.addCell(new Cell().add(new Paragraph(String.valueOf(dto.getQty()))).setFontSize(8));
+//	        table.addCell(new Cell().add(new Paragraph(dto.getOrderDate() != null ? dto.getOrderDate().toString() : "")).setFontSize(8));
+	        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+	        table.addCell(new Cell().add(new Paragraph(
+	            dto.getOrderDate() != null ? dto.getOrderDate().format(formatter) : ""
+	        )).setFontSize(8));
+	        table.addCell(new Cell().add(new Paragraph(dto.getRequestedBy())).setFontSize(8));
+//	        table.addCell(new Cell().add(new Paragraph(dto.getUpdatedDate() != null ? dto.getUpdatedDate().toString() : "")).setFontSize(8));
+	        table.addCell(new Cell().add(new Paragraph(
+	            dto.getUpdatedDate() != null ? dto.getUpdatedDate().format(formatter) : ""
+	        )).setFontSize(8));
+	    }
+
+	    document.add(table);
+	    document.close();
+
+	    return baos.toByteArray();
 	}
 
 	private CMaterialRequestHeaderEntity createCustomerHeaderEntity(String requestId, int totalQty, String userid,

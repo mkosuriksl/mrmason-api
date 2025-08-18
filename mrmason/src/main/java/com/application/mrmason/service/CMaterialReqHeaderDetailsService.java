@@ -42,8 +42,14 @@ public interface CMaterialReqHeaderDetailsService {
     			String customerName, String customerMobile, String userId, LocalDate fromRequestDate,
     			LocalDate toRequstDate,LocalDate fromDeliveryDate,LocalDate toDeliveryDate,String deliveryLocation, RegSource regSource, Pageable pageable) throws AccessDeniedException ;
     	
+//    	public Page<CMaterialRequestHeaderDTO> getMaterialRequestsWithDetails(
+//    			String requestedBy,String materialRequestId, String customerEmail, String customerName, String customerMobile,
+//                String deliveryLocation, LocalDate fromRequestDate, LocalDate toRequestDate,
+//                LocalDate fromDeliveryDate, LocalDate toDeliveryDate,String cMatRequestIdLineid, Pageable pageable);
+    	
     	public Page<CMaterialRequestHeaderDTO> getMaterialRequestsWithDetails(
-    			String requestedBy,String materialRequestId, String customerEmail, String customerName, String customerMobile,
-                String deliveryLocation, LocalDate fromRequestDate, LocalDate toRequestDate,
-                LocalDate fromDeliveryDate, LocalDate toDeliveryDate,String cMatRequestIdLineid, Pageable pageable);
+    	        String requestedBy, String materialRequestId, String customerEmail, String customerName, String customerMobile,
+    	        String deliveryLocation, LocalDate fromRequestDate, LocalDate toRequestDate,
+    	        LocalDate fromDeliveryDate, LocalDate toDeliveryDate, String cMatRequestIdLineid,
+    	        String brand, String itemName, String itemSize, Pageable pageable);
 }

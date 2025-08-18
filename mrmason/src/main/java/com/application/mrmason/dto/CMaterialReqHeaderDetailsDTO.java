@@ -1,7 +1,9 @@
 package com.application.mrmason.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import com.application.mrmason.enums.Status;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -44,4 +46,13 @@ public class CMaterialReqHeaderDetailsDTO {
     @JsonProperty("updatedDate")
     private LocalDate updatedDate;
 
+    private String quotationId;
+    private String customerOrder;
+    private BigDecimal mrp;
+    private BigDecimal discount;
+    private BigDecimal quotedAmount;
+    private String supplierId;
+    private LocalDate quotedDate;
+    private LocalDate supplierUpdatedDate;
+    private Status status;
 }

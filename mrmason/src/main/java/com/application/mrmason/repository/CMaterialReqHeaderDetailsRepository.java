@@ -40,4 +40,13 @@ public interface CMaterialReqHeaderDetailsRepository
         @Query("SELECT c FROM CMaterialReqHeaderDetailsEntity c WHERE c.cMatRequestId = :cMatRequestId")
         List<CMaterialReqHeaderDetailsEntity> findByCMatRequestId(@Param("cMatRequestId") String cMatRequestId);
 
+        @Query("SELECT DISTINCT d.cMatRequestId FROM CMaterialReqHeaderDetailsEntity d " +
+        	       "WHERE (:brand IS NULL OR LOWER(d.brand) = LOWER(:brand)) " +
+        	       "AND (:itemName IS NULL OR LOWER(d.itemName) = LOWER(:itemName)) " +
+        	       "AND (:itemSize IS NULL OR LOWER(d.itemSize) = LOWER(:itemSize))")
+        	List<String> findHeaderIdsByFilters(@Param("brand") String brand,
+        	                                    @Param("itemName") String itemName,
+        	                                    @Param("itemSize") String itemSize);
+
+
 }

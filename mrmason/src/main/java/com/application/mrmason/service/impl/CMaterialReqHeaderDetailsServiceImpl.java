@@ -39,6 +39,7 @@ import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.CMaterialReqHeaderDetailsRepository;
 import com.application.mrmason.repository.CMaterialRequestHeaderRepository;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
+import com.application.mrmason.repository.MaterialSupplierRepository;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.AuthDetailsProvider;
 import com.application.mrmason.service.CMaterialReqHeaderDetailsService;
@@ -90,45 +91,167 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
 	
 	@Autowired
 	private ModelMapper modelMapper;
+	
+	@Autowired
+	private MaterialSupplierRepository materialSupplierRepository;
 
+//	@Override
+//	public Page<CMaterialRequestHeaderDTO> getMaterialRequestsWithDetails(
+//			String requestedBy,String materialRequestId, String customerEmail, String customerName, String customerMobile,
+//            String deliveryLocation, LocalDate fromRequestDate, LocalDate toRequestDate,
+//            LocalDate fromDeliveryDate, LocalDate toDeliveryDate,String cMatRequestIdLineid, Pageable pageable) {
+//
+//        Specification<CMaterialRequestHeaderEntity> spec = 
+//            CMaterialRequestHeaderSpecification.filterByParams(requestedBy,
+//                materialRequestId, customerEmail, customerName, customerMobile,
+//                deliveryLocation, fromRequestDate, toRequestDate, fromDeliveryDate, toDeliveryDate
+//            );
+//
+//        Page<CMaterialRequestHeaderEntity> entities = headerRepo.findAll(spec, pageable);
+//        return entities.map(entity -> {
+//            CMaterialRequestHeaderDTO dto = modelMapper.map(entity, CMaterialRequestHeaderDTO.class);
+//
+//            List<CMaterialReqHeaderDetailsEntity> details;
+//
+//            if (cMatRequestIdLineid != null && !cMatRequestIdLineid.isEmpty()) {
+//                CMaterialReqHeaderDetailsEntity detail = detailsRepo.findById(cMatRequestIdLineid).orElse(null);
+//                details = new ArrayList<>();
+//                if (detail != null && detail.getCMatRequestId().equals(entity.getMaterialRequestId())) {
+//                    details.add(detail);
+//                }
+//            } else {
+//                details = detailsRepo.findByCMatRequestId(entity.getMaterialRequestId());
+//            }
+//
+//            List<CMaterialReqHeaderDetailsDTO> detailDtos = details.stream()
+//                    .map(d -> modelMapper.map(d, CMaterialReqHeaderDetailsDTO.class))
+//                    .collect(Collectors.toList());
+//
+//            dto.setCMaterialReqHeaderDetailsEntity(detailDtos);
+//            
+//            List<CMaterialReqHeaderDetailsDTO> detailDto = details.stream()
+//                    .map(d -> {
+//                        CMaterialReqHeaderDetailsDTO dtoDetail = modelMapper.map(d, CMaterialReqHeaderDetailsDTO.class);
+//
+//                        // Enrich with discount from MaterialSupplier (if exists)
+//                        materialSupplierRepository.findById(d.getCMatRequestIdLineid())
+//                        .ifPresent(supplier -> {
+//                            dtoDetail.setQuotationId(supplier.getQuotationId());
+//                            dtoDetail.setCustomerOrder(supplier.getCustomerOrder());
+//                            dtoDetail.setMrp(supplier.getMrp());
+//                            dtoDetail.setDiscount(supplier.getDiscount());
+//                            dtoDetail.setQuotedAmount(supplier.getQuotedAmount());
+//                            dtoDetail.setSupplierId(supplier.getSupplierId());
+//                            dtoDetail.setQuotedDate(supplier.getQuotedDate());
+//                            dtoDetail.setSupplierUpdatedDate(supplier.getUpdatedDate()); 
+//                            dtoDetail.setStatus(supplier.getStatus());
+//                        });
+//                        return dtoDetail;
+//                    })
+//                    .collect(Collectors.toList());
+//
+//                dto.setCMaterialReqHeaderDetailsEntity(detailDto);
+//            return dto;
+//        });
+//
+//    }
+	
 	@Override
 	public Page<CMaterialRequestHeaderDTO> getMaterialRequestsWithDetails(
-			String requestedBy,String materialRequestId, String customerEmail, String customerName, String customerMobile,
-            String deliveryLocation, LocalDate fromRequestDate, LocalDate toRequestDate,
-            LocalDate fromDeliveryDate, LocalDate toDeliveryDate,String cMatRequestIdLineid, Pageable pageable) {
+	        String requestedBy, String materialRequestId, String customerEmail, String customerName, String customerMobile,
+	        String deliveryLocation, LocalDate fromRequestDate, LocalDate toRequestDate,
+	        LocalDate fromDeliveryDate, LocalDate toDeliveryDate, String cMatRequestIdLineid,
+	        String brand, String itemName, String itemSize, Pageable pageable) {
 
-        Specification<CMaterialRequestHeaderEntity> spec = 
-            CMaterialRequestHeaderSpecification.filterByParams(requestedBy,
-                materialRequestId, customerEmail, customerName, customerMobile,
-                deliveryLocation, fromRequestDate, toRequestDate, fromDeliveryDate, toDeliveryDate
-            );
+	    // If lineid is provided → resolve headerId and override materialRequestId
+	    if (cMatRequestIdLineid != null && !cMatRequestIdLineid.isEmpty()) {
+	        CMaterialReqHeaderDetailsEntity detail =
+	                detailsRepo.findById(cMatRequestIdLineid).orElse(null);
+	        if (detail != null) {
+	            materialRequestId = detail.getCMatRequestId(); // restrict only to this header
+	        } else {
+	            return Page.empty(pageable);
+	        }
+	    }
 
-        Page<CMaterialRequestHeaderEntity> entities = headerRepo.findAll(spec, pageable);
-        return entities.map(entity -> {
-            CMaterialRequestHeaderDTO dto = modelMapper.map(entity, CMaterialRequestHeaderDTO.class);
+	    // Pre-filter headers by brand/itemName/itemSize if needed
+	    List<String> filteredHeaderIds = null;
+	    if (brand != null || itemName != null || itemSize != null) {
+	        filteredHeaderIds = detailsRepo.findHeaderIdsByFilters(brand, itemName, itemSize);
+	        if (filteredHeaderIds == null || filteredHeaderIds.isEmpty()) {
+	            return Page.empty(pageable);
+	        }
+	    }
 
-            List<CMaterialReqHeaderDetailsEntity> details;
+	    // Build specification for header search
+	    Specification<CMaterialRequestHeaderEntity> spec =
+	            CMaterialRequestHeaderSpecification.filterByParams(
+	                    requestedBy,
+	                    materialRequestId,
+	                    customerEmail,
+	                    customerName,
+	                    customerMobile,
+	                    deliveryLocation,
+	                    fromRequestDate,
+	                    toRequestDate,
+	                    fromDeliveryDate,
+	                    toDeliveryDate
+	            );
 
-            if (cMatRequestIdLineid != null && !cMatRequestIdLineid.isEmpty()) {
-                CMaterialReqHeaderDetailsEntity detail = detailsRepo.findById(cMatRequestIdLineid).orElse(null);
-                details = new ArrayList<>();
-                if (detail != null && detail.getCMatRequestId().equals(entity.getMaterialRequestId())) {
-                    details.add(detail);
-                }
-            } else {
-                details = detailsRepo.findByCMatRequestId(entity.getMaterialRequestId());
-            }
+	    // Apply headerIds filter if present
+	    if (filteredHeaderIds != null) {
+	        List<String> finalFilteredHeaderIds = filteredHeaderIds; // effectively final for lambda
+	        spec = spec.and((root, query, cb) ->
+	                root.get("materialRequestId").in(finalFilteredHeaderIds));
+	    }
 
-            List<CMaterialReqHeaderDetailsDTO> detailDtos = details.stream()
-                    .map(d -> modelMapper.map(d, CMaterialReqHeaderDetailsDTO.class))
-                    .collect(Collectors.toList());
+	    Page<CMaterialRequestHeaderEntity> entities = headerRepo.findAll(spec, pageable);
 
-            dto.setCMaterialReqHeaderDetailsEntity(detailDtos);
-            return dto;
-        });
+	    return entities.map(entity -> {
+	        CMaterialRequestHeaderDTO dto = modelMapper.map(entity, CMaterialRequestHeaderDTO.class);
 
-    }
-	
+	        List<CMaterialReqHeaderDetailsEntity> details;
+	        if (cMatRequestIdLineid != null && !cMatRequestIdLineid.isEmpty()) {
+	            details = detailsRepo.findById(cMatRequestIdLineid)
+	                    .map(List::of)
+	                    .orElseGet(List::of);
+	        } else {
+	            details = detailsRepo.findByCMatRequestId(entity.getMaterialRequestId());
+	        }
+
+	        // Apply detail filters (cleanup after fetch)
+	        details = details.stream()
+	                .filter(d -> brand == null || brand.equalsIgnoreCase(d.getBrand()))
+	                .filter(d -> itemName == null || itemName.equalsIgnoreCase(d.getItemName()))
+	                .filter(d -> itemSize == null || itemSize.equalsIgnoreCase(d.getItemSize()))
+	                .collect(Collectors.toList());
+
+	        List<CMaterialReqHeaderDetailsDTO> detailDtos = details.stream()
+	                .map(d -> {
+	                    CMaterialReqHeaderDetailsDTO dtoDetail =
+	                            modelMapper.map(d, CMaterialReqHeaderDetailsDTO.class);
+
+	                    materialSupplierRepository.findById(d.getCMatRequestIdLineid())
+	                            .ifPresent(supplier -> {
+	                                dtoDetail.setQuotationId(supplier.getQuotationId());
+	                                dtoDetail.setCustomerOrder(supplier.getCustomerOrder());
+	                                dtoDetail.setMrp(supplier.getMrp());
+	                                dtoDetail.setDiscount(supplier.getDiscount());
+	                                dtoDetail.setQuotedAmount(supplier.getQuotedAmount());
+	                                dtoDetail.setSupplierId(supplier.getSupplierId());
+	                                dtoDetail.setQuotedDate(supplier.getQuotedDate());
+	                                dtoDetail.setSupplierUpdatedDate(supplier.getUpdatedDate());
+	                                dtoDetail.setStatus(supplier.getStatus());
+	                            });
+	                    return dtoDetail;
+	                })
+	                .collect(Collectors.toList());
+
+	        dto.setCMaterialReqHeaderDetailsEntity(detailDtos);
+	        return dto;
+	    });
+	}
+
 	@Transactional
 	@Override
 	public ResponseCMaterialReqHeaderDetailsDto addMaterialRequest(CommonMaterialRequestDto request) {

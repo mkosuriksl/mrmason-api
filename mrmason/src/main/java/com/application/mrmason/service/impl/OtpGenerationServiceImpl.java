@@ -9,10 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.entity.AdminDetails;
+import com.application.mrmason.entity.MaterialSupplierQuotationLogin;
 import com.application.mrmason.entity.ServicePersonLogin;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.repository.AdminDetailsRepo;
+import com.application.mrmason.repository.MaterialSupplierQuotationUserDAO;
+import com.application.mrmason.repository.MaterialSupplierQuotatuionLoginDAO;
 import com.application.mrmason.repository.ServicePersonLoginDAO;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.EmailService;
@@ -29,6 +32,10 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 	
 	@Autowired
 	ServicePersonLoginDAO userDAO;
+	
+	@Autowired
+	MaterialSupplierQuotatuionLoginDAO msuserDAO;
+	
 	@Autowired
 	public AdminDetailsRepo adminRepo;
 	private final Map<String, String> otpStorage = new HashMap<>(); // Store OTPs temporarily
@@ -39,12 +46,26 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 		int randomNum = (int) (Math.random() * 900000) + 100000;
 		String otp = String.valueOf(randomNum);
 		otpStorage.put(mail, otp);
-//		Optional<ServicePersonLogin> userOpt = Optional.ofNullable(userDAO.findByEmail(mail));
 		Optional<ServicePersonLogin> userOpt = userDAO.findByEmailAndRegSource(mail,regSource);
 		if (userOpt.isPresent()) {
 			ServicePersonLogin user = userOpt.get();
 	        user.setEOtp(otp);
 	        userDAO.save(user);
+	    }
+		mailService.sendEmail(mail, otp,regSource);
+		return otp;
+	}
+	
+	@Override
+	public String generateMsOtp(String mail, RegSource regSource) {
+		int randomNum = (int) (Math.random() * 900000) + 100000;
+		String otp = String.valueOf(randomNum);
+		otpStorage.put(mail, otp);
+		Optional<MaterialSupplierQuotationLogin> userOpt = msuserDAO.findByEmailAndRegSource(mail,regSource);
+		if (userOpt.isPresent()) {
+			MaterialSupplierQuotationLogin user = userOpt.get();
+	        user.setEOtp(otp);
+	        msuserDAO.save(user);
 	    }
 		mailService.sendEmail(mail, otp,regSource);
 		return otp;
@@ -79,25 +100,36 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 		return storedOtp != null && storedOtp.equals(enteredOtp);
 	}
 
-
 	@Override
 	public String generateMobileOtp(String mobile, RegSource regSource) {
 		int randomNum = (int) (Math.random() * 900000) + 100000;
 		String otp = String.valueOf(randomNum);
 		otpStorage.put(mobile, otp);
-//		Optional<ServicePersonLogin> userOpt = Optional.ofNullable(userDAO.findByMobile(mobile));
 		Optional<ServicePersonLogin> userOpt = userDAO.findByMobileAndRegSource(mobile,regSource);
 		if (userOpt.isPresent()) {
 			ServicePersonLogin user = userOpt.get();
 	        user.setMOtp(otp);
 	        userDAO.save(user);
 	    }
-		// String message = "Thanks for registering with us. Your OTP to verify your
-		// mobile number is " + otp + " - www.mrmason.in";
 		smsService.sendSMSMessage(mobile, otp, regSource);
-
 		return otp;
 	}
+	
+	@Override
+	public String generateMsMobileOtp(String mobile, RegSource regSource) {
+		int randomNum = (int) (Math.random() * 900000) + 100000;
+		String otp = String.valueOf(randomNum);
+		otpStorage.put(mobile, otp);
+		Optional<MaterialSupplierQuotationLogin> userOpt = msuserDAO.findByMobileAndRegSource(mobile,regSource);
+		if (userOpt.isPresent()) {
+			MaterialSupplierQuotationLogin user = userOpt.get();
+	        user.setMOtp(otp);
+	        msuserDAO.save(user);
+	    }
+		smsService.sendSMSMessage(mobile, otp, regSource);
+		return otp;
+	}
+
 
 	@Override
 	public boolean verifyMobileOtp(String mobile, String enteredOtp) {

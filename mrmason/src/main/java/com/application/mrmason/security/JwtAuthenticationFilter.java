@@ -16,6 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
+import com.application.mrmason.repository.MaterialSupplierQuotationUserDAO;
 import com.application.mrmason.repository.UserDAO;
 
 import jakarta.servlet.FilterChain;
@@ -40,6 +41,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	
 	@Autowired
 	private CustomerRegistrationRepo customerRegistrationRepo;
+	
+	@Autowired
+	private MaterialSupplierQuotationUserDAO materialSupplierQuotationUserDAO;
 
 	private static final String ORIGIN = "Origin";
 
@@ -85,6 +89,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 					if (userType.equals("EC")) {
 						userDetails = customerRegistrationRepo.findByUserEmail(username);
+					}
+					if (userType.equals("MS")) {
+						userDetails = materialSupplierQuotationUserDAO.findByEmail(username);
 					}
 
 					if (!jwtService.isTokenValid(token, userDetails)) {

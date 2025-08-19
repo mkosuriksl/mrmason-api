@@ -1,6 +1,7 @@
 package com.application.mrmason.security;
 
 import com.application.mrmason.entity.CustomerRegistration;
+import com.application.mrmason.entity.MaterialSupplierQuotationUser;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
@@ -75,7 +76,10 @@ public class JwtService {
 			return UserType.EC;
 		} else if (userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_Adm"))) {
 			return UserType.Adm;
+		}else if (userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_MS"))) {
+			return UserType.MS;
 		}
+		
 		return null;
 	}
 
@@ -116,6 +120,14 @@ public class JwtService {
 		authorities.add(new SimpleGrantedAuthority("ROLE_" + registration.getUserType()));
 
 		return new org.springframework.security.core.userdetails.User(registration.getUserEmail(),
+				registration.getPassword(), authorities);
+	}
+	
+	public UserDetails getUserDetails(MaterialSupplierQuotationUser registration) {
+		Set<GrantedAuthority> authorities = new HashSet<>();
+		authorities.add(new SimpleGrantedAuthority("ROLE_" + registration.getUserType()));
+
+		return new org.springframework.security.core.userdetails.User(registration.getEmail(),
 				registration.getPassword(), authorities);
 	}
 

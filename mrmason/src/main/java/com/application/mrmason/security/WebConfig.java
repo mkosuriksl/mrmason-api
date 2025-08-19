@@ -45,7 +45,8 @@ public class WebConfig {
 				.sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth.requestMatchers("/login", "/error", "/addAdminDetails",
 						"/adminLoginWithPass", "/addNewUser", "/sendOtp", "/verifyOtp", "/sendSmsOtp", "/verifySmsOtp",
-						"/sp-register", "/sp-login", "/sp-send-email-otp", "/sp-verify-email-otp",
+						"/sp-register", "/sp-login", "/sp-send-email-otp", "/sp-verify-email-otp","/ms-send-mobile-otp","/ms-verify-mobile-otp","/ms-login",
+						"/ms-forget-pwd-send-otp","/ms-forget-pwd-change",
 						"/sp-send-mobile-otp", "/sp-verify-mobile-otp", "/forgetPassword/sendOtp",
 						"/forgetPassword/verifyOtpAndChangePassword", "/forget-pwd-send-otp", "/forget-pwd-change",
 						"/admin/forgetPassword/sendOtp", "/admin/forgetPassword/verifyOtpAndChangePassword", "/getData",

@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.entity.CMaterialReqHeaderDetailsEntity;
 import com.application.mrmason.entity.MaterialSupplier;
+import com.application.mrmason.entity.MaterialSupplierQuotationUser;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
@@ -25,6 +26,7 @@ import com.application.mrmason.enums.Status;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.CMaterialReqHeaderDetailsRepository;
+import com.application.mrmason.repository.MaterialSupplierQuotationUserDAO;
 import com.application.mrmason.repository.MaterialSupplierRepository;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.AuthDetailsProvider;
@@ -37,7 +39,7 @@ public class materialSupplierService {
 	@Autowired
 	public AdminDetailsRepo adminRepo;
 	@Autowired
-	UserDAO userDAO;
+	private MaterialSupplierQuotationUserDAO userDAO;
 	@PersistenceContext
 	private EntityManager entityManager;
 	@Autowired
@@ -99,12 +101,12 @@ public class materialSupplierService {
 		List<String> roleNames = loggedInRole.stream().map(GrantedAuthority::getAuthority)
 				.map(role -> role.replace("ROLE_", "")).collect(Collectors.toList());
 		if (!roleNames.contains("Developer")) {
-			throw new ResourceNotFoundException("Only Developer role is allowed. Found roles: " + roleNames);
+			throw new ResourceNotFoundException("Only MaterialSupplierQuotation(MS) role is allowed. Found roles: " + roleNames);
 		}
-		UserType userType = UserType.Developer;
-		User developer = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource)
-				.orElseThrow(() -> new ResourceNotFoundException("Developer not found: " + loggedInUserEmail));
-		String userId = developer.getBodSeqNo();
+		UserType userType = UserType.MS;
+		MaterialSupplierQuotationUser ms = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource)
+				.orElseThrow(() -> new ResourceNotFoundException("MS not found: " + loggedInUserEmail));
+		String userId = ms.getBodSeqNo();
 		return new UserInfo(userId);
 	}
 

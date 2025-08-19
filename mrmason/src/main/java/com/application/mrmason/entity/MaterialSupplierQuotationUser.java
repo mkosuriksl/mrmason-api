@@ -112,7 +112,7 @@ public class MaterialSupplierQuotationUser implements UserDetails {
 		String minute = String.format("%02d", now.getMinute());
 		String second = String.format("%02d", now.getSecond());
 		String millis = String.format("%03d", now.getNano() / 1000000).substring(0, 2);
-		this.bodSeqNo = "SP" + year + month + day + hour + minute + second + millis;
+		this.bodSeqNo = "MS" + year + month + day + hour + minute + second + millis;
 		}
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy hh:mm a");
 		this.update = now;

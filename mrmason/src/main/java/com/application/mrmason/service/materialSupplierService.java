@@ -19,7 +19,6 @@ import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.entity.CMaterialReqHeaderDetailsEntity;
 import com.application.mrmason.entity.MaterialSupplier;
 import com.application.mrmason.entity.MaterialSupplierQuotationUser;
-import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.enums.Status;
@@ -28,7 +27,6 @@ import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.CMaterialReqHeaderDetailsRepository;
 import com.application.mrmason.repository.MaterialSupplierQuotationUserDAO;
 import com.application.mrmason.repository.MaterialSupplierRepository;
-import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.AuthDetailsProvider;
 
 import jakarta.persistence.EntityManager;
@@ -100,7 +98,7 @@ public class materialSupplierService {
 
 		List<String> roleNames = loggedInRole.stream().map(GrantedAuthority::getAuthority)
 				.map(role -> role.replace("ROLE_", "")).collect(Collectors.toList());
-		if (!roleNames.contains("Developer")) {
+		if (!roleNames.contains("MS")) {
 			throw new ResourceNotFoundException("Only MaterialSupplierQuotation(MS) role is allowed. Found roles: " + roleNames);
 		}
 		UserType userType = UserType.MS;

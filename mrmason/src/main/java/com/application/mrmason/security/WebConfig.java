@@ -46,7 +46,7 @@ public class WebConfig {
 				.authorizeHttpRequests(auth -> auth.requestMatchers("/login", "/error", "/addAdminDetails",
 						"/adminLoginWithPass", "/addNewUser", "/sendOtp", "/verifyOtp", "/sendSmsOtp", "/verifySmsOtp",
 						"/sp-register", "/sp-login", "/sp-send-email-otp", "/sp-verify-email-otp","/ms-send-mobile-otp","/ms-verify-mobile-otp","/ms-login",
-						"/ms-forget-pwd-send-otp","/ms-forget-pwd-change",
+						"/ms-forget-pwd-send-otp","/ms-forget-pwd-change","/material-supplier-quotation-register","/ms-send-email-otp","/ms-verify-email-otp",
 						"/sp-send-mobile-otp", "/sp-verify-mobile-otp", "/forgetPassword/sendOtp",
 						"/forgetPassword/verifyOtpAndChangePassword", "/forget-pwd-send-otp", "/forget-pwd-change",
 						"/admin/forgetPassword/sendOtp", "/admin/forgetPassword/verifyOtpAndChangePassword", "/getData",

@@ -119,6 +119,40 @@ public class EmailServiceImpl implements EmailService {
 		}
 	}
 	
+	@Override
+	public void sendEmail(String toMail, RegSource regSource) {
+	    try {
+	        MimeMessage message = mailsender.createMimeMessage();
+	        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+	        helper.setFrom("no_reply@kosuriers.com");
+	        helper.setTo(toMail);
+
+	        String subject = null;
+	        String body = null;
+
+	        if (regSource == RegSource.MRMASON) {
+	            subject = "Welcome to MrMason!";
+	            body = "Thanks for registering with us. Visit us at <a href='https://www.mrmason.in'>www.mrmason.in</a>";
+	        } else if (regSource == RegSource.MEKANIK) {
+	            subject = "Welcome to Mekanik!";
+	            body = "Thanks for registering with us. Visit us at <a href='https://www.mekanik.in'>www.mekanik.in</a>";
+	        } else {
+	            subject = "Welcome!";
+	            body = "Thanks for joining us.";
+	        }
+
+	        helper.setSubject(subject);
+	        helper.setText(body, true); // HTML enabled
+
+	        mailsender.send(message);
+	        log.info("Email sent successfully to {}", toMail);
+	    } catch (MessagingException e) {
+	        log.error("Failed to send email to {}: {}", toMail, e.getMessage());
+	    }
+	}
+
+	
 	public void sendWebMail(String toMail, String body) {
 
 		MimeMessage message = mailsender.createMimeMessage();

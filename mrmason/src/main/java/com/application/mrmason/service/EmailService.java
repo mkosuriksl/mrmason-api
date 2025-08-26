@@ -8,4 +8,5 @@ public interface EmailService {
 	public void sendEmail(String toMail, String body);
 	
 	public void sendWebMail(String toMail, String body);
+	public void sendEmail(String toMail, RegSource regSource);
 }

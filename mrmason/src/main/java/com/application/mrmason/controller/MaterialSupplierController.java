@@ -27,7 +27,7 @@ public class MaterialSupplierController {
 	@Autowired
     private materialSupplierService materialSupplierService ;
 
-    @PostMapping("/add")
+    @PostMapping("/add-quotations")
     public ResponseEntity<GenericResponse<List<MaterialSupplier>>> saveQuotations(
             @RequestBody List<MaterialSupplier> quotations,
             @RequestParam RegSource regSource) {
@@ -36,7 +36,7 @@ public class MaterialSupplierController {
         return ResponseEntity.ok(response);
     }
     
-    @PutMapping("/update")
+    @PutMapping("/update-quotations")
     public ResponseEntity<GenericResponse<List<MaterialSupplier>>> updateTasks(
             @RequestParam RegSource regSource, @RequestBody List<MaterialSupplier> requestList) throws AccessDeniedException {
         List<MaterialSupplier> savedTasks = materialSupplierService.updateMaterial(regSource, requestList);

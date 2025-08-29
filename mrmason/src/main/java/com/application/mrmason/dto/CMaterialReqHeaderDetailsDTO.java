@@ -55,4 +55,5 @@ public class CMaterialReqHeaderDetailsDTO {
     private LocalDate quotedDate;
     private LocalDate supplierUpdatedDate;
     private Status status;
+    private double gst;
 }

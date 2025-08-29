@@ -242,6 +242,7 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
 	                                dtoDetail.setQuotedDate(supplier.getQuotedDate());
 	                                dtoDetail.setSupplierUpdatedDate(supplier.getUpdatedDate());
 	                                dtoDetail.setStatus(supplier.getStatus());
+	                                dtoDetail.setGst(supplier.getGst());
 	                            });
 	                    return dtoDetail;
 	                })

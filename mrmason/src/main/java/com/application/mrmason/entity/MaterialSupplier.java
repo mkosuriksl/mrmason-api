@@ -50,6 +50,9 @@ public class MaterialSupplier {
 	@Column(name = "status")
 	private Status status;
 	
+	@Column(name = "gst")
+	private double gst;
+	
 	@PrePersist
     public void prePersist() {
         if (this.quotationId == null) {

@@ -129,6 +129,7 @@ public class materialSupplierService {
 	            existingTask.setUpdatedDate(LocalDate.now());
 	            existingTask.setStatus(task.getStatus());
 	            existingTask.setGst(task.getGst());
+	            existingTask.setMrp(task.getMrp());
 	            updatedTasks.add(existingTask);
 	        }
 

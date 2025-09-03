@@ -2,6 +2,7 @@ package com.application.mrmason.repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -47,6 +48,16 @@ public interface CMaterialReqHeaderDetailsRepository
         	List<String> findHeaderIdsByFilters(@Param("brand") String brand,
         	                                    @Param("itemName") String itemName,
         	                                    @Param("itemSize") String itemSize);
+
+        @Query("SELECT COUNT(e) FROM CMaterialReqHeaderDetailsEntity e WHERE e.cMatRequestId = :cMatRequestId")
+        long countByCMatRequestId(@Param("cMatRequestId") String cMatRequestId);
+
+        @Query(value = "SELECT * FROM c_material_request_header_details " +
+                "WHERE c_mat_request_id = :cMatRequestId " +
+                "LIMIT 1",
+        nativeQuery = true)
+ Optional<CMaterialReqHeaderDetailsEntity> findFirstByCMatRequestId(
+         @Param("cMatRequestId") String cMatRequestId);
 
 
 }

@@ -234,7 +234,7 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
 	                    materialSupplierRepository.findById(d.getCMatRequestIdLineid())
 	                            .ifPresent(supplier -> {
 	                                dtoDetail.setQuotationId(supplier.getQuotationId());
-	                                dtoDetail.setCustomerOrder(supplier.getCustomerOrder());
+	                                dtoDetail.setCMatRequestIdMSQ(supplier.getCmatRequestId());
 	                                dtoDetail.setMrp(supplier.getMrp());
 	                                dtoDetail.setDiscount(supplier.getDiscount());
 	                                dtoDetail.setQuotedAmount(supplier.getQuotedAmount());

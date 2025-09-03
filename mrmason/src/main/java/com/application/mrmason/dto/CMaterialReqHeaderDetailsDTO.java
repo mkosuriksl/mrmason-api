@@ -47,7 +47,7 @@ public class CMaterialReqHeaderDetailsDTO {
     private LocalDate updatedDate;
 
     private String quotationId;
-    private String customerOrder;
+    private String cMatRequestIdMSQ;
     private BigDecimal mrp;
     private BigDecimal discount;
     private BigDecimal quotedAmount;

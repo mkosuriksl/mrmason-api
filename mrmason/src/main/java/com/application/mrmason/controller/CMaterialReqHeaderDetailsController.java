@@ -35,6 +35,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -341,6 +342,8 @@ public class CMaterialReqHeaderDetailsController {
             @RequestParam(required = false)String brand,
             @RequestParam(required = false)String itemName,
             @RequestParam(required = false)String itemSize,
+            @RequestParam(required = false) String supplierId,       
+            @RequestParam(required = false) BigDecimal quotedAmount,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
@@ -348,7 +351,7 @@ public class CMaterialReqHeaderDetailsController {
         Page<CMaterialRequestHeaderDTO> pageData = service.getMaterialRequestsWithDetails(
         		userId,materialRequestId, customerEmail, customerName, customerMobile,
             deliveryLocation, fromRequestDate, toRequestDate,
-            fromDeliveryDate, toDeliveryDate,cMatRequestIdLineid,brand,itemName,itemSize,pageable
+            fromDeliveryDate, toDeliveryDate,cMatRequestIdLineid,brand,itemName,itemSize,supplierId, quotedAmount,pageable
         );
 
         Map<String, Object> response = new HashMap<>();

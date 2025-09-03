@@ -8,6 +8,7 @@ import com.application.mrmason.dto.ResponseCMaterialReqHeaderDetailsDto;
 import com.application.mrmason.entity.CMaterialRequestHeaderEntity;
 import com.application.mrmason.enums.RegSource;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -51,5 +52,5 @@ public interface CMaterialReqHeaderDetailsService {
     	        String requestedBy, String materialRequestId, String customerEmail, String customerName, String customerMobile,
     	        String deliveryLocation, LocalDate fromRequestDate, LocalDate toRequestDate,
     	        LocalDate fromDeliveryDate, LocalDate toDeliveryDate, String cMatRequestIdLineid,
-    	        String brand, String itemName, String itemSize, Pageable pageable);
+    	        String brand, String itemName, String itemSize,String supplierId, BigDecimal quotedAmount, Pageable pageable);
 }

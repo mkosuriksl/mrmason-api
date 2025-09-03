@@ -1,11 +1,13 @@
 package com.application.mrmason.service.impl;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
@@ -156,12 +158,108 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
 //
 //    }
 	
+//	@Override
+//	public Page<CMaterialRequestHeaderDTO> getMaterialRequestsWithDetails(
+//	        String requestedBy, String materialRequestId, String customerEmail, String customerName, String customerMobile,
+//	        String deliveryLocation, LocalDate fromRequestDate, LocalDate toRequestDate,
+//	        LocalDate fromDeliveryDate, LocalDate toDeliveryDate, String cMatRequestIdLineid,
+//	        String brand, String itemName, String itemSize, Pageable pageable) {
+//
+//	    // If lineid is provided → resolve headerId and override materialRequestId
+//	    if (cMatRequestIdLineid != null && !cMatRequestIdLineid.isEmpty()) {
+//	        CMaterialReqHeaderDetailsEntity detail =
+//	                detailsRepo.findById(cMatRequestIdLineid).orElse(null);
+//	        if (detail != null) {
+//	            materialRequestId = detail.getCMatRequestId(); // restrict only to this header
+//	        } else {
+//	            return Page.empty(pageable);
+//	        }
+//	    }
+//
+//	    // Pre-filter headers by brand/itemName/itemSize if needed
+//	    List<String> filteredHeaderIds = null;
+//	    if (brand != null || itemName != null || itemSize != null) {
+//	        filteredHeaderIds = detailsRepo.findHeaderIdsByFilters(brand, itemName, itemSize);
+//	        if (filteredHeaderIds == null || filteredHeaderIds.isEmpty()) {
+//	            return Page.empty(pageable);
+//	        }
+//	    }
+//
+//	    // Build specification for header search
+//	    Specification<CMaterialRequestHeaderEntity> spec =
+//	            CMaterialRequestHeaderSpecification.filterByParams(
+//	                    requestedBy,
+//	                    materialRequestId,
+//	                    customerEmail,
+//	                    customerName,
+//	                    customerMobile,
+//	                    deliveryLocation,
+//	                    fromRequestDate,
+//	                    toRequestDate,
+//	                    fromDeliveryDate,
+//	                    toDeliveryDate
+//	            );
+//
+//	    // Apply headerIds filter if present
+//	    if (filteredHeaderIds != null) {
+//	        List<String> finalFilteredHeaderIds = filteredHeaderIds; // effectively final for lambda
+//	        spec = spec.and((root, query, cb) ->
+//	                root.get("materialRequestId").in(finalFilteredHeaderIds));
+//	    }
+//
+//	    Page<CMaterialRequestHeaderEntity> entities = headerRepo.findAll(spec, pageable);
+//
+//	    return entities.map(entity -> {
+//	        CMaterialRequestHeaderDTO dto = modelMapper.map(entity, CMaterialRequestHeaderDTO.class);
+//
+//	        List<CMaterialReqHeaderDetailsEntity> details;
+//	        if (cMatRequestIdLineid != null && !cMatRequestIdLineid.isEmpty()) {
+//	            details = detailsRepo.findById(cMatRequestIdLineid)
+//	                    .map(List::of)
+//	                    .orElseGet(List::of);
+//	        } else {
+//	            details = detailsRepo.findByCMatRequestId(entity.getMaterialRequestId());
+//	        }
+//
+//	        // Apply detail filters (cleanup after fetch)
+//	        details = details.stream()
+//	                .filter(d -> brand == null || brand.equalsIgnoreCase(d.getBrand()))
+//	                .filter(d -> itemName == null || itemName.equalsIgnoreCase(d.getItemName()))
+//	                .filter(d -> itemSize == null || itemSize.equalsIgnoreCase(d.getItemSize()))
+//	                .collect(Collectors.toList());
+//
+//	        List<CMaterialReqHeaderDetailsDTO> detailDtos = details.stream()
+//	                .map(d -> {
+//	                    CMaterialReqHeaderDetailsDTO dtoDetail =
+//	                            modelMapper.map(d, CMaterialReqHeaderDetailsDTO.class);
+//
+//	                    materialSupplierRepository.findById(d.getCMatRequestIdLineid())
+//	                            .ifPresent(supplier -> {
+//	                                dtoDetail.setQuotationId(supplier.getQuotationId());
+//	                                dtoDetail.setCMatRequestIdMSQ(supplier.getCmatRequestId());
+//	                                dtoDetail.setMrp(supplier.getMrp());
+//	                                dtoDetail.setDiscount(supplier.getDiscount());
+//	                                dtoDetail.setQuotedAmount(supplier.getQuotedAmount());
+//	                                dtoDetail.setSupplierId(supplier.getSupplierId());
+//	                                dtoDetail.setQuotedDate(supplier.getQuotedDate());
+//	                                dtoDetail.setSupplierUpdatedDate(supplier.getUpdatedDate());
+//	                                dtoDetail.setStatus(supplier.getStatus());
+//	                                dtoDetail.setGst(supplier.getGst());
+//	                            });
+//	                    return dtoDetail;
+//	                })
+//	                .collect(Collectors.toList());
+//
+//	        dto.setCMaterialReqHeaderDetailsEntity(detailDtos);
+//	        return dto;
+//	    });
+//	}
 	@Override
 	public Page<CMaterialRequestHeaderDTO> getMaterialRequestsWithDetails(
 	        String requestedBy, String materialRequestId, String customerEmail, String customerName, String customerMobile,
 	        String deliveryLocation, LocalDate fromRequestDate, LocalDate toRequestDate,
 	        LocalDate fromDeliveryDate, LocalDate toDeliveryDate, String cMatRequestIdLineid,
-	        String brand, String itemName, String itemSize, Pageable pageable) {
+	        String brand, String itemName, String itemSize,String supplierId, BigDecimal quotedAmount, Pageable pageable) {
 
 	    // If lineid is provided → resolve headerId and override materialRequestId
 	    if (cMatRequestIdLineid != null && !cMatRequestIdLineid.isEmpty()) {
@@ -207,34 +305,51 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
 
 	    Page<CMaterialRequestHeaderEntity> entities = headerRepo.findAll(spec, pageable);
 
-	    return entities.map(entity -> {
-	        CMaterialRequestHeaderDTO dto = modelMapper.map(entity, CMaterialRequestHeaderDTO.class);
+	    List<CMaterialRequestHeaderDTO> filteredDtos = entities.getContent().stream()
+	        .map(entity -> {
+	            CMaterialRequestHeaderDTO dto = modelMapper.map(entity, CMaterialRequestHeaderDTO.class);
 
-	        List<CMaterialReqHeaderDetailsEntity> details;
-	        if (cMatRequestIdLineid != null && !cMatRequestIdLineid.isEmpty()) {
-	            details = detailsRepo.findById(cMatRequestIdLineid)
-	                    .map(List::of)
-	                    .orElseGet(List::of);
-	        } else {
-	            details = detailsRepo.findByCMatRequestId(entity.getMaterialRequestId());
-	        }
+	            List<CMaterialReqHeaderDetailsEntity> details;
+	            if (cMatRequestIdLineid != null && !cMatRequestIdLineid.isEmpty()) {
+	                details = detailsRepo.findById(cMatRequestIdLineid)
+	                        .map(List::of)
+	                        .orElseGet(List::of);
+	            } else {
+	                details = detailsRepo.findByCMatRequestId(entity.getMaterialRequestId());
+	            }
 
-	        // Apply detail filters (cleanup after fetch)
-	        details = details.stream()
+	            details = details.stream()
 	                .filter(d -> brand == null || brand.equalsIgnoreCase(d.getBrand()))
 	                .filter(d -> itemName == null || itemName.equalsIgnoreCase(d.getItemName()))
 	                .filter(d -> itemSize == null || itemSize.equalsIgnoreCase(d.getItemSize()))
+	                .filter(d -> {
+	                    if (supplierId == null && quotedAmount == null) {
+	                        return true;
+	                    }
+	                    return materialSupplierRepository.findById(d.getCMatRequestIdLineid())
+	                            .map(supplier -> {
+	                                boolean supplierMatch = (supplierId == null ||
+	                                        supplierId.equalsIgnoreCase(supplier.getSupplierId()));
+	                                boolean quotedMatch = (quotedAmount == null ||
+	                                        quotedAmount.compareTo(supplier.getQuotedAmount()) == 0);
+	                                return supplierMatch && quotedMatch;
+	                            })
+	                            .orElse(false);
+	                })
 	                .collect(Collectors.toList());
 
-	        List<CMaterialReqHeaderDetailsDTO> detailDtos = details.stream()
+	            if (details.isEmpty()) {
+	                return null; // <-- drop this header
+	            }
+
+	            List<CMaterialReqHeaderDetailsDTO> detailDtos = details.stream()
 	                .map(d -> {
 	                    CMaterialReqHeaderDetailsDTO dtoDetail =
 	                            modelMapper.map(d, CMaterialReqHeaderDetailsDTO.class);
-
 	                    materialSupplierRepository.findById(d.getCMatRequestIdLineid())
 	                            .ifPresent(supplier -> {
 	                                dtoDetail.setQuotationId(supplier.getQuotationId());
-	                                dtoDetail.setCustomerOrder(supplier.getCustomerOrder());
+	                                dtoDetail.setCMatRequestIdMSQ(supplier.getCmatRequestId());
 	                                dtoDetail.setMrp(supplier.getMrp());
 	                                dtoDetail.setDiscount(supplier.getDiscount());
 	                                dtoDetail.setQuotedAmount(supplier.getQuotedAmount());
@@ -248,9 +363,15 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
 	                })
 	                .collect(Collectors.toList());
 
-	        dto.setCMaterialReqHeaderDetailsEntity(detailDtos);
-	        return dto;
-	    });
+	            dto.setCMaterialReqHeaderDetailsEntity(detailDtos);
+	            return dto;
+	        })
+	        .filter(Objects::nonNull)  // remove headers with no matching details
+	        .collect(Collectors.toList());
+
+	    // Build new page with filtered data
+	    return new PageImpl<>(filteredDtos, pageable, filteredDtos.size());
+	
 	}
 
 	@Transactional

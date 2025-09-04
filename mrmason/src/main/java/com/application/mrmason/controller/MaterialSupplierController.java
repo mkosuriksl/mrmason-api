@@ -1,10 +1,17 @@
 package com.application.mrmason.controller;
 
 import java.nio.file.AccessDeniedException;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,7 +21,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.MaterialSupplierQuotations;
+import com.application.mrmason.dto.ResponseGetMaterialSupplierQuotationdetailsDto;
+import com.application.mrmason.dto.ResponseGetMaterialSupplierQuotationsheaderDto;
 import com.application.mrmason.entity.MaterialSupplier;
+import com.application.mrmason.entity.MaterialSupplierQuotationHeader;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.service.materialSupplierService;
 
@@ -61,4 +71,57 @@ public class MaterialSupplierController {
                 true, savedTasks);
         return ResponseEntity.ok(response);
     }
+    
+    @GetMapping("/get-material-supplier-details")
+	public ResponseEntity<ResponseGetMaterialSupplierQuotationdetailsDto> getMaterialSupplierDetails(
+			@RequestParam(required = false) String quotationId,
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+
+		Pageable pageable = PageRequest.of(page, size);
+		Page<MaterialSupplier> srpqPage = materialSupplierService
+				.getMaterialSupplierDetails( quotationId, pageable);
+		ResponseGetMaterialSupplierQuotationdetailsDto response = new ResponseGetMaterialSupplierQuotationdetailsDto();
+
+		response.setMessage("Material Supplier Quotation details retrieved successfully.");
+		response.setStatus(true);
+		response.setMaterialSuppliers(srpqPage.getContent());
+
+		// Set pagination fields
+		response.setCurrentPage(srpqPage.getNumber());
+		response.setPageSize(srpqPage.getSize());
+		response.setTotalElements(srpqPage.getTotalElements());
+		response.setTotalPages(srpqPage.getTotalPages());
+
+		return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+    
+    @GetMapping("/get-material-supplier-header")
+    public ResponseEntity<ResponseGetMaterialSupplierQuotationsheaderDto> getQuotationsByUserMobile(
+            @RequestParam(required = false) String userMobile,
+            @RequestParam(required = false) String supplierId,          // <-- Added
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromQuotedDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toQuotedDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<MaterialSupplierQuotationHeader> pageData =
+                materialSupplierService.getQuotationsByUserMobile(
+                        userMobile, supplierId, fromQuotedDate, toQuotedDate, pageable);
+
+        ResponseGetMaterialSupplierQuotationsheaderDto response = new ResponseGetMaterialSupplierQuotationsheaderDto();
+        response.setMessage("Material supplier quotations fetched successfully.");
+        response.setStatus(true);
+        response.setMaterialSupplierQuotationHeaders(pageData.getContent());
+        response.setCurrentPage(pageData.getNumber());
+        response.setPageSize(pageData.getSize());
+        response.setTotalElements(pageData.getTotalElements());
+        response.setTotalPages(pageData.getTotalPages());
+
+        return ResponseEntity.ok(response);
+    }
+
+
+	
 }

@@ -13,6 +13,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +25,7 @@ import com.application.mrmason.entity.CMaterialReqHeaderDetailsEntity;
 import com.application.mrmason.entity.MaterialSupplier;
 import com.application.mrmason.entity.MaterialSupplierQuotationHeader;
 import com.application.mrmason.entity.MaterialSupplierQuotationUser;
+import com.application.mrmason.entity.ServiceRequestPaintQuotation;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.enums.Status;
@@ -35,6 +39,11 @@ import com.application.mrmason.security.AuthDetailsProvider;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 @Service
 public class materialSupplierService {
 
@@ -238,4 +247,36 @@ public class materialSupplierService {
 	        return materialSupplierRepository.saveAll(updatedTasks);
 	    }
 
+	    public Page<MaterialSupplier> getMaterialSupplierDetails(
+				String quotationId,Pageable pageable) {
+
+		    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+
+		    // === Main query ===
+		    CriteriaQuery<MaterialSupplier> query = cb.createQuery(MaterialSupplier.class);
+		    Root<MaterialSupplier> root = query.from(MaterialSupplier.class);
+		    List<Predicate> predicates = new ArrayList<>();
+
+		    if (quotationId != null && !quotationId.trim().isEmpty()) {
+		        predicates.add(cb.equal(root.get("quotationId"), quotationId));
+		    }
+		    query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
+		    TypedQuery<MaterialSupplier> typedQuery = entityManager.createQuery(query);
+		    typedQuery.setFirstResult((int) pageable.getOffset());
+		    typedQuery.setMaxResults(pageable.getPageSize());
+
+		    // === Count query ===
+		    CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+		    Root<MaterialSupplier> countRoot = countQuery.from(MaterialSupplier.class);
+		    List<Predicate> countPredicates = new ArrayList<>();
+
+		    if (quotationId != null && !quotationId.trim().isEmpty()) {
+		    	countPredicates.add(cb.equal(countRoot.get("quotationId"), quotationId));
+		    }
+		   
+		    countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
+		    Long total = entityManager.createQuery(countQuery).getSingleResult();
+
+		    return new PageImpl<>(typedQuery.getResultList(), pageable, total);
+	    }
 }

@@ -21,7 +21,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name="material_supplier_quotation_user_otp_details")
+@Table(name="material_supplier_user_otp_details")
 @Builder
 public class MaterialSupplierQuotationLogin {
 

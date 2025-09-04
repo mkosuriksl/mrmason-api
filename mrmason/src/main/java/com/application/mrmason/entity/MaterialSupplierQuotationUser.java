@@ -30,7 +30,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "material_supplier_quotations")
+@Table(name = "material_supplier_registration")
 public class MaterialSupplierQuotationUser implements UserDetails {
 
 //	private static final long serialVersionUID = 5342327L;

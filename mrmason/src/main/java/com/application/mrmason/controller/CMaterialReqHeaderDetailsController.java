@@ -3,6 +3,7 @@ package com.application.mrmason.controller;
 import com.application.mrmason.dto.CMaterialReqHeaderDetailsDTO;
 import com.application.mrmason.dto.CMaterialReqHeaderDetailsResponseDTO;
 import com.application.mrmason.dto.CMaterialRequestHeaderDTO;
+import com.application.mrmason.dto.CMaterialRequestHeaderWithCategoryDto;
 import com.application.mrmason.dto.CommonMaterialRequestDto;
 import com.application.mrmason.dto.ResponseCMaterialReqHeaderDetailsDto;
 import com.application.mrmason.dto.ResponseGetAdminPopTasksManagemntDto;
@@ -10,11 +11,13 @@ import com.application.mrmason.dto.ResponseGetCMaterialRequestHeaderDto;
 import com.application.mrmason.entity.AdminPopTasksManagemnt;
 import com.application.mrmason.entity.CMaterialRequestHeaderEntity;
 import com.application.mrmason.entity.CustomerRegistration;
+import com.application.mrmason.entity.MaterialSupplierQuotationUser;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
+import com.application.mrmason.repository.MaterialSupplierQuotationUserDAO;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.service.CMaterialReqHeaderDetailsService;
 
@@ -56,6 +59,9 @@ public class CMaterialReqHeaderDetailsController {
     
     @Autowired
     private UserDAO userRepo;
+    
+	@Autowired
+	private MaterialSupplierQuotationUserDAO materialSupplierQuotationUserDAO;
 //    @PreAuthorize("hasAuthority('ROLE_EC') OR hasAuthority('ROLE_Developer')")
 //    @PostMapping("/add-material-request-details")
 //    public ResponseEntity<ResponseCMaterialReqHeaderDetailsDto> addMaterialRequestHeaderDetails(
@@ -122,6 +128,15 @@ public class CMaterialReqHeaderDetailsController {
         	        .orElseThrow(() -> new ResourceNotFoundException(
         	            "Developer not found for email: " + loggedEmail + " with RegSource: MRMASON"));
             userIdFromDb = developer.getBodSeqNo();
+            log.info("Found Developer userId from User table: {}", userIdFromDb);
+        } 
+        else if (authorities.contains(new SimpleGrantedAuthority("ROLE_MS"))) {
+            // Get from User
+        	MaterialSupplierQuotationUser ms = materialSupplierQuotationUserDAO
+        	        .findByEmailAndUserTypeAndRegSource(loggedEmail, UserType.MS, RegSource.MRMASON)
+        	        .orElseThrow(() -> new ResourceNotFoundException(
+        	            "Developer not found for email: " + loggedEmail + " with RegSource: MRMASON"));
+            userIdFromDb = ms.getBodSeqNo();
             log.info("Found Developer userId from User table: {}", userIdFromDb);
         } 
         else {
@@ -304,13 +319,14 @@ public class CMaterialReqHeaderDetailsController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate toDeliveryDate,
             @RequestParam(required = false) String deliveryLocation,
             @RequestParam(required = false) RegSource regSource,
+           @RequestParam(required=false)String materialCategory,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) throws AccessDeniedException {
 
 
 		Pageable pageable = PageRequest.of(page, size);
-		Page<CMaterialRequestHeaderEntity> srpqPage = service.getCMaterialRequestHeader(materialRequestId, customerEmail, customerName, customerMobile,
-				userId,fromRequestDate,toRequstDate,fromDeliveryDate,toDeliveryDate,deliveryLocation,regSource, pageable);
+		Page<CMaterialRequestHeaderWithCategoryDto> srpqPage = service.getCMaterialRequestHeader(materialRequestId, customerEmail, customerName, customerMobile,
+				userId,fromRequestDate,toRequstDate,fromDeliveryDate,toDeliveryDate,deliveryLocation,regSource,materialCategory, pageable);
 		ResponseGetCMaterialRequestHeaderDto response = new ResponseGetCMaterialRequestHeaderDto();
 
 		response.setMessage("CMaterial Request Header data retrieved successfully.");
@@ -342,7 +358,7 @@ public class CMaterialReqHeaderDetailsController {
             @RequestParam(required = false)String brand,
             @RequestParam(required = false)String itemName,
             @RequestParam(required = false)String itemSize,
-            @RequestParam(required = false) String supplierId,       
+            @RequestParam(required = true) String supplierId,       
             @RequestParam(required = false) BigDecimal quotedAmount,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size

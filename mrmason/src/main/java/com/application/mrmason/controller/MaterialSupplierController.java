@@ -72,14 +72,16 @@ public class MaterialSupplierController {
         return ResponseEntity.ok(response);
     }
     
-    @GetMapping("/get-material-supplier-details")
+    @GetMapping("/get-material-supplier-quotation-details")
 	public ResponseEntity<ResponseGetMaterialSupplierQuotationdetailsDto> getMaterialSupplierDetails(
 			@RequestParam(required = false) String quotationId,
+			@RequestParam(required = false) String cmatRequestId,@RequestParam(required = false) String materialLineItem,
+			@RequestParam(required = false) String supplierId,
 			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
 
 		Pageable pageable = PageRequest.of(page, size);
 		Page<MaterialSupplier> srpqPage = materialSupplierService
-				.getMaterialSupplierDetails( quotationId, pageable);
+				.getMaterialSupplierDetails( quotationId,cmatRequestId,materialLineItem,supplierId, pageable);
 		ResponseGetMaterialSupplierQuotationdetailsDto response = new ResponseGetMaterialSupplierQuotationdetailsDto();
 
 		response.setMessage("Material Supplier Quotation details retrieved successfully.");
@@ -95,8 +97,9 @@ public class MaterialSupplierController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
     }
     
-    @GetMapping("/get-material-supplier-header")
+    @GetMapping("/get-material-supplier-quotation-header")
     public ResponseEntity<ResponseGetMaterialSupplierQuotationsheaderDto> getQuotationsByUserMobile(
+    		@RequestParam(required = false) String cmatRequestId,
             @RequestParam(required = false) String userMobile,
             @RequestParam(required = false) String supplierId,          // <-- Added
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromQuotedDate,
@@ -107,7 +110,7 @@ public class MaterialSupplierController {
         Pageable pageable = PageRequest.of(page, size);
 
         Page<MaterialSupplierQuotationHeader> pageData =
-                materialSupplierService.getQuotationsByUserMobile(
+                materialSupplierService.getQuotationsByUserMobile(cmatRequestId,
                         userMobile, supplierId, fromQuotedDate, toQuotedDate, pageable);
 
         ResponseGetMaterialSupplierQuotationsheaderDto response = new ResponseGetMaterialSupplierQuotationsheaderDto();

@@ -252,7 +252,7 @@ public class materialSupplierService {
 	    }
 
 	    public Page<MaterialSupplier> getMaterialSupplierDetails(
-				String quotationId,Pageable pageable) {
+				String quotationId,String cmatRequestId,String materialLineItem,String supplierId,Pageable pageable) {
 
 		    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
@@ -263,6 +263,15 @@ public class materialSupplierService {
 
 		    if (quotationId != null && !quotationId.trim().isEmpty()) {
 		        predicates.add(cb.equal(root.get("quotationId"), quotationId));
+		    }
+		    if (cmatRequestId != null && !cmatRequestId.trim().isEmpty()) {
+		        predicates.add(cb.equal(root.get("cmatRequestId"), cmatRequestId));
+		    }
+		    if (materialLineItem != null && !materialLineItem.trim().isEmpty()) {
+		        predicates.add(cb.equal(root.get("materialLineItem"), materialLineItem));
+		    }
+		    if (supplierId != null && !supplierId.trim().isEmpty()) {
+		        predicates.add(cb.equal(root.get("supplierId"), supplierId));
 		    }
 		    query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
 		    TypedQuery<MaterialSupplier> typedQuery = entityManager.createQuery(query);
@@ -277,14 +286,202 @@ public class materialSupplierService {
 		    if (quotationId != null && !quotationId.trim().isEmpty()) {
 		    	countPredicates.add(cb.equal(countRoot.get("quotationId"), quotationId));
 		    }
-		   
+		    if (cmatRequestId != null && !cmatRequestId.trim().isEmpty()) {
+		    	countPredicates.add(cb.equal(countRoot.get("cmatRequestId"), cmatRequestId));
+		    }
+		    if (materialLineItem != null && !materialLineItem.trim().isEmpty()) {
+		    	countPredicates.add(cb.equal(countRoot.get("materialLineItem"), materialLineItem));
+		    }
+		    if (supplierId != null && !supplierId.trim().isEmpty()) {
+		    	countPredicates.add(cb.equal(countRoot.get("supplierId"), supplierId));
+		    }
 		    countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
 		    Long total = entityManager.createQuery(countQuery).getSingleResult();
 
 		    return new PageImpl<>(typedQuery.getResultList(), pageable, total);
 	    }
 	    
+//	    public Page<MaterialSupplierQuotationHeader> getQuotationsByUserMobile(
+//	    		String cmatRequestId,
+//	            String userMobile,
+//	            String supplierId,
+//	            LocalDate fromQuotedDate,
+//	            LocalDate toQuotedDate,
+//	            Pageable pageable) {
+//
+//	        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+//
+//	        // --- Main query ---
+//	        CriteriaQuery<MaterialSupplierQuotationHeader> cq = cb.createQuery(MaterialSupplierQuotationHeader.class);
+//	        Root<MaterialSupplierQuotationHeader> msqhRoot = cq.from(MaterialSupplierQuotationHeader.class);
+//
+//	        List<Predicate> predicates = new ArrayList<>();
+//
+//	        // If userMobile is provided → join via subqueries (both tables)
+//	        if (userMobile != null && !userMobile.trim().isEmpty()) {
+//
+//	            // Subquery from CustomerRegistration
+//	            Subquery<String> subqueryCustomer = cq.subquery(String.class);
+//	            Root<CMaterialRequestHeaderEntity> cmrRootC = subqueryCustomer.from(CMaterialRequestHeaderEntity.class);
+//	            Root<CustomerRegistration> crRoot = subqueryCustomer.from(CustomerRegistration.class);
+//
+//	            subqueryCustomer.select(cmrRootC.get("materialRequestId"))
+//	                    .where(
+//	                            cb.and(
+//	                                    cb.equal(cmrRootC.get("requestedBy"), crRoot.get("userid")),
+//	                                    cb.equal(crRoot.get("userMobile"), userMobile)
+//	                            )
+//	                    );
+//
+//	            // Subquery from User table
+//	            Subquery<String> subqueryUser = cq.subquery(String.class);
+//	            Root<CMaterialRequestHeaderEntity> cmrRootU = subqueryUser.from(CMaterialRequestHeaderEntity.class);
+//	            Root<User> userRoot = subqueryUser.from(User.class);
+//
+//	            subqueryUser.select(cmrRootU.get("materialRequestId"))
+//	                    .where(
+//	                            cb.and(
+//	                                    cb.equal(cmrRootU.get("requestedBy"), userRoot.get("bodSeqNo")),
+//	                                    cb.equal(userRoot.get("mobile"), userMobile)
+//	                            )
+//	                    );
+//	            
+//	            // Subquery from Material table
+//	            Subquery<String> subqueryMaterial= cq.subquery(String.class);
+//	            Root<CMaterialRequestHeaderEntity> cmrRootU1 = subqueryUser.from(CMaterialRequestHeaderEntity.class);
+//	            Root<MaterialSupplierQuotationUser> userRoot1 = subqueryUser.from(MaterialSupplierQuotationUser.class);
+//
+//	            subqueryUser.select(cmrRootU1.get("materialRequestId"))
+//	                    .where(
+//	                            cb.and(
+//	                                    cb.equal(cmrRootU1.get("requestedBy"), userRoot1.get("bodSeqNo")),
+//	                                    cb.equal(userRoot1.get("mobile"), userMobile)
+//	                            )
+//	                    );
+//
+//	            // Combine with OR
+//	            Predicate userMobilePredicate = cb.or(
+//	                    msqhRoot.get("cmatRequestId").in(subqueryCustomer),
+//	                    msqhRoot.get("cmatRequestId").in(subqueryUser),
+//	                    msqhRoot.get("cmatRequestId").in(subqueryMaterial)
+//	            );
+//
+//	            predicates.add(userMobilePredicate);
+//	        }
+//
+//	        // Supplier filter
+//	        if (supplierId != null && !supplierId.trim().isEmpty()) {
+//	            predicates.add(cb.equal(msqhRoot.get("supplierId"), supplierId));
+//	        }
+//	        if (cmatRequestId != null && !cmatRequestId.trim().isEmpty()) {
+//	            predicates.add(cb.equal(msqhRoot.get("cmatRequestId"), cmatRequestId));
+//	        }
+//
+//	        // Date range filters
+//	        if (fromQuotedDate != null && toQuotedDate != null) {
+//	            predicates.add(cb.between(msqhRoot.get("quotedDate"), fromQuotedDate, toQuotedDate));
+//	        } else if (fromQuotedDate != null) {
+//	            predicates.add(cb.greaterThanOrEqualTo(msqhRoot.get("quotedDate"), fromQuotedDate));
+//	        } else if (toQuotedDate != null) {
+//	            predicates.add(cb.lessThanOrEqualTo(msqhRoot.get("quotedDate"), toQuotedDate));
+//	        }
+//
+//	        cq.select(msqhRoot);
+//	        if (!predicates.isEmpty()) {
+//	            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+//	        }
+//
+//	        TypedQuery<MaterialSupplierQuotationHeader> query = entityManager.createQuery(cq);
+//	        query.setFirstResult((int) pageable.getOffset());
+//	        query.setMaxResults(pageable.getPageSize());
+//	        List<MaterialSupplierQuotationHeader> results = query.getResultList();
+//
+//	        // --- Count query ---
+//	        CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+//	        Root<MaterialSupplierQuotationHeader> countRoot = countQuery.from(MaterialSupplierQuotationHeader.class);
+//
+//	        List<Predicate> countPredicates = new ArrayList<>();
+//
+//	        if (userMobile != null && !userMobile.trim().isEmpty()) {
+//
+//	            // Count subquery (Customer)
+//	            Subquery<String> countSubqueryCustomer = countQuery.subquery(String.class);
+//	            Root<CMaterialRequestHeaderEntity> cmrRootCountC = countSubqueryCustomer.from(CMaterialRequestHeaderEntity.class);
+//	            Root<CustomerRegistration> crRootCount = countSubqueryCustomer.from(CustomerRegistration.class);
+//
+//	            countSubqueryCustomer.select(cmrRootCountC.get("materialRequestId"))
+//	                    .where(
+//	                            cb.and(
+//	                                    cb.equal(cmrRootCountC.get("requestedBy"), crRootCount.get("userid")),
+//	                                    cb.equal(crRootCount.get("userMobile"), userMobile)
+//	                            )
+//	                    );
+//
+//	            // Count subquery (User)
+//	            Subquery<String> countSubqueryUser = countQuery.subquery(String.class);
+//	            Root<CMaterialRequestHeaderEntity> cmrRootCountU = countSubqueryUser.from(CMaterialRequestHeaderEntity.class);
+//	            Root<User> userRootCount = countSubqueryUser.from(User.class);
+//
+//	            countSubqueryUser.select(cmrRootCountU.get("materialRequestId"))
+//	                    .where(
+//	                            cb.and(
+//	                                    cb.equal(cmrRootCountU.get("requestedBy"), userRootCount.get("bodSeqNo")),
+//	                                    cb.equal(userRootCount.get("mobile"), userMobile)
+//	                            )
+//	                    );
+//	            // Count subquery (Material)
+//
+//	            Subquery<String> countSubqueryMaterial= countQuery.subquery(String.class);
+//	            Root<CMaterialRequestHeaderEntity> cmrRootCountU1 = countSubqueryMaterial.from(CMaterialRequestHeaderEntity.class);
+//	            Root<MaterialSupplierQuotationUser> userRootCount1 = countSubqueryMaterial.from(MaterialSupplierQuotationUser.class);
+//
+//	            countSubqueryMaterial.select(cmrRootCountU1.get("materialRequestId"))
+//	                    .where(
+//	                            cb.and(
+//	                                    cb.equal(cmrRootCountU1.get("requestedBy"), userRootCount1.get("bodSeqNo")),
+//	                                    cb.equal(cmrRootCountU1.get("mobile"), userMobile)
+//	                            )
+//	                    );
+//
+//	            countPredicates.add(
+//	                    cb.or(
+//	                            countRoot.get("cmatRequestId").in(countSubqueryCustomer),
+//	                            countRoot.get("cmatRequestId").in(countSubqueryUser),
+//	                            countRoot.get("cmatRequestId").in(countSubqueryMaterial)
+//
+//	                    )
+//	            );
+//	        }
+//
+//	        // Supplier filter
+//	        
+//	        if (supplierId != null && !supplierId.trim().isEmpty()) {
+//	            countPredicates.add(cb.equal(countRoot.get("supplierId"), supplierId));
+//	        }
+//	        if (cmatRequestId != null && !cmatRequestId.trim().isEmpty()) {
+//	            countPredicates.add(cb.equal(countRoot.get("cmatRequestId"), cmatRequestId));
+//	        }
+//
+//	        // Date range filters for count query
+//	        if (fromQuotedDate != null && toQuotedDate != null) {
+//	            countPredicates.add(cb.between(countRoot.get("quotedDate"), fromQuotedDate, toQuotedDate));
+//	        } else if (fromQuotedDate != null) {
+//	            countPredicates.add(cb.greaterThanOrEqualTo(countRoot.get("quotedDate"), fromQuotedDate));
+//	        } else if (toQuotedDate != null) {
+//	            countPredicates.add(cb.lessThanOrEqualTo(countRoot.get("quotedDate"), toQuotedDate));
+//	        }
+//
+//	        countQuery.select(cb.count(countRoot));
+//	        if (!countPredicates.isEmpty()) {
+//	            countQuery.where(cb.and(countPredicates.toArray(new Predicate[0])));
+//	        }
+//
+//	        Long total = entityManager.createQuery(countQuery).getSingleResult();
+//
+//	        return new PageImpl<>(results, pageable, total);
+//	    }
 	    public Page<MaterialSupplierQuotationHeader> getQuotationsByUserMobile(
+	            String cmatRequestId,
 	            String userMobile,
 	            String supplierId,
 	            LocalDate fromQuotedDate,
@@ -293,20 +490,21 @@ public class materialSupplierService {
 
 	        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
-	        // --- Main query ---
+	        // --------------------------
+	        // Main query
+	        // --------------------------
 	        CriteriaQuery<MaterialSupplierQuotationHeader> cq = cb.createQuery(MaterialSupplierQuotationHeader.class);
 	        Root<MaterialSupplierQuotationHeader> msqhRoot = cq.from(MaterialSupplierQuotationHeader.class);
 
 	        List<Predicate> predicates = new ArrayList<>();
 
-	        // If userMobile is provided → join via subqueries (both tables)
+	        // ---- User Mobile Subqueries ----
 	        if (userMobile != null && !userMobile.trim().isEmpty()) {
 
-	            // Subquery from CustomerRegistration
+	            // Subquery 1: CustomerRegistration
 	            Subquery<String> subqueryCustomer = cq.subquery(String.class);
 	            Root<CMaterialRequestHeaderEntity> cmrRootC = subqueryCustomer.from(CMaterialRequestHeaderEntity.class);
 	            Root<CustomerRegistration> crRoot = subqueryCustomer.from(CustomerRegistration.class);
-
 	            subqueryCustomer.select(cmrRootC.get("materialRequestId"))
 	                    .where(
 	                            cb.and(
@@ -315,11 +513,10 @@ public class materialSupplierService {
 	                            )
 	                    );
 
-	            // Subquery from User table
+	            // Subquery 2: User
 	            Subquery<String> subqueryUser = cq.subquery(String.class);
 	            Root<CMaterialRequestHeaderEntity> cmrRootU = subqueryUser.from(CMaterialRequestHeaderEntity.class);
 	            Root<User> userRoot = subqueryUser.from(User.class);
-
 	            subqueryUser.select(cmrRootU.get("materialRequestId"))
 	                    .where(
 	                            cb.and(
@@ -328,21 +525,37 @@ public class materialSupplierService {
 	                            )
 	                    );
 
-	            // Combine with OR
+	            // Subquery 3: MaterialSupplierQuotationUser
+	            Subquery<String> subqueryMaterial = cq.subquery(String.class);
+	            Root<CMaterialRequestHeaderEntity> cmrRootM = subqueryMaterial.from(CMaterialRequestHeaderEntity.class);
+	            Root<MaterialSupplierQuotationUser> msquRoot = subqueryMaterial.from(MaterialSupplierQuotationUser.class);
+	            subqueryMaterial.select(cmrRootM.get("materialRequestId"))
+	                    .where(
+	                            cb.and(
+	                                    cb.equal(cmrRootM.get("requestedBy"), msquRoot.get("bodSeqNo")),
+	                                    cb.equal(msquRoot.get("mobile"), userMobile)
+	                            )
+	                    );
+
 	            Predicate userMobilePredicate = cb.or(
 	                    msqhRoot.get("cmatRequestId").in(subqueryCustomer),
-	                    msqhRoot.get("cmatRequestId").in(subqueryUser)
+	                    msqhRoot.get("cmatRequestId").in(subqueryUser),
+	                    msqhRoot.get("cmatRequestId").in(subqueryMaterial)
 	            );
-
 	            predicates.add(userMobilePredicate);
 	        }
 
-	        // Supplier filter
+	        // ---- Supplier filter ----
 	        if (supplierId != null && !supplierId.trim().isEmpty()) {
 	            predicates.add(cb.equal(msqhRoot.get("supplierId"), supplierId));
 	        }
 
-	        // Date range filters
+	        // ---- Material Request ID filter ----
+	        if (cmatRequestId != null && !cmatRequestId.trim().isEmpty()) {
+	            predicates.add(cb.equal(msqhRoot.get("cmatRequestId"), cmatRequestId));
+	        }
+
+	        // ---- Date filters ----
 	        if (fromQuotedDate != null && toQuotedDate != null) {
 	            predicates.add(cb.between(msqhRoot.get("quotedDate"), fromQuotedDate, toQuotedDate));
 	        } else if (fromQuotedDate != null) {
@@ -351,64 +564,73 @@ public class materialSupplierService {
 	            predicates.add(cb.lessThanOrEqualTo(msqhRoot.get("quotedDate"), toQuotedDate));
 	        }
 
-	        cq.select(msqhRoot);
-	        if (!predicates.isEmpty()) {
-	            cq.where(cb.and(predicates.toArray(new Predicate[0])));
-	        }
+	        cq.select(msqhRoot).where(predicates.toArray(new Predicate[0]));
 
 	        TypedQuery<MaterialSupplierQuotationHeader> query = entityManager.createQuery(cq);
 	        query.setFirstResult((int) pageable.getOffset());
 	        query.setMaxResults(pageable.getPageSize());
 	        List<MaterialSupplierQuotationHeader> results = query.getResultList();
 
-	        // --- Count query ---
+	        // --------------------------
+	        // Count query
+	        // --------------------------
 	        CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
 	        Root<MaterialSupplierQuotationHeader> countRoot = countQuery.from(MaterialSupplierQuotationHeader.class);
-
 	        List<Predicate> countPredicates = new ArrayList<>();
 
 	        if (userMobile != null && !userMobile.trim().isEmpty()) {
-
-	            // Count subquery (Customer)
-	            Subquery<String> countSubqueryCustomer = countQuery.subquery(String.class);
-	            Root<CMaterialRequestHeaderEntity> cmrRootCountC = countSubqueryCustomer.from(CMaterialRequestHeaderEntity.class);
-	            Root<CustomerRegistration> crRootCount = countSubqueryCustomer.from(CustomerRegistration.class);
-
-	            countSubqueryCustomer.select(cmrRootCountC.get("materialRequestId"))
+	            // Subquery 1: CustomerRegistration
+	            Subquery<String> countSubCustomer = countQuery.subquery(String.class);
+	            Root<CMaterialRequestHeaderEntity> cmrRootCC = countSubCustomer.from(CMaterialRequestHeaderEntity.class);
+	            Root<CustomerRegistration> crRootC = countSubCustomer.from(CustomerRegistration.class);
+	            countSubCustomer.select(cmrRootCC.get("materialRequestId"))
 	                    .where(
 	                            cb.and(
-	                                    cb.equal(cmrRootCountC.get("requestedBy"), crRootCount.get("userid")),
-	                                    cb.equal(crRootCount.get("userMobile"), userMobile)
+	                                    cb.equal(cmrRootCC.get("requestedBy"), crRootC.get("userid")),
+	                                    cb.equal(crRootC.get("userMobile"), userMobile)
 	                            )
 	                    );
 
-	            // Count subquery (User)
-	            Subquery<String> countSubqueryUser = countQuery.subquery(String.class);
-	            Root<CMaterialRequestHeaderEntity> cmrRootCountU = countSubqueryUser.from(CMaterialRequestHeaderEntity.class);
-	            Root<User> userRootCount = countSubqueryUser.from(User.class);
-
-	            countSubqueryUser.select(cmrRootCountU.get("materialRequestId"))
+	            // Subquery 2: User
+	            Subquery<String> countSubUser = countQuery.subquery(String.class);
+	            Root<CMaterialRequestHeaderEntity> cmrRootUU = countSubUser.from(CMaterialRequestHeaderEntity.class);
+	            Root<User> userRootC = countSubUser.from(User.class);
+	            countSubUser.select(cmrRootUU.get("materialRequestId"))
 	                    .where(
 	                            cb.and(
-	                                    cb.equal(cmrRootCountU.get("requestedBy"), userRootCount.get("bodSeqNo")),
-	                                    cb.equal(userRootCount.get("mobile"), userMobile)
+	                                    cb.equal(cmrRootUU.get("requestedBy"), userRootC.get("bodSeqNo")),
+	                                    cb.equal(userRootC.get("mobile"), userMobile)
+	                            )
+	                    );
+
+	            // Subquery 3: MaterialSupplierQuotationUser
+	            Subquery<String> countSubMaterial = countQuery.subquery(String.class);
+	            Root<CMaterialRequestHeaderEntity> cmrRootMM = countSubMaterial.from(CMaterialRequestHeaderEntity.class);
+	            Root<MaterialSupplierQuotationUser> msquRootC = countSubMaterial.from(MaterialSupplierQuotationUser.class);
+	            countSubMaterial.select(cmrRootMM.get("materialRequestId"))
+	                    .where(
+	                            cb.and(
+	                                    cb.equal(cmrRootMM.get("requestedBy"), msquRootC.get("bodSeqNo")),
+	                                    cb.equal(msquRootC.get("mobile"), userMobile)
 	                            )
 	                    );
 
 	            countPredicates.add(
 	                    cb.or(
-	                            countRoot.get("cmatRequestId").in(countSubqueryCustomer),
-	                            countRoot.get("cmatRequestId").in(countSubqueryUser)
+	                            countRoot.get("cmatRequestId").in(countSubCustomer),
+	                            countRoot.get("cmatRequestId").in(countSubUser),
+	                            countRoot.get("cmatRequestId").in(countSubMaterial)
 	                    )
 	            );
 	        }
 
-	        // Supplier filter
 	        if (supplierId != null && !supplierId.trim().isEmpty()) {
 	            countPredicates.add(cb.equal(countRoot.get("supplierId"), supplierId));
 	        }
+	        if (cmatRequestId != null && !cmatRequestId.trim().isEmpty()) {
+	            countPredicates.add(cb.equal(countRoot.get("cmatRequestId"), cmatRequestId));
+	        }
 
-	        // Date range filters for count query
 	        if (fromQuotedDate != null && toQuotedDate != null) {
 	            countPredicates.add(cb.between(countRoot.get("quotedDate"), fromQuotedDate, toQuotedDate));
 	        } else if (fromQuotedDate != null) {
@@ -417,13 +639,10 @@ public class materialSupplierService {
 	            countPredicates.add(cb.lessThanOrEqualTo(countRoot.get("quotedDate"), toQuotedDate));
 	        }
 
-	        countQuery.select(cb.count(countRoot));
-	        if (!countPredicates.isEmpty()) {
-	            countQuery.where(cb.and(countPredicates.toArray(new Predicate[0])));
-	        }
-
+	        countQuery.select(cb.count(countRoot)).where(countPredicates.toArray(new Predicate[0]));
 	        Long total = entityManager.createQuery(countQuery).getSingleResult();
 
 	        return new PageImpl<>(results, pageable, total);
 	    }
+
 }

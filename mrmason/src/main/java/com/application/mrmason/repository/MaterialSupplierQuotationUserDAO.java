@@ -66,7 +66,7 @@ public interface MaterialSupplierQuotationUserDAO extends JpaRepository<Material
 	@Query("SELECT u FROM MaterialSupplierQuotationUser u WHERE (u.mobile = :contact OR u.email = :contact) AND u.bodSeqNo = :userId")
 	Optional<MaterialSupplierQuotationUser> findByMobileOrEmailAndBodSeqNo(String contact, String userId);
 
-	@Query("SELECT s FROM User s WHERE s.email = :email AND s.userType = :userType")
+	@Query("SELECT s FROM MaterialSupplierQuotationUser s WHERE s.email = :email AND s.userType = :userType")
 	Optional<MaterialSupplierQuotationUser> findByEmailAndUserType(@Param("email") String email, @Param("userType") UserType userType);
 
 	@Query("SELECT u FROM User u WHERE u.bodSeqNo = :bodSeqNo")

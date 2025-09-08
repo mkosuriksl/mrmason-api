@@ -11,7 +11,7 @@ import lombok.Data;
 public class ResponseGetCMaterialRequestHeaderDto {
 	private String message;
 	private boolean status;
-	private List<CMaterialRequestHeaderEntity> requestHeaderEntities;
+	private List<CMaterialRequestHeaderWithCategoryDto> requestHeaderEntities;
 	private int currentPage;
 	private int pageSize;
 	private long totalElements;

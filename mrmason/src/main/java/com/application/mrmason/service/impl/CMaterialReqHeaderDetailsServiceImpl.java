@@ -6,8 +6,11 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
@@ -27,12 +30,14 @@ import org.springframework.transaction.annotation.Transactional;
 import com.application.mrmason.dto.CMaterialReqHeaderDetailsDTO;
 import com.application.mrmason.dto.CMaterialReqHeaderDetailsResponseDTO;
 import com.application.mrmason.dto.CMaterialRequestHeaderDTO;
+import com.application.mrmason.dto.CMaterialRequestHeaderWithCategoryDto;
 import com.application.mrmason.dto.CommonMaterialRequestDto;
 import com.application.mrmason.dto.ResponseCMaterialReqHeaderDetailsDto;
 import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.CMaterialReqHeaderDetailsEntity;
 import com.application.mrmason.entity.CMaterialRequestHeaderEntity;
 import com.application.mrmason.entity.CustomerRegistration;
+import com.application.mrmason.entity.MaterialSupplierQuotationUser;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
@@ -41,6 +46,7 @@ import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.CMaterialReqHeaderDetailsRepository;
 import com.application.mrmason.repository.CMaterialRequestHeaderRepository;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
+import com.application.mrmason.repository.MaterialSupplierQuotationUserDAO;
 import com.application.mrmason.repository.MaterialSupplierRepository;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.AuthDetailsProvider;
@@ -72,6 +78,9 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
 
 	@Autowired
 	public AdminDetailsRepo adminRepo;
+	
+	@Autowired
+	private MaterialSupplierQuotationUserDAO materialSupplierQuotationUserDAO;
 
 	@Autowired
 	private CMaterialRequestHeaderRepository headerRepo;
@@ -317,26 +326,55 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
 	            } else {
 	                details = detailsRepo.findByCMatRequestId(entity.getMaterialRequestId());
 	            }
-
+//
+//	            details = details.stream()
+//	                .filter(d -> brand == null || brand.equalsIgnoreCase(d.getBrand()))
+//	                .filter(d -> itemName == null || itemName.equalsIgnoreCase(d.getItemName()))
+//	                .filter(d -> itemSize == null || itemSize.equalsIgnoreCase(d.getItemSize()))
+//	                .filter(d -> {
+//	                    if (supplierId == null && quotedAmount == null) {
+//	                        return true;
+//	                    }
+//	                    return materialSupplierRepository.findById(d.getCMatRequestIdLineid())
+//	                            .map(supplier -> {
+//	                                boolean supplierMatch = (supplierId == null ||
+//	                                        supplierId.equalsIgnoreCase(supplier.getSupplierId()));
+//	                                boolean quotedMatch = (quotedAmount == null ||
+//	                                        quotedAmount.compareTo(supplier.getQuotedAmount()) == 0);
+//	                                return supplierMatch && quotedMatch;
+//	                            })
+//	                            .orElse(false);
+//	                })
+//	                .collect(Collectors.toList());
 	            details = details.stream()
-	                .filter(d -> brand == null || brand.equalsIgnoreCase(d.getBrand()))
-	                .filter(d -> itemName == null || itemName.equalsIgnoreCase(d.getItemName()))
-	                .filter(d -> itemSize == null || itemSize.equalsIgnoreCase(d.getItemSize()))
-	                .filter(d -> {
-	                    if (supplierId == null && quotedAmount == null) {
-	                        return true;
-	                    }
-	                    return materialSupplierRepository.findById(d.getCMatRequestIdLineid())
-	                            .map(supplier -> {
-	                                boolean supplierMatch = (supplierId == null ||
-	                                        supplierId.equalsIgnoreCase(supplier.getSupplierId()));
-	                                boolean quotedMatch = (quotedAmount == null ||
-	                                        quotedAmount.compareTo(supplier.getQuotedAmount()) == 0);
-	                                return supplierMatch && quotedMatch;
-	                            })
-	                            .orElse(false);
-	                })
-	                .collect(Collectors.toList());
+                        .filter(d -> brand == null || brand.equalsIgnoreCase(d.getBrand()))
+                        .filter(d -> itemName == null || itemName.equalsIgnoreCase(d.getItemName()))
+                        .filter(d -> itemSize == null || itemSize.equalsIgnoreCase(d.getItemSize()))
+                        .filter(d -> {
+                            // If supplierId is provided → strict filter: supplierId + requestedBy + quotationId not null
+                            if (supplierId != null) {
+                                return materialSupplierRepository.findById(d.getCMatRequestIdLineid())
+                                        .map(supplier -> {
+                                            boolean supplierMatch = supplierId.equalsIgnoreCase(supplier.getSupplierId());
+                                            boolean requestedByMatch = (requestedBy == null || requestedBy.equalsIgnoreCase(d.getRequestedBy()));
+                                            boolean quotationNotNull = supplier.getQuotationId() != null;
+                                            return supplierMatch && requestedByMatch && quotationNotNull;
+                                        })
+                                        .orElse(false);
+                            }
+
+                            // If supplierId not provided but quotedAmount is provided
+                            if (quotedAmount != null) {
+                                return materialSupplierRepository.findById(d.getCMatRequestIdLineid())
+                                        .map(supplier -> quotedAmount.compareTo(supplier.getQuotedAmount()) == 0)
+                                        .orElse(false);
+                            }
+
+                            // No supplier filter → keep as is
+                            return true;
+                        })
+                        .collect(Collectors.toList());
+
 
 	            if (details.isEmpty()) {
 	                return null; // <-- drop this header
@@ -394,8 +432,8 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
 
 	        boolean isCustomer = authorities.stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_EC"));
 	        boolean isServicePerson = authorities.stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_Developer"));
-
-	        if (!isCustomer && !isServicePerson) {
+	        boolean isMaterialSupplier = authorities.stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_MS"));
+	        if (!isCustomer && !isServicePerson &!isMaterialSupplier) {
 	            throw new AccessDeniedException("Unauthorized role");
 	        }
 
@@ -410,18 +448,31 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
 	                    .findByUserEmailAndUserType(loggedEmail, UserType.EC)
 	                    .orElseThrow(() -> new ResourceNotFoundException("Customer not found for email: " + loggedEmail));
 	            recipientEmail = customer.getUserEmail();
-	            recipientName=customer.getUsername();
-	            recipientUserId=customer.getUserid();
-	        } else {
+	            recipientName = customer.getUsername();
+	            recipientUserId = customer.getUserid();
+
+	        } else if (isServicePerson) {
 	            User developer = userDAO
 	                    .findByEmailAndUserTypeAndRegSource(loggedEmail, UserType.Developer, RegSource.MRMASON)
 	                    .orElseThrow(() -> new ResourceNotFoundException(
 	                            "Developer not found for email: " + loggedEmail + " with RegSource: MRMASON"));
 	            recipientEmail = developer.getEmail();
-	            recipientName=developer.getUsername();
-	            recipientUserId=developer.getBodSeqNo();
+	            recipientName = developer.getUsername();
+	            recipientUserId = developer.getBodSeqNo();
 
+	        } else if (isMaterialSupplier) {
+	        	MaterialSupplierQuotationUser supplier = materialSupplierQuotationUserDAO
+	        		    .findByEmailAndUserType(loggedEmail, UserType.MS)
+	        		    .orElseThrow(() -> new ResourceNotFoundException(
+	        		        "Material Supplier not found for email: " + loggedEmail));
+	            recipientEmail = supplier.getEmail();
+	            recipientName = supplier.getName();   // or getBusinessName() if needed
+	            recipientUserId = supplier.getBodSeqNo();
+
+	        } else {
+	            throw new AccessDeniedException("Unauthorized role");
 	        }
+
 
 	        List<CMaterialReqHeaderDetailsDTO> requestDTOList = request.getMaterialRequests();
 	        for (int i = 0; i < requestDTOList.size(); i++) {
@@ -795,106 +846,267 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
 	}
 
 	@Override
-	public Page<CMaterialRequestHeaderEntity> getCMaterialRequestHeader(String materialRequestId, String customerEmail,
-			String customerName, String customerMobile, String userId, LocalDate fromRequestDate,
-			LocalDate toRequstDate,LocalDate fromDeliveryDate,LocalDate toDeliveryDate,String deliveryLocation, RegSource regSource, Pageable pageable) throws AccessDeniedException {
-		UserInfo userInfo = getLoggedInAdminSPInfo(regSource);
+//	public Page<CMaterialRequestHeaderEntity> getCMaterialRequestHeader(String materialRequestId, String customerEmail,
+//			String customerName, String customerMobile, String userId, LocalDate fromRequestDate,
+//			LocalDate toRequstDate,LocalDate fromDeliveryDate,LocalDate toDeliveryDate,String deliveryLocation, Pageable pageable) throws AccessDeniedException {
+////		UserInfo userInfo = getLoggedInAdminSPInfo(regSource);
+////
+////		// ALLOW only Admin or Developer, block others
+////		if (!userInfo.role.equals("Adm") && !userInfo.role.equals("Developer")) {
+////			throw new AccessDeniedException(
+////					"Access denied: only Admin or Developer roles are allowed to access this resource.");
+////		}
+//
+//		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+//		CriteriaQuery<CMaterialRequestHeaderEntity> query = cb.createQuery(CMaterialRequestHeaderEntity.class);
+//		Root<CMaterialRequestHeaderEntity> root = query.from(CMaterialRequestHeaderEntity.class);
+//		List<Predicate> predicates = new ArrayList<>();
+//
+//		if (materialRequestId != null && !materialRequestId.trim().isEmpty()) {
+//			predicates.add(cb.equal(root.get("materialRequestId"), materialRequestId));
+//		}
+//		if (customerEmail != null && !customerEmail.trim().isEmpty()) {
+//			predicates.add(cb.equal(root.get("customerEmail"), customerEmail));
+//		}
+//		if (customerName != null && !customerName.trim().isEmpty()) {
+//			predicates.add(cb.equal(root.get("customerName"), customerName));
+//		}
+//		if (customerMobile != null && !customerMobile.trim().isEmpty()) {
+//			predicates.add(cb.equal(root.get("customerMobile"), customerMobile));
+//		}
+//		if (userId != null && !userId.trim().isEmpty()) {
+//			predicates.add(cb.equal(root.get("requestedBy"), userId));
+//		}
+//		if (deliveryLocation != null && !deliveryLocation.trim().isEmpty()) {
+//			predicates.add(cb.equal(root.get("deliveryLocation"), deliveryLocation));
+//		}
+//		if (fromRequestDate != null && toRequstDate != null) {
+//			predicates.add(cb.between(root.get("createdDate"), fromRequestDate, toRequstDate));
+//		} else if (fromRequestDate != null) {
+//			predicates.add(cb.greaterThanOrEqualTo(root.get("createdDate"), fromRequestDate));
+//		} else if (toRequstDate != null) {
+//			predicates.add(cb.lessThanOrEqualTo(root.get("createdDate"), toRequstDate));
+//		}
+//		
+//		if (fromDeliveryDate != null && toDeliveryDate != null) {
+//			predicates.add(cb.between(root.get("deliveryDate"), fromDeliveryDate, toDeliveryDate));
+//		} else if (fromDeliveryDate != null) {
+//			predicates.add(cb.greaterThanOrEqualTo(root.get("deliveryDate"), fromDeliveryDate));
+//		} else if (toDeliveryDate != null) {
+//			predicates.add(cb.lessThanOrEqualTo(root.get("deliveryDate"), toDeliveryDate));
+//		}
+//		
+//
+//		query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
+//		TypedQuery<CMaterialRequestHeaderEntity> typedQuery = entityManager.createQuery(query);
+//		typedQuery.setFirstResult((int) pageable.getOffset());
+//		typedQuery.setMaxResults(pageable.getPageSize());
+//
+//		// Count query
+//		CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+//		Root<CMaterialRequestHeaderEntity> countRoot = countQuery.from(CMaterialRequestHeaderEntity.class);
+//		List<Predicate> countPredicates = new ArrayList<>();
+//
+//		if (materialRequestId != null && !materialRequestId.trim().isEmpty()) {
+//			countPredicates.add(cb.equal(countRoot.get("materialRequestId"), materialRequestId));
+//		}
+//		if (customerEmail != null && !customerEmail.trim().isEmpty()) {
+//			countPredicates.add(cb.equal(countRoot.get("customerEmail"), customerEmail));
+//		}
+//		if (customerName != null && !customerName.trim().isEmpty()) {
+//			countPredicates.add(cb.equal(countRoot.get("customerName"), customerName));
+//		}
+//		if (customerMobile != null && !customerMobile.trim().isEmpty()) {
+//			countPredicates.add(cb.equal(countRoot.get("customerMobile"), customerMobile));
+//		}
+//		if (userId != null && !userId.trim().isEmpty()) {
+//			countPredicates.add(cb.equal(countRoot.get("requestedBy"), userId));
+//		}
+//		if (deliveryLocation != null && !deliveryLocation.trim().isEmpty()) {
+//			countPredicates.add(cb.equal(countRoot.get("deliveryLocation"), deliveryLocation));
+//		}
+//		if (fromRequestDate != null && toRequstDate != null) {
+//			countPredicates.add(cb.between(countRoot.get("createdDate"), fromRequestDate, toRequstDate));
+//		} else if (fromRequestDate != null) {
+//			countPredicates.add(cb.greaterThanOrEqualTo(countRoot.get("createdDate"), fromRequestDate));
+//		} else if (toRequstDate != null) {
+//			countPredicates.add(cb.lessThanOrEqualTo(countRoot.get("createdDate"), toRequstDate));
+//		}
+//		if (fromDeliveryDate != null && toDeliveryDate != null) {
+//			countPredicates.add(cb.between(countRoot.get("deliveryDate"), fromDeliveryDate, toDeliveryDate));
+//		} else if (fromDeliveryDate != null) {
+//			countPredicates.add(cb.greaterThanOrEqualTo(countRoot.get("deliveryDate"), fromDeliveryDate));
+//		} else if (toDeliveryDate != null) {
+//			countPredicates.add(cb.lessThanOrEqualTo(countRoot.get("deliveryDate"), toDeliveryDate));
+//		}
+//
+//		countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
+//		Long total = entityManager.createQuery(countQuery).getSingleResult();
+//
+//		return new PageImpl<>(typedQuery.getResultList(), pageable, total);
+//	}
+	
+	public Page<CMaterialRequestHeaderWithCategoryDto> getCMaterialRequestHeader(
+            String materialRequestId, String customerEmail,
+            String customerName, String customerMobile, String userId,
+            LocalDate fromRequestDate, LocalDate toRequestDate,
+            LocalDate fromDeliveryDate, LocalDate toDeliveryDate,
+            String deliveryLocation, RegSource regSource,
+            String materialCategory,
+            Pageable pageable) throws AccessDeniedException {
 
-		// ALLOW only Admin or Developer, block others
-		if (!userInfo.role.equals("Adm") && !userInfo.role.equals("Developer")) {
-			throw new AccessDeniedException(
-					"Access denied: only Admin or Developer roles are allowed to access this resource.");
-		}
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
-		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		CriteriaQuery<CMaterialRequestHeaderEntity> query = cb.createQuery(CMaterialRequestHeaderEntity.class);
-		Root<CMaterialRequestHeaderEntity> root = query.from(CMaterialRequestHeaderEntity.class);
-		List<Predicate> predicates = new ArrayList<>();
+        // 1. Header query
+        CriteriaQuery<CMaterialRequestHeaderEntity> query = cb.createQuery(CMaterialRequestHeaderEntity.class);
+        Root<CMaterialRequestHeaderEntity> root = query.from(CMaterialRequestHeaderEntity.class);
 
-		if (materialRequestId != null && !materialRequestId.trim().isEmpty()) {
-			predicates.add(cb.equal(root.get("materialRequestId"), materialRequestId));
-		}
-		if (customerEmail != null && !customerEmail.trim().isEmpty()) {
-			predicates.add(cb.equal(root.get("customerEmail"), customerEmail));
-		}
-		if (customerName != null && !customerName.trim().isEmpty()) {
-			predicates.add(cb.equal(root.get("customerName"), customerName));
-		}
-		if (customerMobile != null && !customerMobile.trim().isEmpty()) {
-			predicates.add(cb.equal(root.get("customerMobile"), customerMobile));
-		}
-		if (userId != null && !userId.trim().isEmpty()) {
-			predicates.add(cb.equal(root.get("requestedBy"), userId));
-		}
-		if (deliveryLocation != null && !deliveryLocation.trim().isEmpty()) {
-			predicates.add(cb.equal(root.get("deliveryLocation"), deliveryLocation));
-		}
-		if (fromRequestDate != null && toRequstDate != null) {
-			predicates.add(cb.between(root.get("createdDate"), fromRequestDate, toRequstDate));
-		} else if (fromRequestDate != null) {
-			predicates.add(cb.greaterThanOrEqualTo(root.get("createdDate"), fromRequestDate));
-		} else if (toRequstDate != null) {
-			predicates.add(cb.lessThanOrEqualTo(root.get("createdDate"), toRequstDate));
-		}
-		
-		if (fromDeliveryDate != null && toDeliveryDate != null) {
-			predicates.add(cb.between(root.get("deliveryDate"), fromDeliveryDate, toDeliveryDate));
-		} else if (fromDeliveryDate != null) {
-			predicates.add(cb.greaterThanOrEqualTo(root.get("deliveryDate"), fromDeliveryDate));
-		} else if (toDeliveryDate != null) {
-			predicates.add(cb.lessThanOrEqualTo(root.get("deliveryDate"), toDeliveryDate));
-		}
-		
+        List<Predicate> predicates = buildPredicates(cb, root,
+                materialRequestId, customerEmail, customerName, customerMobile, userId,
+                fromRequestDate, toRequestDate, fromDeliveryDate, toDeliveryDate, deliveryLocation);
 
-		query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
-		TypedQuery<CMaterialRequestHeaderEntity> typedQuery = entityManager.createQuery(query);
-		typedQuery.setFirstResult((int) pageable.getOffset());
-		typedQuery.setMaxResults(pageable.getPageSize());
+        query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
 
-		// Count query
-		CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
-		Root<CMaterialRequestHeaderEntity> countRoot = countQuery.from(CMaterialRequestHeaderEntity.class);
-		List<Predicate> countPredicates = new ArrayList<>();
+        TypedQuery<CMaterialRequestHeaderEntity> typedQuery = entityManager.createQuery(query);
+        typedQuery.setFirstResult((int) pageable.getOffset());
+        typedQuery.setMaxResults(pageable.getPageSize());
 
-		if (materialRequestId != null && !materialRequestId.trim().isEmpty()) {
-			countPredicates.add(cb.equal(countRoot.get("materialRequestId"), materialRequestId));
-		}
-		if (customerEmail != null && !customerEmail.trim().isEmpty()) {
-			countPredicates.add(cb.equal(countRoot.get("customerEmail"), customerEmail));
-		}
-		if (customerName != null && !customerName.trim().isEmpty()) {
-			countPredicates.add(cb.equal(countRoot.get("customerName"), customerName));
-		}
-		if (customerMobile != null && !customerMobile.trim().isEmpty()) {
-			countPredicates.add(cb.equal(countRoot.get("customerMobile"), customerMobile));
-		}
-		if (userId != null && !userId.trim().isEmpty()) {
-			countPredicates.add(cb.equal(countRoot.get("requestedBy"), userId));
-		}
-		if (deliveryLocation != null && !deliveryLocation.trim().isEmpty()) {
-			countPredicates.add(cb.equal(countRoot.get("deliveryLocation"), deliveryLocation));
-		}
-		if (fromRequestDate != null && toRequstDate != null) {
-			countPredicates.add(cb.between(countRoot.get("createdDate"), fromRequestDate, toRequstDate));
-		} else if (fromRequestDate != null) {
-			countPredicates.add(cb.greaterThanOrEqualTo(countRoot.get("createdDate"), fromRequestDate));
-		} else if (toRequstDate != null) {
-			countPredicates.add(cb.lessThanOrEqualTo(countRoot.get("createdDate"), toRequstDate));
-		}
-		if (fromDeliveryDate != null && toDeliveryDate != null) {
-			countPredicates.add(cb.between(countRoot.get("deliveryDate"), fromDeliveryDate, toDeliveryDate));
-		} else if (fromDeliveryDate != null) {
-			countPredicates.add(cb.greaterThanOrEqualTo(countRoot.get("deliveryDate"), fromDeliveryDate));
-		} else if (toDeliveryDate != null) {
-			countPredicates.add(cb.lessThanOrEqualTo(countRoot.get("deliveryDate"), toDeliveryDate));
-		}
+        List<CMaterialRequestHeaderEntity> headers = typedQuery.getResultList();
 
-		countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
-		Long total = entityManager.createQuery(countQuery).getSingleResult();
+        // 2. Count query (fresh predicates with a fresh root)
+        CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+        Root<CMaterialRequestHeaderEntity> countRoot = countQuery.from(CMaterialRequestHeaderEntity.class);
 
-		return new PageImpl<>(typedQuery.getResultList(), pageable, total);
-	}
+        List<Predicate> countPredicates = buildPredicates(cb, countRoot,
+                materialRequestId, customerEmail, customerName, customerMobile, userId,
+                fromRequestDate, toRequestDate, fromDeliveryDate, toDeliveryDate, deliveryLocation);
 
+        countQuery.select(cb.count(countRoot))
+                  .where(cb.and(countPredicates.toArray(new Predicate[0])));
+
+        Long total = entityManager.createQuery(countQuery).getSingleResult();
+
+        // 3. If no headers, return empty page
+        if (headers.isEmpty()) {
+            return new PageImpl<>(Collections.emptyList(), pageable, total);
+        }
+
+        // 4. Fetch details for these header IDs
+        List<String> headerIds = headers.stream()
+                                        .map(CMaterialRequestHeaderEntity::getMaterialRequestId)
+                                        .toList();
+
+        CriteriaQuery<CMaterialReqHeaderDetailsEntity> detailsQuery =
+                cb.createQuery(CMaterialReqHeaderDetailsEntity.class);
+        Root<CMaterialReqHeaderDetailsEntity> detailsRoot =
+                detailsQuery.from(CMaterialReqHeaderDetailsEntity.class);
+
+        List<Predicate> detailsPreds = new ArrayList<>();
+        detailsPreds.add(detailsRoot.get("cMatRequestId").in(headerIds));
+
+        if (materialCategory != null && !materialCategory.trim().isEmpty()) {
+            detailsPreds.add(cb.equal(detailsRoot.get("materialCategory"), materialCategory));
+        }
+
+        detailsQuery.select(detailsRoot).where(cb.and(detailsPreds.toArray(new Predicate[0])));
+
+        List<CMaterialReqHeaderDetailsEntity> details =
+                entityManager.createQuery(detailsQuery).getResultList();
+
+        // Group details by request ID, keep list of categories
+        Map<String, List<String>> categoryMap = details.stream()
+                .collect(Collectors.groupingBy(
+                        CMaterialReqHeaderDetailsEntity::getCMatRequestId,
+                        Collectors.mapping(CMaterialReqHeaderDetailsEntity::getMaterialCategory, Collectors.toList())
+                ));
+
+        if (materialCategory != null && !materialCategory.trim().isEmpty()) {
+            // Strict mode: Only keep headers that have this category
+            Set<String> matchingHeaderIds = categoryMap.keySet();
+
+            headers = headers.stream()
+                    .filter(h -> matchingHeaderIds.contains(h.getMaterialRequestId()))
+                    .toList();
+
+            total = (long) headers.size(); // recalc total for page
+            if (headers.isEmpty()) {
+                return new PageImpl<>(Collections.emptyList(), pageable, 0);
+            }
+        }
+
+
+        // 5. Merge into DTOs (pick first category if multiple)
+        List<CMaterialRequestHeaderWithCategoryDto> dtos = headers.stream()
+                .map(h -> {
+                    List<String> cats = categoryMap.get(h.getMaterialRequestId());
+                    String firstCategory = (cats != null && !cats.isEmpty()) ? cats.get(0) : null;
+                    return new CMaterialRequestHeaderWithCategoryDto(
+                            h.getMaterialRequestId(),
+                            h.getTotalQty(),
+                            h.getCustomerEmail(),
+                            h.getCustomerName(),
+                            h.getCreatedDate(),
+                            h.getUpdatedBy(),
+                            h.getUpdatedDate(),
+                            h.getQuoteId(),
+                            h.getRequestedBy(),
+                            h.getCustomerMobile(),
+                            h.getDeliveryDate(),
+                            h.getDeliveryLocation(),
+                            firstCategory
+                    );
+                })
+                .toList();
+
+        return new PageImpl<>(dtos, pageable, total);
+    }
+
+    private List<Predicate> buildPredicates(
+            CriteriaBuilder cb,
+            Root<CMaterialRequestHeaderEntity> root,
+            String materialRequestId, String customerEmail,
+            String customerName, String customerMobile, String userId,
+            LocalDate fromRequestDate, LocalDate toRequestDate,
+            LocalDate fromDeliveryDate, LocalDate toDeliveryDate,
+            String deliveryLocation) {
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        if (materialRequestId != null && !materialRequestId.trim().isEmpty()) {
+            predicates.add(cb.equal(root.get("materialRequestId"), materialRequestId));
+        }
+        if (customerEmail != null && !customerEmail.trim().isEmpty()) {
+            predicates.add(cb.equal(root.get("customerEmail"), customerEmail));
+        }
+        if (customerName != null && !customerName.trim().isEmpty()) {
+            predicates.add(cb.equal(root.get("customerName"), customerName));
+        }
+        if (customerMobile != null && !customerMobile.trim().isEmpty()) {
+            predicates.add(cb.equal(root.get("customerMobile"), customerMobile));
+        }
+        if (userId != null && !userId.trim().isEmpty()) {
+            predicates.add(cb.equal(root.get("requestedBy"), userId));
+        }
+        if (deliveryLocation != null && !deliveryLocation.trim().isEmpty()) {
+            predicates.add(cb.equal(root.get("deliveryLocation"), deliveryLocation));
+        }
+        if (fromRequestDate != null && toRequestDate != null) {
+            predicates.add(cb.between(root.get("createdDate"), fromRequestDate, toRequestDate));
+        } else if (fromRequestDate != null) {
+            predicates.add(cb.greaterThanOrEqualTo(root.get("createdDate"), fromRequestDate));
+        } else if (toRequestDate != null) {
+            predicates.add(cb.lessThanOrEqualTo(root.get("createdDate"), toRequestDate));
+        }
+        if (fromDeliveryDate != null && toDeliveryDate != null) {
+            predicates.add(cb.between(root.get("deliveryDate"), fromDeliveryDate, toDeliveryDate));
+        } else if (fromDeliveryDate != null) {
+            predicates.add(cb.greaterThanOrEqualTo(root.get("deliveryDate"), fromDeliveryDate));
+        } else if (toDeliveryDate != null) {
+            predicates.add(cb.lessThanOrEqualTo(root.get("deliveryDate"), toDeliveryDate));
+        }
+
+        return predicates;
+    }
 	private static class UserInfo {
 		String userId;
 		String role;

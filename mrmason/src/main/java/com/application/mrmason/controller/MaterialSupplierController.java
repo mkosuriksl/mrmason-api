@@ -1,5 +1,6 @@
 package com.application.mrmason.controller;
 
+import java.math.BigDecimal;
 import java.nio.file.AccessDeniedException;
 import java.time.LocalDate;
 import java.util.List;
@@ -21,8 +22,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.MaterialSupplierQuotations;
+import com.application.mrmason.dto.QuotationUpdateRequest;
 import com.application.mrmason.dto.ResponseGetMaterialSupplierQuotationdetailsDto;
 import com.application.mrmason.dto.ResponseGetMaterialSupplierQuotationsheaderDto;
+import com.application.mrmason.dto.ResponseInvoiceAndDetailsDto;
 import com.application.mrmason.entity.MaterialSupplier;
 import com.application.mrmason.entity.MaterialSupplierQuotationHeader;
 import com.application.mrmason.enums.RegSource;
@@ -31,7 +34,7 @@ import com.application.mrmason.service.materialSupplierService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/material-supplier")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class MaterialSupplierController {
 
@@ -47,7 +50,7 @@ public class MaterialSupplierController {
 //        return ResponseEntity.ok(response);
 //    }
 //    
-	@PostMapping("/add-quotations")
+	@PostMapping("/add-material-supplier-quotation")
 	public ResponseEntity<GenericResponse<List<MaterialSupplier>>> saveQuotations(
 	        @RequestBody MaterialSupplierQuotations request,
 	        @RequestParam RegSource regSource) {
@@ -63,7 +66,7 @@ public class MaterialSupplierController {
 	    return ResponseEntity.ok(response);
 	}
 
-    @PutMapping("/update-quotations")
+    @PutMapping("/update-material-supplier-quotation")
     public ResponseEntity<GenericResponse<List<MaterialSupplier>>> updateTasks(
             @RequestParam RegSource regSource, @RequestBody List<MaterialSupplier> requestList) throws AccessDeniedException {
         List<MaterialSupplier> savedTasks = materialSupplierService.updateMaterial(regSource, requestList);
@@ -125,6 +128,33 @@ public class MaterialSupplierController {
         return ResponseEntity.ok(response);
     }
 
-
+    @PutMapping("/update-status-with-Invoiced")
+    public String updateQuotation(@RequestParam RegSource regSource,@RequestBody QuotationUpdateRequest request) {
+    	materialSupplierService.updateQuotation(regSource,request);
+        return "Quotation and Invoice updated successfully";
+    }
 	
+    @GetMapping("/get-invoices-and-quotation-details")
+    public ResponseEntity<ResponseInvoiceAndDetailsDto> getInvoicesAndDetails(
+            @RequestParam(required = false) String updatedBy,
+            @RequestParam(required = false) BigDecimal quotedAmount,
+            @RequestParam(required = false) String cmatRequestId,
+            @RequestParam(required = false) String invoiceNumber,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromInvoiceDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toInvoiceDate,
+            @RequestParam(defaultValue = "0") int invoicePage,
+            @RequestParam(defaultValue = "10") int invoiceSize,
+            @RequestParam(defaultValue = "0") int supplierPage,
+            @RequestParam(defaultValue = "10") int supplierSize) {
+
+        // Create Pageable objects
+        Pageable invoicePageable = PageRequest.of(invoicePage, invoiceSize);
+        Pageable supplierPageable = PageRequest.of(supplierPage, supplierSize);
+
+        ResponseInvoiceAndDetailsDto response = materialSupplierService.getInvoicesAndDetails(
+                updatedBy, quotedAmount, cmatRequestId, invoiceNumber, fromInvoiceDate, toInvoiceDate,
+                invoicePageable);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

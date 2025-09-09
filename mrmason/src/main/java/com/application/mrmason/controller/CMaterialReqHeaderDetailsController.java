@@ -3,6 +3,7 @@ package com.application.mrmason.controller;
 import com.application.mrmason.dto.CMaterialReqHeaderDetailsDTO;
 import com.application.mrmason.dto.CMaterialReqHeaderDetailsResponseDTO;
 import com.application.mrmason.dto.CMaterialRequestHeaderDTO;
+import com.application.mrmason.dto.CMaterialRequestHeaderDTO2;
 import com.application.mrmason.dto.CMaterialRequestHeaderWithCategoryDto;
 import com.application.mrmason.dto.CommonMaterialRequestDto;
 import com.application.mrmason.dto.ResponseCMaterialReqHeaderDetailsDto;
@@ -355,19 +356,14 @@ public class CMaterialReqHeaderDetailsController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate fromDeliveryDate,
             @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate toDeliveryDate,
             @RequestParam(required = false) String cMatRequestIdLineid,
-            @RequestParam(required = false)String brand,
-            @RequestParam(required = false)String itemName,
-            @RequestParam(required = false)String itemSize,
-            @RequestParam(required = true) String supplierId,       
-            @RequestParam(required = false) BigDecimal quotedAmount,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<CMaterialRequestHeaderDTO> pageData = service.getMaterialRequestsWithDetails(
+        Page<CMaterialRequestHeaderDTO2> pageData = service.getMaterialRequestsWithDetail(
         		userId,materialRequestId, customerEmail, customerName, customerMobile,
             deliveryLocation, fromRequestDate, toRequestDate,
-            fromDeliveryDate, toDeliveryDate,cMatRequestIdLineid,brand,itemName,itemSize,supplierId, quotedAmount,pageable
+            fromDeliveryDate, toDeliveryDate,cMatRequestIdLineid,pageable
         );
 
         Map<String, Object> response = new HashMap<>();
@@ -381,5 +377,44 @@ public class CMaterialReqHeaderDetailsController {
 
         return ResponseEntity.ok(response);
     }
+//    @GetMapping("/get-material-request-header-and-details")
+//    public ResponseEntity<Map<String, Object>> getMaterialRequests(
+//    		@RequestParam(required = false)String userId,
+//            @RequestParam(required = false) String materialRequestId,
+//            @RequestParam(required = false) String customerEmail,
+//            @RequestParam(required = false) String customerName,
+//            @RequestParam(required = false) String customerMobile,
+//            @RequestParam(required = false) String deliveryLocation,
+//            @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate fromRequestDate,
+//            @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate toRequestDate,
+//            @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate fromDeliveryDate,
+//            @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate toDeliveryDate,
+//            @RequestParam(required = false) String cMatRequestIdLineid,
+//            @RequestParam(required = false)String brand,
+//            @RequestParam(required = false)String itemName,
+//            @RequestParam(required = false)String itemSize,
+//            @RequestParam(required = false) String supplierId,       
+//            @RequestParam(required = false) BigDecimal quotedAmount,
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "10") int size
+//    ) {
+//        Pageable pageable = PageRequest.of(page, size);
+//        Page<CMaterialRequestHeaderDTO> pageData = service.getMaterialRequestsWithDetails(
+//        		userId,materialRequestId, customerEmail, customerName, customerMobile,
+//            deliveryLocation, fromRequestDate, toRequestDate,
+//            fromDeliveryDate, toDeliveryDate,cMatRequestIdLineid,brand,itemName,itemSize,supplierId, quotedAmount,pageable
+//        );
+//
+//        Map<String, Object> response = new HashMap<>();
+//        response.put("message", "Material request history retrieved successfully.");
+//        response.put("status", true);
+//        response.put("CMaterialRequestHeaderEntity", pageData.getContent());
+//        response.put("currentPage", pageData.getNumber());
+//        response.put("pageSize", pageData.getSize());
+//        response.put("totalElements", pageData.getTotalElements());
+//        response.put("totalPages", pageData.getTotalPages());
+//
+//        return ResponseEntity.ok(response);
+//    }
 
 }

@@ -21,13 +21,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.application.mrmason.dto.GenericResponse;
+import com.application.mrmason.dto.QuotationUpdateRequest;
+import com.application.mrmason.dto.ResponseInvoiceAndDetailsDto;
 import com.application.mrmason.entity.CMaterialReqHeaderDetailsEntity;
 import com.application.mrmason.entity.CMaterialRequestHeaderEntity;
 import com.application.mrmason.entity.CustomerRegistration;
+import com.application.mrmason.entity.Invoice;
 import com.application.mrmason.entity.MaterialSupplier;
 import com.application.mrmason.entity.MaterialSupplierQuotationHeader;
 import com.application.mrmason.entity.MaterialSupplierQuotationUser;
-import com.application.mrmason.entity.ServiceRequestPaintQuotation;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
@@ -35,6 +37,7 @@ import com.application.mrmason.enums.Status;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.CMaterialReqHeaderDetailsRepository;
+import com.application.mrmason.repository.InvoiceRepository;
 import com.application.mrmason.repository.MaterialSupplierQuotationHeaderRepository;
 import com.application.mrmason.repository.MaterialSupplierQuotationUserDAO;
 import com.application.mrmason.repository.MaterialSupplierRepository;
@@ -63,6 +66,8 @@ public class materialSupplierService {
 	private CMaterialReqHeaderDetailsRepository cMaterialReqHeaderDetailsRepository;
 	@Autowired
 	private MaterialSupplierQuotationHeaderRepository materialSupplierQuotationHeaderRepository;
+	@Autowired
+	private InvoiceRepository invoiceRepository;
 
 //	@Transactional
 //	public GenericResponse<List<MaterialSupplier>> saveItems(
@@ -242,7 +247,7 @@ public class materialSupplierService {
 	            existingTask.setDiscount(task.getDiscount());
 	            existingTask.setSupplierId(userInfo.userId);
 	            existingTask.setUpdatedDate(LocalDate.now());
-	            existingTask.setStatus(task.getStatus());
+//	            existingTask.setStatus(task.getStatus());
 	            existingTask.setGst(task.getGst());
 	            existingTask.setMrp(task.getMrp());
 	            updatedTasks.add(existingTask);
@@ -251,6 +256,42 @@ public class materialSupplierService {
 	        return materialSupplierRepository.saveAll(updatedTasks);
 	    }
 
+	    @Transactional
+	    public void updateQuotation(RegSource regSource,QuotationUpdateRequest request) {
+
+	    	 UserInfo userInfo = getLoggedInUserInfo(regSource);
+	        MaterialSupplierQuotationHeader header = materialSupplierQuotationHeaderRepository.findById(request.getCmatRequestId())
+	                .orElseThrow(() -> new RuntimeException("Header not found"));
+	        header.setQuotedAmount(request.getQuotedAmount());
+	        header.setInvoiceStatus(Status.valueOf(request.getStatus()));
+	        header.setInvoiceNumber("INV-" + System.currentTimeMillis()); // backend generate invoice number
+	        header.setInvoiceDate(LocalDate.now());
+	        materialSupplierQuotationHeaderRepository.save(header);
+
+	        // 2️⃣ Update details
+	        for (QuotationUpdateRequest.QuotationDetail detail : request.getQuotations()) {
+	            MaterialSupplier supplierDetail = materialSupplierRepository.findById(detail.getMaterialLineItem())
+	                    .orElseThrow(() -> new RuntimeException("Detail not found: " + detail.getMaterialLineItem()));
+	            supplierDetail.setDiscount(detail.getDiscount());
+	            supplierDetail.setGst(detail.getGst());
+	            supplierDetail.setMrp(detail.getMrp());
+	            supplierDetail.setInvoiceNumber(header.getInvoiceNumber());
+	            supplierDetail.setInvoiceStatus(header.getInvoiceStatus());
+	            supplierDetail.setQuotationStatus(header.getQuotationStatus());
+	            supplierDetail.setUpdatedDate(LocalDate.now());
+	            materialSupplierRepository.save(supplierDetail);
+	        }
+
+	        // 3️⃣ Save to invoice table
+	        Invoice invoice = new Invoice();
+	        invoice.setCmatRequestId(request.getCmatRequestId());
+	        invoice.setInvoiceNumber(header.getInvoiceNumber());
+	        invoice.setQuotedAmount(request.getQuotedAmount());
+	        invoice.setUpdatedBy(userInfo.userId);
+	        invoice.setInvoiceDate(LocalDate.now());
+	        invoiceRepository.save(invoice);
+	    }
+	    
 	    public Page<MaterialSupplier> getMaterialSupplierDetails(
 				String quotationId,String cmatRequestId,String materialLineItem,String supplierId,Pageable pageable) {
 
@@ -645,4 +686,107 @@ public class materialSupplierService {
 	        return new PageImpl<>(results, pageable, total);
 	    }
 
+	    @Transactional
+	    public ResponseInvoiceAndDetailsDto getInvoicesAndDetails(
+	            String updatedBy,
+	            BigDecimal quotedAmount,
+	            String cmatRequestId,
+	            String invoiceNumber,
+	            LocalDate fromInvoiceDate,
+	            LocalDate toInvoiceDate,
+	            Pageable invoicePageable) {
+
+	        ResponseInvoiceAndDetailsDto response = new ResponseInvoiceAndDetailsDto();
+	        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+
+	        // ---------- 1️⃣ Fetch Invoices (with pagination) ----------
+	        CriteriaQuery<Invoice> invoiceQuery = cb.createQuery(Invoice.class);
+	        Root<Invoice> invoiceRoot = invoiceQuery.from(Invoice.class);
+
+	        List<Predicate> invoicePredicates = buildInvoicePredicates(cb, invoiceRoot,
+	                updatedBy, quotedAmount, cmatRequestId, invoiceNumber, fromInvoiceDate, toInvoiceDate);
+
+	        invoiceQuery.select(invoiceRoot).where(cb.and(invoicePredicates.toArray(new Predicate[0])));
+	        TypedQuery<Invoice> typedInvoiceQuery = entityManager.createQuery(invoiceQuery);
+
+	        typedInvoiceQuery.setFirstResult((int) invoicePageable.getOffset());
+	        typedInvoiceQuery.setMaxResults(invoicePageable.getPageSize());
+
+	        List<Invoice> invoices = typedInvoiceQuery.getResultList();
+
+	        // Count query for invoices
+	        CriteriaQuery<Long> countInvoiceQuery = cb.createQuery(Long.class);
+	        Root<Invoice> countInvoiceRoot = countInvoiceQuery.from(Invoice.class);
+	        List<Predicate> countInvoicePredicates = buildInvoicePredicates(cb, countInvoiceRoot,
+	                updatedBy, quotedAmount, cmatRequestId, invoiceNumber, fromInvoiceDate, toInvoiceDate);
+
+	        countInvoiceQuery.select(cb.count(countInvoiceRoot))
+	                .where(cb.and(countInvoicePredicates.toArray(new Predicate[0])));
+
+	        Long totalInvoices = entityManager.createQuery(countInvoiceQuery).getSingleResult();
+	        int invoiceTotalPages = (int) Math.ceil((double) totalInvoices / invoicePageable.getPageSize());
+	        List<MaterialSupplier> materialSuppliers = new ArrayList<>();
+	        List<MaterialSupplierQuotationHeader> quotationHeaders = new ArrayList<>();
+
+	        if (!invoices.isEmpty()) {
+	            List<String> invoiceCmatIds = invoices.stream()
+	                    .map(Invoice::getCmatRequestId)
+	                    .toList();
+
+	            CriteriaQuery<MaterialSupplier> supplierQuery = cb.createQuery(MaterialSupplier.class);
+	            Root<MaterialSupplier> supplierRoot = supplierQuery.from(MaterialSupplier.class);
+	            supplierQuery.select(supplierRoot)
+	                    .where(supplierRoot.get("cmatRequestId").in(invoiceCmatIds));
+
+	            materialSuppliers = entityManager.createQuery(supplierQuery).getResultList();
+	            CriteriaQuery<MaterialSupplierQuotationHeader> quotationQuery = cb.createQuery(MaterialSupplierQuotationHeader.class);
+	            Root<MaterialSupplierQuotationHeader> quotationRoot = quotationQuery.from(MaterialSupplierQuotationHeader.class);
+	            quotationQuery.select(quotationRoot)
+	                    .where(quotationRoot.get("cmatRequestId").in(invoiceCmatIds));
+
+	            quotationHeaders = entityManager.createQuery(quotationQuery).getResultList();
+	        }
+	        response.setStatus(true);
+	        response.setMessage("Invoices, Material Suppliers, and Quotation Headers retrieved successfully.");	        response.setInvoices(invoices);
+	        response.setInvoiceCurrentPage(invoicePageable.getPageNumber());
+	        response.setInvoicePageSize(invoicePageable.getPageSize());
+	        response.setInvoiceTotalElements(totalInvoices);
+	        response.setInvoiceTotalPages(invoiceTotalPages);
+	        response.setMaterialSuppliers(materialSuppliers);
+	        response.setMaterialSupplierQuotationHeaders(quotationHeaders);
+
+	        return response;
+	    }
+
+
+	    // ---------- Helper Method ----------
+	    private List<Predicate> buildInvoicePredicates(CriteriaBuilder cb, Root<Invoice> root,
+	                                                   String updatedBy,
+	                                                   BigDecimal quotedAmount,
+	                                                   String cmatRequestId,
+	                                                   String invoiceNumber,
+	                                                   LocalDate fromInvoiceDate,
+	                                                   LocalDate toInvoiceDate) {
+	        List<Predicate> predicates = new ArrayList<>();
+
+	        if (updatedBy != null && !updatedBy.isEmpty()) {
+	            predicates.add(cb.equal(root.get("updatedBy"), updatedBy));
+	        }
+	        if (quotedAmount != null) {
+	            predicates.add(cb.equal(root.get("quotedAmount"), quotedAmount));
+	        }
+	        if (cmatRequestId != null && !cmatRequestId.isEmpty()) {
+	            predicates.add(cb.equal(root.get("cmatRequestId"), cmatRequestId));
+	        }
+	        if (invoiceNumber != null && !invoiceNumber.isEmpty()) {
+	            predicates.add(cb.equal(root.get("invoiceNumber"), invoiceNumber));
+	        }
+	        if (fromInvoiceDate != null) {
+	            predicates.add(cb.greaterThanOrEqualTo(root.get("invoiceDate"), fromInvoiceDate));
+	        }
+	        if (toInvoiceDate != null) {
+	            predicates.add(cb.lessThanOrEqualTo(root.get("invoiceDate"), toInvoiceDate));
+	        }
+	        return predicates;
+	    }
 }

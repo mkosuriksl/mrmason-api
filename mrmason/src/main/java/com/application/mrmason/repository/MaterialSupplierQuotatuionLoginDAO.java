@@ -31,6 +31,10 @@ public interface MaterialSupplierQuotatuionLoginDAO extends JpaRepository<Materi
 
 	Optional<MaterialSupplierQuotationLogin> findByMobileAndRegSource(String mobile, RegSource regSource);
 	
+	@Query("SELECT m FROM MaterialSupplierQuotationLogin m WHERE m.mobile = :mobile")
+	Optional<MaterialSupplierQuotationLogin> findByMobil(@Param("mobile") String mobile);
+
+	
 	@Query("SELECT s FROM MaterialSupplierQuotationLogin s WHERE LOWER(s.email) = LOWER(:email) AND s.eOtp = :eOtp AND s.regSource = :regSource")
 	MaterialSupplierQuotationLogin findByEmailEOtpAndRegSourceIgnoreCase(@Param("email") String email, @Param("eOtp") String eOtp, @Param("regSource") RegSource regSource);
 

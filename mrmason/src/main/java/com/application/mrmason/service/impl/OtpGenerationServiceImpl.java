@@ -9,11 +9,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.entity.AdminDetails;
+import com.application.mrmason.entity.CustomerEmailOtp;
+import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.entity.MaterialSupplierQuotationLogin;
 import com.application.mrmason.entity.ServicePersonLogin;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.repository.AdminDetailsRepo;
+import com.application.mrmason.repository.CustomerEmailOtpRepo;
+import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.repository.MaterialSupplierQuotationUserDAO;
 import com.application.mrmason.repository.MaterialSupplierQuotatuionLoginDAO;
 import com.application.mrmason.repository.ServicePersonLoginDAO;
@@ -38,6 +42,13 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 	
 	@Autowired
 	public AdminDetailsRepo adminRepo;
+	
+	@Autowired
+	CustomerEmailOtpRepo emailLoginRepo;
+	
+	@Autowired
+	CustomerRegistrationRepo customerRegistrationRepo;
+	
 	private final Map<String, String> otpStorage = new HashMap<>(); // Store OTPs temporarily
 
 	// Generate and send OTP to the user (via email, SMS, etc.)
@@ -85,6 +96,21 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 		mailService.sendEmail(mail, otp);
 		return otp;
 	}
+	
+	@Override
+	public String generateEmailOtpByCustomer(String mail) {
+		int randomNum = (int) (Math.random() * 900000) + 100000;
+		String otp = String.valueOf(randomNum);
+		otpStorage.put(mail, otp);
+		Optional<CustomerEmailOtp> userOpt = Optional.ofNullable(emailLoginRepo.findByEmail(mail));
+	    if (userOpt.isPresent()) {
+	    	CustomerEmailOtp user = userOpt.get();
+	        user.setOtp(otp);
+	        emailLoginRepo.save(user);
+	    }
+		mailService.sendEmail(mail, otp);
+		return otp;
+	}
 
 	@Override
 	public boolean verifyOtp(String email, String enteredOtp,RegSource regSource) {
@@ -96,9 +122,17 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 	
 	@Override
 	public boolean verifyOtp(String email, String enteredOtp) {
-		String storedOtp = otpStorage.get(email);
+		String storedOtp = otpStorage.get(enteredOtp);
 		return storedOtp != null && storedOtp.equals(enteredOtp);
 	}
+	@Override
+	public boolean verifyEmailOtpWithCustomer(String email, String enteredOtp) {
+	    return Optional.ofNullable(emailLoginRepo.findByEmailAndOtp(email, enteredOtp))
+	                   .map(CustomerEmailOtp::getOtp)
+	                   .filter(otp -> otp.equals(enteredOtp))
+	                   .isPresent();
+	}
+
 
 	@Override
 	public String generateMobileOtp(String mobile, RegSource regSource) {

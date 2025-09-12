@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.CustomerEmailOtp;
+import com.application.mrmason.entity.CustomerMobileOtp;
 import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.entity.MaterialSupplierQuotationLogin;
 import com.application.mrmason.entity.ServicePersonLogin;
@@ -17,6 +18,7 @@ import com.application.mrmason.entity.User;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.CustomerEmailOtpRepo;
+import com.application.mrmason.repository.CustomerMobileOtpRepo;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.repository.MaterialSupplierQuotationUserDAO;
 import com.application.mrmason.repository.MaterialSupplierQuotatuionLoginDAO;
@@ -45,6 +47,9 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 	
 	@Autowired
 	CustomerEmailOtpRepo emailLoginRepo;
+	
+	@Autowired
+	CustomerMobileOtpRepo customerMobileOtpRepo;
 	
 	@Autowired
 	CustomerRegistrationRepo customerRegistrationRepo;
@@ -98,19 +103,39 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 	}
 	
 	@Override
+//	public String generateEmailOtpByCustomer(String mail) {
+//		int randomNum = (int) (Math.random() * 900000) + 100000;
+//		String otp = String.valueOf(randomNum);
+//		otpStorage.put(mail, otp);
+//		Optional<CustomerEmailOtp> userOpt = Optional.ofNullable(emailLoginRepo.findByEmail(mail));
+//	    if (userOpt.isPresent()) {
+//	    	CustomerEmailOtp user = userOpt.get();
+//	        user.setOtp(otp);
+//	        emailLoginRepo.save(user);
+//	    }
+//		mailService.sendEmail(mail, otp);
+//		return otp;
+//	}
 	public String generateEmailOtpByCustomer(String mail) {
-		int randomNum = (int) (Math.random() * 900000) + 100000;
-		String otp = String.valueOf(randomNum);
-		otpStorage.put(mail, otp);
-		Optional<CustomerEmailOtp> userOpt = Optional.ofNullable(emailLoginRepo.findByEmail(mail));
-	    if (userOpt.isPresent()) {
-	    	CustomerEmailOtp user = userOpt.get();
-	        user.setOtp(otp);
-	        emailLoginRepo.save(user);
+	    int randomNum = (int) (Math.random() * 900000) + 100000;
+	    String otp = String.valueOf(randomNum);
+	    otpStorage.put(mail, otp);
+
+	    // Save OTP in c_emailotp table
+	    CustomerEmailOtp user = emailLoginRepo.findByEmail(mail);
+	    if (user == null) {
+	        user = new CustomerEmailOtp();
+	        user.setEmail(mail);
 	    }
-		mailService.sendEmail(mail, otp);
-		return otp;
+	    user.setOtp(otp);
+	    emailLoginRepo.save(user);
+
+	    // Send email
+	    mailService.sendEmail(mail, otp);
+
+	    return otp;
 	}
+
 
 	@Override
 	public boolean verifyOtp(String email, String enteredOtp,RegSource regSource) {
@@ -163,8 +188,40 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 		smsService.sendSMSMessage(mobile, otp, regSource);
 		return otp;
 	}
+	
+	@Override
+//	public String generateCustomerMobileOtp(String mail) {
+//		int randomNum = (int) (Math.random() * 900000) + 100000;
+//		String otp = String.valueOf(randomNum);
+//		otpStorage.put(mail, otp);
+//		Optional<CustomerMobileOtp> userOpt = Optional.ofNullable(customerMobileOtpRepo.findByMobileNum(mail));
+//	    if (userOpt.isPresent()) {
+//	    	CustomerMobileOtp user = userOpt.get();
+//	        user.setOtp(otp);
+//	        customerMobileOtpRepo.save(user);
+//	    }
+//	    smsService.sendSMSMessage(mail, otp);
+//		return otp;
+//	}
+	public String generateCustomerMobileOtp(String mobile) {
+	    int randomNum = (int) (Math.random() * 900000) + 100000;
+	    String otp = String.valueOf(randomNum);
+	    otpStorage.put(mobile, otp);
 
+	    // Save OTP in c_emailotp table
+	    CustomerMobileOtp user = customerMobileOtpRepo.findByMobileNum(mobile);
+	    if (user == null) {
+	        user = new CustomerMobileOtp();
+	        user.setMobileNum(mobile);
+	    }
+	    user.setOtp(otp);
+	    customerMobileOtpRepo.save(user);
 
+	    // Send email
+	    smsService.sendSMSMessage(mobile, otp);
+
+	    return otp;
+	}
 	@Override
 	public boolean verifyMobileOtp(String mobile, String enteredOtp) {
 		String storedOtp = otpStorage.get(mobile);

@@ -27,6 +27,12 @@ public class CustomerMobileOtpServiceImpl implements CustomerMobileOtpService{
 		}
 		return null;
 	}
+	public String  isMobileNumExists(String mobile) {
+		if(mobileRepo.findByMobileNum(mobile)==null) {
+			return null;
+		}
+		return mobile;
+	}
 
 }
 

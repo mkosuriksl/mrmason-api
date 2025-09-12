@@ -265,7 +265,7 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 					}
 				} else if (userEmail == null && phno != null) {
 					if (loginDb.getMobileVerified().equalsIgnoreCase("yes")) {
-						CustomerRegistration user=repo.findByUserEmailOrUserMobile(userEmail, phno);
+						CustomerRegistration user=repo.findByUserMobile(phno);
 						if (byCrypt.matches(userPassword, loginDb.getUserPassword())) {
 							String jwtToken = jwtService.generateToken(customerRegistration,customerRegistration.getUserid());
 							response.setJwtToken(jwtToken);

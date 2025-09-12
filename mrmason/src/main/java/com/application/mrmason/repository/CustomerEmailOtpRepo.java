@@ -9,4 +9,6 @@ import com.application.mrmason.entity.CustomerEmailOtp;
 public interface CustomerEmailOtpRepo extends JpaRepository<CustomerEmailOtp,Long>{
 
 	CustomerEmailOtp findByEmail(String email);
+
+	CustomerEmailOtp findByEmailAndOtp(String email, String enteredOtp);
 }

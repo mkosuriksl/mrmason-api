@@ -41,7 +41,7 @@ public class CustomerEmailOtpController {
 			Optional<CustomerEmailOtp> user = Optional.of(otpRepo.findByEmail(userEmail));
 
 			if (user.get().getOtp() == null) {
-				otpService.generateOtp(userEmail,login.getRegSource());
+				otpService.generateEmailOtpByCustomer(userEmail);
 				response.setMessage("OTP Sent to Registered EmailId.");
 				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);
@@ -56,7 +56,7 @@ public class CustomerEmailOtpController {
 		String userEmail = login.getEmail();
 		String otp = login.getOtp();
 
-		if (otpService.verifyOtp(userEmail, otp)) {
+		if (otpService.verifyEmailOtpWithCustomer(userEmail, otp)) {
 
 			emailLoginService.updateData(otp, userEmail);
 			response.setStatus(true);

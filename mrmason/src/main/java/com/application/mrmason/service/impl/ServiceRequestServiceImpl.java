@@ -234,16 +234,28 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
 	        predicates.add(cb.equal(root.get("status"), status));
 	    }
 
+//	    DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+////	    DateTimeFormatter timestampFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+//
+//	    if (fromDate != null && toDate != null) {
+//	        LocalDate from = LocalDate.parse(fromDate, inputFormatter);
+//	        LocalDate to = LocalDate.parse(toDate, inputFormatter);
+//	        LocalDateTime fromDateTime = from.atStartOfDay();
+//	        LocalDateTime toDateTime = to.atTime(23, 59, 59);
+//
+//	        predicates.add(cb.between(root.get("serviceRequestDate"), fromDateTime, toDateTime));
+//	    }
 	    DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-//	    DateTimeFormatter timestampFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+	    DateTimeFormatter dbFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-	    if (fromDate != null && toDate != null) {
-	        LocalDate from = LocalDate.parse(fromDate, inputFormatter);
-	        LocalDate to = LocalDate.parse(toDate, inputFormatter);
-	        LocalDateTime fromDateTime = from.atStartOfDay();
-	        LocalDateTime toDateTime = to.atTime(23, 59, 59);
+	    if (fromDate != null) {
+	        String formattedFrom = LocalDate.parse(fromDate, inputFormatter).format(dbFormatter);
+	        predicates.add(cb.greaterThanOrEqualTo(root.get("serviceRequestDate"), formattedFrom));
+	    }
 
-	        predicates.add(cb.between(root.get("serviceRequestDate"), fromDateTime, toDateTime));
+	    if (toDate != null) {
+	        String formattedTo = LocalDate.parse(toDate, inputFormatter).format(dbFormatter);
+	        predicates.add(cb.lessThanOrEqualTo(root.get("serviceRequestDate"), formattedTo));
 	    }
 
 

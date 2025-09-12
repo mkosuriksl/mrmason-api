@@ -18,4 +18,6 @@ public interface AdminSmsRepo extends JpaRepository<AdminSms, Long> {
 
 	@Query("SELECT a FROM AdminSms a WHERE a.active = true")
 	List<AdminSms> findAllByActive();
+
+	Optional<AdminSms> findFirstByActiveTrue();
 }

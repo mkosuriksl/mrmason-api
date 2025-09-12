@@ -9,5 +9,7 @@ public interface SmsSender {
 	boolean registrationSendSMSMessage(String phoneNumber, String message, RegSource regSource);
 	
 	public boolean sendSMSMessage(String phoneNumber, RegSource regSource) ;
+	
+	public boolean sendSMSMessage(String phoneNumber, String otp);
 
 }

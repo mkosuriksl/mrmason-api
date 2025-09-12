@@ -4,4 +4,5 @@ import com.application.mrmason.entity.CustomerMobileOtp;
 
 public interface CustomerMobileOtpService {
 	CustomerMobileOtp updateData(String otp,String mobile);
+	public String  isMobileNumExists(String mobile);
 }

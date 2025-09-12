@@ -14,5 +14,6 @@ public interface OtpGenerationService {
 	boolean verifyMobileOtp(String mobile, String enteredOtp);
 	public String generateMsOtp(String mail, RegSource regSource);
 	public String generateMsMobileOtp(String mobile, RegSource regSource) ;
+	public String generateCustomerMobileOtp(String mail);
 //	public String generateMsMobileOtp(String mobile);
 }

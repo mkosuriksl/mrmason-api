@@ -19,6 +19,7 @@ import com.application.mrmason.entity.CustomerAssets;
 import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.entity.ServiceRequest;
 import com.application.mrmason.entity.ServiceStatusUpate;
+import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.repository.CustomerAssetsRepo;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.repository.ServiceRequestRepo;
@@ -148,15 +149,15 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
 	public Page<ServiceRequest> getServiceReq(
 	        String userId, String assetId, String location, String serviceSubCategory,
 	        String email, String mobile, String status, String fromDate, String toDate,
-	        int page, int size) {
+	        int page, int size,RegSource regSource) {
 
 	    // Derive userId from email or mobile if userId is not provided
 	    if ((email != null || mobile != null) && userId == null) {
 	        CustomerRegistration customer = null;
 	        if (email != null) {
-	            customer = repo.findByUserEmail(email);
+	            customer = repo.findByUserEmailAndRegSource(email,regSource);
 	        } else if (mobile != null) {
-	            customer = repo.findByUserMobile(mobile);
+	            customer = repo.findByUserMobileAndRegSource(mobile,regSource);
 	        }
 
 	        if (customer != null) {

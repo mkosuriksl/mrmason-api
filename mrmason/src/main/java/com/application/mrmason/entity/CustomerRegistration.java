@@ -16,6 +16,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.application.mrmason.enums.RegSource;
+
 @Entity
 @Getter
 @Setter
@@ -77,6 +79,8 @@ public class CustomerRegistration implements UserDetails {
 		return this.userName;
 	}
 	
+	@Enumerated(EnumType.STRING)
+	private RegSource regSource;
 
 	@PrePersist
 	private void prePersist() {

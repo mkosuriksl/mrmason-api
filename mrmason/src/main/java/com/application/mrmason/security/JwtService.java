@@ -44,6 +44,15 @@ public class JwtService {
 	public String extractUserType(String token) {
 		return extractClaim(token, claims -> claims.get("userType", String.class));
 	}
+	
+	public RegSource extractRegSource(String token) {
+	    String regSourceStr = extractClaim(token, claims -> claims.get("regSource", String.class));
+	    if (regSourceStr == null) {
+	        return null; // or throw exception if regSource must always exist
+	    }
+	    return RegSource.valueOf(regSourceStr.toUpperCase()); 
+	}
+
 
 	public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
 		final Claims claims = extractAllClaims(token);

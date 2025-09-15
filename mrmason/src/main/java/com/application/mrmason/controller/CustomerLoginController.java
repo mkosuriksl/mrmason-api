@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import com.application.mrmason.dto.ChangePasswordDto;
 import com.application.mrmason.dto.ResponseMessageDto;
+import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.service.CustomerLoginService;
 import com.application.mrmason.service.CustomerRegistrationService;
 
@@ -59,8 +60,9 @@ public class CustomerLoginController {
 		String newPass = request.getNewPass();
 		String confPass = request.getConfPass();
 		String mobile=request.getMobile();
+		RegSource regSource=request.getRegSource();
 		try {
-			String data=loginService.forgetPassword(mobile,email, otp, newPass, confPass);
+			String data=loginService.forgetPassword(mobile,email, otp, newPass, confPass,regSource);
 			if (data == "changed") {
 				response.setMessage("Password Changed Successfully..");
 				response.setStatus(true);

@@ -13,6 +13,7 @@ import com.application.mrmason.dto.Logindto;
 import com.application.mrmason.dto.ResponseMessageDto;
 import com.application.mrmason.entity.CustomerEmailOtp;
 import com.application.mrmason.entity.CustomerLogin;
+import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.repository.CustomerEmailOtpRepo;
 import com.application.mrmason.repository.CustomerLoginRepo;
 import com.application.mrmason.service.CustomerEmailOtpService;
@@ -38,17 +39,18 @@ public class CustomerEmailOtpController {
 	@PostMapping("/sendOtp")
 	public ResponseEntity<ResponseMessageDto> sendEmail(@RequestBody Logindto login) {
 	    String userEmail = login.getEmail();
+	    RegSource regSource=login.getRegSource();
 	    ResponseMessageDto response = new ResponseMessageDto();
 
 	    // Check if email exists
-	    if (emailLoginService.isEmailExists(userEmail) == null) {
+	    if (emailLoginService.isEmailExistsAndRegSource(userEmail,regSource) == null) {
 	        response.setMessage("Invalid EmailId..!");
 	        response.setStatus(false);
 	        return new ResponseEntity<>(response, HttpStatus.OK);
 	    }
 
 	    // Check if already verified from c_login table
-	    CustomerLogin loginEntity = customerLoginRepo.findByUserEmail(userEmail);
+	    CustomerLogin loginEntity = customerLoginRepo.findByUserEmailAndRegSource(userEmail,regSource);
 	    if (loginEntity != null && "yes".equalsIgnoreCase(loginEntity.getEmailVerified())) {
 	        response.setMessage("Email already verified.");
 	        response.setStatus(false);
@@ -56,7 +58,7 @@ public class CustomerEmailOtpController {
 	    }
 
 	    // Generate OTP
-	    otpService.generateEmailOtpByCustomer(userEmail);
+	    otpService.generateEmailOtpByCustomerAndRegSource(userEmail,regSource);
 	    response.setMessage("OTP Sent to Registered EmailId.");
 	    response.setStatus(true);
 	    return new ResponseEntity<>(response, HttpStatus.OK);
@@ -85,10 +87,11 @@ public class CustomerEmailOtpController {
 	public ResponseEntity<ResponseMessageDto> verifyCustomer(@RequestBody Logindto login) {
 		String userEmail = login.getEmail();
 		String otp = login.getOtp();
+		RegSource regSource=login.getRegSource();
 
-		if (otpService.verifyEmailOtpWithCustomer(userEmail, otp)) {
+		if (otpService.verifyEmailOtpAndRegSourceWithCustomer(userEmail,regSource, otp)) {
 
-			emailLoginService.updateData(otp, userEmail);
+			emailLoginService.updateData(otp, userEmail,regSource);
 			response.setStatus(true);
 			response.setMessage(" Email Verified successful");
 			return new ResponseEntity<>(response, HttpStatus.OK);

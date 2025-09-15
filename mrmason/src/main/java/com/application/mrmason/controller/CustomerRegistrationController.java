@@ -21,6 +21,7 @@ import com.application.mrmason.dto.ResponseMessageDto;
 import com.application.mrmason.dto.ResponseUpdateDto;
 import com.application.mrmason.dto.UpdateProfileDto;
 import com.application.mrmason.entity.CustomerRegistration;
+import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.service.CustomerRegistrationService;
 
 @RestController
@@ -161,18 +162,19 @@ public class CustomerRegistrationController {
 		String newPass = request.getNewPass();
 		String confPass = request.getConfPass();
 		String userMobile = request.getMobile();
+		RegSource regSource=request.getRegSource();
 
 		try {
-			if (service.changePassword(userMail, oldPass, newPass, confPass, userMobile) == "changed") {
+			if (service.changePassword(userMail, oldPass, newPass, confPass, userMobile,regSource) == "changed") {
 				response2.setMessage("Password Changed Successfully..");
 				response2.setStatus(true);
 				return new ResponseEntity<>(response2, HttpStatus.OK);
 
-			} else if (service.changePassword(userMail, oldPass, newPass, confPass, userMobile) == "notMatched") {
+			} else if (service.changePassword(userMail, oldPass, newPass, confPass, userMobile,regSource) == "notMatched") {
 				response2.setMessage("New Passwords Not Matched.!");
 				response2.setStatus(false);
 				return new ResponseEntity<>(response2, HttpStatus.OK);
-			} else if (service.changePassword(userMail, oldPass, newPass, confPass, userMobile) == "incorrect") {
+			} else if (service.changePassword(userMail, oldPass, newPass, confPass, userMobile,regSource) == "incorrect") {
 				response2.setMessage("Old Password is Incorrect");
 				response2.setStatus(false);
 				return new ResponseEntity<>(response2, HttpStatus.OK);
@@ -192,9 +194,10 @@ public class CustomerRegistrationController {
 		String userEmail = requestDto.getEmail();
 		String phno = requestDto.getMobile();
 		String userPassword = requestDto.getPassword();
+		RegSource regSource=requestDto.getRegSource();
 		
 		try {
-			ResponseLoginDto response = service.loginDetails(userEmail, phno, userPassword);
+			ResponseLoginDto response = service.loginDetails(userEmail, phno, userPassword,regSource);
 			if (response.getJwtToken() != null) {
 				return new ResponseEntity<ResponseLoginDto>(response, HttpStatus.OK);
 			}

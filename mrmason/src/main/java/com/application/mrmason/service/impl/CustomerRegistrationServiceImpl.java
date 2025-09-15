@@ -18,6 +18,7 @@ import com.application.mrmason.entity.CustomerEmailOtp;
 import com.application.mrmason.entity.CustomerLogin;
 import com.application.mrmason.entity.CustomerMobileOtp;
 import com.application.mrmason.entity.CustomerRegistration;
+import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.repository.CustomerEmailOtpRepo;
 import com.application.mrmason.repository.CustomerLoginRepo;
 import com.application.mrmason.repository.CustomerMobileOtpRepo;
@@ -67,17 +68,17 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 		loginEntity.setMobileVerified("no");
 		loginEntity.setEmailVerified("no");
 		loginEntity.setStatus("inactive");
-
+		loginEntity.setRegSource(customer.getRegSource());
 		loginRepo.save(loginEntity);
 
 		CustomerEmailOtp emailLoginEntity = new CustomerEmailOtp();
 		emailLoginEntity.setEmail(customer.getUserEmail());
-
+		emailLoginEntity.setRegSource(customer.getRegSource());
 		emailRepo.save(emailLoginEntity);
 		
 		CustomerMobileOtp mobileLoginEntity = new CustomerMobileOtp();
 		mobileLoginEntity.setMobileNum(customer.getUserMobile());
-		
+		mobileLoginEntity.setRegSource(customer.getRegSource());
 		mobileRepo.save(mobileLoginEntity);
 		
 
@@ -93,13 +94,13 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 		customerDto.setUserTown(customer.getUserTown());
 		customerDto.setUsertype(String.valueOf(registration.getUserType()));
 		customerDto.setUserDistrict(customer.getUserDistrict());
-
+		customerDto.setRegSource(customer.getRegSource());
 		return customerDto;
 	}
 
 	@Override
 	public boolean isUserUnique(CustomerRegistration customer) {
-		CustomerRegistration user = repo.findByUserEmailOrUserMobile(customer.getUserEmail(), customer.getUserMobile());
+		CustomerRegistration user = repo.findUserWithSameRegSource(customer.getUserEmail(), customer.getUserMobile(),customer.getRegSource());
 		return user == null;
 	}
 
@@ -214,9 +215,9 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 	}
 
 	@Override
-	public String changePassword(String usermail, String oldPass, String newPass, String confPass, String phno) {
+	public String changePassword(String usermail, String oldPass, String newPass, String confPass, String phno,RegSource regSource) {
 		BCryptPasswordEncoder byCrypt = new BCryptPasswordEncoder();
-		Optional<CustomerLogin> user = Optional.of(loginRepo.findByUserEmailOrUserMobile(usermail, phno));
+		Optional<CustomerLogin> user = Optional.of(loginRepo.findByUserEmailOrUserMobileAndRegSource(usermail, phno,regSource));
 		if (user.isPresent()) {
 			if (byCrypt.matches(oldPass, user.get().getUserPassword())) {
 				if (newPass.equals(confPass)) {
@@ -237,14 +238,14 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 	}
 
 	@Override
-	public ResponseLoginDto loginDetails(String userEmail, String phno, String userPassword) {
+	public ResponseLoginDto loginDetails(String userEmail, String phno, String userPassword,RegSource regSource) {
 		ResponseLoginDto response = new ResponseLoginDto();
 
-		CustomerLogin loginDb = loginRepo.findByUserEmailOrUserMobile(userEmail, phno);
+		CustomerLogin loginDb = loginRepo.findByUserEmailOrUserMobileAndRegSource(userEmail, phno,regSource);
 		if (loginDb != null) {
 			if (loginDb.getStatus().equalsIgnoreCase("active")) {
 				CustomerRegistration customerRegistration = customerRegistrationRepo
-						.findByUserEmail(loginDb.getUserEmail());
+						.findByUserEmailAndRegSource(loginDb.getUserEmail(),loginDb.getRegSource());
 				if (userEmail != null && phno == null) {
 					if (loginDb.getEmailVerified().equalsIgnoreCase("yes")) {
 						if (byCrypt.matches(userPassword, loginDb.getUserPassword())) {
@@ -265,7 +266,7 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 					}
 				} else if (userEmail == null && phno != null) {
 					if (loginDb.getMobileVerified().equalsIgnoreCase("yes")) {
-						CustomerRegistration user=repo.findByUserMobile(phno);
+						CustomerRegistration user=repo.findByUserMobileAndRegSource(phno,regSource);
 						if (byCrypt.matches(userPassword, loginDb.getUserPassword())) {
 							String jwtToken = jwtService.generateToken(customerRegistration,customerRegistration.getUserid());
 							response.setJwtToken(jwtToken);

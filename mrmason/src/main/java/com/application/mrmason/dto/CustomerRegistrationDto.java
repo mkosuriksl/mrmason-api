@@ -1,5 +1,9 @@
 package com.application.mrmason.dto;
 
+import com.application.mrmason.enums.RegSource;
+
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,5 +22,6 @@ public class CustomerRegistrationDto {
 	private String userState;
 	private String userPincode;
 	private String regDate;
+	private RegSource regSource;
 
 }

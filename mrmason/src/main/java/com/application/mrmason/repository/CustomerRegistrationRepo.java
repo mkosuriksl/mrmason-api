@@ -11,11 +11,19 @@ import org.springframework.stereotype.Repository;
 import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
+import com.application.mrmason.enums.RegSource;
 @Repository
 public interface CustomerRegistrationRepo extends JpaRepository<CustomerRegistration, Long>{
 	CustomerRegistration findByUserEmailOrUserMobile(String email,String phNo);
+	@Query("SELECT u FROM CustomerRegistration u WHERE " +
+		       "(u.userEmail = :email OR u.userMobile = :mobile) " +
+		       "AND u.regSource = :regSource")
+		CustomerRegistration findUserWithSameRegSource(@Param("email") String email, 
+		                                               @Param("mobile") String mobile, 
+		                                               @Param("regSource") RegSource regSource);
+
 	List<CustomerRegistration> findAllByUserEmailOrUserMobileOrUserState(String email,String phNo,String userState);
-	CustomerRegistration findByUserEmail(String email);
+	CustomerRegistration findByUserEmailAndRegSource(String email,RegSource regSource);
 	CustomerRegistration findByUserid(String userid);
 	
 	@Query("SELECT cr FROM CustomerRegistration cr WHERE cr.regDate BETWEEN :startDate AND :endDate")
@@ -23,7 +31,7 @@ public interface CustomerRegistrationRepo extends JpaRepository<CustomerRegistra
 	
 	@Query("SELECT c FROM CustomerRegistration c WHERE c.userEmail = :userEmail")
     CustomerRegistration findByUserEmailCustomQuery(@Param("userEmail") String userEmail);
-	CustomerRegistration findByUserMobile(String mobile);
+	CustomerRegistration findByUserMobileAndRegSource(String mobile,RegSource regSource);
 	Optional<CustomerRegistration> findByUserEmailAndUserType(String loggedInUserEmail, UserType userType);
 	
 	@Query("SELECT c FROM CustomerRegistration c WHERE c.userid IN :userIds")

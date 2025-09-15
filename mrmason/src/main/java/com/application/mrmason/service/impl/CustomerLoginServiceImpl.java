@@ -58,8 +58,8 @@ public class CustomerLoginServiceImpl implements CustomerLoginService {
 	}
 
 	@Override
-	public CustomerLogin updateDataWithEmail(String email) {
-		Optional<CustomerLogin> existedById = Optional.of(loginRepo.findByUserEmail(email));
+	public CustomerLogin updateDataWithEmailAndRegSource(String email,RegSource regSource) {
+		Optional<CustomerLogin> existedById = Optional.of(loginRepo.findByUserEmailAndRegSource(email,regSource));
 		if (existedById.isPresent()) {
 			existedById.get().setEmailVerified("yes");
 			existedById.get().setStatus("active");
@@ -69,8 +69,8 @@ public class CustomerLoginServiceImpl implements CustomerLoginService {
 	}
 	
 	@Override
-	public CustomerLogin updateDataWithMobile(String mobile) {
-		Optional<CustomerLogin> existedById = Optional.of(loginRepo.findByUserMobile(mobile));
+	public CustomerLogin updateDataWithMobile(String mobile,RegSource regSource) {
+		Optional<CustomerLogin> existedById = Optional.of(loginRepo.findByUserMobileAndRegSource(mobile,regSource));
 		if (existedById.isPresent()) {
 			existedById.get().setMobileVerified("yes");
 			existedById.get().setStatus("active");
@@ -80,13 +80,13 @@ public class CustomerLoginServiceImpl implements CustomerLoginService {
 	}
 
 	@Override
-	public ResponseLoginDto loginDetails(String userEmail, String phno, String userPassword) {
+	public ResponseLoginDto loginDetails(String userEmail, String phno, String userPassword,RegSource regSource) {
 		ResponseLoginDto response = new ResponseLoginDto();
-		CustomerLogin loginDb = loginRepo.findByUserEmailOrUserMobile(userEmail, phno);
+		CustomerLogin loginDb = loginRepo.findByUserEmailOrUserMobileAndRegSource(userEmail, phno,regSource);
 		if (loginDb != null) {
 			if (loginDb.getStatus().equalsIgnoreCase("active")) {
 				CustomerRegistration customerRegistration = customerRegistrationRepo
-						.findByUserEmail(loginDb.getUserEmail());
+						.findByUserEmailAndRegSource(loginDb.getUserEmail(),loginDb.getRegSource());
 				if (userEmail != null && phno == null) {
 					if (loginDb.getEmailVerified().equalsIgnoreCase("yes")) {
 						if (byCrypt.matches(userPassword, loginDb.getUserPassword())) {
@@ -144,29 +144,29 @@ public class CustomerLoginServiceImpl implements CustomerLoginService {
 
 	@Override
 	public String sendMail(String email,RegSource regSource) {
-		Optional<CustomerLogin> userOp = Optional.ofNullable(loginRepo.findByUserEmail(email));
+		Optional<CustomerLogin> userOp = Optional.ofNullable(loginRepo.findByUserEmailAndRegSource(email,regSource));
 		if (userOp.isPresent()) {
-			otpService.generateOtp(email,regSource);
+			otpService.generateCustomerOtp(email,regSource);
 			return "otp";
 		}
 		return null;
 	}
 	@Override
 	public String sendSms(String mobile,RegSource regSource) {
-		Optional<CustomerLogin> userOp = Optional.ofNullable(loginRepo.findByUserMobile(mobile));
+		Optional<CustomerLogin> userOp = Optional.ofNullable(loginRepo.findByUserMobileAndRegSource(mobile,regSource));
 		if (userOp.isPresent()) {
-			otpService.generateMobileOtp(mobile,regSource);
+			otpService.generateCustomerMobileOtp(mobile,regSource);
 			return "otp";
 		}
 		return null;
 	}
 	
 	@Override
-	public String forgetPassword(String mobile,String email, String otp, String newPass, String confPass) {
-		Optional<CustomerLogin> userEmail = Optional.ofNullable(loginRepo.findByUserEmail(email));
-		Optional<CustomerLogin> userMobile = Optional.ofNullable(loginRepo.findByUserMobile(mobile));
+	public String forgetPassword(String mobile,String email, String otp, String newPass, String confPass,RegSource regSource) {
+		Optional<CustomerLogin> userEmail = Optional.ofNullable(loginRepo.findByUserEmailAndRegSource(email,regSource));
+		Optional<CustomerLogin> userMobile = Optional.ofNullable(loginRepo.findByUserMobileAndRegSource(mobile,regSource));
 		if (userEmail.isPresent()) {
-			if (otpService.verifyOtp(email, otp)) {
+			if (otpService.verifyCustomerEmailOtp(email, otp,regSource)) {
 				if (newPass.equals(confPass)) {
 					String encryptPassword = byCrypt.encode(confPass);
 					userEmail.get().setUserPassword(encryptPassword);
@@ -179,7 +179,7 @@ public class CustomerLoginServiceImpl implements CustomerLoginService {
 				return "incorrect";
 			}
 		}else if(userMobile.isPresent()) {
-			if (otpService.verifyMobileOtp(mobile, otp)) {
+			if (otpService.verifyMobileOtpRegSource(mobile, otp,regSource)) {
 				if (newPass.equals(confPass)) {
 					String encryptPassword = byCrypt.encode(confPass);
 					userMobile.get().setUserPassword(encryptPassword);

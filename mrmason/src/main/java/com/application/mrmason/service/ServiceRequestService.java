@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.data.domain.Page;
 
 import com.application.mrmason.entity.ServiceRequest;
+import com.application.mrmason.enums.RegSource;
 
 public interface ServiceRequestService {
 	ServiceRequest addRequest(ServiceRequest request);
@@ -16,7 +17,7 @@ public interface ServiceRequestService {
 	public Page<ServiceRequest> getServiceReq(
 	        String userId, String assetId, String location, String serviceSubCategory,
 	        String email, String mobile, String status, String fromDate, String toDate,
-	        int page, int size) ;
+	        int page, int size,RegSource regSource) ;
 	
 //	public ServiceRequest requestedDetails(String requestId);
 	

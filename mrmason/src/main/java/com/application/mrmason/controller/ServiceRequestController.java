@@ -22,6 +22,7 @@ import com.application.mrmason.dto.ResponseServiceReqDto;
 import com.application.mrmason.dto.ServiceRequestWithCustomerDTO;
 import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.entity.ServiceRequest;
+import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.service.ServiceRequestService;
 
@@ -124,11 +125,13 @@ public class ServiceRequestController {
 	        @RequestParam(required = false) String fromDate,
 	        @RequestParam(required = false) String toDate,
 	        @RequestParam(defaultValue = "0") int page,
-	        @RequestParam(defaultValue = "10") int size) {
+	        @RequestParam(defaultValue = "10") int size,
+	        @RequestParam(required = false) RegSource regSource
+	        ) {
 	    try {
 	        Page<ServiceRequest> serviceReqPage = reqService.getServiceReq(
 	            userId, assetId, location, serviceSubCategory,
-	            email, mobile, status, fromDate, toDate, page, size);
+	            email, mobile, status, fromDate, toDate, page, size,regSource);
 
 	        if (serviceReqPage.isEmpty()) {
 	            response.setMessage("No data found for the given details.!");

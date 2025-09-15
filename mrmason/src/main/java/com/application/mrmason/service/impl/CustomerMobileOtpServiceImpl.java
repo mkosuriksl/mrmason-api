@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.entity.CustomerMobileOtp;
+import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.repository.CustomerMobileOtpRepo;
 import com.application.mrmason.service.CustomerLoginService;
 import com.application.mrmason.service.CustomerMobileOtpService;
@@ -18,21 +19,22 @@ public class CustomerMobileOtpServiceImpl implements CustomerMobileOtpService{
 	CustomerLoginService loginService;
 	
 	@Override
-	public CustomerMobileOtp updateData(String otp, String mobile) {
-		Optional<CustomerMobileOtp> existedById = Optional.of(mobileRepo.findByMobileNum(mobile));
+	public CustomerMobileOtp updateData(String otp, String mobile,RegSource regSource) {
+		Optional<CustomerMobileOtp> existedById = Optional.of(mobileRepo.findByMobileNumAndRegSource(mobile,regSource));
 		if(existedById.isPresent()) {
 			existedById.get().setOtp(otp);
-			loginService.updateDataWithMobile(mobile);
+			loginService.updateDataWithMobile(mobile,regSource);
 			return mobileRepo.save(existedById.get());
 		}
 		return null;
 	}
-	public String  isMobileNumExists(String mobile) {
-		if(mobileRepo.findByMobileNum(mobile)==null) {
+	public String  isMobileNumExistsAndRegSource(String mobile,RegSource regSource) {
+		if(mobileRepo.findByMobileNumAndRegSource(mobile,regSource)==null) {
 			return null;
 		}
 		return mobile;
 	}
+
 
 }
 

@@ -72,4 +72,6 @@ public interface MaterialSupplierQuotationUserDAO extends JpaRepository<Material
 	@Query("SELECT u FROM User u WHERE u.bodSeqNo = :bodSeqNo")
 	Optional<MaterialSupplierQuotationUser> findByBodSeqNoUploadImage(@Param("bodSeqNo") String bodSeqNo);
 
+	List<MaterialSupplierQuotationUser> findByLocationContaining(String location);
+
 }

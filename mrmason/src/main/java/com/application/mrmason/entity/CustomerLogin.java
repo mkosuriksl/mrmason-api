@@ -1,7 +1,11 @@
 package com.application.mrmason.entity;
 
+import com.application.mrmason.enums.RegSource;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -33,6 +37,7 @@ public class CustomerLogin {
 	private String emailVerified;
 	@Column(name="status")
 	private String status;
-	
+	@Enumerated(EnumType.STRING)
+	private RegSource regSource;
 
 }

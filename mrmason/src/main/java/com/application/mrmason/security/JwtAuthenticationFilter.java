@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.application.mrmason.entity.User;
+import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.repository.MaterialSupplierQuotationUserDAO;
@@ -77,6 +78,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 					String username = jwtService.extractUsername(token);
 					String userId = jwtService.extractUserId(token);
 					String userType = jwtService.extractUserType(token);
+					RegSource regSource=jwtService.extractRegSource(token);
 					UserDetails userDetails = null;
 					if (userType.equals("Developer") || userType.equals("worker")) {
 						User user = userDAO.findByMobileOrEmailAndBodSeqNo(username, userId).get();
@@ -88,7 +90,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 					}
 
 					if (userType.equals("EC")) {
-						userDetails = customerRegistrationRepo.findByUserEmail(username);
+						userDetails = customerRegistrationRepo.findByUserEmailAndRegSource(username,regSource);
 					}
 					if (userType.equals("MS")) {
 						userDetails = materialSupplierQuotationUserDAO.findByEmail(username);

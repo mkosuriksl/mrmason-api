@@ -2,8 +2,12 @@ package com.application.mrmason.entity;
 
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.application.mrmason.enums.RegSource;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -31,4 +35,7 @@ public class CustomerEmailOtp {
 	@UpdateTimestamp
 	@Column(name="updateddate")
 	private String regDate;
+	private String status;
+	@Enumerated(EnumType.STRING)
+	private RegSource regSource;
 }

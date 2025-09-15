@@ -1,5 +1,7 @@
 package com.application.mrmason.dto;
 
+import com.application.mrmason.enums.RegSource;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,4 +14,5 @@ public class ChangePasswordDto {
 	private String newPass;
 	private String confPass;
 	private String otp;
+	private RegSource regSource;
 }

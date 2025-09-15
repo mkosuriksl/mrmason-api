@@ -7,6 +7,7 @@ import com.application.mrmason.dto.CustomerRegistrationDto;
 import com.application.mrmason.dto.CustomerResponseDTO;
 import com.application.mrmason.dto.ResponseLoginDto;
 import com.application.mrmason.entity.CustomerRegistration;
+import com.application.mrmason.enums.RegSource;
 
 public interface CustomerRegistrationService {
 
@@ -21,10 +22,10 @@ public interface CustomerRegistrationService {
 
 	CustomerRegistrationDto getProfileData(String userid);
 
-	String changePassword(String usermail, String oldPass, String newPass, String confPass, String phno);
+	String changePassword(String usermail, String oldPass, String newPass, String confPass, String phno,RegSource regSource);
 
 	List<CustomerResponseDTO> getCustomerData(String email, String phNo, String userState, String fromDate,
 			String toDate,Map<String, String> requestParams);
 
-	public ResponseLoginDto loginDetails(String userEmail, String phno, String userPassword);
+	public ResponseLoginDto loginDetails(String userEmail, String phno, String userPassword,RegSource regSource);
 }

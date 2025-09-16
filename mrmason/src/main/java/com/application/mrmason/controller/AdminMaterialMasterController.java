@@ -2,6 +2,7 @@ package com.application.mrmason.controller;
 
 import java.nio.file.AccessDeniedException;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -89,5 +90,22 @@ public class AdminMaterialMasterController {
 		return adminMaterialMasterService.uploadDoc(skuId, materialMasterImage1, materialMasterImage2, materialMasterImage3,materialMasterImage4,
 				materialMasterImage5);
 	}
+    
+    @GetMapping("/get-brand-by-materialcategory")
+    public ResponseEntity<List<String>> getDistinctLocations(@RequestParam String materialCategory,@RequestParam(required = false) Map<String, String> requestParams) {
+        List<String> distinctLocations = adminMaterialMasterService.findDistinctBrandByMaterialCategory(materialCategory,requestParams);
+
+        if (distinctLocations.isEmpty()) {
+            return ResponseEntity.noContent().build();  // Return 204 if no data found
+        }
+
+        return ResponseEntity.ok(distinctLocations);  // Return 200 OK with the list of locations
+    }
+    
+    @GetMapping("/distinct-material-category")
+    public ResponseEntity<List<String>> getDistinctMaterialCategory() {
+        List<String> types = adminMaterialMasterService.findDistinctMaterialCategory();
+        return ResponseEntity.ok(types);
+    }
 }
 

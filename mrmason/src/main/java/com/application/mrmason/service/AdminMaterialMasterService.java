@@ -2,6 +2,7 @@ package com.application.mrmason.service;
 
 import java.nio.file.AccessDeniedException;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,5 +22,8 @@ public interface AdminMaterialMasterService{
 	public ResponseEntity<ResponseModel > uploadDoc(String skuId, MultipartFile materialMasterImage1, MultipartFile materialMasterImage2,
 			MultipartFile materialMasterImage3,MultipartFile materialMasterImage4,
             MultipartFile materialMasterImage5)throws AccessDeniedException;
+
+	public List<String> findDistinctBrandByMaterialCategory(String materialCategory, Map<String, String> requestParams);
+	public List<String> findDistinctMaterialCategory() ;
 }
 

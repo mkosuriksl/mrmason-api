@@ -2,9 +2,11 @@ package com.application.mrmason.service.impl;
 
 import java.nio.file.AccessDeniedException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -280,6 +282,22 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 		    response.setError("false");
 		    response.setMsg("Admin Material images uploaded and stored successfully.");
 		    return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+		
+		@Override
+		public List<String> findDistinctBrandByMaterialCategory(String materialCategory, Map<String, String> requestParams) {
+			List<String> expectedParams = Arrays.asList("materialCategory");
+			for (String paramName : requestParams.keySet()) {
+				if (!expectedParams.contains(paramName)) {
+					throw new IllegalArgumentException("Unexpected parameter '" + paramName + "' is not allowed.");
+				}
+			}
+			return adminMaterialMasterRepository.findDistinctBrandByMaterialCategory(materialCategory);
+		}
+
+		@Override
+		public List<String> findDistinctMaterialCategory() {
+			return adminMaterialMasterRepository.findDistinctMaterialCategory();
 		}
 
 }

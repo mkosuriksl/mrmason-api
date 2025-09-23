@@ -166,5 +166,26 @@ public class EmailServiceImpl implements EmailService {
 			// Handle exception
 		}
 	}
+	
+	@Override
+	public void sendEmailPromotion(String toMail, String subject, String body, RegSource regSource) {
+	    try {
+	        MimeMessage message = mailsender.createMimeMessage();
+	        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+	        helper.setFrom("no_reply@kosuriers.com");
+	        helper.setTo(toMail);
+
+	        // You pass subject & body directly now
+	        helper.setSubject(subject);
+	        helper.setText(body, true); // true = allow HTML
+
+	        mailsender.send(message);
+	        log.info("Promotional Email sent successfully to {} via {}", toMail, regSource);
+	    } catch (MessagingException e) {
+	        log.error("Failed to send promotional email to {}: {}", toMail, e.getMessage());
+	    }
+	}
+
 
 }

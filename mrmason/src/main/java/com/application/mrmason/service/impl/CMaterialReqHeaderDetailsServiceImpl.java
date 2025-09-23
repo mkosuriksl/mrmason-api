@@ -417,6 +417,7 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
 	        String requestedBy, String materialRequestId, String customerEmail, String customerName, String customerMobile,
 	        String deliveryLocation, LocalDate fromRequestDate, LocalDate toRequestDate,
 	        LocalDate fromDeliveryDate, LocalDate toDeliveryDate, String cMatRequestIdLineid,
+	        String itemName, String itemSize, String brand,
 	        Pageable pageable) {
 
 	    // If lineid is provided → resolve headerId and override materialRequestId
@@ -429,6 +430,7 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
 	            return Page.empty(pageable);
 	        }
 	    }
+	    
 
 	    // Build specification for header search
 	    Specification<CMaterialRequestHeaderEntity> spec =
@@ -444,6 +446,20 @@ public class CMaterialReqHeaderDetailsServiceImpl implements CMaterialReqHeaderD
 	                    fromDeliveryDate,
 	                    toDeliveryDate
 	            );
+	    if ((itemName != null && !itemName.isEmpty()) ||
+	    	    (itemSize != null && !itemSize.isEmpty()) ||
+	    	    (brand != null && !brand.isEmpty())) {
+
+	    	    List<String> matchingHeaderIds = detailsRepo
+	    	        .findHeaderIdsByItemNameSizeBrand(itemName, itemSize, brand);
+
+	    	    if (matchingHeaderIds.isEmpty()) {
+	    	        return Page.empty(pageable); // no matches → stop here
+	    	    }
+
+	    	    spec = spec.and((root, query, cb) -> root.get("materialRequestId").in(matchingHeaderIds));
+	    	}
+
 	    Page<CMaterialRequestHeaderEntity> entities = headerRepo.findAll(spec, pageable);
 
 	    List<CMaterialRequestHeaderDTO2> filteredDtos = entities.getContent().stream()

@@ -11,5 +11,7 @@ public interface SmsSender {
 	public boolean sendSMSMessage(String phoneNumber, RegSource regSource) ;
 	
 	public boolean sendSMSMessage(String phoneNumber, String otp);
+	
+	public boolean sendSMSPromotion(String userMobile, String message, RegSource regSource);
 
 }

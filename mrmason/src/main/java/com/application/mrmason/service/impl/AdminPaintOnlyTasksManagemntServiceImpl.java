@@ -162,7 +162,7 @@ public class AdminPaintOnlyTasksManagemntServiceImpl implements AdminPaintOnlyTa
 			predicates.add(cb.equal(root.get("taskName"), taskName));
 		}
 		if (taskId != null && !taskId.trim().isEmpty()) {
-			predicates.add(cb.equal(root.get("requestId"), taskId));
+			predicates.add(cb.equal(root.get("taskId"), taskId));
 		}
 		if (adminTaskId != null && !adminTaskId.trim().isEmpty()) {
 			predicates.add(cb.equal(root.get("adminTaskId"), adminTaskId));
@@ -185,7 +185,7 @@ public class AdminPaintOnlyTasksManagemntServiceImpl implements AdminPaintOnlyTa
 			countPredicates.add(cb.equal(countRoot.get("taskName"), taskName));
 		}
 		if (taskId != null && !taskId.trim().isEmpty()) {
-			countPredicates.add(cb.equal(countRoot.get("requestId"), taskId));
+			countPredicates.add(cb.equal(countRoot.get("taskId"), taskId));
 		}
 		if (adminTaskId != null && !adminTaskId.trim().isEmpty()) {
 			countPredicates.add(cb.equal(countRoot.get("adminTaskId"), adminTaskId));

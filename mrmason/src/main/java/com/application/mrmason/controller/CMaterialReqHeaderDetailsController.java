@@ -356,6 +356,9 @@ public class CMaterialReqHeaderDetailsController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate fromDeliveryDate,
             @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate toDeliveryDate,
             @RequestParam(required = false) String cMatRequestIdLineid,
+            @RequestParam(required = false) String itemName,
+            @RequestParam(required = false) String itemSize,
+            @RequestParam(required = false)String brand,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
@@ -363,7 +366,8 @@ public class CMaterialReqHeaderDetailsController {
         Page<CMaterialRequestHeaderDTO2> pageData = service.getMaterialRequestsWithDetail(
         		userId,materialRequestId, customerEmail, customerName, customerMobile,
             deliveryLocation, fromRequestDate, toRequestDate,
-            fromDeliveryDate, toDeliveryDate,cMatRequestIdLineid,pageable
+            fromDeliveryDate, toDeliveryDate,cMatRequestIdLineid,
+            itemName,itemSize,brand,pageable
         );
 
         Map<String, Object> response = new HashMap<>();

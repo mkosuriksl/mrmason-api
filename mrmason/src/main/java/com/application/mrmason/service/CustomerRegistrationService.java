@@ -28,4 +28,6 @@ public interface CustomerRegistrationService {
 			String toDate,Map<String, String> requestParams);
 
 	public ResponseLoginDto loginDetails(String userEmail, String phno, String userPassword,RegSource regSource);
+	
+	public void sendPromotionalNotifications(String userPincode,RegSource regSource);
 }

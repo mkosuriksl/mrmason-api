@@ -241,5 +241,55 @@ public class SmsService implements SmsSender {
 			return false;
 		}
 	}
+	
+	@Override
+	public boolean sendSMSPromotion(String userMobile, String message, RegSource regSource) {
+	    log.info("sendSMSPromotion Service Called: ({}, {}, {})", userMobile, message, regSource);
+	    try {
+	        Optional<AdminSms> smsOpt = smsRepo.findFirstByActiveTrue();
+
+	        if (smsOpt.isEmpty()) {
+	            log.info("No active SMS configuration found for mobile number: {}", userMobile);
+	            return false;
+	        }
+
+	        AdminSms sms = smsOpt.get();
+
+	        // Decode API key
+	        String key = new String(Base64.getDecoder().decode(sms.getApiKey()));
+	        String apiKey = URLEncoder.encode(key, StandardCharsets.UTF_8.toString());
+
+	        // Encode params
+	        String encodedMessage = URLEncoder.encode(message, StandardCharsets.UTF_8.toString());
+	        String sender = URLEncoder.encode(sms.getSender(), StandardCharsets.UTF_8.toString());
+	        String numbers = URLEncoder.encode(userMobile, StandardCharsets.UTF_8.toString());
+
+	        // Construct URL
+	        String url = sms.getUrl()
+	                + "apikey=" + apiKey
+	                + "&numbers=" + numbers
+	                + "&message=" + encodedMessage
+	                + "&sender=" + sender;
+
+	        HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+	        conn.setRequestMethod("POST");
+	        conn.setDoOutput(true);
+
+	        try (BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+	            StringBuilder smsResponse = new StringBuilder();
+	            String line;
+	            while ((line = rd.readLine()) != null) {
+	                smsResponse.append(line).append(" ");
+	            }
+	            log.info("Response From SMS Service: {}", smsResponse);
+	        }
+
+	        return true;
+	    } catch (Exception e) {
+	        log.error("Exception while Sending Promotional SMS to {} with error: {}", userMobile, e.getMessage());
+	        return false;
+	    }
+	}
+
 
 }

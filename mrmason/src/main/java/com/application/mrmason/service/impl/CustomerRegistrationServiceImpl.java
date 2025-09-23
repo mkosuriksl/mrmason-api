@@ -18,13 +18,16 @@ import com.application.mrmason.entity.CustomerEmailOtp;
 import com.application.mrmason.entity.CustomerLogin;
 import com.application.mrmason.entity.CustomerMobileOtp;
 import com.application.mrmason.entity.CustomerRegistration;
+import com.application.mrmason.entity.MessageTemplate;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.repository.CustomerEmailOtpRepo;
 import com.application.mrmason.repository.CustomerLoginRepo;
 import com.application.mrmason.repository.CustomerMobileOtpRepo;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
+import com.application.mrmason.repository.MessageTemplateRepository;
 import com.application.mrmason.security.JwtService;
 import com.application.mrmason.service.CustomerRegistrationService;
+import com.application.mrmason.service.EmailService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -53,6 +56,12 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 	JwtService jwtService;
 	@Autowired
 	CustomerRegistrationRepo customerRegistrationRepo;
+	@Autowired
+	private MessageTemplateRepository messageTemplateRepository;
+	@Autowired
+	private EmailService mailService;
+	@Autowired
+	private SmsService smsService;
 
 	@Override
 	public CustomerRegistrationDto saveData(CustomerRegistration customer) {
@@ -292,5 +301,55 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 		response.setMessage("Invalid User.!");
 		return response;
 	}
+	
+	@Override
+	public void sendPromotionalNotifications(String userPincode, RegSource regSource) {
+	    // 1. Load template
+	    MessageTemplate template = messageTemplateRepository
+	            .findByTemplateCode("PROMO_OFFER")
+	            .orElseThrow(() -> new RuntimeException("Template not found!"));
+
+	    // 2. Get recipients
+	    List<CustomerRegistration> customers;
+
+	    if (userPincode == null || userPincode.isBlank()) {
+	        // No location provided → send to all
+	        customers = customerRegistrationRepo.findAll();
+	    } else {
+	        // Try customers in that location
+	        customers = customerRegistrationRepo.findByUserPincode(userPincode);
+	        if (customers.isEmpty()) {
+	            // Location not found → fallback to all
+	            customers = customerRegistrationRepo.findAll();
+	        }
+	    }
+
+	    // 3. Send messages
+	    for (CustomerRegistration customer : customers) {
+	        String message = template.getTemplateText()
+	                .replace("{cId}", safeValue(customer.getUserid()))
+	                .replace("{name}", safeValue(customer.getUsername()))
+	                .replace("{location}", safeValue(customer.getUserPincode()));
+
+	        String subject = "Promotional Offer"; // could also be read from template
+
+	        // Send Email
+	        if (customer.getUserEmail() != null && !customer.getUserEmail().isBlank()) {
+	            mailService.sendEmailPromotion(customer.getUserEmail(), subject, message, regSource);
+	        }
+
+	        // Send SMS
+	        if (customer.getUserMobile() != null && !customer.getUserMobile().isBlank()) {
+	            smsService.sendSMSPromotion(customer.getUserMobile(), message, regSource);
+	        }
+	    }
+	}
+
+	// --- Helper method to avoid null issues in .replace() ---
+	private String safeValue(String value) {
+	    return value != null ? value : "";
+	}
+
+
 
 }

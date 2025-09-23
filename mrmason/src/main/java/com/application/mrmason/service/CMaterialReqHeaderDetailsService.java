@@ -41,5 +41,6 @@ public interface CMaterialReqHeaderDetailsService {
     	        String requestedBy, String materialRequestId, String customerEmail, String customerName, String customerMobile,
     	        String deliveryLocation, LocalDate fromRequestDate, LocalDate toRequestDate,
     	        LocalDate fromDeliveryDate, LocalDate toDeliveryDate, String cMatRequestIdLineid,
+    	        String itemName, String itemSize, String brand,
     	        Pageable pageable);
 }

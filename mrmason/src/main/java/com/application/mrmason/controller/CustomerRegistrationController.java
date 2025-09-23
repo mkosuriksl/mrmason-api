@@ -8,11 +8,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.ChangePasswordDto;
 import com.application.mrmason.dto.CustomerResponseDTO;
-import com.application.mrmason.dto.FilterCustomerAndUser;
 import com.application.mrmason.dto.Logindto;
 import com.application.mrmason.dto.ResponseCustomerRegDto;
 import com.application.mrmason.dto.ResponseListCustomerData;
@@ -209,4 +213,13 @@ public class CustomerRegistrationController {
 		
 
 	}
+	
+    @PostMapping("/api/promotions")
+    public String sendPromotionalMessages(
+            @RequestParam(required = false) String userPincode,
+            @RequestParam RegSource regSource) {
+
+    	service.sendPromotionalNotifications(userPincode, regSource);
+        return "Promotional notifications sent successfully!";
+    }
 }

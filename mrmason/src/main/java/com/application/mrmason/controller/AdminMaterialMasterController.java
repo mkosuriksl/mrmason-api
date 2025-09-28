@@ -21,8 +21,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.application.mrmason.dto.AdminMaterialMasterRequestDTO;
 import com.application.mrmason.dto.GenericResponse;
+import com.application.mrmason.dto.MaterialGroupDTO;
 import com.application.mrmason.dto.ResponseGetAdminMaterialMasterDto;
 import com.application.mrmason.entity.AdminMaterialMaster;
+import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.service.AdminMaterialMasterService;
 
 
@@ -35,23 +37,23 @@ public class AdminMaterialMasterController {
     private AdminMaterialMasterService adminMaterialMasterService;
     
     @PostMapping("/add")
-    public ResponseEntity<GenericResponse<List<AdminMaterialMaster>>> createAdminMaterialMaster(
-            @RequestBody AdminMaterialMasterRequestDTO requestDTO)throws AccessDeniedException  {
-        List<AdminMaterialMaster> savedMaterials =
-                adminMaterialMasterService.createAdminMaterialMaster(requestDTO.getMaterials());
-        GenericResponse<List<AdminMaterialMaster>> response = new GenericResponse<>("Admin Material Master Saved Successfully",
-				true, savedMaterials);
-        
-        return ResponseEntity.ok(response);
+    public GenericResponse<List<MaterialGroupDTO>> createMaterials(
+            @RequestBody List<MaterialGroupDTO> materialGroups,
+            @RequestParam("regSource") RegSource regSource) throws AccessDeniedException {
+
+        List<MaterialGroupDTO> savedMaterials = adminMaterialMasterService
+                .createAdminMaterialMaster(materialGroups, regSource);
+
+        return new GenericResponse<>("Materials saved successfully", true, savedMaterials);
     }
     
     @PutMapping("/update")
     public ResponseEntity<GenericResponse<List<AdminMaterialMaster>>> updateAdminMaterialMasters(
-            @RequestBody AdminMaterialMasterRequestDTO requestDTO) throws AccessDeniedException {
+            @RequestBody AdminMaterialMasterRequestDTO requestDTO,@RequestParam("regSource") RegSource regSource) throws AccessDeniedException {
 
         List<AdminMaterialMaster> updatedMaterials =
-                adminMaterialMasterService.updateAdminMaterialMasters(requestDTO.getMaterials());
-        GenericResponse<List<AdminMaterialMaster>> response = new GenericResponse<>("Admin Material Master Saved Successfully",
+                adminMaterialMasterService.updateAdminMaterialMasters(requestDTO.getMaterials(),regSource);
+        GenericResponse<List<AdminMaterialMaster>> response = new GenericResponse<>("Material Master Saved Successfully",
 				true, updatedMaterials);
         return ResponseEntity.ok(response);
     }
@@ -67,7 +69,7 @@ public class AdminMaterialMasterController {
 				brand, modelNo, brandsize,shape, pageable);
 		ResponseGetAdminMaterialMasterDto response = new ResponseGetAdminMaterialMasterDto();
 
-		response.setMessage("Admin Material Master details retrieved successfully.");
+		response.setMessage("Material Master details retrieved successfully.");
 		response.setStatus(true);
 		response.setGetAdminMaterialMaster(srpqPage.getContent());
 
@@ -82,12 +84,14 @@ public class AdminMaterialMasterController {
     
     @PostMapping("upload_images")
 	public ResponseEntity<?> uploadCabDocs(@RequestParam("skuId") String skuId,
+			@RequestParam("regSource") RegSource regSource,
 			@RequestParam(value = "materialMasterImage1", required = false) MultipartFile materialMasterImage1,
 			@RequestParam(value = "materialMasterImage2", required = false) MultipartFile materialMasterImage2,
 			@RequestParam(value = "materialMasterImage3", required = false) MultipartFile materialMasterImage3,
 			@RequestParam(value = "materialMasterImage4", required = false) MultipartFile materialMasterImage4,
-			@RequestParam(value = "materialMasterImage5", required = false) MultipartFile materialMasterImage5) throws AccessDeniedException{
-		return adminMaterialMasterService.uploadDoc(skuId, materialMasterImage1, materialMasterImage2, materialMasterImage3,materialMasterImage4,
+			@RequestParam(value = "materialMasterImage5", required = false) MultipartFile materialMasterImage5
+			) throws AccessDeniedException{
+		return adminMaterialMasterService.uploadDoc(regSource,skuId, materialMasterImage1, materialMasterImage2, materialMasterImage3,materialMasterImage4,
 				materialMasterImage5);
 	}
     

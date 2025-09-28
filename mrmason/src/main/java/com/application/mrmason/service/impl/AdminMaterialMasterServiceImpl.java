@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,14 +21,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.application.mrmason.config.AWSConfig;
+import com.application.mrmason.dto.MaterialDTO;
+import com.application.mrmason.dto.MaterialGroupDTO;
 import com.application.mrmason.dto.ResponseModel;
 import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.AdminMaterialMaster;
+import com.application.mrmason.entity.MaterialSupplierQuotationUser;
 import com.application.mrmason.entity.UploadMatericalMasterImages;
 import com.application.mrmason.entity.UserType;
+import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.AdminMaterialMasterRepository;
+import com.application.mrmason.repository.MaterialSupplierQuotationUserDAO;
 import com.application.mrmason.repository.UploadMatericalMasterImagesRepository;
 import com.application.mrmason.security.AuthDetailsProvider;
 import com.application.mrmason.service.AdminMaterialMasterService;
@@ -44,119 +48,144 @@ import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
 
 @Service
-public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterService{
-	
+public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterService {
+
 	@Autowired
 	public AdminDetailsRepo adminRepo;
-	
+
 	@Autowired
 	private AdminMaterialMasterRepository adminMaterialMasterRepository;
-	
+
 	@PersistenceContext
 	private EntityManager entityManager;
-	
+
 	@Autowired
 	private AWSConfig awsConfig;
-	
+
 	@Autowired
 	private UploadMatericalMasterImagesRepository uploadMatericalMasterImagesRepository;
 
+	@Autowired
+	private MaterialSupplierQuotationUserDAO materialSupplierQuotationUserDAO;
+
 	@Override
-    public List<AdminMaterialMaster> createAdminMaterialMaster(List<AdminMaterialMaster> requestDTO) throws AccessDeniedException {
-        AdminInfo userInfo=getLoggedInAdminInfo();
-	    if (!UserType.Adm.name().equals(userInfo.role)) {
-	        throw new AccessDeniedException("Only Admin users can access this API.");
-	    }
-        List<AdminMaterialMaster> updatedList = requestDTO.stream().map(material -> {
-            int randomSixDigit = new Random().nextInt(900000) + 100000;
-            String skuId = userInfo.adminId + "_" + material.getBrand() + "_" + material.getModelNo() + "_" +
-                           material.getMaterialCategory() + "_" + material.getMaterialSubCategory() + "_" + randomSixDigit;
+	public List<MaterialGroupDTO> createAdminMaterialMaster(List<MaterialGroupDTO> requestGroups, RegSource regSource)
+			throws AccessDeniedException {
 
-            material.setSkuId(skuId);
-            material.setUpdatedBy(userInfo.adminId);
-            material.setUpdatedDate(new Date());
-            material.setStatus("Active");
-            return material;
-        }).collect(Collectors.toList());
+		UserInfo userInfo = getLoggedInUserInfo(regSource);
 
-        return adminMaterialMasterRepository.saveAll(updatedList);
-    }
+		// 1. Flatten materials and generate SKU
+		List<AdminMaterialMaster> entitiesToSave = new ArrayList<>();
+		for (MaterialGroupDTO group : requestGroups) {
+			for (MaterialDTO m : group.getMaterials()) {
+				if (m.getSkuId() == null) {
 
-	private static class AdminInfo {
+					String skuId = userInfo.userId + "_" + m.getSkuId();
+					m.setSkuId(skuId);
+				}
+				// Create entity
+				AdminMaterialMaster entity = new AdminMaterialMaster();
+				entity.setSkuId(userInfo.userId + "_" + m.getSkuId());
+				entity.setMaterialCategory(group.getMaterialCategory());
+				entity.setMaterialSubCategory(group.getMaterialSubCategory());
+				entity.setBrand(group.getBrand());
+				entity.setModelNo(m.getModelNo());
+				entity.setModelName(m.getModelName());
+				entity.setShape(m.getShape());
+				entity.setWidth(m.getWidth());
+				entity.setLength(m.getLength());
+				entity.setSize(m.getSize());
+				entity.setThickness(m.getThickness());
+				entity.setUpdatedBy(userInfo.userId);
+				entity.setUpdatedDate(new Date());
+				entity.setStatus("Active");
 
-		public String role;
-		String adminId;
-		AdminInfo(String adminId,String role) {
-			this.adminId=adminId;
-			this.role = role;
+				entitiesToSave.add(entity);
+			}
+		}
+
+		// 2. Save all materials
+		adminMaterialMasterRepository.saveAll(entitiesToSave);
+
+		// 3. Return same grouped structure
+		return requestGroups;
+	}
+
+	private static class UserInfo {
+
+		String userId;
+
+		UserInfo(String userId) {
+			this.userId = userId;
 		}
 	}
 
-	private AdminInfo getLoggedInAdminInfo( ) {
+	private UserInfo getLoggedInUserInfo(RegSource regSource) {
 		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
 		Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
+
 		List<String> roleNames = loggedInRole.stream().map(GrantedAuthority::getAuthority)
 				.map(role -> role.replace("ROLE_", "")).collect(Collectors.toList());
-		String userId = null;
-		String role = roleNames.get(0);
-		UserType userType = UserType.valueOf(role);
+
+		if (roleNames.equals("MS")) {
+			throw new ResourceNotFoundException("Restricted role: " + roleNames);
+		}
+
+		UserType userType = UserType.valueOf(roleNames.get(0));
+		String userId;
+
 		if (userType == UserType.Adm) {
-			AdminDetails user = adminRepo.findByEmailAndUserType(loggedInUserEmail, userType)
-					.orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
-			userId = user.getAdminId();
-		} 
-		return new AdminInfo(userId, role);
+			AdminDetails admin = adminRepo.findByEmailAndUserType(loggedInUserEmail, userType)
+					.orElseThrow(() -> new ResourceNotFoundException("Admin not found: " + loggedInUserEmail));
+			userId = admin.getEmail(); // or any other logic you want
+		} else {
+			MaterialSupplierQuotationUser user = materialSupplierQuotationUserDAO
+					.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource)
+					.orElseThrow(() -> new ResourceNotFoundException("Material User not found: " + loggedInUserEmail));
+			userId = user.getBodSeqNo();
+		}
+
+		return new UserInfo(userId);
 	}
 
-
 	@Override
-	public List<AdminMaterialMaster> updateAdminMaterialMasters(List<AdminMaterialMaster> updatedList) throws AccessDeniedException {
-		 AdminInfo userInfo = getLoggedInAdminInfo();
-		    if (!UserType.Adm.name().equals(userInfo.role)) {
-		        throw new AccessDeniedException("Only Admin users can access this API.");
-		    }
+	public List<AdminMaterialMaster> updateAdminMaterialMasters(List<AdminMaterialMaster> updatedList,
+			RegSource regSource) throws AccessDeniedException {
+		UserInfo userInfo = getLoggedInUserInfo(regSource);
 
-	    List<AdminMaterialMaster> savedMaterials = updatedList.stream().map(material -> {
-	        Optional<AdminMaterialMaster> existingOpt = adminMaterialMasterRepository.findBySkuId(material.getSkuId());
+		List<AdminMaterialMaster> savedMaterials = updatedList.stream().map(material -> {
+			Optional<AdminMaterialMaster> existingOpt = adminMaterialMasterRepository.findBySkuId(material.getSkuId());
 
-	        if (existingOpt.isPresent()) {
-	            AdminMaterialMaster existing = existingOpt.get();
+			if (existingOpt.isPresent()) {
+				AdminMaterialMaster existing = existingOpt.get();
 
-	            // Do NOT allow updating these fields:
-	            material.setBrand(existing.getBrand());
-	            material.setModelNo(existing.getModelNo());
-	            material.setMaterialCategory(existing.getMaterialCategory());
-	            material.setMaterialSubCategory(existing.getMaterialSubCategory());
+				// Do NOT allow updating these fields:
+				material.setBrand(existing.getBrand());
+				material.setMaterialCategory(existing.getMaterialCategory());
+				material.setMaterialSubCategory(existing.getMaterialSubCategory());
 
-	            // Allow updating these fields:
-	            material.setUpdatedBy(userInfo.adminId);
-	            material.setUpdatedDate(new Date());
-	            material.setLength(updatedList.get(0).getLength());
-	            material.setModelName(updatedList.get(0).getModelName());
-	            material.setShape(updatedList.get(0).getShape());
-	            material.setWidth(updatedList.get(0).getWidth());
-	            material.setSize(updatedList.get(0).getSize());
-	            material.setThickness(updatedList.get(0).getThickness());
-	            material.setStatus(updatedList.get(0).getStatus());
-	            return material;
-	        } else {
-	            throw new RuntimeException("Material with SKU ID " + material.getSkuId() + " not found.");
-	        }
-	    }).collect(Collectors.toList());
+				// Allow updating these fields:
+				material.setUpdatedBy(userInfo.userId);
+				material.setUpdatedDate(new Date());
+				material.setLength(updatedList.get(0).getLength());
+				material.setModelName(updatedList.get(0).getModelName());
+				material.setShape(updatedList.get(0).getShape());
+				material.setWidth(updatedList.get(0).getWidth());
+				material.setSize(updatedList.get(0).getSize());
+				material.setThickness(updatedList.get(0).getThickness());
+				material.setStatus(updatedList.get(0).getStatus());
+				return material;
+			} else {
+				throw new RuntimeException("Material with SKU ID " + material.getSkuId() + " not found.");
+			}
+		}).collect(Collectors.toList());
 
-	    return adminMaterialMasterRepository.saveAll(savedMaterials);
+		return adminMaterialMasterRepository.saveAll(savedMaterials);
 	}
 
-	
 	@Override
-	public Page<AdminMaterialMaster> getAdminMaterialMaster(String materialCategory,
-			String materialSubCategory, String brand, String modelNo, String size,String shape, Pageable pageable)
-			throws AccessDeniedException {
-
-		 AdminInfo userInfo = getLoggedInAdminInfo();
-		    if (!UserType.Adm.name().equals(userInfo.role)) {
-		        throw new AccessDeniedException("Only Admin users can access this API.");
-		    }
+	public Page<AdminMaterialMaster> getAdminMaterialMaster(String materialCategory, String materialSubCategory,
+			String brand, String modelNo, String size, String shape, Pageable pageable) throws AccessDeniedException {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<AdminMaterialMaster> query = cb.createQuery(AdminMaterialMaster.class);
 		Root<AdminMaterialMaster> root = query.from(AdminMaterialMaster.class);
@@ -216,88 +245,85 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 		return new PageImpl<>(typedQuery.getResultList(), pageable, total);
 	}
 
+	@Transactional
+	@Override
+	public ResponseEntity<ResponseModel> uploadDoc(RegSource regSource,String skuId, MultipartFile materialMasterImage1,
+			MultipartFile materialMasterImage2, MultipartFile materialMasterImage3, MultipartFile materialMasterImage4,
+			MultipartFile materialMasterImage5) throws AccessDeniedException {
+		UserInfo userInfo = getLoggedInUserInfo(regSource);
+		ResponseModel response = new ResponseModel();
 
-		@Transactional
-		@Override
-		public ResponseEntity<ResponseModel> uploadDoc(String skuId, MultipartFile materialMasterImage1,
-		                                               MultipartFile materialMasterImage2,
-		                                               MultipartFile materialMasterImage3,
-		                                               MultipartFile materialMasterImage4,
-		                                               MultipartFile materialMasterImage5) throws AccessDeniedException {
-
-		    AdminInfo userInfo = getLoggedInAdminInfo();
-		    ResponseModel response = new ResponseModel();
-
-		    // 1. Check if skuId exists in AdminMaterialMaster
-		    Optional<AdminMaterialMaster> adminMaterial = adminMaterialMasterRepository.findBySkuId(skuId);
-		    if (adminMaterial.isEmpty()) {
-		        response.setError("true");
-		        response.setMsg("SKU ID not found in AdminMaterialMaster.");
-		        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-		    }
-
-		    // 2. Directory for S3
-		    String directoryPath = "adminMaterialMaster/" + skuId + "/";
-
-		    // 3. Prepare new UploadMatericalMasterImages entity
-		    UploadMatericalMasterImages uploadEntity = new UploadMatericalMasterImages();
-		    uploadEntity.setSkuId(skuId);
-		    uploadEntity.setUpdatedBy(userInfo.adminId);
-		    uploadEntity.setUpdatedDate(new Date());
-
-		    if (materialMasterImage1 != null && !materialMasterImage1.isEmpty()) {
-		        String path1 = directoryPath + materialMasterImage1.getOriginalFilename();
-		        String link1 = awsConfig.uploadFileToS3Bucket(path1, materialMasterImage1);
-		        uploadEntity.setMaterialMasterImage1(link1);
-		    }
-
-		    if (materialMasterImage2 != null && !materialMasterImage2.isEmpty()) {
-		        String path2 = directoryPath + materialMasterImage2.getOriginalFilename();
-		        String link2 = awsConfig.uploadFileToS3Bucket(path2, materialMasterImage2);
-		        uploadEntity.setMaterialMasterImage2(link2);
-		    }
-
-		    if (materialMasterImage3 != null && !materialMasterImage3.isEmpty()) {
-		        String path3 = directoryPath + materialMasterImage3.getOriginalFilename();
-		        String link3 = awsConfig.uploadFileToS3Bucket(path3, materialMasterImage3);
-		        uploadEntity.setMaterialMasterImage3(link3);
-		    }
-
-		    if (materialMasterImage4 != null && !materialMasterImage4.isEmpty()) {
-		        String path4 = directoryPath + materialMasterImage4.getOriginalFilename();
-		        String link4 = awsConfig.uploadFileToS3Bucket(path4, materialMasterImage4);
-		        uploadEntity.setMaterialMasterImage4(link4);
-		    }
-
-		    if (materialMasterImage5 != null && !materialMasterImage5.isEmpty()) {
-		        String path5 = directoryPath + materialMasterImage5.getOriginalFilename();
-		        String link5 = awsConfig.uploadFileToS3Bucket(path5, materialMasterImage5);
-		        uploadEntity.setMaterialMasterImage5(link5);
-		    }
-
-		    // 4. Save to UploadMatericalMasterImages table
-		    uploadMatericalMasterImagesRepository.save(uploadEntity);
-
-		    // 5. Response
-		    response.setError("false");
-		    response.setMsg("Admin Material images uploaded and stored successfully.");
-		    return new ResponseEntity<>(response, HttpStatus.OK);
+		// 1. Check if skuId exists in AdminMaterialMaster
+		Optional<AdminMaterialMaster> adminMaterial = adminMaterialMasterRepository.findBySkuId(skuId);
+		if (adminMaterial.isEmpty()) {
+			response.setError("true");
+			response.setMsg("SKU ID not found in AdminMaterialMaster.");
+			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 		}
-		
-		@Override
-		public List<String> findDistinctBrandByMaterialCategory(String materialCategory, Map<String, String> requestParams) {
-			List<String> expectedParams = Arrays.asList("materialCategory");
-			for (String paramName : requestParams.keySet()) {
-				if (!expectedParams.contains(paramName)) {
-					throw new IllegalArgumentException("Unexpected parameter '" + paramName + "' is not allowed.");
-				}
+
+		// 2. Directory for S3
+		String directoryPath = "adminMaterialMaster/" + skuId + "/";
+
+		// 3. Prepare new UploadMatericalMasterImages entity
+		UploadMatericalMasterImages uploadEntity = new UploadMatericalMasterImages();
+		uploadEntity.setSkuId(skuId);
+		uploadEntity.setUpdatedBy(userInfo.userId);
+		uploadEntity.setUpdatedDate(new Date());
+
+		if (materialMasterImage1 != null && !materialMasterImage1.isEmpty()) {
+			String path1 = directoryPath + materialMasterImage1.getOriginalFilename();
+			String link1 = awsConfig.uploadFileToS3Bucket(path1, materialMasterImage1);
+			uploadEntity.setMaterialMasterImage1(link1);
+		}
+
+		if (materialMasterImage2 != null && !materialMasterImage2.isEmpty()) {
+			String path2 = directoryPath + materialMasterImage2.getOriginalFilename();
+			String link2 = awsConfig.uploadFileToS3Bucket(path2, materialMasterImage2);
+			uploadEntity.setMaterialMasterImage2(link2);
+		}
+
+		if (materialMasterImage3 != null && !materialMasterImage3.isEmpty()) {
+			String path3 = directoryPath + materialMasterImage3.getOriginalFilename();
+			String link3 = awsConfig.uploadFileToS3Bucket(path3, materialMasterImage3);
+			uploadEntity.setMaterialMasterImage3(link3);
+		}
+
+		if (materialMasterImage4 != null && !materialMasterImage4.isEmpty()) {
+			String path4 = directoryPath + materialMasterImage4.getOriginalFilename();
+			String link4 = awsConfig.uploadFileToS3Bucket(path4, materialMasterImage4);
+			uploadEntity.setMaterialMasterImage4(link4);
+		}
+
+		if (materialMasterImage5 != null && !materialMasterImage5.isEmpty()) {
+			String path5 = directoryPath + materialMasterImage5.getOriginalFilename();
+			String link5 = awsConfig.uploadFileToS3Bucket(path5, materialMasterImage5);
+			uploadEntity.setMaterialMasterImage5(link5);
+		}
+
+		// 4. Save to UploadMatericalMasterImages table
+		uploadMatericalMasterImagesRepository.save(uploadEntity);
+
+		// 5. Response
+		response.setError("false");
+		response.setMsg("Admin Material images uploaded and stored successfully.");
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@Override
+	public List<String> findDistinctBrandByMaterialCategory(String materialCategory,
+			Map<String, String> requestParams) {
+		List<String> expectedParams = Arrays.asList("materialCategory");
+		for (String paramName : requestParams.keySet()) {
+			if (!expectedParams.contains(paramName)) {
+				throw new IllegalArgumentException("Unexpected parameter '" + paramName + "' is not allowed.");
 			}
-			return adminMaterialMasterRepository.findDistinctBrandByMaterialCategory(materialCategory);
 		}
+		return adminMaterialMasterRepository.findDistinctBrandByMaterialCategory(materialCategory);
+	}
 
-		@Override
-		public List<String> findDistinctMaterialCategory() {
-			return adminMaterialMasterRepository.findDistinctMaterialCategory();
-		}
+	@Override
+	public List<String> findDistinctMaterialCategory() {
+		return adminMaterialMasterRepository.findDistinctMaterialCategory();
+	}
 
 }

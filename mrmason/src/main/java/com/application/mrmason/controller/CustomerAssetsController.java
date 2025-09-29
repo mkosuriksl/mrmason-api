@@ -18,11 +18,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.CustomerAssetDto;
+import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.ResponseAssetDto;
 import com.application.mrmason.dto.ResponseCustomerAssetsDto;
 import com.application.mrmason.dto.ResponseListCustomerAssets;
 import com.application.mrmason.dto.UpdateAssetDto;
 import com.application.mrmason.entity.CustomerAssets;
+import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.service.CustomerAssetsService;
 
 @RestController
@@ -34,46 +36,27 @@ public class CustomerAssetsController {
 	ResponseListCustomerAssets response = new ResponseListCustomerAssets();
 
 	@PostMapping("/addAssets")
-	public ResponseEntity<ResponseAssetDto> newCustomer(@RequestBody CustomerAssets asset) {
-		ResponseAssetDto response = new ResponseAssetDto();
-		try {
+	public ResponseEntity<GenericResponse<CustomerAssetDto>> addAsset(@RequestBody CustomerAssets asset,
+			@RequestParam RegSource regSource) {
 
-			if (assetService.saveAssets(asset) != null) {
-				assetService.saveAssets(asset);
-				response.setAddAsset(assetService.getAssetByAssetId(asset.getAssetId()));
-				response.setMessage("Asset added successfully..");
-				response.setStatus(true);
-				return ResponseEntity.ok(response);
-			}
-			response.setMessage("Invalid User.!");
-			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.OK);
-		} catch (Exception e) {
-			response.setMessage(e.getMessage());
-			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.OK);
-		}
+			// Call service directly to get DTO
+			CustomerAssetDto assetDto = assetService.getAssetByAssetId(asset, regSource);
 
+			return ResponseEntity.ok(new GenericResponse<>("Asset added successfully.", true, assetDto));
 	}
 
 	@PutMapping("/updateAssets")
-	public ResponseEntity<?> updateAssetDetails(@RequestBody CustomerAssetDto updateAsset) {
+	public ResponseEntity<?> updateAssetDetails(@RequestBody CustomerAssetDto updateAsset,
+			@RequestParam RegSource regSource) {
 		try {
-			ResponseAssetDto response = new ResponseAssetDto();
-			if (assetService.updateAssets(updateAsset) != null) {
-				assetService.updateAssets(updateAsset);
-				response.setAddAsset(assetService.getAssetByAssetId(updateAsset.getAssetId()));
-				response.setMessage("Asset updated successfully..");
-				response.setStatus(true);
-				return new ResponseEntity<>(response, HttpStatus.OK);
-			}
-			response.setMessage("Invalid User.!");
-			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.OK);
+			// Call service directly to get DTO
+			CustomerAssets assetDto = assetService.updateAssets(updateAsset, regSource);
+
+			return ResponseEntity.ok(new GenericResponse<>("Asset added successfully.", true, assetDto));
+
 		} catch (Exception e) {
-			response.setMessage(e.getMessage());
-			response.setStatus(false);
-			return new ResponseEntity<>(response, HttpStatus.OK);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(new GenericResponse<>("Error: " + e.getMessage(), false, null));
 		}
 	}
 

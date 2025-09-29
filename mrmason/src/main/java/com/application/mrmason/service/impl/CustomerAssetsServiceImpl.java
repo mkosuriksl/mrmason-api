@@ -1,21 +1,33 @@
 package com.application.mrmason.service.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.stereotype.Service;
 
 import com.application.mrmason.dto.CustomerAssetDto;
-import com.application.mrmason.dto.UpdateAssetDto;
+import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.CustomerAssets;
+import com.application.mrmason.entity.CustomerRegistration;
+import com.application.mrmason.entity.MaterialSupplierQuotationUser;
+import com.application.mrmason.entity.User;
+import com.application.mrmason.entity.UserType;
+import com.application.mrmason.enums.RegSource;
+import com.application.mrmason.exceptions.ResourceNotFoundException;
+import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.CustomerAssetsRepo;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
+import com.application.mrmason.repository.MaterialSupplierQuotationUserDAO;
+import com.application.mrmason.repository.UserDAO;
+import com.application.mrmason.security.AuthDetailsProvider;
 import com.application.mrmason.service.CustomerAssetsService;
 
 import jakarta.persistence.EntityManager;
@@ -34,6 +46,12 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 	CustomerRegistrationRepo regiRepo;
 	@PersistenceContext
 	private EntityManager entityManager;
+	@Autowired
+	public AdminDetailsRepo adminRepo;
+	@Autowired
+	private MaterialSupplierQuotationUserDAO materialSupplierQuotationUserDAO;
+	@Autowired
+	UserDAO userDAO;
 
 	@Override
 	public CustomerAssets saveAssets(CustomerAssets asset) {
@@ -45,8 +63,9 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 	}
 
 	@Override
-	public CustomerAssets updateAssets(CustomerAssetDto asset) {
-		Optional<CustomerAssets> assetDb = assetRepo.findByUserIdAndAssetId(asset.getUserId(), asset.getAssetId());
+	public CustomerAssets updateAssets(CustomerAssetDto asset,RegSource regSource) {
+		UserInfo userInfo = getLoggedInUserInfo(regSource);
+		Optional<CustomerAssets> assetDb = assetRepo.findByUserIdAndAssetId(userInfo.userId, asset.getAssetId());
 		if (assetDb.isPresent()) {
 			CustomerAssets user = assetDb.get();
 			user.setAssetCat(asset.getAssetCat());
@@ -163,32 +182,97 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 //	}
 
 	@Override
-	public CustomerAssetDto getAssetByAssetId(String assetId) {
-		if (assetRepo.findAllByAssetId(assetId) != null) {
-			Optional<CustomerAssets> assetDb = assetRepo.findAllByAssetId(assetId);
-			CustomerAssets assetData = assetDb.get();
-			CustomerAssetDto assetDto = new CustomerAssetDto();
+	public CustomerAssetDto getAssetByAssetId(CustomerAssets asset, RegSource regSource) {
+		UserInfo userInfo = getLoggedInUserInfo(regSource);
+		
+		asset.setUserId(userInfo.userId);
 
-			assetDto.setAssetCat(assetData.getAssetCat());
-			assetDto.setAssetSubCat(assetData.getAssetSubCat());
-			assetDto.setDistrict(assetData.getDistrict());
-			assetDto.setDoorNo(assetData.getDoorNo());
-			assetDto.setLocation(assetData.getLocation());
-			assetDto.setPinCode(assetData.getPinCode());
-			assetDto.setState(assetData.getState());
-			assetDto.setStreet(assetData.getStreet());
-			assetDto.setTown(assetData.getTown());
-			assetDto.setAssetModel(assetData.getAssetModel());
-			assetDto.setRegDate(assetData.getRegDateFormatted());
-			assetDto.setPlanId(assetData.getPlanId());
-			assetDto.setMembershipExp(assetData.getMembershipExpDb());
-			assetDto.setAssetId(assetData.getAssetId());
-			assetDto.setUserId(assetData.getUserId());
-			assetDto.setAssetBrand(assetData.getAssetBrand());
-			return assetDto;
+	    // Save the entity
+	    CustomerAssets savedAsset = assetRepo.save(asset);
+		CustomerAssetDto assetDto = new CustomerAssetDto();
 
+		assetDto.setAssetCat(asset.getAssetCat());
+		assetDto.setAssetSubCat(asset.getAssetSubCat());
+		assetDto.setDistrict(asset.getDistrict());
+		assetDto.setDoorNo(asset.getDoorNo());
+		assetDto.setLocation(asset.getLocation());
+		assetDto.setPinCode(asset.getPinCode());
+		assetDto.setState(asset.getState());
+		assetDto.setStreet(asset.getStreet());
+		assetDto.setTown(asset.getTown());
+		assetDto.setAssetModel(asset.getAssetModel());
+		assetDto.setRegDate(asset.getRegDateFormatted());
+		assetDto.setPlanId(asset.getPlanId());
+		assetDto.setMembershipExp(asset.getMembershipExpDb());
+		assetDto.setAssetId(asset.getAssetId());
+		assetDto.setUserId(savedAsset.getUserId());
+		assetDto.setAssetBrand(asset.getAssetBrand());
+		assetRepo.save(asset);
+		return assetDto;
+
+	}
+	private static class UserInfo {
+
+		String userId;
+
+		UserInfo(String userId) {
+			this.userId = userId;
 		}
-		return null;
+
+	}
+
+	private UserInfo getLoggedInUserInfo(RegSource regSource) {
+	    String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
+	    Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
+
+	    List<String> roleNames = loggedInRole.stream()
+	            .map(GrantedAuthority::getAuthority)
+	            .map(role -> role.replace("ROLE_", ""))
+	            .collect(Collectors.toList());
+
+	    if (roleNames.isEmpty()) {
+	        throw new ResourceNotFoundException("No roles assigned for user: " + loggedInUserEmail);
+	    }
+
+	    UserType userType = UserType.valueOf(roleNames.get(0));
+	    String userId;
+
+	    switch (userType) {
+	        case Adm:
+	            AdminDetails admin = adminRepo.findByEmailAndUserType(loggedInUserEmail, UserType.Adm)
+	                    .orElseThrow(() -> new ResourceNotFoundException("Admin not found: " + loggedInUserEmail));
+	            userId = admin.getEmail();
+	            break;
+
+	        case MS:
+	            MaterialSupplierQuotationUser msUser = materialSupplierQuotationUserDAO
+	                    .findByEmailAndUserTypeAndRegSource(loggedInUserEmail, UserType.MS, regSource)
+	                    .orElseThrow(() -> new ResourceNotFoundException("Material User not found: " + loggedInUserEmail));
+	            userId = msUser.getBodSeqNo();
+	            break;
+
+	        case EC:
+	        case Developer:
+	            // Try CustomerRegistration first
+	            CustomerRegistration customer = regiRepo
+	                    .findByUserEmailAndUserTypeAndRegSource(loggedInUserEmail, UserType.EC, regSource)
+	                    .orElse(null);
+
+	            if (customer != null) {
+	                userId = customer.getUserid();
+	            } else {
+	                // If not found in Customer, try User table
+	                User user = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, UserType.Developer, regSource)
+	                        .orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
+	                userId = user.getBodSeqNo();
+	            }
+	            break;
+
+	        default:
+	            throw new ResourceNotFoundException("Unsupported user type: " + userType);
+	    }
+
+	    return new UserInfo(userId);
 	}
 
 }

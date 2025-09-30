@@ -1,12 +1,9 @@
 package com.application.mrmason.controller;
 
-import java.util.List;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,10 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.CustomerAssetDto;
 import com.application.mrmason.dto.GenericResponse;
-import com.application.mrmason.dto.ResponseAssetDto;
 import com.application.mrmason.dto.ResponseCustomerAssetsDto;
 import com.application.mrmason.dto.ResponseListCustomerAssets;
-import com.application.mrmason.dto.UpdateAssetDto;
 import com.application.mrmason.entity.CustomerAssets;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.service.CustomerAssetsService;

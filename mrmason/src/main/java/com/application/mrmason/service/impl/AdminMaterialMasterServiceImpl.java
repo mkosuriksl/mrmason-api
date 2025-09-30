@@ -185,7 +185,7 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 
 	@Override
 	public Page<AdminMaterialMaster> getAdminMaterialMaster(String materialCategory, String materialSubCategory,
-			String brand, String modelNo, String size, String shape, Pageable pageable) throws AccessDeniedException {
+			String brand, String modelNo, String size, String shape,String userId, Pageable pageable) throws AccessDeniedException {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<AdminMaterialMaster> query = cb.createQuery(AdminMaterialMaster.class);
 		Root<AdminMaterialMaster> root = query.from(AdminMaterialMaster.class);
@@ -208,6 +208,9 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 		}
 		if (shape != null && !shape.trim().isEmpty()) {
 			predicates.add(cb.equal(root.get("shape"), shape));
+		}
+		if (userId != null && !userId.trim().isEmpty()) {
+			predicates.add(cb.equal(root.get("updatedBy"), userId));
 		}
 
 		query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
@@ -238,7 +241,9 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 		if (shape != null && !shape.trim().isEmpty()) {
 			countPredicates.add(cb.equal(countRoot.get("shape"), shape));
 		}
-
+		if (userId != null && !userId.trim().isEmpty()) {
+			countPredicates.add(cb.equal(countRoot.get("updatedBy"), userId));
+		}
 		countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
 		Long total = entityManager.createQuery(countQuery).getSingleResult();
 

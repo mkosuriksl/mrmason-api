@@ -62,11 +62,12 @@ public class AdminMaterialMasterController {
 			@RequestParam(required = false) String materialCategory, @RequestParam(required = false) String materialSubCategory,
 			@RequestParam(required = false) String brand, @RequestParam(required = false) String modelNo,
 			@RequestParam(required = false) String brandsize, @RequestParam(required = false) String shape,
+			@RequestParam(required = false)String userId,
 			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) throws AccessDeniedException {
 
 		Pageable pageable = PageRequest.of(page, size);
 		Page<AdminMaterialMaster> srpqPage = adminMaterialMasterService.getAdminMaterialMaster(materialCategory,materialSubCategory,
-				brand, modelNo, brandsize,shape, pageable);
+				brand, modelNo, brandsize,shape,userId, pageable);
 		ResponseGetAdminMaterialMasterDto response = new ResponseGetAdminMaterialMasterDto();
 
 		response.setMessage("Material Master details retrieved successfully.");

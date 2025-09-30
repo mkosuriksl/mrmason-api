@@ -11,6 +11,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.application.mrmason.enums.RegSource;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -31,6 +32,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "material_supplier_registration")
+@JsonIgnoreProperties({"password"})
 public class MaterialSupplierQuotationUser implements UserDetails {
 
 //	private static final long serialVersionUID = 5342327L;

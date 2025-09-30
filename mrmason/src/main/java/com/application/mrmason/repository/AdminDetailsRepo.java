@@ -26,4 +26,6 @@ public interface AdminDetailsRepo extends JpaRepository<AdminDetails,Long >{
 	Optional<AdminDetails> findByEmailDetails(@Param("email") String email);
 
 	Page<AdminDetails> findByEmailOrMobile(String string, String string2, Pageable pageable);
+
+	AdminDetails findByAdminId(String adminId);
 }

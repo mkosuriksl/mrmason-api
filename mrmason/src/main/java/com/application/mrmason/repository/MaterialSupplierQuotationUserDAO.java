@@ -74,4 +74,6 @@ public interface MaterialSupplierQuotationUserDAO extends JpaRepository<Material
 
 	List<MaterialSupplierQuotationUser> findByLocationContaining(String location);
 
+	List<MaterialSupplierQuotationUser> findByLocationIgnoreCase(String location);
+
 }

@@ -17,6 +17,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.application.mrmason.enums.RegSource;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Getter
@@ -24,6 +25,7 @@ import com.application.mrmason.enums.RegSource;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "c_registration")
+@JsonIgnoreProperties({"userpassword"})
 public class CustomerRegistration implements UserDetails {
 
 	private static final long serialVersionUID = 5342328L;

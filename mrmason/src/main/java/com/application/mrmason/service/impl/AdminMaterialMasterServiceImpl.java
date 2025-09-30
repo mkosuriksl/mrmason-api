@@ -5,9 +5,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +24,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.application.mrmason.config.AWSConfig;
+import com.application.mrmason.dto.AdminDetailsDto;
+import com.application.mrmason.dto.AdminMaterialMasterResponseDTO;
 import com.application.mrmason.dto.MaterialDTO;
 import com.application.mrmason.dto.MaterialGroupDTO;
+import com.application.mrmason.dto.MaterialSupplierDto;
 import com.application.mrmason.dto.ResponseModel;
 import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.AdminMaterialMaster;
@@ -67,6 +73,7 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 
 	@Autowired
 	private MaterialSupplierQuotationUserDAO materialSupplierQuotationUserDAO;
+
 
 	@Override
 	public List<MaterialGroupDTO> createAdminMaterialMaster(List<MaterialGroupDTO> requestGroups, RegSource regSource)
@@ -330,5 +337,88 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 	public List<String> findDistinctMaterialCategory() {
 		return adminMaterialMasterRepository.findDistinctMaterialCategory();
 	}
+	
+	@Override
+	public AdminMaterialMasterResponseDTO getMaterialsWithUserInfo(
+	        String materialCategory,
+	        String materialSubCategory,
+	        String brand,
+	        String location // ✅ new filter param
+	) {
+	    // Step 1: Fetch all materials (based on category/brand/subCategory)
+	    List<AdminMaterialMaster> materials = adminMaterialMasterRepository
+	            .searchMaterials(materialCategory, materialSubCategory, brand);
+
+	    List<AdminDetailsDto> adminDtos = new ArrayList<>();
+	    List<MaterialSupplierDto> supplierDtos = new ArrayList<>();
+	    Set<String> seenAdminIds = new HashSet<>();
+	    Set<String> seenSupplierIds = new HashSet<>();
+
+	    // Step 2: If location filter is provided → find matching suppliers
+	    Set<String> matchingBodSeqNos = new HashSet<>();
+	    if (location != null && !location.isEmpty()) {
+	        List<MaterialSupplierQuotationUser> matchingSuppliers =
+	                materialSupplierQuotationUserDAO.findByLocationIgnoreCase(location);
+
+	        for (MaterialSupplierQuotationUser s : matchingSuppliers) {
+	            matchingBodSeqNos.add(s.getBodSeqNo());
+	        }
+	    }
+
+	    // Step 3: Filter materials based on supplier's bodSeqNo
+	    Iterator<AdminMaterialMaster> iterator = materials.iterator();
+	    while (iterator.hasNext()) {
+	        AdminMaterialMaster material = iterator.next();
+	        String userId = material.getUpdatedBy();
+
+	        // If location filter applied → check against supplier bodSeqNos
+	        if (!matchingBodSeqNos.isEmpty() && !matchingBodSeqNos.contains(userId)) {
+	            iterator.remove(); // ❌ not matching supplier
+	            continue;
+	        }
+
+	        // --- Admin details ---
+	        AdminDetails user = adminRepo.findByAdminId(userId);
+	        if (user != null && seenAdminIds.add(user.getAdminId())) {
+	            adminDtos.add(toAdminDto(user));
+	        }
+
+	        // --- Supplier details ---
+	        MaterialSupplierQuotationUser supplier = materialSupplierQuotationUserDAO.findByBodSeqNo(userId);
+	        if (supplier != null && seenSupplierIds.add(supplier.getBodSeqNo())) {
+	            supplierDtos.add(toSupplierDto(supplier));
+	        }
+	    }
+
+	    return new AdminMaterialMasterResponseDTO(materials, adminDtos, supplierDtos);
+	}
+
+    // --- Mapping helpers ---
+    private AdminDetailsDto toAdminDto(AdminDetails admin) {
+    	AdminDetailsDto dto = new AdminDetailsDto();
+        dto.setId(admin.getId());
+        dto.setMobile(admin.getMobile());
+        dto.setEmail(admin.getEmail());
+        dto.setRegDate(admin.getRegDate());
+        dto.setStatus(admin.getStatus());
+        dto.setAdminId(admin.getAdminId());
+        dto.setAdminName(admin.getAdminName());  
+        return dto;
+    }
+
+    private MaterialSupplierDto toSupplierDto(MaterialSupplierQuotationUser supplier) {
+        MaterialSupplierDto dto = new MaterialSupplierDto();
+        dto.setBodSeqNo(supplier.getBodSeqNo());
+        dto.setName(supplier.getName());
+        dto.setBusinessName(supplier.getBusinessName());
+        dto.setMobile(supplier.getMobile());
+        dto.setEmail(supplier.getEmail());
+        dto.setAddress(supplier.getAddress());
+        dto.setCity(supplier.getCity());
+        dto.setDistrict(supplier.getDistrict());
+        dto.setState(supplier.getState());
+        dto.setLocation(supplier.getLocation());
+        return dto;
+    }
 
 }

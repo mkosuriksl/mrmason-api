@@ -32,6 +32,7 @@ import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.security.AuthDetailsProvider;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -298,17 +299,17 @@ public class CustomerOrderMethodHandler {
 		return entityManager.createQuery(cq).getResultList();
 	}
 
-//	public String deleteOrderLineAndHeader(String orderId, String orderlineId) {
-//		CustomerOrderDetailsEntity detail = orderDetailsRepo.findByOrderlineIdAndOrderId(orderlineId, orderId)
-//				.orElseThrow(() -> new EntityNotFoundException(
-//						"Order line not found with orderId: " + orderId + " and orderlineId: " + orderlineId));
-//		orderDetailsRepo.delete(detail);
-//		List<CustomerOrderDetailsEntity> remaining = orderDetailsRepo.findByOrderId(orderId);
-//		if (remaining.isEmpty()) {
-//			orderHdrRepo.deleteById(orderId);
-//			return "Order line and order header deleted successfully.";
-//		}
-//
-//		return "Order line deleted successfully. Header retained as it has other lines.";
-//	}
+	public String deleteOrderLineAndHeader(String orderId, String orderlineId) {
+		CustomerOrderDetailsEntity detail = orderDetailsRepo.findByOrderlineIdAndOrderId(orderlineId, orderId)
+				.orElseThrow(() -> new EntityNotFoundException(
+						"Order line not found with orderId: " + orderId + " and orderlineId: " + orderlineId));
+		orderDetailsRepo.delete(detail);
+		List<CustomerOrderDetailsEntity> remaining = orderDetailsRepo.findByOrderId(orderId);
+		if (remaining.isEmpty()) {
+			orderHdrRepo.deleteById(orderId);
+			return "Order line and order header deleted successfully.";
+		}
+
+		return "Order line deleted successfully. Header retained as it has other lines.";
+	}
 }

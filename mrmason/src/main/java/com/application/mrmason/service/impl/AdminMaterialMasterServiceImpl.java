@@ -192,7 +192,14 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 
 	@Override
 	public Page<AdminMaterialMaster> getAdminMaterialMaster(String materialCategory, String materialSubCategory,
-			String brand, String modelNo, String size, String shape,String userId, Pageable pageable) throws AccessDeniedException {
+			String brand, String modelNo, String size, String shape,String userId, Pageable pageable,Map<String, String> requestParams) throws AccessDeniedException {
+		
+		List<String> expectedParams = Arrays.asList("materialCategory","materialSubCategory","brand","modelNo","size","shape","userId");
+	    for (String paramName : requestParams.keySet()) {
+	        if (!expectedParams.contains(paramName)) {
+	            throw new IllegalArgumentException("Unexpected parameter '" + paramName + "' is not allowed.");
+	        }
+	    }
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<AdminMaterialMaster> query = cb.createQuery(AdminMaterialMaster.class);
 		Root<AdminMaterialMaster> root = query.from(AdminMaterialMaster.class);

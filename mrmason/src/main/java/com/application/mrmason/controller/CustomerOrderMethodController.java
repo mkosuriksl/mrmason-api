@@ -1,10 +1,13 @@
 package com.application.mrmason.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -20,6 +23,8 @@ import com.application.mrmason.dto.UpdateCustomerOrderRequestDto;
 import com.application.mrmason.entity.CustomerOrderDetailsEntity;
 import com.application.mrmason.entity.CustomerOrderHdrEntity;
 import com.application.mrmason.service.CustomerOrderMethodHandler;
+
+import jakarta.persistence.EntityNotFoundException;
 
 @RestController
 @RequestMapping("/customer-cart")
@@ -78,26 +83,26 @@ public class CustomerOrderMethodController {
 	) {
 	    return orderMethodHandler.getOrderDetail(cId, orderId, orderlineId,skuIdUserId, fromDate, toDate, userId, page, size);
 	}
-//
-//	@DeleteMapping("/delete")
-//	public ResponseEntity<Map<String, Object>> deleteOrder(
-//	        @RequestParam String orderId,
-//	        @RequestParam String orderlineId) {
-//	    Map<String, Object> response = new HashMap<>();
-//	    try {
-//	        String message = orderMethodHandler.deleteOrderLineAndHeader(orderId, orderlineId);
-//	        response.put("status", true);
-//	        response.put("message", message);
-//	        return ResponseEntity.ok(response);
-//	    } catch (EntityNotFoundException e) {
-//	        response.put("status", false);
-//	        response.put("message", e.getMessage());
-//	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-//	    } catch (Exception e) {
-//	        response.put("status", false);
-//	        response.put("message", "Error deleting order.");
-//	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-//	    }
-//	}
+
+	@DeleteMapping("/delete")
+	public ResponseEntity<Map<String, Object>> deleteOrder(
+	        @RequestParam String orderId,
+	        @RequestParam String orderlineId) {
+	    Map<String, Object> response = new HashMap<>();
+	    try {
+	        String message = orderMethodHandler.deleteOrderLineAndHeader(orderId, orderlineId);
+	        response.put("status", true);
+	        response.put("message", message);
+	        return ResponseEntity.ok(response);
+	    } catch (EntityNotFoundException e) {
+	        response.put("status", false);
+	        response.put("message", e.getMessage());
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+	    } catch (Exception e) {
+	        response.put("status", false);
+	        response.put("message", "Error deleting order.");
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	    }
+	}
 
 }

@@ -24,7 +24,7 @@ public interface AdminMaterialMasterService {
 			throws AccessDeniedException;
 
 	public Page<AdminMaterialMaster> getAdminMaterialMaster(String materialCategory, String materialSubCategory,
-			String brand, String modelNo, String size, String shape, String userId, Pageable pageable)
+			String brand, String modelNo, String size, String shape, String userId, Pageable pageable,Map<String, String> requestParams)
 			throws AccessDeniedException;
 
 	public ResponseEntity<ResponseModel> uploadDoc(RegSource regSource, String skuId,

@@ -32,7 +32,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "material_supplier_registration")
-@JsonIgnoreProperties({"password"})
+//@JsonIgnoreProperties({"password"})
 public class MaterialSupplierQuotationUser implements UserDetails {
 
 //	private static final long serialVersionUID = 5342327L;

@@ -25,7 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.application.mrmason.dto.GenericResponse;
-import com.application.mrmason.dto.QuotationUpdateRequest;
+import com.application.mrmason.dto.QuotationStatusUpdateRequest;
 import com.application.mrmason.dto.ResponseInvoiceAndDetailsDto;
 import com.application.mrmason.entity.CMaterialReqHeaderDetailsEntity;
 import com.application.mrmason.entity.CMaterialRequestHeaderEntity;
@@ -200,6 +200,7 @@ public class materialSupplierService {
 			throw new ResourceNotFoundException(
 					"cMatRequestId not found in CMaterialReqHeaderDetailsEntity: " + cMatRequestId);
 		}
+	    String quotationId = userInfo.userId + "_" + ((int)(Math.random() * 900000) + 100000);
 
 		List<MaterialSupplier> validatedItems = new ArrayList<>();
 		Set<String> seenLineItems = new HashSet<>();
@@ -210,7 +211,7 @@ public class materialSupplierService {
 						+ "' does not belong to cMatRequestId '" + cMatRequestId + "'");
 			}
 
-			item.setQuotationId(null);
+			item.setQuotationId(quotationId);
 			item.setCmatRequestId(cMatRequestId);
 
 			if (!seenLineItems.add(item.getMaterialLineItem())) {
@@ -257,7 +258,7 @@ public class materialSupplierService {
 		quotationHeader.setInvoiceStatus(invoiceStatus);
 		quotationHeader.setInvoiceDate(LocalDate.now());
 		quotationHeader.setQuotationStatus(quotationStatus);
-		quotationHeader.setQuotationId(saved.get(0).getQuotationId());
+		quotationHeader.setQuotationId(quotationId);
 		quotationHeader.setQuotedAmount(totalQuotedAmount);
 		quotationHeader.setSupplierId(userInfo.userId);
 		quotationHeader.setQuotedDate(LocalDate.now());
@@ -423,42 +424,70 @@ public class materialSupplierService {
 		return materialSupplierRepository.saveAll(updatedTasks);
 	}
 
+//	@Transactional
+//	public void updateQuotation(RegSource regSource, QuotationUpdateRequest request) {
+//
+//		UserInfo userInfo = getLoggedInUserInfo(regSource);
+//		MaterialSupplierQuotationHeader header = materialSupplierQuotationHeaderRepository
+//				.findById(request.getCmatRequestId()).orElseThrow(() -> new RuntimeException("Header not found"));
+//		header.setQuotedAmount(request.getQuotedAmount());
+//		header.setInvoiceStatus(Status.valueOf(request.getStatus()));
+//		header.setInvoiceNumber("INV-" + System.currentTimeMillis()); // backend generate invoice number
+//		header.setInvoiceDate(LocalDate.now());
+//		materialSupplierQuotationHeaderRepository.save(header);
+//
+//		// 2️⃣ Update details
+//		for (QuotationUpdateRequest.QuotationDetail detail : request.getQuotations()) {
+//			MaterialSupplier supplierDetail = materialSupplierRepository.findById(detail.getMaterialLineItem())
+//					.orElseThrow(() -> new RuntimeException("Detail not found: " + detail.getMaterialLineItem()));
+//			supplierDetail.setDiscount(detail.getDiscount());
+//			supplierDetail.setGst(detail.getGst());
+//			supplierDetail.setMrp(detail.getMrp());
+//			supplierDetail.setInvoiceNumber(header.getInvoiceNumber());
+//			supplierDetail.setInvoiceStatus(header.getInvoiceStatus());
+//			supplierDetail.setQuotationStatus(header.getQuotationStatus());
+//			supplierDetail.setUpdatedDate(LocalDate.now());
+//			materialSupplierRepository.save(supplierDetail);
+//		}
+//
+//		// 3️⃣ Save to invoice table
+//		Invoice invoice = new Invoice();
+//		invoice.setCmatRequestId(request.getCmatRequestId());
+//		invoice.setInvoiceNumber(header.getInvoiceNumber());
+//		invoice.setQuotedAmount(request.getQuotedAmount());
+//		invoice.setUpdatedBy(userInfo.userId);
+//		invoice.setInvoiceDate(LocalDate.now());
+//		invoiceRepository.save(invoice);
+//	}
+
 	@Transactional
-	public void updateQuotation(RegSource regSource, QuotationUpdateRequest request) {
+	public void updateQuotationStatuses(RegSource regSource, List<QuotationStatusUpdateRequest> updates) {
 
-		UserInfo userInfo = getLoggedInUserInfo(regSource);
-		MaterialSupplierQuotationHeader header = materialSupplierQuotationHeaderRepository
-				.findById(request.getCmatRequestId()).orElseThrow(() -> new RuntimeException("Header not found"));
-		header.setQuotedAmount(request.getQuotedAmount());
-		header.setInvoiceStatus(Status.valueOf(request.getStatus()));
-		header.setInvoiceNumber("INV-" + System.currentTimeMillis()); // backend generate invoice number
-		header.setInvoiceDate(LocalDate.now());
-		materialSupplierQuotationHeaderRepository.save(header);
+        for (QuotationStatusUpdateRequest req : updates) {
+            
+            // 1️⃣ Generate invoice number
+            String invoiceNumber = "INV-" + System.currentTimeMillis();
+            int updatedDetails = materialSupplierRepository.updateInvoiceStatusByQuotationId(
+                    req.getQuotationId(),
+                    req.getStatus(),   // This sets invoiceStatus
+                    invoiceNumber);
 
-		// 2️⃣ Update details
-		for (QuotationUpdateRequest.QuotationDetail detail : request.getQuotations()) {
-			MaterialSupplier supplierDetail = materialSupplierRepository.findById(detail.getMaterialLineItem())
-					.orElseThrow(() -> new RuntimeException("Detail not found: " + detail.getMaterialLineItem()));
-			supplierDetail.setDiscount(detail.getDiscount());
-			supplierDetail.setGst(detail.getGst());
-			supplierDetail.setMrp(detail.getMrp());
-			supplierDetail.setInvoiceNumber(header.getInvoiceNumber());
-			supplierDetail.setInvoiceStatus(header.getInvoiceStatus());
-			supplierDetail.setQuotationStatus(header.getQuotationStatus());
-			supplierDetail.setUpdatedDate(LocalDate.now());
-			materialSupplierRepository.save(supplierDetail);
-		}
 
-		// 3️⃣ Save to invoice table
-		Invoice invoice = new Invoice();
-		invoice.setCmatRequestId(request.getCmatRequestId());
-		invoice.setInvoiceNumber(header.getInvoiceNumber());
-		invoice.setQuotedAmount(request.getQuotedAmount());
-		invoice.setUpdatedBy(userInfo.userId);
-		invoice.setInvoiceDate(LocalDate.now());
-		invoiceRepository.save(invoice);
+            // 3️⃣ Update header table (invoice status + invoice number)
+            int updatedHeader = materialSupplierQuotationHeaderRepository.updateInvoiceStatusByQuotationId(
+                    req.getQuotationId(),
+                    req.getStatus(),
+                    invoiceNumber);
+
+            // 4️⃣ (Optional) Add debug logs or validation
+            if (updatedDetails == 0) {
+                System.out.println("No details found for quotation: " + req.getQuotationId());
+            }
+            if (updatedHeader == 0) {
+                System.out.println("No header found for quotation: " + req.getQuotationId());
+            }
+        }
 	}
-
 	public Page<MaterialSupplier> getMaterialSupplierDetails(String quotationId, String cmatRequestId,
 			String materialLineItem, String supplierId, Pageable pageable) {
 

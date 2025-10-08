@@ -67,11 +67,11 @@ public class MaterialSupplier {
 	
 	@PrePersist
     public void prePersist() {
-        if (this.quotationId == null) {
-            // Generate random 6-digit number
-            int randomSixDigits = (int)(Math.random() * 900000) + 100000;
-            this.quotationId = supplierId + "_" + randomSixDigits;
-        }
+//        if (this.quotationId == null) {
+//            // Generate random 6-digit number
+//            int randomSixDigits = (int)(Math.random() * 900000) + 100000;
+//            this.quotationId = supplierId + "_" + randomSixDigits;
+//        }
         if (this.updatedDate == null) {
             this.updatedDate = LocalDate.now();
         }

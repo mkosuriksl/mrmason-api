@@ -100,9 +100,10 @@ public class AdminMaterialMasterController {
 
 	@GetMapping("/get-brand-by-materialcategory")
 	public ResponseEntity<List<String>> getDistinctLocations(@RequestParam String materialCategory,
+			@RequestParam String materialSubCategory,
 			@RequestParam(required = false) Map<String, String> requestParams) {
 		List<String> distinctLocations = adminMaterialMasterService
-				.findDistinctBrandByMaterialCategory(materialCategory, requestParams);
+				.findDistinctBrandByMaterialCategory(materialCategory,materialSubCategory ,requestParams);
 
 		if (distinctLocations.isEmpty()) {
 			return ResponseEntity.noContent().build(); // Return 204 if no data found
@@ -112,10 +113,14 @@ public class AdminMaterialMasterController {
 	}
 
 	@GetMapping("/distinct-material-category")
-	public ResponseEntity<List<String>> getDistinctMaterialCategory() {
-		List<String> types = adminMaterialMasterService.findDistinctMaterialCategory();
-		return ResponseEntity.ok(types);
+	public ResponseEntity<List<Map<String, Object>>> getDistinctMaterialCategory() {
+	    List<Map<String, Object>> categories = adminMaterialMasterService.findDistinctMaterialCategoryWithSubCategory();
+	    return ResponseEntity.ok(categories);
 	}
+//	public ResponseEntity<List<String>> getDistinctMaterialCategory() {
+//		List<String> types = adminMaterialMasterService.findDistinctMaterialCategory();
+//		return ResponseEntity.ok(types);
+//	}
 
 	@GetMapping("/home-search")
 	public AdminMaterialMasterResponseDTO searchMaterials(@RequestParam(required = false) String materialCategory,

@@ -52,6 +52,7 @@ public class WebConfig {
 						"/admin/forgetPassword/sendOtp", "/admin/forgetPassword/verifyOtpAndChangePassword", "/getData",
 						"/getServiceCategory/civil/{serviceCategory}", "/getAssetCategory/civil/{assetCategory}",
 						"/getServiceCategory/nonCivil/{serviceCategory}", "/getServiceCategory", "/getServiceRequest",
+						"/admin-material-master/get-brand-by-materialcategory","/admin-material-master/distinct-material-category",
 						"/getAssetCategory/nonCivil/{assetCategory}", "/getAdminAsset/civil/{assetCat}",
 						"/getAdminAsset/nonCivil/{assetCat}", "/filterServicePerson", "/getServicePersonDetails",
 						"/paint-master/**", "/api/v1/auth/**", "/v2/api-docs", "/v3/api-docs", "/v3/api-docs/**",

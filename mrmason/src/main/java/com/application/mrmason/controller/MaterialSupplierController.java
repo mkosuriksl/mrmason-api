@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.MaterialSupplierQuotations;
+import com.application.mrmason.dto.QuotationStatusUpdateRequest;
 import com.application.mrmason.dto.QuotationUpdateRequest;
 import com.application.mrmason.dto.ResponseGetMaterialSupplierQuotationdetailsDto;
 import com.application.mrmason.dto.ResponseGetMaterialSupplierQuotationsheaderDto;
@@ -129,10 +130,20 @@ public class MaterialSupplierController {
     }
 
     @PutMapping("/update-status-with-Invoiced")
-    public String updateQuotation(@RequestParam RegSource regSource,@RequestBody QuotationUpdateRequest request) {
-    	materialSupplierService.updateQuotation(regSource,request);
-        return "Quotation and Invoice updated successfully";
+    public ResponseEntity<?> updateQuotationStatuses(@RequestParam RegSource regSource,@RequestBody List<QuotationStatusUpdateRequest> updates) {
+        try {
+            materialSupplierService.updateQuotationStatuses(regSource,updates);
+            return ResponseEntity.ok("Quotation and Invoice statuses updated successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error updating statuses: " + e.getMessage());
+        }
     }
+//    public String updateQuotation(@RequestParam RegSource regSource,@RequestBody QuotationUpdateRequest request) {
+//    	materialSupplierService.updateQuotation(regSource,request);
+//        return "Quotation and Invoice updated successfully";
+//    }
+    
 	
     @GetMapping("/get-invoices-and-quotation-details")
     public ResponseEntity<ResponseInvoiceAndDetailsDto> getInvoicesAndDetails(

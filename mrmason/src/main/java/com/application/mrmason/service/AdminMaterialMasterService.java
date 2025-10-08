@@ -31,9 +31,11 @@ public interface AdminMaterialMasterService {
 			MultipartFile materialMasterImage1, MultipartFile materialMasterImage2, MultipartFile materialMasterImage3,
 			MultipartFile materialMasterImage4, MultipartFile materialMasterImage5) throws AccessDeniedException;
 
-	public List<String> findDistinctBrandByMaterialCategory(String materialCategory, Map<String, String> requestParams);
+	public List<String> findDistinctBrandByMaterialCategory(String materialCategory,String materialSubCategory, Map<String, String> requestParams);
 
-	public List<String> findDistinctMaterialCategory();
+//	public List<String> findDistinctMaterialCategory();
+	
+	public List<Map<String, Object>> findDistinctMaterialCategoryWithSubCategory();
 
 	public AdminMaterialMasterResponseDTO getMaterialsWithUserInfo(String materialCategory, String materialSubCategory,
 			String brand, String location);

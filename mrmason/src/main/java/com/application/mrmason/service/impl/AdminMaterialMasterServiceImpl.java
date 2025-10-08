@@ -7,6 +7,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -329,21 +331,42 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 	}
 
 	@Override
-	public List<String> findDistinctBrandByMaterialCategory(String materialCategory,
+	public List<String> findDistinctBrandByMaterialCategory(String materialCategory,String materialSubCategory,
 			Map<String, String> requestParams) {
-		List<String> expectedParams = Arrays.asList("materialCategory");
+		List<String> expectedParams = Arrays.asList("materialCategory","materialSubCategory");
 		for (String paramName : requestParams.keySet()) {
 			if (!expectedParams.contains(paramName)) {
 				throw new IllegalArgumentException("Unexpected parameter '" + paramName + "' is not allowed.");
 			}
 		}
-		return adminMaterialMasterRepository.findDistinctBrandByMaterialCategory(materialCategory);
+		return adminMaterialMasterRepository.findDistinctBrandByMaterialCategory(materialCategory,materialSubCategory);
 	}
 
 	@Override
-	public List<String> findDistinctMaterialCategory() {
-		return adminMaterialMasterRepository.findDistinctMaterialCategory();
+//	public List<String> findDistinctMaterialCategory() {
+//		return adminMaterialMasterRepository.findDistinctMaterialCategory();
+//	}
+	public List<Map<String, Object>> findDistinctMaterialCategoryWithSubCategory() {
+	    List<Object[]> results = adminMaterialMasterRepository.findCategoryAndSubCategory();
+	    Map<String, Set<String>> grouped = new LinkedHashMap<>();
+
+	    for (Object[] row : results) {
+	        String category = (String) row[0];
+	        String subCategory = (String) row[1];
+	        grouped.computeIfAbsent(category, k -> new LinkedHashSet<>()).add(subCategory);
+	    }
+
+	    // Convert map to list of JSON-friendly objects
+	    List<Map<String, Object>> response = new ArrayList<>();
+	    for (Map.Entry<String, Set<String>> entry : grouped.entrySet()) {
+	        Map<String, Object> map = new LinkedHashMap<>();
+	        map.put("category", entry.getKey());
+	        map.put("subCategories", new ArrayList<>(entry.getValue()));
+	        response.add(map);
+	    }
+	    return response;
 	}
+
 	
 	@Override
 	public AdminMaterialMasterResponseDTO getMaterialsWithUserInfo(

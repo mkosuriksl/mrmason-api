@@ -55,6 +55,8 @@ public interface CustomerRegistrationRepo extends JpaRepository<CustomerRegistra
 	
 	@Query("SELECT s FROM CustomerRegistration s WHERE s.userEmail = :userEmail AND s.userType = :userType AND s.regSource = :regSource")
 	Optional<CustomerRegistration> findByUserEmailAndUserTypeAndRegSource(@Param("userEmail") String userEmail,@Param("userType") UserType userType,RegSource regSource);
+	
+	List<CustomerRegistration> findByUserMobileOrUserEmail(String customerNumber, String customerEmail);
 
 
 }

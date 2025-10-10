@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.application.mrmason.dto.AdminMaterialMasterResponseDTO;
+import com.application.mrmason.dto.AdminMaterialMasterResponseWithImageDto;
 import com.application.mrmason.dto.MaterialGroupDTO;
 import com.application.mrmason.dto.ResponseModel;
 import com.application.mrmason.entity.AdminMaterialMaster;
@@ -23,9 +24,10 @@ public interface AdminMaterialMasterService {
 	List<AdminMaterialMaster> updateAdminMaterialMasters(List<AdminMaterialMaster> updatedList, RegSource regSource)
 			throws AccessDeniedException;
 
-	public Page<AdminMaterialMaster> getAdminMaterialMaster(String materialCategory, String materialSubCategory,
-			String brand, String modelNo, String size, String shape, String userId, Pageable pageable,Map<String, String> requestParams)
-			throws AccessDeniedException;
+	public Page<AdminMaterialMasterResponseWithImageDto> getAdminMaterialMaster(
+	        String materialCategory, String materialSubCategory,
+	        String brand, String modelNo, String size, String shape,
+	        String userId, Pageable pageable, Map<String, String> requestParams) throws AccessDeniedException;
 
 	public ResponseEntity<ResponseModel> uploadDoc(RegSource regSource, String skuId,
 			MultipartFile materialMasterImage1, MultipartFile materialMasterImage2, MultipartFile materialMasterImage3,

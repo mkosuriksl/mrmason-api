@@ -10,7 +10,7 @@ import lombok.Data;
 public class ResponseGetAdminMaterialMasterDto {
 	private String message;
 	private boolean status;
-	private List<AdminMaterialMaster> getAdminMaterialMaster;
+	private List<AdminMaterialMasterResponseWithImageDto> getAdminMaterialMaster;
 	private int currentPage;
 	private int pageSize;
 	private long totalElements;

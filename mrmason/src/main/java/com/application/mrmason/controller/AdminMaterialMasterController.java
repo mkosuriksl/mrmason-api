@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.application.mrmason.dto.AdminMaterialMasterRequestDTO;
 import com.application.mrmason.dto.AdminMaterialMasterResponseDTO;
+import com.application.mrmason.dto.AdminMaterialMasterResponseWithImageDto;
 import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.MaterialGroupDTO;
 import com.application.mrmason.dto.ResponseGetAdminMaterialMasterDto;
@@ -68,7 +69,7 @@ public class AdminMaterialMasterController {
 			throws AccessDeniedException {
 
 		Pageable pageable = PageRequest.of(page, size);
-		Page<AdminMaterialMaster> srpqPage = adminMaterialMasterService.getAdminMaterialMaster(materialCategory,
+		Page<AdminMaterialMasterResponseWithImageDto> srpqPage = adminMaterialMasterService.getAdminMaterialMaster(materialCategory,
 				materialSubCategory, brand, modelNo, brandsize, shape, userId, pageable,requestParams);
 		ResponseGetAdminMaterialMasterDto response = new ResponseGetAdminMaterialMasterDto();
 

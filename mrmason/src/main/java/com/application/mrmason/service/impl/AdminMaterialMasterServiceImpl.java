@@ -4,6 +4,7 @@ import java.nio.file.AccessDeniedException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -15,6 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -28,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.application.mrmason.config.AWSConfig;
 import com.application.mrmason.dto.AdminDetailsDto;
 import com.application.mrmason.dto.AdminMaterialMasterResponseDTO;
+import com.application.mrmason.dto.AdminMaterialMasterResponseWithImageDto;
 import com.application.mrmason.dto.MaterialDTO;
 import com.application.mrmason.dto.MaterialGroupDTO;
 import com.application.mrmason.dto.MaterialSupplierDto;
@@ -75,7 +78,6 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 
 	@Autowired
 	private MaterialSupplierQuotationUserDAO materialSupplierQuotationUserDAO;
-
 
 	@Override
 	public List<MaterialGroupDTO> createAdminMaterialMaster(List<MaterialGroupDTO> requestGroups, RegSource regSource)
@@ -193,84 +195,107 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 	}
 
 	@Override
-	public Page<AdminMaterialMaster> getAdminMaterialMaster(String materialCategory, String materialSubCategory,
-			String brand, String modelNo, String size, String shape,String userId, Pageable pageable,Map<String, String> requestParams) throws AccessDeniedException {
-		
-		List<String> expectedParams = Arrays.asList("materialCategory","materialSubCategory","brand","modelNo","size","shape","userId");
-	    for (String paramName : requestParams.keySet()) {
-	        if (!expectedParams.contains(paramName)) {
-	            throw new IllegalArgumentException("Unexpected parameter '" + paramName + "' is not allowed.");
-	        }
-	    }
+	public Page<AdminMaterialMasterResponseWithImageDto> getAdminMaterialMaster(String materialCategory,
+			String materialSubCategory, String brand, String modelNo, String size, String shape, String userId,
+			Pageable pageable, Map<String, String> requestParams) throws AccessDeniedException {
+
+		// Validate params
+		List<String> expectedParams = Arrays.asList("materialCategory", "materialSubCategory", "brand", "modelNo",
+				"brandsize", "shape", "userId");
+		for (String paramName : requestParams.keySet()) {
+			if (!expectedParams.contains(paramName)) {
+				throw new IllegalArgumentException("Unexpected parameter '" + paramName + "' is not allowed.");
+			}
+		}
+
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<AdminMaterialMaster> query = cb.createQuery(AdminMaterialMaster.class);
 		Root<AdminMaterialMaster> root = query.from(AdminMaterialMaster.class);
-		List<Predicate> predicates = new ArrayList<>();
 
-		if (materialCategory != null && !materialCategory.trim().isEmpty()) {
+		List<Predicate> predicates = new ArrayList<>();
+		if (materialCategory != null && !materialCategory.trim().isEmpty())
 			predicates.add(cb.equal(root.get("materialCategory"), materialCategory));
-		}
-		if (materialSubCategory != null && !materialSubCategory.trim().isEmpty()) {
+		if (materialSubCategory != null && !materialSubCategory.trim().isEmpty())
 			predicates.add(cb.equal(root.get("materialSubCategory"), materialSubCategory));
-		}
-		if (brand != null && !brand.trim().isEmpty()) {
+		if (brand != null && !brand.trim().isEmpty())
 			predicates.add(cb.equal(root.get("brand"), brand));
-		}
-		if (modelNo != null && !modelNo.trim().isEmpty()) {
+		if (modelNo != null && !modelNo.trim().isEmpty())
 			predicates.add(cb.equal(root.get("modelNo"), modelNo));
-		}
-		if (size != null && !size.trim().isEmpty()) {
+		if (size != null && !size.trim().isEmpty())
 			predicates.add(cb.equal(root.get("size"), size));
-		}
-		if (shape != null && !shape.trim().isEmpty()) {
+		if (shape != null && !shape.trim().isEmpty())
 			predicates.add(cb.equal(root.get("shape"), shape));
-		}
-		if (userId != null && !userId.trim().isEmpty()) {
+		if (userId != null && !userId.trim().isEmpty())
 			predicates.add(cb.equal(root.get("updatedBy"), userId));
-		}
 
 		query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
 		TypedQuery<AdminMaterialMaster> typedQuery = entityManager.createQuery(query);
 		typedQuery.setFirstResult((int) pageable.getOffset());
 		typedQuery.setMaxResults(pageable.getPageSize());
 
-		// Count query
+		List<AdminMaterialMaster> materials = typedQuery.getResultList();
+
+		// ✅ Fetch all image records for the same SKUs
+		List<String> skuIds = materials.stream().map(AdminMaterialMaster::getSkuId).toList();
+		if (skuIds.isEmpty()) {
+			return new PageImpl<>(Collections.emptyList(), pageable, 0);
+		}
+
+		CriteriaQuery<UploadMatericalMasterImages> imgQuery = cb.createQuery(UploadMatericalMasterImages.class);
+		Root<UploadMatericalMasterImages> imgRoot = imgQuery.from(UploadMatericalMasterImages.class);
+		imgQuery.select(imgRoot).where(imgRoot.get("skuId").in(skuIds));
+		List<UploadMatericalMasterImages> images = entityManager.createQuery(imgQuery).getResultList();
+
+		// ✅ Map images by skuId
+		Map<String, UploadMatericalMasterImages> imageMap = images.stream()
+				.collect(Collectors.toMap(UploadMatericalMasterImages::getSkuId, img -> img));
+
+		// ✅ Merge material + images
+		List<AdminMaterialMasterResponseWithImageDto> mergedList = materials.stream().map(mat -> {
+			AdminMaterialMasterResponseWithImageDto dto = new AdminMaterialMasterResponseWithImageDto();
+			BeanUtils.copyProperties(mat, dto);
+			UploadMatericalMasterImages img = imageMap.get(mat.getSkuId());
+			if (img != null) {
+				dto.setMaterialMasterImage1(img.getMaterialMasterImage1());
+				dto.setMaterialMasterImage2(img.getMaterialMasterImage2());
+				dto.setMaterialMasterImage3(img.getMaterialMasterImage3());
+				dto.setMaterialMasterImage4(img.getMaterialMasterImage4());
+				dto.setMaterialMasterImage5(img.getMaterialMasterImage5());
+			}
+			return dto;
+		}).toList();
+
+		// ✅ Count query (REBUILD predicates for countRoot)
 		CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
 		Root<AdminMaterialMaster> countRoot = countQuery.from(AdminMaterialMaster.class);
 		List<Predicate> countPredicates = new ArrayList<>();
 
-		if (materialCategory != null && !materialCategory.trim().isEmpty()) {
+		if (materialCategory != null && !materialCategory.trim().isEmpty())
 			countPredicates.add(cb.equal(countRoot.get("materialCategory"), materialCategory));
-		}
-		if (materialSubCategory != null && !materialSubCategory.trim().isEmpty()) {
+		if (materialSubCategory != null && !materialSubCategory.trim().isEmpty())
 			countPredicates.add(cb.equal(countRoot.get("materialSubCategory"), materialSubCategory));
-		}
-		if (brand != null && !brand.trim().isEmpty()) {
+		if (brand != null && !brand.trim().isEmpty())
 			countPredicates.add(cb.equal(countRoot.get("brand"), brand));
-		}
-		if (modelNo != null && !modelNo.trim().isEmpty()) {
+		if (modelNo != null && !modelNo.trim().isEmpty())
 			countPredicates.add(cb.equal(countRoot.get("modelNo"), modelNo));
-		}
-		if (size != null && !size.trim().isEmpty()) {
+		if (size != null && !size.trim().isEmpty())
 			countPredicates.add(cb.equal(countRoot.get("size"), size));
-		}
-		if (shape != null && !shape.trim().isEmpty()) {
+		if (shape != null && !shape.trim().isEmpty())
 			countPredicates.add(cb.equal(countRoot.get("shape"), shape));
-		}
-		if (userId != null && !userId.trim().isEmpty()) {
+		if (userId != null && !userId.trim().isEmpty())
 			countPredicates.add(cb.equal(countRoot.get("updatedBy"), userId));
-		}
+
 		countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
 		Long total = entityManager.createQuery(countQuery).getSingleResult();
 
-		return new PageImpl<>(typedQuery.getResultList(), pageable, total);
+		return new PageImpl<>(mergedList, pageable, total);
 	}
 
 	@Transactional
 	@Override
-	public ResponseEntity<ResponseModel> uploadDoc(RegSource regSource,String skuId, MultipartFile materialMasterImage1,
-			MultipartFile materialMasterImage2, MultipartFile materialMasterImage3, MultipartFile materialMasterImage4,
-			MultipartFile materialMasterImage5) throws AccessDeniedException {
+	public ResponseEntity<ResponseModel> uploadDoc(RegSource regSource, String skuId,
+			MultipartFile materialMasterImage1, MultipartFile materialMasterImage2, MultipartFile materialMasterImage3,
+			MultipartFile materialMasterImage4, MultipartFile materialMasterImage5) throws AccessDeniedException {
 		UserInfo userInfo = getLoggedInUserInfo(regSource);
 		ResponseModel response = new ResponseModel();
 
@@ -331,15 +356,15 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 	}
 
 	@Override
-	public List<String> findDistinctBrandByMaterialCategory(String materialCategory,String materialSubCategory,
+	public List<String> findDistinctBrandByMaterialCategory(String materialCategory, String materialSubCategory,
 			Map<String, String> requestParams) {
-		List<String> expectedParams = Arrays.asList("materialCategory","materialSubCategory");
+		List<String> expectedParams = Arrays.asList("materialCategory", "materialSubCategory");
 		for (String paramName : requestParams.keySet()) {
 			if (!expectedParams.contains(paramName)) {
 				throw new IllegalArgumentException("Unexpected parameter '" + paramName + "' is not allowed.");
 			}
 		}
-		return adminMaterialMasterRepository.findDistinctBrandByMaterialCategory(materialCategory,materialSubCategory);
+		return adminMaterialMasterRepository.findDistinctBrandByMaterialCategory(materialCategory, materialSubCategory);
 	}
 
 	@Override
@@ -347,65 +372,82 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 //		return adminMaterialMasterRepository.findDistinctMaterialCategory();
 //	}
 	public List<Map<String, Object>> findDistinctMaterialCategoryWithSubCategory() {
-	    List<Object[]> results = adminMaterialMasterRepository.findCategoryAndSubCategory();
-	    Map<String, Set<String>> grouped = new LinkedHashMap<>();
+		List<Object[]> results = adminMaterialMasterRepository.findCategoryAndSubCategory();
+		Map<String, Set<String>> grouped = new LinkedHashMap<>();
 
-	    for (Object[] row : results) {
-	        String category = (String) row[0];
-	        String subCategory = (String) row[1];
-	        grouped.computeIfAbsent(category, k -> new LinkedHashSet<>()).add(subCategory);
-	    }
+		for (Object[] row : results) {
+			String category = (String) row[0];
+			String subCategory = (String) row[1];
+			grouped.computeIfAbsent(category, k -> new LinkedHashSet<>()).add(subCategory);
+		}
 
-	    // Convert map to list of JSON-friendly objects
-	    List<Map<String, Object>> response = new ArrayList<>();
-	    for (Map.Entry<String, Set<String>> entry : grouped.entrySet()) {
-	        Map<String, Object> map = new LinkedHashMap<>();
-	        map.put("category", entry.getKey());
-	        map.put("subCategories", new ArrayList<>(entry.getValue()));
-	        response.add(map);
-	    }
-	    return response;
+		// Convert map to list of JSON-friendly objects
+		List<Map<String, Object>> response = new ArrayList<>();
+		for (Map.Entry<String, Set<String>> entry : grouped.entrySet()) {
+			Map<String, Object> map = new LinkedHashMap<>();
+			map.put("category", entry.getKey());
+			map.put("subCategories", new ArrayList<>(entry.getValue()));
+			response.add(map);
+		}
+		return response;
 	}
 
-	
 	@Override
-	public AdminMaterialMasterResponseDTO getMaterialsWithUserInfo(
-	        String materialCategory,
-	        String materialSubCategory,
-	        String brand,
-	        String location // ✅ new filter param
-	) {
+	public AdminMaterialMasterResponseDTO getMaterialsWithUserInfo(String materialCategory, String materialSubCategory,
+	        String brand, String location) {
+
 	    // Step 1: Fetch all materials (based on category/brand/subCategory)
-	    List<AdminMaterialMaster> materials = adminMaterialMasterRepository
-	            .searchMaterials(materialCategory, materialSubCategory, brand);
+	    List<AdminMaterialMaster> materials = adminMaterialMasterRepository.searchMaterials(materialCategory,
+	            materialSubCategory, brand);
+
+	    if (materials.isEmpty()) {
+	        return new AdminMaterialMasterResponseDTO(Collections.emptyList(), Collections.emptyList(),
+	                Collections.emptyList());
+	    }
 
 	    List<AdminDetailsDto> adminDtos = new ArrayList<>();
 	    List<MaterialSupplierDto> supplierDtos = new ArrayList<>();
 	    Set<String> seenAdminIds = new HashSet<>();
 	    Set<String> seenSupplierIds = new HashSet<>();
 
-	    // Step 2: If location filter is provided → find matching suppliers
-	    Set<String> matchingBodSeqNos = new HashSet<>();
-	    if (location != null && !location.isEmpty()) {
-	        List<MaterialSupplierQuotationUser> matchingSuppliers =
-	                materialSupplierQuotationUserDAO.findByLocationIgnoreCase(location);
+	    // Step 2: Fetch all images for materials
+	    List<String> skuIds = materials.stream().map(AdminMaterialMaster::getSkuId).toList();
+	    List<UploadMatericalMasterImages> images = uploadMatericalMasterImagesRepository.findAllById(skuIds);
 
-	        for (MaterialSupplierQuotationUser s : matchingSuppliers) {
-	            matchingBodSeqNos.add(s.getBodSeqNo());
-	        }
-	    }
+	    // Map images by skuId
+	    Map<String, UploadMatericalMasterImages> imageMap = images.stream()
+	            .collect(Collectors.toMap(UploadMatericalMasterImages::getSkuId, img -> img));
 
-	    // Step 3: Filter materials based on supplier's bodSeqNo
-	    Iterator<AdminMaterialMaster> iterator = materials.iterator();
-	    while (iterator.hasNext()) {
-	        AdminMaterialMaster material = iterator.next();
+	    // Step 3: Build final material DTO list with proper location filtering
+	    List<AdminMaterialMasterResponseWithImageDto> materialDtos = new ArrayList<>();
+
+	    for (AdminMaterialMaster material : materials) {
 	        String userId = material.getUpdatedBy();
 
-	        // If location filter applied → check against supplier bodSeqNos
-	        if (!matchingBodSeqNos.isEmpty() && !matchingBodSeqNos.contains(userId)) {
-	            iterator.remove(); // ❌ not matching supplier
-	            continue;
+	        // Fetch supplier for this material
+	        MaterialSupplierQuotationUser supplier = materialSupplierQuotationUserDAO.findByBodSeqNo(userId);
+
+	        // Apply location filter if provided
+	        if (location != null && !location.isEmpty()) {
+	            if (supplier == null || !location.equalsIgnoreCase(supplier.getLocation())) {
+	                continue; // skip this material if location doesn't match
+	            }
 	        }
+
+	        // --- Map material + images ---
+	        AdminMaterialMasterResponseWithImageDto dto = new AdminMaterialMasterResponseWithImageDto();
+	        BeanUtils.copyProperties(material, dto);
+
+	        UploadMatericalMasterImages img = imageMap.get(material.getSkuId());
+	        if (img != null) {
+	            dto.setMaterialMasterImage1(img.getMaterialMasterImage1());
+	            dto.setMaterialMasterImage2(img.getMaterialMasterImage2());
+	            dto.setMaterialMasterImage3(img.getMaterialMasterImage3());
+	            dto.setMaterialMasterImage4(img.getMaterialMasterImage4());
+	            dto.setMaterialMasterImage5(img.getMaterialMasterImage5());
+	        }
+
+	        materialDtos.add(dto);
 
 	        // --- Admin details ---
 	        AdminDetails user = adminRepo.findByAdminId(userId);
@@ -414,41 +456,41 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 	        }
 
 	        // --- Supplier details ---
-	        MaterialSupplierQuotationUser supplier = materialSupplierQuotationUserDAO.findByBodSeqNo(userId);
 	        if (supplier != null && seenSupplierIds.add(supplier.getBodSeqNo())) {
 	            supplierDtos.add(toSupplierDto(supplier));
 	        }
 	    }
 
-	    return new AdminMaterialMasterResponseDTO(materials, adminDtos, supplierDtos);
+	    return new AdminMaterialMasterResponseDTO(materialDtos, adminDtos, supplierDtos);
 	}
 
-    // --- Mapping helpers ---
-    private AdminDetailsDto toAdminDto(AdminDetails admin) {
-    	AdminDetailsDto dto = new AdminDetailsDto();
-        dto.setId(admin.getId());
-        dto.setMobile(admin.getMobile());
-        dto.setEmail(admin.getEmail());
-        dto.setRegDate(admin.getRegDate());
-        dto.setStatus(admin.getStatus());
-        dto.setAdminId(admin.getAdminId());
-        dto.setAdminName(admin.getAdminName());  
-        return dto;
-    }
 
-    private MaterialSupplierDto toSupplierDto(MaterialSupplierQuotationUser supplier) {
-        MaterialSupplierDto dto = new MaterialSupplierDto();
-        dto.setBodSeqNo(supplier.getBodSeqNo());
-        dto.setName(supplier.getName());
-        dto.setBusinessName(supplier.getBusinessName());
-        dto.setMobile(supplier.getMobile());
-        dto.setEmail(supplier.getEmail());
-        dto.setAddress(supplier.getAddress());
-        dto.setCity(supplier.getCity());
-        dto.setDistrict(supplier.getDistrict());
-        dto.setState(supplier.getState());
-        dto.setLocation(supplier.getLocation());
-        return dto;
-    }
+	// --- Mapping helpers ---
+	private AdminDetailsDto toAdminDto(AdminDetails admin) {
+		AdminDetailsDto dto = new AdminDetailsDto();
+		dto.setId(admin.getId());
+		dto.setMobile(admin.getMobile());
+		dto.setEmail(admin.getEmail());
+		dto.setRegDate(admin.getRegDate());
+		dto.setStatus(admin.getStatus());
+		dto.setAdminId(admin.getAdminId());
+		dto.setAdminName(admin.getAdminName());
+		return dto;
+	}
+
+	private MaterialSupplierDto toSupplierDto(MaterialSupplierQuotationUser supplier) {
+		MaterialSupplierDto dto = new MaterialSupplierDto();
+		dto.setBodSeqNo(supplier.getBodSeqNo());
+		dto.setName(supplier.getName());
+		dto.setBusinessName(supplier.getBusinessName());
+		dto.setMobile(supplier.getMobile());
+		dto.setEmail(supplier.getEmail());
+		dto.setAddress(supplier.getAddress());
+		dto.setCity(supplier.getCity());
+		dto.setDistrict(supplier.getDistrict());
+		dto.setState(supplier.getState());
+		dto.setLocation(supplier.getLocation());
+		return dto;
+	}
 
 }

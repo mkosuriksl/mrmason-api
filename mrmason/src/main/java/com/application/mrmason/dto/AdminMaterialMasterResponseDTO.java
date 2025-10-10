@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AdminMaterialMasterResponseDTO {
-    private List<AdminMaterialMaster> materials;
+    private List<AdminMaterialMasterResponseWithImageDto> materials;
     private List<AdminDetailsDto> admins;
     private List<MaterialSupplierDto> suppliers;
 }

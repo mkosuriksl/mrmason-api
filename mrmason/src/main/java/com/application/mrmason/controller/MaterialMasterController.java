@@ -92,9 +92,9 @@ public class MaterialMasterController {
 	@GetMapping("/home-search-by-location")
     public ResponseEntity<GenericResponse<ResponseGetMasterDto>> getMaterials(
             @RequestParam String location,
-            @RequestParam(required = false) String serviceCategory,
-            @RequestParam(required = false) String productCategory,
-            @RequestParam(required = false) String productSubCategory,
+//            @RequestParam(required = false) String serviceCategory,
+            @RequestParam(required = false) String materialCategory,
+            @RequestParam(required = false) String materialSubCategory,
             @RequestParam(required = false) String brand,
             @RequestParam(required = false) String model,
             @RequestParam(defaultValue = "0") int page,
@@ -102,7 +102,7 @@ public class MaterialMasterController {
     ) {
         // Call service to get ResponseGetMasterDto with paged MaterialMasters
         ResponseGetMasterDto responseDto = homeService.getMaterialsWithPagination(
-                location, serviceCategory, productCategory, productSubCategory, brand, model, page, size
+                location, materialCategory, materialSubCategory, brand, model, page, size
         );
 
         // Wrap in GenericResponse

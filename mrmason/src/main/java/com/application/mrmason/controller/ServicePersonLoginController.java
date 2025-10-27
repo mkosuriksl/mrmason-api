@@ -77,7 +77,7 @@ public class ServicePersonLoginController {
 				response.setMessage("Incorrect OTP, Please enter correct Otp");
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			} else {
-				optVerify.setEOtp(null);
+//				optVerify.setEOtp(null);
 				optVerify.setEVerify("yes");
 				response.setStatus(true);
 				servicePersonDao.save(optVerify);
@@ -135,7 +135,7 @@ public class ServicePersonLoginController {
 				response.setMessage("Incorrect OTP, Please enter correct Otp");
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			} else {
-				optVerify.setMOtp(null);
+//				optVerify.setMOtp(null);
 				optVerify.setMobVerify("yes");
 				response.setStatus(true);
 				servicePersonDao.save(optVerify);

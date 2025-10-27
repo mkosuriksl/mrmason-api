@@ -2,7 +2,9 @@ package com.application.mrmason.service.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -10,15 +12,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.application.mrmason.config.AWSConfig;
 import com.application.mrmason.dto.CustomerAssetDto;
+import com.application.mrmason.dto.ResponseModel;
 import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.CustomerAssets;
 import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.entity.MaterialSupplierAssets;
 import com.application.mrmason.entity.MaterialSupplierQuotationUser;
+import com.application.mrmason.entity.UploadMachineImage;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
@@ -28,6 +37,7 @@ import com.application.mrmason.repository.CustomerAssetsRepo;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.repository.MaterialSupplierAssetsRepo;
 import com.application.mrmason.repository.MaterialSupplierQuotationUserDAO;
+import com.application.mrmason.repository.UploadMachineImageRepo;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.AuthDetailsProvider;
 import com.application.mrmason.service.CustomerAssetsService;
@@ -56,7 +66,11 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 	private MaterialSupplierQuotationUserDAO materialSupplierQuotationUserDAO;
 	@Autowired
 	UserDAO userDAO;
-
+	@Autowired
+	private AWSConfig awsConfig;
+	@Autowired
+	private UploadMachineImageRepo machineImageRepo;
+	
 	@Override
 	public CustomerAssets saveAssets(CustomerAssets asset) {
 		if (regiRepo.findByUserid(asset.getUserId()) != null) {
@@ -171,57 +185,81 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 	}
 
 	private Page<MaterialSupplierAssets> getMaterialSupplierAssets(String userId, String assetId, String location,
-			String assetCat, String assetSubCat, String assetModel, String assetBrand, Pageable pageable) {
-		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		CriteriaQuery<MaterialSupplierAssets> query = cb.createQuery(MaterialSupplierAssets.class);
-		Root<MaterialSupplierAssets> root = query.from(MaterialSupplierAssets.class);
+	        String assetCat, String assetSubCat, String assetModel, String assetBrand, Pageable pageable) {
 
-		List<Predicate> predicates = new ArrayList<>();
-		if (userId != null && !userId.trim().isEmpty())
-			predicates.add(cb.equal(root.get("userId"), userId));
-		if (assetId != null && !assetId.trim().isEmpty())
-			predicates.add(cb.equal(root.get("assetId"), assetId));
-		if (location != null && !location.trim().isEmpty())
-			predicates.add(cb.equal(root.get("location"), location));
-		if (assetCat != null && !assetCat.trim().isEmpty())
-			predicates.add(cb.equal(root.get("assetCat"), assetCat));
-		if (assetSubCat != null && !assetSubCat.trim().isEmpty())
-			predicates.add(cb.equal(root.get("assetSubCat"), assetSubCat));
-		if (assetModel != null && !assetModel.trim().isEmpty())
-			predicates.add(cb.equal(root.get("assetModel"), assetModel));
-		if (assetBrand != null && !assetBrand.trim().isEmpty())
-			predicates.add(cb.equal(root.get("assetBrand"), assetBrand));
+	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+	    CriteriaQuery<MaterialSupplierAssets> query = cb.createQuery(MaterialSupplierAssets.class);
+	    Root<MaterialSupplierAssets> root = query.from(MaterialSupplierAssets.class);
 
-		query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
+	    List<Predicate> predicates = new ArrayList<>();
+	    if (userId != null && !userId.trim().isEmpty())
+	        predicates.add(cb.equal(root.get("userId"), userId));
+	    if (assetId != null && !assetId.trim().isEmpty())
+	        predicates.add(cb.equal(root.get("assetId"), assetId));
+	    if (location != null && !location.trim().isEmpty())
+	        predicates.add(cb.equal(root.get("location"), location));
+	    if (assetCat != null && !assetCat.trim().isEmpty())
+	        predicates.add(cb.equal(root.get("assetCat"), assetCat));
+	    if (assetSubCat != null && !assetSubCat.trim().isEmpty())
+	        predicates.add(cb.equal(root.get("assetSubCat"), assetSubCat));
+	    if (assetModel != null && !assetModel.trim().isEmpty())
+	        predicates.add(cb.equal(root.get("assetModel"), assetModel));
+	    if (assetBrand != null && !assetBrand.trim().isEmpty())
+	        predicates.add(cb.equal(root.get("assetBrand"), assetBrand));
 
-		TypedQuery<MaterialSupplierAssets> typedQuery = entityManager.createQuery(query);
-		typedQuery.setFirstResult((int) pageable.getOffset());
-		typedQuery.setMaxResults(pageable.getPageSize());
+	    query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
 
-// Count query
-		CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
-		Root<MaterialSupplierAssets> countRoot = countQuery.from(MaterialSupplierAssets.class);
-		List<Predicate> countPredicates = new ArrayList<>();
+	    TypedQuery<MaterialSupplierAssets> typedQuery = entityManager.createQuery(query);
+	    typedQuery.setFirstResult((int) pageable.getOffset());
+	    typedQuery.setMaxResults(pageable.getPageSize());
 
-		if (userId != null && !userId.trim().isEmpty())
-			countPredicates.add(cb.equal(countRoot.get("userId"), userId));
-		if (assetId != null && !assetId.trim().isEmpty())
-			countPredicates.add(cb.equal(countRoot.get("assetId"), assetId));
-		if (location != null && !location.trim().isEmpty())
-			countPredicates.add(cb.equal(countRoot.get("location"), location));
-		if (assetCat != null && !assetCat.trim().isEmpty())
-			countPredicates.add(cb.equal(countRoot.get("assetCat"), assetCat));
-		if (assetSubCat != null && !assetSubCat.trim().isEmpty())
-			countPredicates.add(cb.equal(countRoot.get("assetSubCat"), assetSubCat));
-		if (assetModel != null && !assetModel.trim().isEmpty())
-			countPredicates.add(cb.equal(countRoot.get("assetModel"), assetModel));
-		if (assetBrand != null && !assetBrand.trim().isEmpty())
-			countPredicates.add(cb.equal(countRoot.get("assetBrand"), assetBrand));
+	    // Count query
+	    CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+	    Root<MaterialSupplierAssets> countRoot = countQuery.from(MaterialSupplierAssets.class);
+	    List<Predicate> countPredicates = new ArrayList<>();
 
-		countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
-		Long total = entityManager.createQuery(countQuery).getSingleResult();
+	    if (userId != null && !userId.trim().isEmpty())
+	        countPredicates.add(cb.equal(countRoot.get("userId"), userId));
+	    if (assetId != null && !assetId.trim().isEmpty())
+	        countPredicates.add(cb.equal(countRoot.get("assetId"), assetId));
+	    if (location != null && !location.trim().isEmpty())
+	        countPredicates.add(cb.equal(countRoot.get("location"), location));
+	    if (assetCat != null && !assetCat.trim().isEmpty())
+	        countPredicates.add(cb.equal(countRoot.get("assetCat"), assetCat));
+	    if (assetSubCat != null && !assetSubCat.trim().isEmpty())
+	        countPredicates.add(cb.equal(countRoot.get("assetSubCat"), assetSubCat));
+	    if (assetModel != null && !assetModel.trim().isEmpty())
+	        countPredicates.add(cb.equal(countRoot.get("assetModel"), assetModel));
+	    if (assetBrand != null && !assetBrand.trim().isEmpty())
+	        countPredicates.add(cb.equal(countRoot.get("assetBrand"), assetBrand));
 
-		return new PageImpl<>(typedQuery.getResultList(), pageable, total);
+	    countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
+	    Long total = entityManager.createQuery(countQuery).getSingleResult();
+
+	    List<MaterialSupplierAssets> assetsList = typedQuery.getResultList();
+
+	    // ✅ Fetch and set image from UploadMachineImage
+	    if (!assetsList.isEmpty()) {
+	        List<String> assetIds = assetsList.stream().map(MaterialSupplierAssets::getAssetId).toList();
+
+	        // Query upload_machine_image for matching assetIds
+	        List<UploadMachineImage> imageList = entityManager.createQuery(
+	                        "SELECT u FROM UploadMachineImage u WHERE u.assetId IN :assetIds", UploadMachineImage.class)
+	                .setParameter("assetIds", assetIds)
+	                .getResultList();
+
+	        Map<String, String> imageMap = imageList.stream()
+	                .collect(Collectors.toMap(UploadMachineImage::getAssetId, UploadMachineImage::getImage));
+
+	        // Add image field dynamically (via transient variable)
+	        for (MaterialSupplierAssets asset : assetsList) {
+	            if (imageMap.containsKey(asset.getAssetId())) {
+	                asset.setImage(imageMap.get(asset.getAssetId()));
+	            }
+	        }
+	    }
+
+	    return new PageImpl<>(assetsList, pageable, total);
 	}
 
 //	@Override
@@ -434,6 +472,74 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 						.orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
 				userId = user.getBodSeqNo();
 			}
+			break;
+
+		default:
+			throw new ResourceNotFoundException("Unsupported user type: " + userType);
+		}
+
+		return new UserInfo(userId);
+	}
+
+	@Override
+	public ResponseEntity<ResponseModel> uploadprofileimage(String assetId, MultipartFile image, RegSource regSource)
+			throws AccessDeniedException {
+
+		UserInfo userInfo = getLoggedInSPInfo(regSource);
+		ResponseModel response = new ResponseModel();
+		Optional<MaterialSupplierAssets> machineAssets = materialSupplierAssetsRepo.findByAssetIdUploadImage(assetId);
+		if (machineAssets.isEmpty()) {
+			response.setError("true");
+			response.setMsg("AssetId ID not found in MaterialSupplierAssets.");
+			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+		}
+
+		// 2. Directory for S3
+		String directoryPath = "uploadMachine/" + assetId + "/";
+
+		// 3. Prepare new UploadMatericalMasterImages entity
+		UploadMachineImage uploadEntity = new UploadMachineImage();
+		uploadEntity.setAssetId(assetId);
+		uploadEntity.setUpdatedBy(userInfo.userId);
+		uploadEntity.setUpdatedDate(new Date());
+
+		if (image != null && !image.isEmpty()) {
+			String path1 = directoryPath + image.getOriginalFilename();
+			String link1 = awsConfig.uploadFileToS3Bucket(path1, image);
+			uploadEntity.setImage(link1);
+		}
+		machineImageRepo.save(uploadEntity);
+		response.setError("false");
+		response.setMsg("Machine image uploaded successfully.");
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	private UserInfo getLoggedInSPInfo(RegSource regSource) {
+		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
+		Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
+
+		List<String> roleNames = loggedInRole.stream().map(GrantedAuthority::getAuthority)
+				.map(role -> role.replace("ROLE_", "")).collect(Collectors.toList());
+
+		if (roleNames.isEmpty()) {
+			throw new ResourceNotFoundException("No roles assigned for user: " + loggedInUserEmail);
+		}
+
+		UserType userType = UserType.valueOf(roleNames.get(0));
+		String userId;
+
+		switch (userType) {
+		case Adm:
+			AdminDetails admin = adminRepo.findByEmailAndUserType(loggedInUserEmail, UserType.Adm)
+					.orElseThrow(() -> new ResourceNotFoundException("Admin not found: " + loggedInUserEmail));
+			userId = admin.getAdminId();
+			break;
+
+		case MS:
+			MaterialSupplierQuotationUser msUser = materialSupplierQuotationUserDAO
+					.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, UserType.MS, regSource)
+					.orElseThrow(() -> new ResourceNotFoundException("Material User not found: " + loggedInUserEmail));
+			userId = msUser.getBodSeqNo();
 			break;
 
 		default:

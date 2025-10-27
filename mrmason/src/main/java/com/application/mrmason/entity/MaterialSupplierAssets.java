@@ -97,6 +97,10 @@ public class MaterialSupplierAssets {
 
     @Column(name = "membership_expiry_date")
     private String membershipExpDb;
+    
+    @Transient
+    private String image;
+
 
     @PrePersist
 	private void prePersist() {

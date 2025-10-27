@@ -33,6 +33,8 @@ public interface SpServiceDetailsService {
 	public List<SpServiceWithNoOfProject> getByUserServicesId(List<SpServiceDetails> userServices);
 
     List<Userdto> getServicePersonDetails(String serviceType, String location);
+    
+    public List<String> getAutoSearchLocations(String serviceType, String location);
 	
 	List<AddServices> getUserInDetails(String serviceType, String location);
 	

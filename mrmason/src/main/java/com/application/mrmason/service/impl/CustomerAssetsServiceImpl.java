@@ -17,6 +17,7 @@ import com.application.mrmason.dto.CustomerAssetDto;
 import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.CustomerAssets;
 import com.application.mrmason.entity.CustomerRegistration;
+import com.application.mrmason.entity.MaterialSupplierAssets;
 import com.application.mrmason.entity.MaterialSupplierQuotationUser;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
@@ -25,6 +26,7 @@ import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.CustomerAssetsRepo;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
+import com.application.mrmason.repository.MaterialSupplierAssetsRepo;
 import com.application.mrmason.repository.MaterialSupplierQuotationUserDAO;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.AuthDetailsProvider;
@@ -42,6 +44,8 @@ import jakarta.persistence.criteria.Root;
 public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 	@Autowired
 	CustomerAssetsRepo assetRepo;
+	@Autowired
+	MaterialSupplierAssetsRepo materialSupplierAssetsRepo;
 	@Autowired
 	CustomerRegistrationRepo regiRepo;
 	@PersistenceContext
@@ -63,7 +67,7 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 	}
 
 	@Override
-	public CustomerAssets updateAssets(CustomerAssetDto asset,RegSource regSource) {
+	public CustomerAssets updateAssets(CustomerAssetDto asset, RegSource regSource) {
 		UserInfo userInfo = getLoggedInUserInfo(regSource);
 		Optional<CustomerAssets> assetDb = assetRepo.findByUserIdAndAssetId(userInfo.userId, asset.getAssetId());
 		if (assetDb.isPresent()) {
@@ -86,111 +90,278 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 	}
 
 	@Override
-	public Page<CustomerAssets> getCustomerAssets(String userId, String assetId, String location, String assetCat,
-			String assetSubCat, String assetModel, String assetBrand, Pageable pageable) {
+	public Page<?> getAssets(String userId, String assetId, String location, String assetCat, String assetSubCat,
+			String assetModel, String assetBrand, Pageable pageable, RegSource regSource) {
+
+		// Determine logged-in user type
+		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
+		Collection<? extends GrantedAuthority> roles = AuthDetailsProvider.getLoggedRole();
+
+		String roleName = roles.stream().map(GrantedAuthority::getAuthority).map(r -> r.replace("ROLE_", ""))
+				.findFirst()
+				.orElseThrow(() -> new ResourceNotFoundException("User role not found for: " + loggedInUserEmail));
+
+		UserType userType = UserType.valueOf(roleName);
+
+		if (userType == UserType.MS) {
+			return getMaterialSupplierAssets(userId, assetId, location, assetCat, assetSubCat, assetModel, assetBrand,
+					pageable);
+		} else if (userType == UserType.EC) {
+			return getCustomerAssetsInternal(userId, assetId, location, assetCat, assetSubCat, assetModel, assetBrand,
+					pageable);
+		} else {
+			throw new ResourceNotFoundException("Unsupported user type for assets: " + userType);
+		}
+	}
+
+	private Page<CustomerAssets> getCustomerAssetsInternal(String userId, String assetId, String location,
+			String assetCat, String assetSubCat, String assetModel, String assetBrand, Pageable pageable) {
+
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<CustomerAssets> query = cb.createQuery(CustomerAssets.class);
 		Root<CustomerAssets> root = query.from(CustomerAssets.class);
 
 		List<Predicate> predicates = new ArrayList<>();
 
-		if (userId != null && !userId.trim().isEmpty()) {
+		if (userId != null && !userId.trim().isEmpty())
 			predicates.add(cb.equal(root.get("userId"), userId));
-		}
-		if (assetId != null && !assetId.trim().isEmpty()) {
+		if (assetId != null && !assetId.trim().isEmpty())
 			predicates.add(cb.equal(root.get("assetId"), assetId));
-		}
-		if (location != null && !location.trim().isEmpty()) {
+		if (location != null && !location.trim().isEmpty())
 			predicates.add(cb.equal(root.get("location"), location));
-		}
-		if (assetCat != null && !assetCat.trim().isEmpty()) {
+		if (assetCat != null && !assetCat.trim().isEmpty())
 			predicates.add(cb.equal(root.get("assetCat"), assetCat));
-		}
-		if (assetSubCat != null && !assetSubCat.trim().isEmpty()) {
+		if (assetSubCat != null && !assetSubCat.trim().isEmpty())
 			predicates.add(cb.equal(root.get("assetSubCat"), assetSubCat));
-		}
-		if (assetModel != null && !assetModel.trim().isEmpty()) {
+		if (assetModel != null && !assetModel.trim().isEmpty())
 			predicates.add(cb.equal(root.get("assetModel"), assetModel));
-		}
-		if (assetBrand != null && !assetBrand.trim().isEmpty()) {
+		if (assetBrand != null && !assetBrand.trim().isEmpty())
 			predicates.add(cb.equal(root.get("assetBrand"), assetBrand));
-		}
 
 		query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
+
 		TypedQuery<CustomerAssets> typedQuery = entityManager.createQuery(query);
 		typedQuery.setFirstResult((int) pageable.getOffset());
 		typedQuery.setMaxResults(pageable.getPageSize());
 
-// Count query
+		// ✅ Build count query properly
 		CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
 		Root<CustomerAssets> countRoot = countQuery.from(CustomerAssets.class);
 		List<Predicate> countPredicates = new ArrayList<>();
 
-		if (userId != null && !userId.trim().isEmpty()) {
+		if (userId != null && !userId.trim().isEmpty())
 			countPredicates.add(cb.equal(countRoot.get("userId"), userId));
-		}
-		if (assetId != null && !assetId.trim().isEmpty()) {
+		if (assetId != null && !assetId.trim().isEmpty())
 			countPredicates.add(cb.equal(countRoot.get("assetId"), assetId));
-		}
-		if (location != null && !location.trim().isEmpty()) {
+		if (location != null && !location.trim().isEmpty())
 			countPredicates.add(cb.equal(countRoot.get("location"), location));
-		}
-		if (assetCat != null && !assetCat.trim().isEmpty()) {
+		if (assetCat != null && !assetCat.trim().isEmpty())
 			countPredicates.add(cb.equal(countRoot.get("assetCat"), assetCat));
-		}
-		if (assetSubCat != null && !assetSubCat.trim().isEmpty()) {
+		if (assetSubCat != null && !assetSubCat.trim().isEmpty())
 			countPredicates.add(cb.equal(countRoot.get("assetSubCat"), assetSubCat));
-		}
-		if (assetModel != null && !assetModel.trim().isEmpty()) {
+		if (assetModel != null && !assetModel.trim().isEmpty())
 			countPredicates.add(cb.equal(countRoot.get("assetModel"), assetModel));
-		}
-		if (assetBrand != null && !assetBrand.trim().isEmpty()) {
+		if (assetBrand != null && !assetBrand.trim().isEmpty())
 			countPredicates.add(cb.equal(countRoot.get("assetBrand"), assetBrand));
-		}
 
 		countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
 		Long total = entityManager.createQuery(countQuery).getSingleResult();
 
 		return new PageImpl<>(typedQuery.getResultList(), pageable, total);
 	}
-//	public List<CustomerAssets> getAssets(String userId,String assetId,String location,String assetCat,String assetSubCat,String assetModel,String assetBrand) {
-//
-//		if(userId!=null && assetId==null && location==null && assetCat==null && assetSubCat==null && assetModel==null && assetBrand==null) {
-//			Optional<List<CustomerAssets>> user=Optional.of((assetRepo.findByUserIdOrderByIdDesc(userId)));
-//			return user.get();
-//		}else if(userId==null && assetId!=null && location==null && assetCat==null && assetSubCat==null && assetModel==null && assetBrand==null) {
-//			Optional<List<CustomerAssets>> user=Optional.of((assetRepo.findByAssetIdOrderByIdDesc(assetId)));
-//			return user.get();
-//		}else if(userId==null && assetId==null && location!=null && assetCat==null && assetSubCat==null && assetModel==null && assetBrand==null) {
-//			Optional<List<CustomerAssets>> user=Optional.of((assetRepo.findByLocationOrderByIdDesc(location)));
-//			return user.get();
-//		}else if(userId==null && assetId==null && location==null && assetCat!=null && assetSubCat==null && assetModel==null && assetBrand==null) {
-//			Optional<List<CustomerAssets>> user=Optional.of((assetRepo.findByAssetCatOrderByIdDesc(assetCat)));
-//			return user.get();
-//		}else if(userId==null && assetId==null && location==null && assetCat==null && assetSubCat!=null && assetModel==null && assetBrand==null) {
-//			Optional<List<CustomerAssets>> user=Optional.of((assetRepo.findByAssetSubCatOrderByIdDesc(assetSubCat)));
-//			return user.get();
-//		}else if(userId==null && assetId==null && location==null && assetCat==null && assetSubCat==null && assetModel!=null && assetBrand==null) {
-//			Optional<List<CustomerAssets>> user=Optional.of((assetRepo.findByAssetModelOrderByIdDesc(assetModel)));
-//			return user.get();
-//		}else if(userId==null && assetId==null && location==null && assetCat==null && assetSubCat==null && assetModel==null && assetBrand!=null) {
-//			Optional<List<CustomerAssets>> user=Optional.of((assetRepo.findByAssetBrandOrderByIdDesc(assetBrand)));
-//			return user.get();
-//		}
-//		return null;
 
+	private Page<MaterialSupplierAssets> getMaterialSupplierAssets(String userId, String assetId, String location,
+			String assetCat, String assetSubCat, String assetModel, String assetBrand, Pageable pageable) {
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+		CriteriaQuery<MaterialSupplierAssets> query = cb.createQuery(MaterialSupplierAssets.class);
+		Root<MaterialSupplierAssets> root = query.from(MaterialSupplierAssets.class);
+
+		List<Predicate> predicates = new ArrayList<>();
+		if (userId != null && !userId.trim().isEmpty())
+			predicates.add(cb.equal(root.get("userId"), userId));
+		if (assetId != null && !assetId.trim().isEmpty())
+			predicates.add(cb.equal(root.get("assetId"), assetId));
+		if (location != null && !location.trim().isEmpty())
+			predicates.add(cb.equal(root.get("location"), location));
+		if (assetCat != null && !assetCat.trim().isEmpty())
+			predicates.add(cb.equal(root.get("assetCat"), assetCat));
+		if (assetSubCat != null && !assetSubCat.trim().isEmpty())
+			predicates.add(cb.equal(root.get("assetSubCat"), assetSubCat));
+		if (assetModel != null && !assetModel.trim().isEmpty())
+			predicates.add(cb.equal(root.get("assetModel"), assetModel));
+		if (assetBrand != null && !assetBrand.trim().isEmpty())
+			predicates.add(cb.equal(root.get("assetBrand"), assetBrand));
+
+		query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
+
+		TypedQuery<MaterialSupplierAssets> typedQuery = entityManager.createQuery(query);
+		typedQuery.setFirstResult((int) pageable.getOffset());
+		typedQuery.setMaxResults(pageable.getPageSize());
+
+// Count query
+		CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+		Root<MaterialSupplierAssets> countRoot = countQuery.from(MaterialSupplierAssets.class);
+		List<Predicate> countPredicates = new ArrayList<>();
+
+		if (userId != null && !userId.trim().isEmpty())
+			countPredicates.add(cb.equal(countRoot.get("userId"), userId));
+		if (assetId != null && !assetId.trim().isEmpty())
+			countPredicates.add(cb.equal(countRoot.get("assetId"), assetId));
+		if (location != null && !location.trim().isEmpty())
+			countPredicates.add(cb.equal(countRoot.get("location"), location));
+		if (assetCat != null && !assetCat.trim().isEmpty())
+			countPredicates.add(cb.equal(countRoot.get("assetCat"), assetCat));
+		if (assetSubCat != null && !assetSubCat.trim().isEmpty())
+			countPredicates.add(cb.equal(countRoot.get("assetSubCat"), assetSubCat));
+		if (assetModel != null && !assetModel.trim().isEmpty())
+			countPredicates.add(cb.equal(countRoot.get("assetModel"), assetModel));
+		if (assetBrand != null && !assetBrand.trim().isEmpty())
+			countPredicates.add(cb.equal(countRoot.get("assetBrand"), assetBrand));
+
+		countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
+		Long total = entityManager.createQuery(countQuery).getSingleResult();
+
+		return new PageImpl<>(typedQuery.getResultList(), pageable, total);
+	}
+
+//	@Override
+//	public Page<CustomerAssets> getCustomerAssets(String userId, String assetId, String location, String assetCat,
+//			String assetSubCat, String assetModel, String assetBrand, Pageable pageable) {
+//		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+//		CriteriaQuery<CustomerAssets> query = cb.createQuery(CustomerAssets.class);
+//		Root<CustomerAssets> root = query.from(CustomerAssets.class);
+//
+//		List<Predicate> predicates = new ArrayList<>();
+//
+//		if (userId != null && !userId.trim().isEmpty()) {
+//			predicates.add(cb.equal(root.get("userId"), userId));
+//		}
+//		if (assetId != null && !assetId.trim().isEmpty()) {
+//			predicates.add(cb.equal(root.get("assetId"), assetId));
+//		}
+//		if (location != null && !location.trim().isEmpty()) {
+//			predicates.add(cb.equal(root.get("location"), location));
+//		}
+//		if (assetCat != null && !assetCat.trim().isEmpty()) {
+//			predicates.add(cb.equal(root.get("assetCat"), assetCat));
+//		}
+//		if (assetSubCat != null && !assetSubCat.trim().isEmpty()) {
+//			predicates.add(cb.equal(root.get("assetSubCat"), assetSubCat));
+//		}
+//		if (assetModel != null && !assetModel.trim().isEmpty()) {
+//			predicates.add(cb.equal(root.get("assetModel"), assetModel));
+//		}
+//		if (assetBrand != null && !assetBrand.trim().isEmpty()) {
+//			predicates.add(cb.equal(root.get("assetBrand"), assetBrand));
+//		}
+//
+//		query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
+//		TypedQuery<CustomerAssets> typedQuery = entityManager.createQuery(query);
+//		typedQuery.setFirstResult((int) pageable.getOffset());
+//		typedQuery.setMaxResults(pageable.getPageSize());
+//
+//// Count query
+//		CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+//		Root<CustomerAssets> countRoot = countQuery.from(CustomerAssets.class);
+//		List<Predicate> countPredicates = new ArrayList<>();
+//
+//		if (userId != null && !userId.trim().isEmpty()) {
+//			countPredicates.add(cb.equal(countRoot.get("userId"), userId));
+//		}
+//		if (assetId != null && !assetId.trim().isEmpty()) {
+//			countPredicates.add(cb.equal(countRoot.get("assetId"), assetId));
+//		}
+//		if (location != null && !location.trim().isEmpty()) {
+//			countPredicates.add(cb.equal(countRoot.get("location"), location));
+//		}
+//		if (assetCat != null && !assetCat.trim().isEmpty()) {
+//			countPredicates.add(cb.equal(countRoot.get("assetCat"), assetCat));
+//		}
+//		if (assetSubCat != null && !assetSubCat.trim().isEmpty()) {
+//			countPredicates.add(cb.equal(countRoot.get("assetSubCat"), assetSubCat));
+//		}
+//		if (assetModel != null && !assetModel.trim().isEmpty()) {
+//			countPredicates.add(cb.equal(countRoot.get("assetModel"), assetModel));
+//		}
+//		if (assetBrand != null && !assetBrand.trim().isEmpty()) {
+//			countPredicates.add(cb.equal(countRoot.get("assetBrand"), assetBrand));
+//		}
+//
+//		countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
+//		Long total = entityManager.createQuery(countQuery).getSingleResult();
+//
+//		return new PageImpl<>(typedQuery.getResultList(), pageable, total);
 //	}
 
 	@Override
+//	public CustomerAssetDto getAssetByAssetId(CustomerAssets asset, RegSource regSource) {
+//		UserInfo userInfo = getLoggedInUserInfo(regSource);
+//		
+//		asset.setUserId(userInfo.userId);
+//
+//	    // Save the entity
+//	    CustomerAssets savedAsset = assetRepo.save(asset);
+//		CustomerAssetDto assetDto = new CustomerAssetDto();
+//
+//		assetDto.setAssetCat(asset.getAssetCat());
+//		assetDto.setAssetSubCat(asset.getAssetSubCat());
+//		assetDto.setDistrict(asset.getDistrict());
+//		assetDto.setDoorNo(asset.getDoorNo());
+//		assetDto.setLocation(asset.getLocation());
+//		assetDto.setPinCode(asset.getPinCode());
+//		assetDto.setState(asset.getState());
+//		assetDto.setStreet(asset.getStreet());
+//		assetDto.setTown(asset.getTown());
+//		assetDto.setAssetModel(asset.getAssetModel());
+//		assetDto.setRegDate(asset.getRegDateFormatted());
+//		assetDto.setPlanId(asset.getPlanId());
+//		assetDto.setMembershipExp(asset.getMembershipExpDb());
+//		assetDto.setAssetId(asset.getAssetId());
+//		assetDto.setUserId(savedAsset.getUserId());
+//		assetDto.setAssetBrand(asset.getAssetBrand());
+//		assetRepo.save(asset);
+//		return assetDto;
+//
+//	}
 	public CustomerAssetDto getAssetByAssetId(CustomerAssets asset, RegSource regSource) {
 		UserInfo userInfo = getLoggedInUserInfo(regSource);
-		
 		asset.setUserId(userInfo.userId);
 
-	    // Save the entity
-	    CustomerAssets savedAsset = assetRepo.save(asset);
-		CustomerAssetDto assetDto = new CustomerAssetDto();
+		// Save based on user type
+		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
+		Collection<? extends GrantedAuthority> roles = AuthDetailsProvider.getLoggedRole();
 
+		String roleName = roles.stream().map(GrantedAuthority::getAuthority).map(r -> r.replace("ROLE_", ""))
+				.findFirst().orElseThrow(() -> new ResourceNotFoundException("User role not found"));
+
+		UserType userType = UserType.valueOf(roleName);
+
+		if (userType == UserType.MS) {
+			// Map CustomerAssets -> MaterialSupplierAssets
+			MaterialSupplierAssets msAsset = new MaterialSupplierAssets();
+			msAsset.setUserId(asset.getUserId());
+			msAsset.setAssetCat(asset.getAssetCat());
+			msAsset.setAssetSubCat(asset.getAssetSubCat());
+			msAsset.setLocation(asset.getLocation());
+			msAsset.setStreet(asset.getStreet());
+			msAsset.setDoorNo(asset.getDoorNo());
+			msAsset.setTown(asset.getTown());
+			msAsset.setDistrict(asset.getDistrict());
+			msAsset.setState(asset.getState());
+			msAsset.setPinCode(asset.getPinCode());
+			msAsset.setPlanId(asset.getPlanId());
+			msAsset.setAssetBrand(asset.getAssetBrand());
+			msAsset.setAssetModel(asset.getAssetModel());
+
+			materialSupplierAssetsRepo.save(msAsset);
+		} else if (userType == UserType.EC) {
+			assetRepo.save(asset);
+		} else {
+			throw new ResourceNotFoundException("Unsupported user type: " + userType);
+		}
+
+		// Prepare DTO for response
+		CustomerAssetDto assetDto = new CustomerAssetDto();
 		assetDto.setAssetCat(asset.getAssetCat());
 		assetDto.setAssetSubCat(asset.getAssetSubCat());
 		assetDto.setDistrict(asset.getDistrict());
@@ -205,12 +376,12 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 		assetDto.setPlanId(asset.getPlanId());
 		assetDto.setMembershipExp(asset.getMembershipExpDb());
 		assetDto.setAssetId(asset.getAssetId());
-		assetDto.setUserId(savedAsset.getUserId());
+		assetDto.setUserId(asset.getUserId());
 		assetDto.setAssetBrand(asset.getAssetBrand());
-		assetRepo.save(asset);
-		return assetDto;
 
+		return assetDto;
 	}
+
 	private static class UserInfo {
 
 		String userId;
@@ -222,57 +393,54 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 	}
 
 	private UserInfo getLoggedInUserInfo(RegSource regSource) {
-	    String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
-	    Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
+		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
+		Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
 
-	    List<String> roleNames = loggedInRole.stream()
-	            .map(GrantedAuthority::getAuthority)
-	            .map(role -> role.replace("ROLE_", ""))
-	            .collect(Collectors.toList());
+		List<String> roleNames = loggedInRole.stream().map(GrantedAuthority::getAuthority)
+				.map(role -> role.replace("ROLE_", "")).collect(Collectors.toList());
 
-	    if (roleNames.isEmpty()) {
-	        throw new ResourceNotFoundException("No roles assigned for user: " + loggedInUserEmail);
-	    }
+		if (roleNames.isEmpty()) {
+			throw new ResourceNotFoundException("No roles assigned for user: " + loggedInUserEmail);
+		}
 
-	    UserType userType = UserType.valueOf(roleNames.get(0));
-	    String userId;
+		UserType userType = UserType.valueOf(roleNames.get(0));
+		String userId;
 
-	    switch (userType) {
-	        case Adm:
-	            AdminDetails admin = adminRepo.findByEmailAndUserType(loggedInUserEmail, UserType.Adm)
-	                    .orElseThrow(() -> new ResourceNotFoundException("Admin not found: " + loggedInUserEmail));
-	            userId = admin.getEmail();
-	            break;
+		switch (userType) {
+		case Adm:
+			AdminDetails admin = adminRepo.findByEmailAndUserType(loggedInUserEmail, UserType.Adm)
+					.orElseThrow(() -> new ResourceNotFoundException("Admin not found: " + loggedInUserEmail));
+			userId = admin.getEmail();
+			break;
 
-	        case MS:
-	            MaterialSupplierQuotationUser msUser = materialSupplierQuotationUserDAO
-	                    .findByEmailAndUserTypeAndRegSource(loggedInUserEmail, UserType.MS, regSource)
-	                    .orElseThrow(() -> new ResourceNotFoundException("Material User not found: " + loggedInUserEmail));
-	            userId = msUser.getBodSeqNo();
-	            break;
+		case MS:
+			MaterialSupplierQuotationUser msUser = materialSupplierQuotationUserDAO
+					.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, UserType.MS, regSource)
+					.orElseThrow(() -> new ResourceNotFoundException("Material User not found: " + loggedInUserEmail));
+			userId = msUser.getBodSeqNo();
+			break;
 
-	        case EC:
-	        case Developer:
-	            // Try CustomerRegistration first
-	            CustomerRegistration customer = regiRepo
-	                    .findByUserEmailAndUserTypeAndRegSource(loggedInUserEmail, UserType.EC, regSource)
-	                    .orElse(null);
+		case EC:
+		case Developer:
+			// Try CustomerRegistration first
+			CustomerRegistration customer = regiRepo
+					.findByUserEmailAndUserTypeAndRegSource(loggedInUserEmail, UserType.EC, regSource).orElse(null);
 
-	            if (customer != null) {
-	                userId = customer.getUserid();
-	            } else {
-	                // If not found in Customer, try User table
-	                User user = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, UserType.Developer, regSource)
-	                        .orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
-	                userId = user.getBodSeqNo();
-	            }
-	            break;
+			if (customer != null) {
+				userId = customer.getUserid();
+			} else {
+				// If not found in Customer, try User table
+				User user = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, UserType.Developer, regSource)
+						.orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
+				userId = user.getBodSeqNo();
+			}
+			break;
 
-	        default:
-	            throw new ResourceNotFoundException("Unsupported user type: " + userType);
-	    }
+		default:
+			throw new ResourceNotFoundException("Unsupported user type: " + userType);
+		}
 
-	    return new UserInfo(userId);
+		return new UserInfo(userId);
 	}
 
 }

@@ -74,6 +74,21 @@ public interface MaterialSupplierQuotationUserDAO extends JpaRepository<Material
 
 	List<MaterialSupplierQuotationUser> findByLocationContaining(String location);
 
-	List<MaterialSupplierQuotationUser> findByLocationIgnoreCase(String location);
+//	List<MaterialSupplierQuotationUser> findByLocationIgnoreCase(String location);
+	@Query("SELECT m FROM MaterialSupplierQuotationUser m " +
+		       "WHERE LOWER(m.location) LIKE LOWER(CONCAT(:prefix, '%')) ESCAPE '\\'")
+		List<MaterialSupplierQuotationUser> searchByLocationPrefix(@Param("prefix") String prefix);
+	
+	@Query("SELECT DISTINCT m.location FROM MaterialSupplierQuotationUser m " +
+		       "WHERE LOWER(m.location) LIKE LOWER(CONCAT(:prefix, '%')) " +
+		       "AND m.location IS NOT NULL")
+		List<String> findDistinctLocationsByPrefix(@Param("prefix") String prefix);
+
+	@Query("SELECT DISTINCT m.location FROM MaterialSupplierQuotationUser m WHERE m.bodSeqNo IN :supplierIds AND LOWER(m.location) LIKE LOWER(CONCAT(:safeInput, '%'))")
+	List<String> findDistinctByBodSeqNoInAndLocationStartingWithIgnoreCase(
+	        @Param("supplierIds") List<String> supplierIds,
+	        @Param("safeInput") String safeInput);
+
+
 
 }

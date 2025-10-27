@@ -55,52 +55,53 @@ public class CustomerAssetsController {
 		}
 	}
 
-//	@GetMapping("/getAssets")
-//	public ResponseEntity<ResponseListCustomerAssets> getAssetDetails(@RequestParam(required = false)String userId,@RequestParam(required = false)String assetId,@RequestParam(required = false)String location,@RequestParam(required = false)String assetCat,@RequestParam(required = false)String assetSubCat,@RequestParam(required = false)String assetModel,@RequestParam(required = false)String assetBrand) {
-//		try {
-//			List<CustomerAssets> entity = assetService.getAssets(userId, assetId, location, assetCat, assetSubCat, assetModel, assetBrand);
-//			if (!entity.isEmpty()) {
-//				response.setMessage("Assets fetched successfully.");
-//				response.setStatus(true);
-//				response.setData(entity);
-//				return new ResponseEntity<>(response, HttpStatus.OK);
-//				
-//			}
-//			response.setMessage("No data found for the given details.!");
-//			response.setStatus(true);
-//			response.setData(entity);
-//			return new ResponseEntity<>(response, HttpStatus.OK);
-//			
-//
-//		} catch (Exception e) {
-//			response.setMessage(e.getMessage());
-//			response.setStatus(false);
-//			return new ResponseEntity<>(response, HttpStatus.OK);
-//		}
-//
-//	}
-
 	@GetMapping("/getAssets")
-	public ResponseEntity<ResponseCustomerAssetsDto> getAssets(@RequestParam(required = false) String userId,
-			@RequestParam(required = false) String assetId, @RequestParam(required = false) String location,
-			@RequestParam(required = false) String assetCat, @RequestParam(required = false) String assetSubCat,
-			@RequestParam(required = false) String assetModel, @RequestParam(required = false) String assetBrand,
-			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+	public ResponseEntity<ResponseCustomerAssetsDto> getAssets(
+	        @RequestParam(required = false) String userId,
+	        @RequestParam(required = false) String assetId,
+	        @RequestParam(required = false) String location,
+	        @RequestParam(required = false) String assetCat,
+	        @RequestParam(required = false) String assetSubCat,
+	        @RequestParam(required = false) String assetModel,
+	        @RequestParam(required = false) String assetBrand,
+	        @RequestParam(defaultValue = "0") int page,
+	        @RequestParam(defaultValue = "10") int size,
+	        @RequestParam RegSource regSource) {
 
-		Pageable pageable = PageRequest.of(page, size);
-		Page<CustomerAssets> assetsPage = assetService.getCustomerAssets(userId, assetId, location, assetCat,
-				assetSubCat, assetModel, assetBrand, pageable);
+	    Pageable pageable = PageRequest.of(page, size);
+	    Page<?> assetsPage = assetService.getAssets(userId, assetId, location, assetCat, assetSubCat, assetModel, assetBrand, pageable, regSource);
 
-		ResponseCustomerAssetsDto response = new ResponseCustomerAssetsDto();
-		response.setMessage("Customer assets retrieved successfully.");
-		response.setStatus(true);
-		response.setAssets(assetsPage.getContent());
-		response.setCurrentPage(assetsPage.getNumber());
-		response.setPageSize(assetsPage.getSize());
-		response.setTotalElements(assetsPage.getTotalElements());
-		response.setTotalPages(assetsPage.getTotalPages());
+	    ResponseCustomerAssetsDto response = new ResponseCustomerAssetsDto();
+	    response.setMessage("Assets retrieved successfully.");
+	    response.setStatus(true);
+	    response.setAssets(assetsPage.getContent());
+	    response.setCurrentPage(assetsPage.getNumber());
+	    response.setPageSize(assetsPage.getSize());
+	    response.setTotalElements(assetsPage.getTotalElements());
+	    response.setTotalPages(assetsPage.getTotalPages());
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
+	    return new ResponseEntity<>(response, HttpStatus.OK);
 	}
+//	public ResponseEntity<ResponseCustomerAssetsDto> getAssets(@RequestParam(required = false) String userId,
+//			@RequestParam(required = false) String assetId, @RequestParam(required = false) String location,
+//			@RequestParam(required = false) String assetCat, @RequestParam(required = false) String assetSubCat,
+//			@RequestParam(required = false) String assetModel, @RequestParam(required = false) String assetBrand,
+//			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+//
+//		Pageable pageable = PageRequest.of(page, size);
+//		Page<CustomerAssets> assetsPage = assetService.getCustomerAssets(userId, assetId, location, assetCat,
+//				assetSubCat, assetModel, assetBrand, pageable);
+//
+//		ResponseCustomerAssetsDto response = new ResponseCustomerAssetsDto();
+//		response.setMessage("Customer assets retrieved successfully.");
+//		response.setStatus(true);
+//		response.setAssets(assetsPage.getContent());
+//		response.setCurrentPage(assetsPage.getNumber());
+//		response.setPageSize(assetsPage.getSize());
+//		response.setTotalElements(assetsPage.getTotalElements());
+//		response.setTotalPages(assetsPage.getTotalPages());
+//
+//		return new ResponseEntity<>(response, HttpStatus.OK);
+//	}
 
 }

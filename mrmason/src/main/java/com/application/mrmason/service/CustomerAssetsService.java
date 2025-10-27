@@ -11,8 +11,8 @@ public interface CustomerAssetsService {
 	CustomerAssets saveAssets(CustomerAssets asset);
 //	CustomerAssets updateAssets(CustomerAssetDto asset);
 //	List<CustomerAssets> getAssets(String userId,String assetId,String location,String assetCat,String assetSubCat,String assetModel,String assetBrand);
-	public Page<CustomerAssets> getCustomerAssets(String userId, String assetId, String location, String assetCat,
-			String assetSubCat, String assetModel, String assetBrand, Pageable pageable) ;
+//	public Page<CustomerAssets> getCustomerAssets(String userId, String assetId, String location, String assetCat,
+//			String assetSubCat, String assetModel, String assetBrand, Pageable pageable) ;
 //	CustomerAssetDto getAssetByAssetId(String assetId);
 	
 
@@ -21,5 +21,8 @@ public interface CustomerAssetsService {
 	CustomerAssets updateAssets(CustomerAssetDto asset,RegSource regSource);
 
 	CustomerAssetDto getAssetByAssetId(CustomerAssets asset, RegSource regSource);
+	
+	public Page<?> getAssets(String userId, String assetId, String location, String assetCat, String assetSubCat,
+			String assetModel, String assetBrand, Pageable pageable, RegSource regSource) ;
 
 }

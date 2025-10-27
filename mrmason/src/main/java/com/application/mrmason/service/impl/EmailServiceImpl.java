@@ -108,6 +108,8 @@ public class EmailServiceImpl implements EmailService {
 				 body = "Thanks for registering with us. Your OTP to verify your email is " + otp + " - www.mrmason.in";
 			}else if(regSource == RegSource.MEKANIK) {
 				 body = "Thanks for registering with us. Your OTP to verify your email is " + otp + " - www.mekanik.in";
+			}else if(regSource==RegSource.BHATSR) {
+				 body = "Thanks for registering with us. Your OTP to verify your email is " + otp + " - www.bhatsr.in";
 			}
 			
 			helper.setText(body, true); // Set to true for HTML content
@@ -137,7 +139,11 @@ public class EmailServiceImpl implements EmailService {
 	        } else if (regSource == RegSource.MEKANIK) {
 	            subject = "Welcome to Mekanik!";
 	            body = "Thanks for registering with us. Visit us at <a href='https://www.mekanik.in'>www.mekanik.in</a>";
-	        } else {
+	        }
+	        else if (regSource == RegSource.BHATSR) {
+	            subject = "Welcome to Bhatsr!";
+	            body = "Thanks for registering with us. Visit us at <a href='https://www.bhatsr.in'>www.bhatsr.in</a>";
+	        }else {
 	            subject = "Welcome!";
 	            body = "Thanks for joining us.";
 	        }

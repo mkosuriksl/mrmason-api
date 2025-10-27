@@ -1,5 +1,6 @@
 package com.application.mrmason.controller;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.ResponseSpServiceDetailsDto;
 import com.application.mrmason.dto.ResponseSpServiceGetDto;
 import com.application.mrmason.dto.ResponseUserUserServicesDto;
@@ -131,4 +133,26 @@ public class SpServiceDetailsController {
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
+	@GetMapping("/distinct-location-by-sp")
+	public ResponseEntity<GenericResponse<List<String>>> autoSearchLocation(
+	        @RequestParam(required = false) String serviceType,
+	        @RequestParam(required = false) String location) {
+
+	    List<String> locations = spService.getAutoSearchLocations(serviceType, location);
+
+	    GenericResponse<List<String>> response = new GenericResponse<>();
+	    if (!locations.isEmpty()) {
+	        response.setSuccess(true);
+	        response.setMessage("Matching locations found");
+	        response.setData(locations);
+	    } else {
+	        response.setSuccess(false);
+	        response.setMessage("No matching locations found");
+	        response.setData(Collections.emptyList());
+	    }
+
+	    return ResponseEntity.ok(response);
+	}
+
+	
 }

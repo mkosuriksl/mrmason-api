@@ -211,11 +211,11 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 		List<SpServiceDetails> serviceDetails;
 
 		if (serviceType != null && location != null) {
-			serviceDetails = serviceRepo.findByServiceTypeAndLocation(serviceType, location);
+			serviceDetails = serviceRepo.findByServiceTypeAndLocationLikeIgnoreCase(serviceType, location.trim() + "%");
 		} else if (serviceType != null && location == null) {
 			serviceDetails = serviceRepo.findByServiceType(serviceType);
 		} else if (location != null && serviceType == null) {
-			serviceDetails = serviceRepo.findByLocation(location);
+			serviceDetails = serviceRepo.findByLocationLikeIgnoreCase(location.trim() + "%");
 		} else {
 			return Collections.emptyList();
 		}
@@ -252,13 +252,33 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 	}
 
 	@Override
+	public List<String> getAutoSearchLocations(String serviceType, String location) {
+	    List<String> locations;
+
+	    if (serviceType != null && location != null) {
+	        // 🔍 partial match for both serviceType and location
+	        locations = serviceRepo.findDistinctLocations(serviceType, location.trim().toLowerCase());
+	    } else if (serviceType != null && location == null) {
+	        // fetch all distinct locations for that serviceType
+	        locations = serviceRepo.findDistinctLocations(serviceType, null);
+	    } else if (serviceType == null && location != null) {
+	        // partial match for location only
+	        locations = serviceRepo.findDistinctLocations(null, location.trim().toLowerCase());
+	    } else {
+	        return Collections.emptyList();
+	    }
+
+	    return locations;
+	}
+	@Override
 	public List<SpServiceDetails> getUserService(String serviceType, String location) {
 		if (serviceType != null && location != null) {
-			return serviceRepo.findByServiceTypeAndLocation(serviceType, location);
+//			return serviceRepo.findByServiceTypeAndLocation(serviceType, location);
+			return serviceRepo.findByServiceTypeAndLocationLikeIgnoreCase(serviceType, location.trim() + "%");
 		} else if (serviceType != null && location == null) {
 			return serviceRepo.findByServiceType(serviceType);
 		} else if (location != null && serviceType == null) {
-			return serviceRepo.findByLocation(location);
+			return serviceRepo.findByLocationLikeIgnoreCase(location.trim() + "%");
 		} else {
 			return Collections.emptyList();
 		}
@@ -362,11 +382,11 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 		List<SpServiceDetails> serviceDetails;
 
 		if (serviceType != null && location != null) {
-			serviceDetails = serviceRepo.findByServiceTypeAndLocation(serviceType, location);
+			serviceDetails = serviceRepo.findByServiceTypeAndLocationLikeIgnoreCase(serviceType, location.trim() + "%");
 		} else if (serviceType != null && location == null) {
 			serviceDetails = serviceRepo.findByServiceType(serviceType);
 		} else if (location != null && serviceType == null) {
-			serviceDetails = serviceRepo.findByLocation(location);
+			serviceDetails = serviceRepo.findByLocationLikeIgnoreCase(location.trim() + "%");
 		} else {
 			System.out.println("Both serviceType and location are null.");
 			return Collections.emptyList();
@@ -392,11 +412,11 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 		List<SpServiceDetails> serviceDetails;
 
 		if (serviceType != null && location != null) {
-			serviceDetails = serviceRepo.findByServiceTypeAndLocation(serviceType, location);
+			serviceDetails = serviceRepo.findByServiceTypeAndLocationLikeIgnoreCase(serviceType, location.trim() + "%");
 		} else if (serviceType != null && location == null) {
 			serviceDetails = serviceRepo.findByServiceType(serviceType);
 		} else if (location != null && serviceType == null) {
-			serviceDetails = serviceRepo.findByLocation(location);
+			serviceDetails = serviceRepo.findByLocationLikeIgnoreCase(location.trim() + "%");
 		} else {
 			return Collections.emptyList();
 		}

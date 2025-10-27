@@ -1,6 +1,7 @@
 package com.application.mrmason.controller;
 
 import java.nio.file.AccessDeniedException;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,7 +93,6 @@ public class MaterialMasterController {
 	@GetMapping("/home-search-by-location")
     public ResponseEntity<GenericResponse<ResponseGetMasterDto>> getMaterials(
             @RequestParam String location,
-//            @RequestParam(required = false) String serviceCategory,
             @RequestParam(required = false) String materialCategory,
             @RequestParam(required = false) String materialSubCategory,
             @RequestParam(required = false) String brand,
@@ -114,4 +114,27 @@ public class MaterialMasterController {
 
         return ResponseEntity.ok(response);
     }
+	
+	@GetMapping("/distinct-location-by-ms")
+	public ResponseEntity<GenericResponse<List<String>>> autoSearchLocation(
+	        @RequestParam String location,
+	        @RequestParam(required = false) String materialCategory,
+	        @RequestParam(required = false) String materialSubCategory,
+	        @RequestParam(required = false) String brand,
+	        @RequestParam(required = false) String model) {
+
+	    List<String> locations = homeService.autoSearchLocations(location, materialCategory, materialSubCategory, brand, model);
+
+	    GenericResponse<List<String>> response;
+
+	    if (locations.isEmpty()) {
+	        response = new GenericResponse<>("No records matches", false, Collections.emptyList());
+	    } else {
+	        response = new GenericResponse<>("Locations retrieved successfully", true, locations);
+	    }
+
+	    return ResponseEntity.ok(response);
+	}
+
+
 }

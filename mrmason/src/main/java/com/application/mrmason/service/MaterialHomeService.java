@@ -44,8 +44,8 @@ public class MaterialHomeService {
 	@PersistenceContext
 	private EntityManager entityManager;
 
-	public ResponseGetMasterDto getMaterialsWithPagination(String location,
-			String productCategory, String productSubCategory, String brand, String model, int page, int size) {
+	public ResponseGetMasterDto getMaterialsWithPagination(String location, String productCategory,
+			String productSubCategory, String brand, String model, int page, int size) {
 		Pageable pageable = PageRequest.of(page, size);
 
 		// 1. Get suppliers by location
@@ -142,6 +142,45 @@ public class MaterialHomeService {
 		responseDto.setTotalPages((int) Math.ceil((double) totalElements / size));
 
 		return responseDto;
+	}
+
+	public List<String> autoSearchLocations(String locationPrefix, String materialCategory, String materialSubCategory,
+			String brand, String model) {
+		String safeInput = (locationPrefix == null) ? "" : locationPrefix.trim();
+
+// Base search — all matching locations
+		List<String> locations = materialSupplierQuotationUserDAO.findDistinctLocationsByPrefix(safeInput);
+
+// Optional filters (category, brand, etc.) — only if you want to filter using AdminMaterialMaster
+		if ((materialCategory != null && !materialCategory.isEmpty())
+				|| (materialSubCategory != null && !materialSubCategory.isEmpty())
+				|| (brand != null && !brand.isEmpty()) || (model != null && !model.isEmpty())) {
+
+// Build query to narrow down suppliers based on material filters
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			CriteriaQuery<String> query = cb.createQuery(String.class);
+			Root<AdminMaterialMaster> root = query.from(AdminMaterialMaster.class);
+
+			List<Predicate> predicates = new ArrayList<>();
+
+			if (materialCategory != null && !materialCategory.isEmpty())
+				predicates.add(cb.equal(root.get("materialCategory"), materialCategory));
+			if (materialSubCategory != null && !materialSubCategory.isEmpty())
+				predicates.add(cb.equal(root.get("materialSubCategory"), materialSubCategory));
+			if (brand != null && !brand.isEmpty())
+				predicates.add(cb.equal(root.get("brand"), brand));
+			if (model != null && !model.isEmpty())
+				predicates.add(cb.equal(root.get("modelName"), model));
+
+			query.select(root.get("updatedBy")).where(cb.and(predicates.toArray(new Predicate[0])));
+			List<String> supplierIds = entityManager.createQuery(query).getResultList();
+
+// Filter locations belonging to these suppliers
+			locations = materialSupplierQuotationUserDAO
+					.findDistinctByBodSeqNoInAndLocationStartingWithIgnoreCase(supplierIds, safeInput);
+		}
+
+		return locations;
 	}
 
 }

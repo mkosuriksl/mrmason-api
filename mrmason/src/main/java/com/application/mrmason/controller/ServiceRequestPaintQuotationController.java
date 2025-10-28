@@ -1,6 +1,7 @@
 package com.application.mrmason.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -57,31 +58,50 @@ public class ServiceRequestPaintQuotationController {
 	}
 
 	@GetMapping("/get-serviceRequestAllquotation")
-	public ResponseEntity<ResponseGetServiceRequestPaintQuotationDto> getServiceRequestPaintQuotationService(
-			@RequestParam(required = false) String admintasklineId,
-			@RequestParam(required = false) String taskDescription,@RequestParam(required = false) String serviceCategory,
-			@RequestParam(required = false) String taskId, @RequestParam(required = false) String measureNames,
-			@RequestParam(required = false) String status, @RequestParam(required = false) String spId,
-			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+	public ResponseEntity<Map<String, Object>> getAllGroupedQuotations(
+            @RequestParam(required = false) String admintasklineId,
+            @RequestParam(required = false) String taskDescription,
+            @RequestParam(required = false) String serviceCategory,
+            @RequestParam(required = false) String taskId,
+            @RequestParam(required = false) String measureNames,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String spId,
+            @RequestParam(required = false) String requestId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
-		Pageable pageable = PageRequest.of(page, size);
-		Page<ServiceRequestPaintQuotation> srpqPage = serviceRequestPaintQuotationService
-				.getServiceRequestPaintQuotationService( admintasklineId, taskDescription,
-						taskId, serviceCategory,measureNames, status, spId, pageable);
-		ResponseGetServiceRequestPaintQuotationDto response = new ResponseGetServiceRequestPaintQuotationDto();
+        Map<String, Object> response = serviceRequestPaintQuotationService.getAllGroupedQuotations(
+                admintasklineId, taskDescription, serviceCategory,
+                taskId, measureNames, status, spId, requestId, page, size
+        );
 
-		response.setMessage("Service Request BCEPP Quotation details retrieved successfully.");
-		response.setStatus(true);
-		response.setServiceRequestPaintQuotation(srpqPage.getContent());
-
-		// Set pagination fields
-		response.setCurrentPage(srpqPage.getNumber());
-		response.setPageSize(srpqPage.getSize());
-		response.setTotalElements(srpqPage.getTotalElements());
-		response.setTotalPages(srpqPage.getTotalPages());
-
-		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
+        return ResponseEntity.ok(response);
+    }
+//	public ResponseEntity<ResponseGetServiceRequestPaintQuotationDto> getServiceRequestPaintQuotationService(
+//			@RequestParam(required = false) String admintasklineId,
+//			@RequestParam(required = false) String taskDescription,@RequestParam(required = false) String serviceCategory,
+//			@RequestParam(required = false) String taskId, @RequestParam(required = false) String measureNames,
+//			@RequestParam(required = false) String status, @RequestParam(required = false) String spId,
+//			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+//
+//		Pageable pageable = PageRequest.of(page, size);
+//		Page<ServiceRequestPaintQuotation> srpqPage = serviceRequestPaintQuotationService
+//				.getServiceRequestPaintQuotationService( admintasklineId, taskDescription,
+//						taskId, serviceCategory,measureNames, status, spId, pageable);
+//		ResponseGetServiceRequestPaintQuotationDto response = new ResponseGetServiceRequestPaintQuotationDto();
+//
+//		response.setMessage("Service Request BCEPP Quotation details retrieved successfully.");
+//		response.setStatus(true);
+//		response.setServiceRequestPaintQuotation(srpqPage.getContent());
+//
+//		// Set pagination fields
+//		response.setCurrentPage(srpqPage.getNumber());
+//		response.setPageSize(srpqPage.getSize());
+//		response.setTotalElements(srpqPage.getTotalElements());
+//		response.setTotalPages(srpqPage.getTotalPages());
+//
+//		return new ResponseEntity<>(response, HttpStatus.OK);
+//	}
 	
 	@PutMapping("/update-serviceRequestAllquotation")
 	public ResponseEntity<GenericResponse<List<ServiceRequestPaintQuotation>>> updateServiceRequestQuotation(

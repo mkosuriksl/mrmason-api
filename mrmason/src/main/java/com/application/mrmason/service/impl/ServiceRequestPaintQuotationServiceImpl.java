@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -58,7 +59,7 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 
 	@Autowired
 	private SiteMeasurementRepository serviceRequestRepo;
-	
+
 	@Autowired
 	private ServiceRequestPaintQuotationRepository serviceRequestPaintQuotationRepository;
 
@@ -66,70 +67,72 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 	ServiceRequestQuotationRepository serviceRequestQuotationAuditRepository;
 
 	@Override
-	public List<ServiceRequestPaintQuotation> createServiceRequestPaintQuotationService(
-	        String requestId, String serviceCategory, List<ServiceRequestItem> items, RegSource regSource) {
+	public List<ServiceRequestPaintQuotation> createServiceRequestPaintQuotationService(String requestId,
+			String serviceCategory, List<ServiceRequestItem> items, RegSource regSource) {
 
-	    UserInfo userInfo = getLoggedInUserInfo(regSource);
+		UserInfo userInfo = getLoggedInUserInfo(regSource);
 
-	    Map<String, Integer> taskCounters = new HashMap<>(); // counter per taskId
-	    List<ServiceRequestPaintQuotation> savedQuotations = new ArrayList<>();
-	    double totalQuotationAmount = 0.0;
+		Map<String, Integer> taskCounters = new HashMap<>(); // counter per taskId
+		List<ServiceRequestPaintQuotation> savedQuotations = new ArrayList<>();
+		double totalQuotationAmount = 0.0;
 
-	    for (ServiceRequestItem item : items) {
-	        String taskId = item.getTaskId();
-	        taskCounters.putIfAbsent(taskId, 0); // initialize if not present
+		for (ServiceRequestItem item : items) {
+			String taskId = item.getTaskId();
+			taskCounters.putIfAbsent(taskId, 0); // initialize if not present
 
-	        for (MeasurementDTO measurement : item.getMeasurements()) {
-	            int currentCounter = taskCounters.compute(taskId, (k, v) -> v + 1); // increment for this taskId
-	            String lineId = taskId + "_" + String.format("%04d", currentCounter); // e.g., PLUMBING_0001
+			for (MeasurementDTO measurement : item.getMeasurements()) {
+				int currentCounter = taskCounters.compute(taskId, (k, v) -> v + 1); // increment for this taskId
+				String lineId = taskId + "_" + String.format("%04d", currentCounter); // e.g., PLUMBING_0001
 
-	            ServiceRequestPaintQuotation sRPQ = new ServiceRequestPaintQuotation();
-	            sRPQ.setAdmintasklineId(lineId); // ✅ Fix: Set primary key manually
-	            sRPQ.setRequestId(requestId);
-	            sRPQ.setTaskId(taskId); // Save original taskId if needed
-	            sRPQ.setTaskDescription(item.getTaskDescription() != null 
-	                ? item.getTaskDescription() 
-	                : item.getTaskId());
-	            sRPQ.setServiceCategory(serviceCategory);
-	            sRPQ.setQuotedDate(new Date());
-	            sRPQ.setStatus(SPWAStatus.NEW);
-	            sRPQ.setSpId(userInfo.userId);
-	            sRPQ.setUpdatedBy(userInfo.userId);
-	            sRPQ.setUpdatedDate(new Date());
-	            sRPQ.setMeasureNames(measurement.getMeasureNames());
-	            sRPQ.setValue(measurement.getValue());
-	            if ("quotationAmount".equalsIgnoreCase(measurement.getMeasureNames())) {
-	                try {
-	                    totalQuotationAmount += Double.parseDouble(measurement.getValue());
-	                } catch (NumberFormatException e) {
-	                    // log error
-	                }
-	            }
+				ServiceRequestPaintQuotation sRPQ = new ServiceRequestPaintQuotation();
+				sRPQ.setAdmintasklineId(lineId); // ✅ Fix: Set primary key manually
+				sRPQ.setRequestId(requestId);
+				sRPQ.setTaskId(taskId); // Save original taskId if needed
+				sRPQ.setTaskDescription(
+						item.getTaskDescription() != null ? item.getTaskDescription() : item.getTaskId());
+				sRPQ.setServiceCategory(serviceCategory);
+				sRPQ.setQuotedDate(new Date());
+				sRPQ.setStatus(SPWAStatus.NEW);
+				sRPQ.setSpId(userInfo.userId);
+				sRPQ.setUpdatedBy(userInfo.userId);
+				sRPQ.setUpdatedDate(new Date());
+				sRPQ.setMeasureNames(measurement.getMeasureNames());
+				sRPQ.setValue(measurement.getValue());
+				if ("quotationAmount".equalsIgnoreCase(measurement.getMeasureNames())) {
+					try {
+						totalQuotationAmount += Double.parseDouble(measurement.getValue());
+					} catch (NumberFormatException e) {
+						// log error
+					}
+				}
 
-	            savedQuotations.add(serviceRequestPaintQuotationRepository.save(sRPQ));
-	        }
-	    }
+				savedQuotations.add(serviceRequestPaintQuotationRepository.save(sRPQ));
+			}
+		}
 
-	    // Audit logic (unchanged)
-	    List<ServiceRequestQuotation> existingAuditOpt = serviceRequestQuotationAuditRepository.findByRequestId(requestId);
-	    ServiceRequestQuotation audit = existingAuditOpt.isEmpty() ? new ServiceRequestQuotation() : existingAuditOpt.get(0);
+		// Audit logic (unchanged)
+		List<ServiceRequestQuotation> existingAuditOpt = serviceRequestQuotationAuditRepository
+				.findByRequestId(requestId);
+		ServiceRequestQuotation audit = existingAuditOpt.isEmpty() ? new ServiceRequestQuotation()
+				: existingAuditOpt.get(0);
 
-	    audit.setRequestId(requestId);
-	    audit.setQuotedDate(new Date());
-	    audit.setUpdatedBy(userInfo.userId);
-	    audit.setUpdatedDate(new Date());
-	    audit.setQuotatedBy(userInfo.userId);
-	    audit.setStatus(SPWAStatus.NEW);
+		audit.setRequestId(requestId);
+		audit.setQuotedDate(new Date());
+		audit.setUpdatedBy(userInfo.userId);
+		audit.setUpdatedDate(new Date());
+		audit.setQuotatedBy(userInfo.userId);
+		audit.setStatus(SPWAStatus.NEW);
 
-	    if (totalQuotationAmount > 0) {
-	        audit.setMeasureNames("quotationAmount");
-	        audit.setValue(String.valueOf(totalQuotationAmount));
-	    }
+		if (totalQuotationAmount > 0) {
+			audit.setMeasureNames("quotationAmount");
+			audit.setValue(String.valueOf(totalQuotationAmount));
+		}
 
-	    serviceRequestQuotationAuditRepository.save(audit);
+		serviceRequestQuotationAuditRepository.save(audit);
 
-	    return savedQuotations;
+		return savedQuotations;
 	}
+
 	private static class UserInfo {
 
 		String userId;
@@ -165,153 +168,232 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 
 		return new UserInfo(userId);
 	}
-	
+
 	@Override
-	public Page<ServiceRequestPaintQuotation> getServiceRequestPaintQuotationService(
-			String admintasklineId, String taskDescription, String taskId,String serviceCategory,
-			String measureNames,String status,String spId,Pageable pageable) {
+	public Page<ServiceRequestPaintQuotation> getServiceRequestPaintQuotationService(String admintasklineId,
+			String taskDescription, String taskId, String serviceCategory, String measureNames, String status,
+			String spId, Pageable pageable) {
 
-	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
-	    // === Main query ===
-	    CriteriaQuery<ServiceRequestPaintQuotation> query = cb.createQuery(ServiceRequestPaintQuotation.class);
-	    Root<ServiceRequestPaintQuotation> root = query.from(ServiceRequestPaintQuotation.class);
-	    List<Predicate> predicates = new ArrayList<>();
+		// === Main query ===
+		CriteriaQuery<ServiceRequestPaintQuotation> query = cb.createQuery(ServiceRequestPaintQuotation.class);
+		Root<ServiceRequestPaintQuotation> root = query.from(ServiceRequestPaintQuotation.class);
+		List<Predicate> predicates = new ArrayList<>();
 
-	    if (admintasklineId != null && !admintasklineId.trim().isEmpty()) {
-	        predicates.add(cb.equal(root.get("admintasklineId"), admintasklineId));
-	    }
-	    if (taskDescription != null && !taskDescription.trim().isEmpty()) {
-	        predicates.add(cb.equal(root.get("taskDescription"), taskDescription));
-	    }
-	    if (taskId != null && !taskId.trim().isEmpty()) {
-	        predicates.add(cb.equal(root.get("taskId"), taskId));
-	    }
-	    if (measureNames != null ) {
-	        predicates.add(cb.equal(root.get("measureNames"), measureNames));
-	    }
-	    if (status != null && !status.trim().isEmpty()) {
-	        predicates.add(cb.equal(root.get("status"), status));
-	    }
-	    if (spId != null && !spId.trim().isEmpty()) {
-	        predicates.add(cb.equal(root.get("spId"), spId));
-	    }
-	    if (serviceCategory != null && !serviceCategory.trim().isEmpty()) {
-	        predicates.add(cb.equal(root.get("serviceCategory"), serviceCategory));
-	    }
-	    query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
-	    TypedQuery<ServiceRequestPaintQuotation> typedQuery = entityManager.createQuery(query);
-	    typedQuery.setFirstResult((int) pageable.getOffset());
-	    typedQuery.setMaxResults(pageable.getPageSize());
+		if (admintasklineId != null && !admintasklineId.trim().isEmpty()) {
+			predicates.add(cb.equal(root.get("admintasklineId"), admintasklineId));
+		}
+		if (taskDescription != null && !taskDescription.trim().isEmpty()) {
+			predicates.add(cb.equal(root.get("taskDescription"), taskDescription));
+		}
+		if (taskId != null && !taskId.trim().isEmpty()) {
+			predicates.add(cb.equal(root.get("taskId"), taskId));
+		}
+		if (measureNames != null) {
+			predicates.add(cb.equal(root.get("measureNames"), measureNames));
+		}
+		if (status != null && !status.trim().isEmpty()) {
+			predicates.add(cb.equal(root.get("status"), status));
+		}
+		if (spId != null && !spId.trim().isEmpty()) {
+			predicates.add(cb.equal(root.get("spId"), spId));
+		}
+		if (serviceCategory != null && !serviceCategory.trim().isEmpty()) {
+			predicates.add(cb.equal(root.get("serviceCategory"), serviceCategory));
+		}
+		query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
+		TypedQuery<ServiceRequestPaintQuotation> typedQuery = entityManager.createQuery(query);
+		typedQuery.setFirstResult((int) pageable.getOffset());
+		typedQuery.setMaxResults(pageable.getPageSize());
 
-	    // === Count query ===
-	    CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
-	    Root<ServiceRequestPaintQuotation> countRoot = countQuery.from(ServiceRequestPaintQuotation.class);
-	    List<Predicate> countPredicates = new ArrayList<>();
+		// === Count query ===
+		CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+		Root<ServiceRequestPaintQuotation> countRoot = countQuery.from(ServiceRequestPaintQuotation.class);
+		List<Predicate> countPredicates = new ArrayList<>();
 
-	    if (admintasklineId != null && !admintasklineId.trim().isEmpty()) {
-	    	countPredicates.add(cb.equal(countRoot.get("admintasklineId"), admintasklineId));
-	    }
-	    if (taskDescription != null && !taskDescription.trim().isEmpty()) {
-	    	countPredicates.add(cb.equal(countRoot.get("taskDescription"), taskDescription));
-	    }
-	    if (taskId != null && !taskId.trim().isEmpty()) {
-	    	countPredicates.add(cb.equal(countRoot.get("taskId"), taskId));
-	    }
-	    if (measureNames != null ) {
-	    	countPredicates.add(cb.equal(countRoot.get("measureNames"), measureNames));
-	    }
-	    if (status != null && !status.trim().isEmpty()) {
-	    	countPredicates.add(cb.equal(countRoot.get("status"), status));
-	    }
-	    if (spId != null && !spId.trim().isEmpty()) {
-	    	countPredicates.add(cb.equal(countRoot.get("spId"), spId));
-	    }
-	    if (serviceCategory != null && !serviceCategory.trim().isEmpty()) {
-	    	countPredicates.add(cb.equal(countRoot.get("serviceCategory"), serviceCategory));
-	    }
-	    countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
-	    Long total = entityManager.createQuery(countQuery).getSingleResult();
+		if (admintasklineId != null && !admintasklineId.trim().isEmpty()) {
+			countPredicates.add(cb.equal(countRoot.get("admintasklineId"), admintasklineId));
+		}
+		if (taskDescription != null && !taskDescription.trim().isEmpty()) {
+			countPredicates.add(cb.equal(countRoot.get("taskDescription"), taskDescription));
+		}
+		if (taskId != null && !taskId.trim().isEmpty()) {
+			countPredicates.add(cb.equal(countRoot.get("taskId"), taskId));
+		}
+		if (measureNames != null) {
+			countPredicates.add(cb.equal(countRoot.get("measureNames"), measureNames));
+		}
+		if (status != null && !status.trim().isEmpty()) {
+			countPredicates.add(cb.equal(countRoot.get("status"), status));
+		}
+		if (spId != null && !spId.trim().isEmpty()) {
+			countPredicates.add(cb.equal(countRoot.get("spId"), spId));
+		}
+		if (serviceCategory != null && !serviceCategory.trim().isEmpty()) {
+			countPredicates.add(cb.equal(countRoot.get("serviceCategory"), serviceCategory));
+		}
+		countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
+		Long total = entityManager.createQuery(countQuery).getSingleResult();
 
-	    return new PageImpl<>(typedQuery.getResultList(), pageable, total);
+		return new PageImpl<>(typedQuery.getResultList(), pageable, total);
 	}
 
 	@Override
 	public List<ServiceRequestPaintQuotation> updateServiceRequestQuotation(String taskId,
-	        List<ServiceRequestPaintQuotation> dtoList, RegSource regSource) {
+			List<ServiceRequestPaintQuotation> dtoList, RegSource regSource) {
 
-	    UserInfo userInfo = getLoggedInUserInfo(regSource);
+		UserInfo userInfo = getLoggedInUserInfo(regSource);
 
-	    // Step 1: Load existing quotations by taskId
-	    Map<String, ServiceRequestPaintQuotation> existingMap = serviceRequestPaintQuotationRepository
-	            .findByTaskId(taskId)
-	            .stream()
-	            .collect(Collectors.toMap(ServiceRequestPaintQuotation::getAdmintasklineId, Function.identity()));
+		// Step 1: Load existing quotations by taskId
+		Map<String, ServiceRequestPaintQuotation> existingMap = serviceRequestPaintQuotationRepository
+				.findByTaskId(taskId).stream()
+				.collect(Collectors.toMap(ServiceRequestPaintQuotation::getAdmintasklineId, Function.identity()));
 
-	    List<ServiceRequestPaintQuotation> updatedQuotations = new ArrayList<>();
-	    double totalQuotationAmount = 0.0;
-	    String requestId = null;
-	    SPWAStatus status = !dtoList.isEmpty() ? dtoList.get(0).getStatus() : SPWAStatus.NEW;
+		List<ServiceRequestPaintQuotation> updatedQuotations = new ArrayList<>();
+		double totalQuotationAmount = 0.0;
+		String requestId = null;
+		SPWAStatus status = !dtoList.isEmpty() ? dtoList.get(0).getStatus() : SPWAStatus.NEW;
 
-	    for (ServiceRequestPaintQuotation dto : dtoList) {
-	        String admintasklineId = dto.getAdmintasklineId();
-	        String lineTaskId = admintasklineId.split("_")[0];
+		for (ServiceRequestPaintQuotation dto : dtoList) {
+			String admintasklineId = dto.getAdmintasklineId();
+			String lineTaskId = admintasklineId.split("_")[0];
 
-	        // Validate admintasklineId prefix
-	        if (!lineTaskId.equals(taskId)) {
-	            throw new IllegalArgumentException("Invalid admintasklineId: " + admintasklineId +
-	                    " does not match taskId: " + taskId);
-	        }
+			// Validate admintasklineId prefix
+			if (!lineTaskId.equals(taskId)) {
+				throw new IllegalArgumentException(
+						"Invalid admintasklineId: " + admintasklineId + " does not match taskId: " + taskId);
+			}
 
-	        ServiceRequestPaintQuotation existing = existingMap.get(admintasklineId);
-	        if (existing != null) {
-	            // Update relevant field
-	            existing.setQuotedDate(new Date());
-	            existing.setStatus(dto.getStatus());
-	            existing.setUpdatedBy(userInfo.userId);
-	            existing.setUpdatedDate(new Date());
+			ServiceRequestPaintQuotation existing = existingMap.get(admintasklineId);
+			if (existing != null) {
+				// Update relevant field
+				existing.setQuotedDate(new Date());
+				existing.setStatus(dto.getStatus());
+				existing.setUpdatedBy(userInfo.userId);
+				existing.setUpdatedDate(new Date());
 
-	            if ("quotationAmount".equalsIgnoreCase(dto.getMeasureNames())) {
-	                try {
-	                    totalQuotationAmount += Double.parseDouble(dto.getValue());
-	                } catch (NumberFormatException e) {
-	                    // You can log a warning here
-	                }
-	            }
+				if ("quotationAmount".equalsIgnoreCase(dto.getMeasureNames())) {
+					try {
+						totalQuotationAmount += Double.parseDouble(dto.getValue());
+					} catch (NumberFormatException e) {
+						// You can log a warning here
+					}
+				}
 
-	            requestId = existing.getRequestId(); // Save for audit header update
+				requestId = existing.getRequestId(); // Save for audit header update
 
-	            updatedQuotations.add(serviceRequestPaintQuotationRepository.save(existing));
-	        }
-	    }
+				updatedQuotations.add(serviceRequestPaintQuotationRepository.save(existing));
+			}
+		}
 
-	    // Step 2: Update or create ServiceRequestQuotation audit/header
-	    if (requestId != null) {
-	        List<ServiceRequestQuotation> optionalHeader = serviceRequestQuotationAuditRepository.findByRequestIds(requestId);
-	        ServiceRequestQuotation header;
+		// Step 2: Update or create ServiceRequestQuotation audit/header
+		if (requestId != null) {
+			List<ServiceRequestQuotation> optionalHeader = serviceRequestQuotationAuditRepository
+					.findByRequestIds(requestId);
+			ServiceRequestQuotation header;
 
-	        if (!optionalHeader.isEmpty()) {
-	            header = optionalHeader.get(0);
-	        } else {
-	            header = new ServiceRequestQuotation();
-	            header.setRequestId(requestId);
-	            header.setQuotedDate(new Date());
-	            header.setQuotatedBy(userInfo.userId);
-	        }
+			if (!optionalHeader.isEmpty()) {
+				header = optionalHeader.get(0);
+			} else {
+				header = new ServiceRequestQuotation();
+				header.setRequestId(requestId);
+				header.setQuotedDate(new Date());
+				header.setQuotatedBy(userInfo.userId);
+			}
 
-	        if (totalQuotationAmount > 0) {
-	            header.setMeasureNames("quotationAmount");
-	            header.setValue(String.valueOf(totalQuotationAmount));
-	        }
+			if (totalQuotationAmount > 0) {
+				header.setMeasureNames("quotationAmount");
+				header.setValue(String.valueOf(totalQuotationAmount));
+			}
 
-	        header.setStatus(status);
-	        header.setUpdatedBy(userInfo.userId);
-	        header.setUpdatedDate(new Date());
+			header.setStatus(status);
+			header.setUpdatedBy(userInfo.userId);
+			header.setUpdatedDate(new Date());
 
-	        serviceRequestQuotationAuditRepository.save(header);
-	    }
+			serviceRequestQuotationAuditRepository.save(header);
+		}
 
-	    return updatedQuotations;
+		return updatedQuotations;
+	}
+
+	@Override
+	public Map<String, Object> getAllGroupedQuotations(String admintasklineId, String taskDescription,
+			String serviceCategory, String taskId, String measureNames, String status, String spId,
+			String requestId,int page,
+			int size) {
+
+		// ✅ Step 1: Fetch all records
+		List<ServiceRequestPaintQuotation> allQuotations = serviceRequestPaintQuotationRepository.findAll();
+
+		// ✅ Step 2: Apply filters safely
+		List<ServiceRequestPaintQuotation> filtered = allQuotations.stream()
+				.filter(q -> admintasklineId == null || q.getAdmintasklineId().equalsIgnoreCase(admintasklineId))
+				.filter(q -> taskDescription == null || q.getTaskDescription().equalsIgnoreCase(taskDescription))
+				.filter(q -> serviceCategory == null || q.getServiceCategory().equalsIgnoreCase(serviceCategory))
+				.filter(q -> taskId == null || q.getTaskId().equalsIgnoreCase(taskId))
+				.filter(q -> measureNames == null || q.getMeasureNames().equalsIgnoreCase(measureNames))
+				.filter(q -> status == null || (q.getStatus() != null && q.getStatus().name().equalsIgnoreCase(status)))
+				.filter(q -> requestId == null || q.getRequestId().equalsIgnoreCase(requestId))
+				.filter(q -> spId == null || q.getSpId().equalsIgnoreCase(spId)).collect(Collectors.toList());
+
+		// ✅ Step 3: Group by taskId (derived from admintasklineId before "_")
+		Map<String, List<ServiceRequestPaintQuotation>> groupedByTaskId = filtered.stream()
+				.collect(Collectors.groupingBy(q -> {
+					String id = q.getAdmintasklineId();
+					return (id != null && id.contains("_")) ? id.split("_")[0] : id;
+				}));
+
+		// ✅ Step 4: Build structured item list
+		List<Map<String, Object>> items = groupedByTaskId.entrySet().stream().map(entry -> {
+			String groupedTaskId = entry.getKey();
+			List<ServiceRequestPaintQuotation> group = entry.getValue();
+			ServiceRequestPaintQuotation parent = group.get(0);
+
+			Map<String, Object> item = new LinkedHashMap<>();
+			item.put("taskDescription", parent.getTaskDescription());
+			item.put("taskId", groupedTaskId);
+
+			// Build measurements
+			List<Map<String, Object>> measurements = group.stream().map(child -> {
+				Map<String, Object> measurement = new LinkedHashMap<>();
+				measurement.put("admintasklineId", child.getAdmintasklineId());
+				measurement.put("measureNames", child.getMeasureNames());
+				measurement.put("value", child.getValue());
+				return measurement;
+			}).collect(Collectors.toList());
+
+			item.put("measurements", measurements);
+			return item;
+		}).collect(Collectors.toList());
+
+		// ✅ Step 5: Handle pagination
+		int totalItems = items.size();
+		int totalPages = (int) Math.ceil((double) totalItems / size);
+		int fromIndex = Math.min(page * size, totalItems);
+		int toIndex = Math.min(fromIndex + size, totalItems);
+		List<Map<String, Object>> paginatedItems = items.subList(fromIndex, toIndex);
+
+		// ✅ Step 6: Build ordered final response
+		Map<String, Object> response = new LinkedHashMap<>();
+
+		if (!filtered.isEmpty()) {
+			ServiceRequestPaintQuotation first = filtered.get(0);
+			response.put("serviceCategory", first.getServiceCategory());
+			response.put("requestId", first.getRequestId());
+			response.put("updated_by", first.getUpdatedBy());
+			response.put("updateddate", first.getUpdatedDate());
+			response.put("status", first.getStatus());
+			response.put("spId", first.getSpId());
+		}
+
+		response.put("items", paginatedItems);
+		response.put("currentPage", page);
+		response.put("pageSize", size);
+		response.put("totalItems", totalItems);
+		response.put("totalPages", totalPages);
+
+		return response;
 	}
 
 }

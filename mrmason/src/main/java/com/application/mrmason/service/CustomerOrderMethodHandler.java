@@ -66,12 +66,12 @@ public class CustomerOrderMethodHandler {
 			throw new ResourceNotFoundException("Access denied. This API is restricted to customer users only.");
 		}
 
-		List<AdminMaterialMaster> storeList = adminMaterialMasterRepository.findByUpdatedBy(dto.getUserId());
-		if (storeList.isEmpty()) {
-		    throw new ResourceNotFoundException("UserId not found for id: " + dto.getUserId());
-		}
+//		List<AdminMaterialMaster> storeList = adminMaterialMasterRepository.findByUpdatedBy(dto.getUserId());
+//		if (storeList.isEmpty()) {
+//		    throw new ResourceNotFoundException("UserId not found for id: " + dto.getUserId());
+//		}
 		// pick first if needed
-		AdminMaterialMaster store = storeList.get(0);
+//		AdminMaterialMaster store = storeList.get(0);
 
 
 		// 🔹 Step 1: Find existing PENDING order (fetch details eagerly)
@@ -97,7 +97,7 @@ public class CustomerOrderMethodHandler {
 			// ✅ Create new header
 			orderHdr = new CustomerOrderHdrEntity();
 			orderHdr.setStatus(OrderStatus.PENDING);
-			orderHdr.setSkuIdUserId(storeList.get(0).getSkuId());
+			orderHdr.setSkuIdUserId(dto.getOrderDetailsList().get(0).getSkuIdUserId());
 			orderHdr.setOrderDate(new Date());
 			orderHdr.setUpdatedBy(login.get().getUserid());
 			orderHdr.setUpdatedDate(new Date());
@@ -221,7 +221,7 @@ public class CustomerOrderMethodHandler {
 
 			CustomerGetOrderResponseDTO dto = new CustomerGetOrderResponseDTO();
 			dto.setOrderId(orderIdKey);
-			dto.setUserId(orderDetailsEntities.get(0).getUserId());
+			dto.setCustomerId(orderDetailsEntities.get(0).getUpdatedBy());
 			dto.setOrderDetailsList(orderDetailsEntities.stream()
 					.map(e -> modelMapper.map(e, CustomerOrderDetailsDto.class)).collect(Collectors.toList()));
 

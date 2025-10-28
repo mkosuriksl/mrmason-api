@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 public class CustomerGetOrderResponseDTO {
 	private String orderId;
-	private String userId;
+	private String customerId;
 	private List<CustomerOrderDetailsDto> orderDetailsList;
 	private int currentPage;
 	private int pageSize;

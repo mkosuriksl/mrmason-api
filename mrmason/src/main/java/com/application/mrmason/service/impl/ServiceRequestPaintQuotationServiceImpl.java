@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -22,17 +21,15 @@ import com.application.mrmason.dto.MeasurementDTO;
 import com.application.mrmason.dto.ServiceRequestItem;
 import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.SPWAStatus;
+import com.application.mrmason.entity.ServiceRequestHeaderAllQuotation;
 import com.application.mrmason.entity.ServiceRequestPaintQuotation;
-import com.application.mrmason.entity.ServiceRequestPlumbingQuotation;
-import com.application.mrmason.entity.ServiceRequestQuotation;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.AdminDetailsRepo;
+import com.application.mrmason.repository.ServiceRequestHeaderAllQuotationRepo;
 import com.application.mrmason.repository.ServiceRequestPaintQuotationRepository;
-import com.application.mrmason.repository.ServiceRequestQuotationRepository;
-import com.application.mrmason.repository.SiteMeasurementRepository;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.AuthDetailsProvider;
 import com.application.mrmason.service.ServiceRequestPaintQuotationService;
@@ -58,13 +55,10 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 	private EntityManager entityManager;
 
 	@Autowired
-	private SiteMeasurementRepository serviceRequestRepo;
-
-	@Autowired
 	private ServiceRequestPaintQuotationRepository serviceRequestPaintQuotationRepository;
 
 	@Autowired
-	ServiceRequestQuotationRepository serviceRequestQuotationAuditRepository;
+	ServiceRequestHeaderAllQuotationRepo serviceRequestHeaderAllQuotationRepo;
 
 	@Override
 	public List<ServiceRequestPaintQuotation> createServiceRequestPaintQuotationService(String requestId,
@@ -74,7 +68,23 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 
 		Map<String, Integer> taskCounters = new HashMap<>(); // counter per taskId
 		List<ServiceRequestPaintQuotation> savedQuotations = new ArrayList<>();
-		double totalQuotationAmount = 0.0;
+
+		List<ServiceRequestHeaderAllQuotation> existingAuditOpt = serviceRequestHeaderAllQuotationRepo
+				.findByRequestId(requestId);
+		ServiceRequestHeaderAllQuotation audit = existingAuditOpt.isEmpty() ? new ServiceRequestHeaderAllQuotation()
+				: existingAuditOpt.get(0);
+
+		if (audit.getQuotationId() == null) {
+			// When new record
+			audit.setQuotationId("QT" + System.currentTimeMillis());
+		}
+		audit.setRequestId(requestId);
+		audit.setQuotedDate(new Date());
+		audit.setUpdatedBy(userInfo.userId);
+		audit.setUpdatedDate(new Date());
+		audit.setSpId(userInfo.userId);
+		audit = serviceRequestHeaderAllQuotationRepo.save(audit);
+		String quotationId = audit.getQuotationId();
 
 		for (ServiceRequestItem item : items) {
 			String taskId = item.getTaskId();
@@ -82,7 +92,7 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 
 			for (MeasurementDTO measurement : item.getMeasurements()) {
 				int currentCounter = taskCounters.compute(taskId, (k, v) -> v + 1); // increment for this taskId
-				String lineId = taskId + "_" + String.format("%04d", currentCounter); // e.g., PLUMBING_0001
+				String lineId = taskId + "_" + String.format("%04d", currentCounter)+"_"+quotationId; // e.g., PLUMBING_0001
 
 				ServiceRequestPaintQuotation sRPQ = new ServiceRequestPaintQuotation();
 				sRPQ.setAdmintasklineId(lineId); // ✅ Fix: Set primary key manually
@@ -98,38 +108,9 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 				sRPQ.setUpdatedDate(new Date());
 				sRPQ.setMeasureNames(measurement.getMeasureNames());
 				sRPQ.setValue(measurement.getValue());
-				if ("quotationAmount".equalsIgnoreCase(measurement.getMeasureNames())) {
-					try {
-						totalQuotationAmount += Double.parseDouble(measurement.getValue());
-					} catch (NumberFormatException e) {
-						// log error
-					}
-				}
-
 				savedQuotations.add(serviceRequestPaintQuotationRepository.save(sRPQ));
 			}
 		}
-
-		// Audit logic (unchanged)
-		List<ServiceRequestQuotation> existingAuditOpt = serviceRequestQuotationAuditRepository
-				.findByRequestId(requestId);
-		ServiceRequestQuotation audit = existingAuditOpt.isEmpty() ? new ServiceRequestQuotation()
-				: existingAuditOpt.get(0);
-
-		audit.setRequestId(requestId);
-		audit.setQuotedDate(new Date());
-		audit.setUpdatedBy(userInfo.userId);
-		audit.setUpdatedDate(new Date());
-		audit.setQuotatedBy(userInfo.userId);
-		audit.setStatus(SPWAStatus.NEW);
-
-		if (totalQuotationAmount > 0) {
-			audit.setMeasureNames("quotationAmount");
-			audit.setValue(String.valueOf(totalQuotationAmount));
-		}
-
-		serviceRequestQuotationAuditRepository.save(audit);
-
 		return savedQuotations;
 	}
 
@@ -251,15 +232,10 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 				.collect(Collectors.toMap(ServiceRequestPaintQuotation::getAdmintasklineId, Function.identity()));
 
 		List<ServiceRequestPaintQuotation> updatedQuotations = new ArrayList<>();
-		double totalQuotationAmount = 0.0;
 		String requestId = null;
-		SPWAStatus status = !dtoList.isEmpty() ? dtoList.get(0).getStatus() : SPWAStatus.NEW;
-
 		for (ServiceRequestPaintQuotation dto : dtoList) {
 			String admintasklineId = dto.getAdmintasklineId();
 			String lineTaskId = admintasklineId.split("_")[0];
-
-			// Validate admintasklineId prefix
 			if (!lineTaskId.equals(taskId)) {
 				throw new IllegalArgumentException(
 						"Invalid admintasklineId: " + admintasklineId + " does not match taskId: " + taskId);
@@ -267,20 +243,11 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 
 			ServiceRequestPaintQuotation existing = existingMap.get(admintasklineId);
 			if (existing != null) {
-				// Update relevant field
 				existing.setQuotedDate(new Date());
-				existing.setStatus(dto.getStatus());
+				existing.setMeasureNames(dto.getMeasureNames());
+				existing.setValue(dto.getValue());
 				existing.setUpdatedBy(userInfo.userId);
 				existing.setUpdatedDate(new Date());
-
-				if ("quotationAmount".equalsIgnoreCase(dto.getMeasureNames())) {
-					try {
-						totalQuotationAmount += Double.parseDouble(dto.getValue());
-					} catch (NumberFormatException e) {
-						// You can log a warning here
-					}
-				}
-
 				requestId = existing.getRequestId(); // Save for audit header update
 
 				updatedQuotations.add(serviceRequestPaintQuotationRepository.save(existing));
@@ -289,29 +256,22 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 
 		// Step 2: Update or create ServiceRequestQuotation audit/header
 		if (requestId != null) {
-			List<ServiceRequestQuotation> optionalHeader = serviceRequestQuotationAuditRepository
+			List<ServiceRequestHeaderAllQuotation> optionalHeader = serviceRequestHeaderAllQuotationRepo
 					.findByRequestIds(requestId);
-			ServiceRequestQuotation header;
+			ServiceRequestHeaderAllQuotation header;
 
 			if (!optionalHeader.isEmpty()) {
 				header = optionalHeader.get(0);
 			} else {
-				header = new ServiceRequestQuotation();
+				header = new ServiceRequestHeaderAllQuotation();
 				header.setRequestId(requestId);
 				header.setQuotedDate(new Date());
-				header.setQuotatedBy(userInfo.userId);
+				header.setSpId(userInfo.userId);
 			}
-
-			if (totalQuotationAmount > 0) {
-				header.setMeasureNames("quotationAmount");
-				header.setValue(String.valueOf(totalQuotationAmount));
-			}
-
-			header.setStatus(status);
 			header.setUpdatedBy(userInfo.userId);
 			header.setUpdatedDate(new Date());
 
-			serviceRequestQuotationAuditRepository.save(header);
+			serviceRequestHeaderAllQuotationRepo.save(header);
 		}
 
 		return updatedQuotations;
@@ -319,9 +279,8 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 
 	@Override
 	public Map<String, Object> getAllGroupedQuotations(String admintasklineId, String taskDescription,
-			String serviceCategory, String taskId, String measureNames, String status, String spId,
-			String requestId,int page,
-			int size) {
+			String serviceCategory, String taskId, String measureNames, String status, String spId, String requestId,
+			int page, int size) {
 
 		// ✅ Step 1: Fetch all records
 		List<ServiceRequestPaintQuotation> allQuotations = serviceRequestPaintQuotationRepository.findAll();

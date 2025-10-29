@@ -22,5 +22,6 @@ public interface CustomerOrderDetailsRepo extends JpaRepository<CustomerOrderDet
 		        @Param("orderId") String orderId
 		);
 
+    List<CustomerOrderDetailsEntity> findByCustomerOrderOrderHdrEntity_UpdatedBy(String updatedBy);
 
 }

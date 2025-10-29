@@ -4,6 +4,7 @@ import java.util.Date;
 
 import com.application.mrmason.enums.OrderStatus;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -46,8 +47,8 @@ public class CustomerOrderDetailsEntity {
 	@Column(name = "orderQty")
 	private Integer orderQty;
 
-	@Column(name = "prescriptionRequired")
-	private String prescriptionRequired;
+//	@Column(name = "prescriptionRequired")
+//	private String prescriptionRequired;
 
 	@Column(name = "updated_date")
 	private Date updatedDate;
@@ -60,8 +61,8 @@ public class CustomerOrderDetailsEntity {
 	@JoinColumn(name = "orderId", referencedColumnName = "orderId")
 	private CustomerOrderHdrEntity customerOrderOrderHdrEntity;
 
-	@Column(name = "userid")
-	private String userId;
+	@Column(name = "msuserid")
+	private String msUserId;
 	
     @Column(name = "Status")
     private OrderStatus status;

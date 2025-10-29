@@ -67,7 +67,7 @@ public class CustomerOrderHandler {
 	    CustomerRetailerOrderHdrEntity orderHdr = new CustomerRetailerOrderHdrEntity();
 	    orderHdr.setCustomerCartOrderId(cartHeader.getOrderId());
 	    orderHdr.setCustomerId(dto.getCustomerId());
-	    String userId=cartHeader.getCustomerOrderDetailsEntities().get(0).getUserId();
+	    String userId=cartHeader.getCustomerOrderDetailsEntities().get(0).getMsUserId();
 	    orderHdr.setRetailerId(userId); // ✅ ensure this is set BEFORE generating orderId
 	    orderHdr.setDeliveryMethod(dto.getDeliveryMethod());
 	    orderHdr.setOrderStatus(OrderStatus.NEW);

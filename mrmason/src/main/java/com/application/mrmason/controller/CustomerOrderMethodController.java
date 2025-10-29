@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,7 +26,6 @@ import com.application.mrmason.service.CustomerOrderMethodHandler;
 import jakarta.persistence.EntityNotFoundException;
 
 @RestController
-@RequestMapping("/customer-cart")
 public class CustomerOrderMethodController {
 
     private final PaymentSPTasksManagmentController paymentSPTasksManagmentController;
@@ -39,7 +37,7 @@ public class CustomerOrderMethodController {
         this.paymentSPTasksManagmentController = paymentSPTasksManagmentController;
     }
 
-	@PostMapping("/add")
+	@PostMapping("/customer-cart/add")
 	public ResponseEntity<GenericResponse<CustomerOrderHdrEntity>> createCustomerOrderMethod(
 			@RequestBody CustomerOrderRequestDto requestDto) {
 		try {
@@ -58,7 +56,7 @@ public class CustomerOrderMethodController {
 		}
 	}
 
-	@PutMapping("/update")
+	@PutMapping("/customer-cart/update")
 	public ResponseEntity<?> updateOrderLine(@RequestBody UpdateCustomerOrderRequestDto dto) {
 		try {
 			List<CustomerOrderDetailsEntity> updated = orderMethodHandler.updateOrderDetails(dto);
@@ -69,7 +67,7 @@ public class CustomerOrderMethodController {
 	}
 
 	
-	@GetMapping("/get")
+	@GetMapping("/customer-cart/get")
 	public GenericResponse<List<CustomerGetOrderResponseDTO>> getOrders(
 	        @RequestParam(required = false) String cId,
 	        @RequestParam(required = false) String orderId,
@@ -77,14 +75,14 @@ public class CustomerOrderMethodController {
 	        @RequestParam(required = false) String skuIdUserId,
 	        @RequestParam(required = false) String fromDate,
 	        @RequestParam(required = false) String toDate,
-			@RequestParam(required = false) String userId,
+			@RequestParam(required = false) String msUserId,
 	        @RequestParam(defaultValue = "0") int page,
 	        @RequestParam(defaultValue = "10") int size
 	) {
-	    return orderMethodHandler.getOrderDetail(cId, orderId, orderlineId,skuIdUserId, fromDate, toDate, userId, page, size);
+	    return orderMethodHandler.getOrderDetail(cId, orderId, orderlineId,skuIdUserId, fromDate, toDate, msUserId, page, size);
 	}
 
-	@DeleteMapping("/delete")
+	@DeleteMapping("/customer-cart/delete")
 	public ResponseEntity<Map<String, Object>> deleteOrder(
 	        @RequestParam String orderId,
 	        @RequestParam String orderlineId) {
@@ -103,6 +101,15 @@ public class CustomerOrderMethodController {
 	        response.put("message", "Error deleting order.");
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 	    }
+	}
+
+	@GetMapping("/get-customer-cart")
+	public GenericResponse<List<CustomerGetOrderResponseDTO>> getOrdersByCustomerId(
+	        @RequestParam String cId,
+	        @RequestParam(defaultValue = "0") int page,
+	        @RequestParam(defaultValue = "10") int size) {
+
+	    return orderMethodHandler.getOrderDetailByCustomerId(cId, page, size);
 	}
 
 }

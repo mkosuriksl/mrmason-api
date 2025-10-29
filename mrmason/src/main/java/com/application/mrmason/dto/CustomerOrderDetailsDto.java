@@ -15,9 +15,9 @@ public class CustomerOrderDetailsDto {
 	private Integer gst;
 	private Double total;
 	private Integer orderQty;
-	private String prescriptionRequired;
+//	private String prescriptionRequired;
 	private Date updatedDate;
 	private String updatedBy;
-	private String userId;
+	private String msUserId;
 
 }

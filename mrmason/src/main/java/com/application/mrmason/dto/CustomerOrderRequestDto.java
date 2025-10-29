@@ -6,6 +6,6 @@ import lombok.Data;
 
 @Data
 public class CustomerOrderRequestDto {
-	private String userId;
+	private String cId;
 	private List<CustomerOrderDetailsDto> orderDetailsList;
 }

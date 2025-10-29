@@ -52,8 +52,8 @@ public class CustomerOrderHdrEntity {
     @Column(name = "updated_by")
     private String updatedBy;
 	
-	@Column(name = "skuId_userId")
-	private String skuIdUserId;
+//	@Column(name = "skuId_userId")
+//	private String skuIdUserId;
 	
 	@OneToMany(mappedBy = "customerOrderOrderHdrEntity", cascade = CascadeType.ALL)
     @JsonManagedReference

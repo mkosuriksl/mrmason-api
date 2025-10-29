@@ -97,7 +97,7 @@ public class CustomerOrderMethodHandler {
 			// ✅ Create new header
 			orderHdr = new CustomerOrderHdrEntity();
 			orderHdr.setStatus(OrderStatus.PENDING);
-			orderHdr.setSkuIdUserId(dto.getOrderDetailsList().get(0).getSkuIdUserId());
+//			orderHdr.setSkuIdUserId(dto.getOrderDetailsList().get(0).getSkuIdUserId());
 			orderHdr.setOrderDate(new Date());
 			orderHdr.setUpdatedBy(login.get().getUserid());
 			orderHdr.setUpdatedDate(new Date());
@@ -138,13 +138,13 @@ public class CustomerOrderMethodHandler {
 		    CustomerOrderDetailsEntity orderDetailsEntity = new CustomerOrderDetailsEntity();
 
 		    orderDetailsEntity.setSkuIdUserId(stockEntity.getSkuId());
-		    orderDetailsEntity.setUserId(stockEntity.getUpdatedBy());
+		    orderDetailsEntity.setMsUserId(stockEntity.getUpdatedBy());
 		    orderDetailsEntity.setMrp(orderDetails.getMrp());
 		    orderDetailsEntity.setDiscount(orderDetails.getDiscount());
 		    orderDetailsEntity.setGst(orderDetails.getGst());
 		    orderDetailsEntity.setTotal(orderDetails.getTotal());
 		    orderDetailsEntity.setOrderQty(orderDetails.getOrderQty());
-		    orderDetailsEntity.setPrescriptionRequired(orderDetails.getPrescriptionRequired());
+//		    orderDetailsEntity.setPrescriptionRequired(orderDetails.getPrescriptionRequired());
 		    orderDetailsEntity.setBrand(orderDetails.getBrand());
 		    orderDetailsEntity.setOrderlineId(baseOrderId + "_" + String.format("%03d", counter++));
 		    orderDetailsEntity.setStatus(OrderStatus.PENDING);
@@ -198,12 +198,12 @@ public class CustomerOrderMethodHandler {
 
 	@Transactional
 	public GenericResponse<List<CustomerGetOrderResponseDTO>> getOrderDetail(String customerId, String orderid,
-			String orderlineId,String skuIdUserId, String fromDate, String toDate, String userId, Integer page, Integer size) {
+			String orderlineId,String skuIdUserId, String fromDate, String toDate, String msUserId, Integer page, Integer size) {
 
 		// 1️⃣ Fetch all matching records without pagination
 		List<CustomerOrderDetailsEntity> allEntities = fetchFilteredOrderDetailsWithoutPagination(customerId, orderid,
 				orderlineId,skuIdUserId, fromDate, toDate,
-				userId);
+				msUserId);
 
 		if (allEntities.isEmpty()) {
 			return new GenericResponse<>("No records found", false, null);
@@ -250,7 +250,7 @@ public class CustomerOrderMethodHandler {
 	}
 
 	private List<CustomerOrderDetailsEntity> fetchFilteredOrderDetailsWithoutPagination(String customerId,
-			String orderid, String orderlineId,String skuIdUserId, String fromDate, String toDate, String userId) {
+			String orderid, String orderlineId,String skuIdUserId, String fromDate, String toDate, String msUserId) {
 
 		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
 		Optional<CustomerRegistration> login = customerRegisterRepository.findByUserEmailAndUserTypeAndRegSource(loggedInUserEmail,UserType.EC,RegSource.MRMASON);
@@ -279,8 +279,8 @@ public class CustomerOrderMethodHandler {
 		if (skuIdUserId != null && !skuIdUserId.trim().isEmpty())
 			predicates.add(cb.equal(root.get("skuIdUserId"), skuIdUserId));
 		
-		if (userId != null && !userId.trim().isEmpty())
-			predicates.add(cb.equal(root.get("userId"), userId));
+		if (msUserId != null && !msUserId.trim().isEmpty())
+			predicates.add(cb.equal(root.get("msUserId"), msUserId));
 
 		if (fromDate != null && toDate != null) {
 			predicates.add(cb.between(hdrJoin.get("orderDate"), java.sql.Date.valueOf(fromDate),
@@ -312,4 +312,60 @@ public class CustomerOrderMethodHandler {
 
 		return "Order line deleted successfully. Header retained as it has other lines.";
 	}
+	
+	public GenericResponse<List<CustomerGetOrderResponseDTO>> getOrderDetailByCustomerId(
+	        String customerId, Integer page, Integer size) {
+
+	    // 1️⃣ Fetch all records for given customerId
+	    List<CustomerOrderDetailsEntity> allEntities = 
+	    		orderDetailsRepo.findByCustomerOrderOrderHdrEntity_UpdatedBy(customerId);
+
+	    if (allEntities.isEmpty()) {
+	        return new GenericResponse<>("No records found for customerId: " + customerId, false, null);
+	    }
+
+	    // 2️⃣ Group by orderId
+	    Map<String, List<CustomerOrderDetailsEntity>> groupedByOrderId = allEntities.stream()
+	            .collect(Collectors.groupingBy(
+	                    e -> e.getCustomerOrderOrderHdrEntity().getOrderId(),
+	                    LinkedHashMap::new,
+	                    Collectors.toList()
+	            ));
+
+	    List<CustomerGetOrderResponseDTO> allOrders = new ArrayList<>();
+
+	    // 3️⃣ Build DTO for each order group
+	    for (Map.Entry<String, List<CustomerOrderDetailsEntity>> entry : groupedByOrderId.entrySet()) {
+	        String orderIdKey = entry.getKey();
+	        List<CustomerOrderDetailsEntity> orderDetailsEntities = entry.getValue();
+
+	        CustomerGetOrderResponseDTO dto = new CustomerGetOrderResponseDTO();
+	        dto.setOrderId(orderIdKey);
+	        dto.setCustomerId(orderDetailsEntities.get(0).getCustomerOrderOrderHdrEntity().getUpdatedBy());
+	        dto.setOrderDetailsList(orderDetailsEntities.stream()
+	                .map(e -> modelMapper.map(e, CustomerOrderDetailsDto.class))
+	                .collect(Collectors.toList()));
+
+	        allOrders.add(dto);
+	    }
+
+	    // 4️⃣ Apply pagination on grouped orders
+	    int totalOrders = allOrders.size();
+	    int fromIndex = page * size;
+	    int toIndex = Math.min(fromIndex + size, totalOrders);
+	    if (fromIndex > toIndex) fromIndex = toIndex;
+
+	    List<CustomerGetOrderResponseDTO> pagedOrders = allOrders.subList(fromIndex, toIndex);
+
+	    // 5️⃣ Set pagination metadata
+	    pagedOrders.forEach(dto -> {
+	        dto.setCurrentPage(page);
+	        dto.setPageSize(size);
+	        dto.setTotalElements(totalOrders);
+	        dto.setTotalPages((int) Math.ceil((double) totalOrders / size));
+	    });
+
+	    return new GenericResponse<>("Customer orders retrieved successfully.", true, pagedOrders);
+	}
+
 }

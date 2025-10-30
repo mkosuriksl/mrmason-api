@@ -12,7 +12,7 @@ public class SpServiceDetailsDto {
 	private String qualification;
 	private String experience;
 	private String charge;
-	private String status;
+//	private String status;
 	private String availableWithinRange;
 	private String location;
 	private String city;

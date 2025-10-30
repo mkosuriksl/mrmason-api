@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.MaterialMasterRequestDto;
+import com.application.mrmason.dto.ResponseGetAssetsDto;
 import com.application.mrmason.dto.ResponseGetMasterDto;
 import com.application.mrmason.dto.ResponseGetMaterialMasterDto;
 import com.application.mrmason.entity.MaterialMaster;
@@ -135,6 +136,29 @@ public class MaterialMasterController {
 
 	    return ResponseEntity.ok(response);
 	}
+	
+	@GetMapping("/home-search-by-machine")
+	public ResponseEntity<GenericResponse<ResponseGetAssetsDto>> getAssets(
+			 @RequestParam(required = false) String assetSubCat,
+	        @RequestParam(required = false) String assetBrand,
+	        @RequestParam(required = false) String assetModel,
+	        @RequestParam(required = false) String assetCat,
+	        @RequestParam(required = false) String location,
+	        @RequestParam(required = false) String userId,
+	        @RequestParam(defaultValue = "0") int page,
+	        @RequestParam(defaultValue = "10") int size
+	) {
+	    ResponseGetAssetsDto responseDto = homeService.getAssetsWithPagination(assetSubCat,assetBrand, assetModel, assetCat,location,userId, page, size);
+
+	    GenericResponse<ResponseGetAssetsDto> response = new GenericResponse<>(
+	            "Assets retrieved successfully",
+	            true,
+	            responseDto
+	    );
+
+	    return ResponseEntity.ok(response);
+	}
+
 
 
 }

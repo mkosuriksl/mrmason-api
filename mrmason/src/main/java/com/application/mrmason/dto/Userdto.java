@@ -32,4 +32,5 @@ public class Userdto {
 	private String VerifiedStatus;
 	private String linkedInURL;
 	private String highestQualification;
+	private String currentLocation;
 }

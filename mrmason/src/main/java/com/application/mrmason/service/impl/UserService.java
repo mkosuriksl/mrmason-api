@@ -42,6 +42,7 @@ import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.AdminSpVerificationRepository;
 import com.application.mrmason.repository.DeleteUserRepo;
+import com.application.mrmason.repository.SPAvailabilityRepo;
 import com.application.mrmason.repository.ServicePersonLoginDAO;
 import com.application.mrmason.repository.SpServiceDetailsRepo;
 import com.application.mrmason.repository.UploadUserProfilemageRepository;
@@ -103,6 +104,9 @@ public class UserService {
 
 	@Autowired
 	private DeleteUserRepo deleteUserRepo;
+	
+	@Autowired
+	SPAvailabilityRepo availabilityReo;
 
 	public Optional<User> checkExistingUser(String email, String phone, RegSource regSource) {
 		List<User> users = userDAO.findByEmailANDMobile(email, phone);
@@ -416,6 +420,9 @@ public class UserService {
 			dto.setName(userdb.getName());
 			dto.setMobile(userdb.getMobile());
 			dto.setEmail(userdb.getEmail());
+			availabilityReo.findByBodSeqNos(user.get().getBodSeqNo())
+            .ifPresent(spa -> dto.setCurrentLocation(spa.getAddress()));
+			
 			dto.setAddress(userdb.getAddress());
 			dto.setCity(userdb.getCity());
 			dto.setDistrict(userdb.getDistrict());

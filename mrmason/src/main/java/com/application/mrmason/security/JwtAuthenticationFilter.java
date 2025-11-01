@@ -96,7 +96,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 					}
 
 					if (userType.equals("EC")) {
-						userDetails = customerRegistrationRepo.findByUserEmailAndRegSource(username,regSource);
+						userDetails = customerRegistrationRepo.findByUserEmail(username);
 					}
 					if (userType.equals("MS")) {
 						userDetails = materialSupplierQuotationUserDAO.findByEmail(username);

@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.application.mrmason.entity.CustomerRegistration;
+import com.application.mrmason.entity.MaterialSupplierQuotationUser;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
@@ -45,6 +46,9 @@ public interface CustomerRegistrationRepo extends JpaRepository<CustomerRegistra
 	@Query("SELECT c FROM CustomerRegistration c WHERE c.userMobile = :userMobile")
     Optional<CustomerRegistration> findByUserMobileOne(String userMobile);
 	List<CustomerRegistration> findByUserTown(String trim);
+	
+	CustomerRegistration findByUserEmail(String email);
+
 	
 	@Query("SELECT cr FROM CustomerRegistration cr WHERE cr.regDate BETWEEN :startDate AND :endDate")
 	List<CustomerRegistration> findByRegisteredDateBetween(String startDate, String endDate);

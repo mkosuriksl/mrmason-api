@@ -220,6 +220,7 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 		customerDto.setUserState(user.get().getUserState());
 		customerDto.setUserTown(user.get().getUserTown());
 		customerDto.setUsertype(String.valueOf(user.get().getUserType()));
+		customerDto.setRegSource(user.get().getRegSource());
 		return customerDto;
 	}
 

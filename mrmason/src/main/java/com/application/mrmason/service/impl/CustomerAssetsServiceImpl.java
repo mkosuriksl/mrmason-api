@@ -352,8 +352,11 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 			msAsset.setPlanId(asset.getPlanId());
 			msAsset.setAssetBrand(asset.getAssetBrand());
 			msAsset.setAssetModel(asset.getAssetModel());
-
-			materialSupplierAssetsRepo.save(msAsset);
+			msAsset.setPlanId(asset.getPlanId());
+			MaterialSupplierAssets savedAsset = materialSupplierAssetsRepo.save(msAsset);
+			// Set generated ID back into DTO
+			asset.setAssetId(savedAsset.getAssetId());
+			asset.setMembershipExp(savedAsset.getMembershipExp());
 		} else if (userType == UserType.EC) {
 			assetRepo.save(asset);
 		} else {

@@ -6,7 +6,8 @@ public enum UserType {
     Adm,
     worker,
     MS,
-	RT;
+	RT,
+	FR;
 	
     public static UserType fromString(String userType) {
         switch (userType.toLowerCase()) {
@@ -22,6 +23,8 @@ public enum UserType {
             	return MS;
             case "rt":
             	return RT;
+            case "fr":
+            	return FR;
             default:
                 throw new IllegalArgumentException("Unknown user type: " + userType);
         }

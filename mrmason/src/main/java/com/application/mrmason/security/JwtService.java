@@ -1,6 +1,23 @@
 package com.application.mrmason.security;
 
+import java.security.Key;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
+
 import com.application.mrmason.entity.CustomerRegistration;
+import com.application.mrmason.entity.FrReg;
 import com.application.mrmason.entity.MaterialSupplierQuotationUser;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
@@ -10,15 +27,6 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
-
-import java.security.Key;
-import java.util.*;
-import java.util.function.Function;
 
 @Service
 public class JwtService {
@@ -87,6 +95,8 @@ public class JwtService {
 			return UserType.Adm;
 		}else if (userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_MS"))) {
 			return UserType.MS;
+		}else if (userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_FR"))) {
+			return UserType.FR;
 		}
 		
 		return null;
@@ -137,6 +147,14 @@ public class JwtService {
 		authorities.add(new SimpleGrantedAuthority("ROLE_" + registration.getUserType()));
 
 		return new org.springframework.security.core.userdetails.User(registration.getEmail(),
+				registration.getPassword(), authorities);
+	}
+	
+	public UserDetails getUserDetails(FrReg registration) {
+		Set<GrantedAuthority> authorities = new HashSet<>();
+		authorities.add(new SimpleGrantedAuthority("ROLE_" + registration.getUserType()));
+
+		return new org.springframework.security.core.userdetails.User(registration.getFrEmail(),
 				registration.getPassword(), authorities);
 	}
 

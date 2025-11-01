@@ -13,10 +13,13 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.application.mrmason.entity.FrLogin;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
+import com.application.mrmason.repository.FrLoginRepo;
+import com.application.mrmason.repository.FrRegRepository;
 import com.application.mrmason.repository.MaterialSupplierQuotationUserDAO;
 import com.application.mrmason.repository.UserDAO;
 
@@ -45,6 +48,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	
 	@Autowired
 	private MaterialSupplierQuotationUserDAO materialSupplierQuotationUserDAO;
+	
+	@Autowired
+	private FrRegRepository frRegRepository;
 
 	private static final String ORIGIN = "Origin";
 
@@ -94,6 +100,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 					}
 					if (userType.equals("MS")) {
 						userDetails = materialSupplierQuotationUserDAO.findByEmail(username);
+					}
+					if (userType.equals("FR")) {
+						userDetails = frRegRepository.findByFrEmails(username);
 					}
 
 					if (!jwtService.isTokenValid(token, userDetails)) {

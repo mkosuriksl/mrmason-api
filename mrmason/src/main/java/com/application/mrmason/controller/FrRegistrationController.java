@@ -60,7 +60,7 @@ public class FrRegistrationController {
 //        return service.changePassword(dto);
 //    }
     
-    @PostMapping("/fr-primary-secondary-skills")
+    @PostMapping("/fr-profile")
     public ResponseEntity<GenericResponse<FrProfile>> saveOrUpdateProfile(@RequestBody FrProfile profile) {
         GenericResponse<FrProfile> response = service.addOrUpdateProfile(profile);
         return ResponseEntity.ok(response);

@@ -13,7 +13,9 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.entity.FrLogin;
+import com.application.mrmason.entity.MaterialSupplierQuotationUser;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.repository.AdminDetailsRepo;
@@ -96,10 +98,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 					}
 
 					if (userType.equals("EC")) {
-						userDetails = customerRegistrationRepo.findByUserEmail(username);
+						CustomerRegistration customer = customerRegistrationRepo.findByUserMobileOrUserEmailAndUserid(username,userId).get();
+						userDetails=customer;
 					}
 					if (userType.equals("MS")) {
-						userDetails = materialSupplierQuotationUserDAO.findByEmail(username);
+						MaterialSupplierQuotationUser material = materialSupplierQuotationUserDAO.findByMobileOrEmailAndBodSeqNo(username,userId).get();
+						userDetails=material;
 					}
 					if (userType.equals("FR")) {
 						userDetails = frRegRepository.findByFrEmails(username);

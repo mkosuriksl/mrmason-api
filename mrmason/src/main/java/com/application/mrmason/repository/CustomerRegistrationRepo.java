@@ -47,7 +47,7 @@ public interface CustomerRegistrationRepo extends JpaRepository<CustomerRegistra
     Optional<CustomerRegistration> findByUserMobileOne(String userMobile);
 	List<CustomerRegistration> findByUserTown(String trim);
 	
-	CustomerRegistration findByUserEmail(String email);
+	CustomerRegistration findByUserEmail(String userEmail);
 
 	
 	@Query("SELECT cr FROM CustomerRegistration cr WHERE cr.regDate BETWEEN :startDate AND :endDate")
@@ -62,5 +62,6 @@ public interface CustomerRegistrationRepo extends JpaRepository<CustomerRegistra
 	
 	List<CustomerRegistration> findByUserMobileOrUserEmail(String customerNumber, String customerEmail);
 
-
+	@Query("SELECT u FROM CustomerRegistration u WHERE (u.userMobile = :contact OR u.userEmail = :contact) AND u.userid = :userId")
+	Optional<CustomerRegistration> findByUserMobileOrUserEmailAndUserid(String contact, String userId);
 }

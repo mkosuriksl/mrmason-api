@@ -132,7 +132,7 @@ public class CustomerLoginServiceImpl implements CustomerLoginService {
 		customerDto.setRegDate(customerOp.get().getRegDate());
 		customerDto.setUserDistrict((customerOp.get().getUserDistrict()));
 		customerDto.setUserEmail(customerOp.get().getUserEmail());
-		customerDto.setUserid(customerOp.get().getUserid());
+		customerDto.setUserId(customerOp.get().getUserid());
 		customerDto.setUserMobile(customerOp.get().getUserMobile());
 		customerDto.setUserName(customerOp.get().getUsername());
 		customerDto.setUserPincode(customerOp.get().getUserPincode());

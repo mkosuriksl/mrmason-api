@@ -1,13 +1,13 @@
 package com.application.mrmason.service.impl;
 
 import java.nio.file.AccessDeniedException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -37,6 +37,7 @@ import com.application.mrmason.dto.MaterialSupplierDto;
 import com.application.mrmason.dto.ResponseModel;
 import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.AdminMaterialMaster;
+import com.application.mrmason.entity.MaterialMaster;
 import com.application.mrmason.entity.MaterialSupplierQuotationUser;
 import com.application.mrmason.entity.UploadMatericalMasterImages;
 import com.application.mrmason.entity.UserType;
@@ -44,6 +45,7 @@ import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.AdminMaterialMasterRepository;
+import com.application.mrmason.repository.MaterialMasterRepository;
 import com.application.mrmason.repository.MaterialSupplierQuotationUserDAO;
 import com.application.mrmason.repository.UploadMatericalMasterImagesRepository;
 import com.application.mrmason.security.AuthDetailsProvider;
@@ -78,49 +80,131 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 
 	@Autowired
 	private MaterialSupplierQuotationUserDAO materialSupplierQuotationUserDAO;
+	
+	@Autowired
+	private MaterialMasterRepository materialMasterRepository;
 
 	@Override
 	public List<MaterialGroupDTO> createAdminMaterialMaster(List<MaterialGroupDTO> requestGroups, RegSource regSource)
-			throws AccessDeniedException {
+	        throws AccessDeniedException {
 
-		UserInfo userInfo = getLoggedInUserInfo(regSource);
+	    UserInfo userInfo = getLoggedInUserInfo(regSource);
 
-		// 1. Flatten materials and generate SKU
-		List<AdminMaterialMaster> entitiesToSave = new ArrayList<>();
-		for (MaterialGroupDTO group : requestGroups) {
-			for (MaterialDTO m : group.getMaterials()) {
-				if (m.getSkuId() == null) {
+	    List<AdminMaterialMaster> adminEntitiesToSave = new ArrayList<>();
+	    List<MaterialMaster> materialEntitiesToSave = new ArrayList<>();
 
-					String skuId = userInfo.userId + "_" + m.getSkuId();
-					m.setSkuId(skuId);
-				}
-				// Create entity
-				AdminMaterialMaster entity = new AdminMaterialMaster();
-				entity.setSkuId(userInfo.userId + "_" + m.getSkuId());
-				entity.setMaterialCategory(group.getMaterialCategory());
-				entity.setMaterialSubCategory(group.getMaterialSubCategory());
-				entity.setBrand(group.getBrand());
-				entity.setModelNo(m.getModelNo());
-				entity.setModelName(m.getModelName());
-				entity.setShape(m.getShape());
-				entity.setWidth(m.getWidth());
-				entity.setLength(m.getLength());
-				entity.setSize(m.getSize());
-				entity.setThickness(m.getThickness());
-				entity.setUpdatedBy(userInfo.userId);
-				entity.setUpdatedDate(new Date());
-				entity.setStatus("Active");
+	    for (MaterialGroupDTO group : requestGroups) {
+	        for (MaterialDTO m : group.getMaterials()) {
 
-				entitiesToSave.add(entity);
-			}
-		}
+	            // Generate SKU base (short version)
+	            String shortSku = group.getMaterialCategory() + "_"
+	                    + group.getMaterialSubCategory() + "_"
+	                    + group.getBrand() + "_"
+	                    + m.getSkuId();
 
-		// 2. Save all materials
-		adminMaterialMasterRepository.saveAll(entitiesToSave);
+	            // Full SKU for AdminMaterialMaster
+	            String fullSku = userInfo.userId + "_" + shortSku;
 
-		// 3. Return same grouped structure
-		return requestGroups;
+	            // Check duplicate in admin_material_master
+	            boolean exists = materialMasterRepository.existsByMsCatmsSubCatmsBrandSkuId(shortSku);
+	            if (exists) {
+	                // Skip duplicate SKU
+	                continue;
+	            }
+
+	            // --- Create AdminMaterialMaster entity ---
+	            AdminMaterialMaster adminEntity = new AdminMaterialMaster();
+	            adminEntity.setSkuId(fullSku);
+	            adminEntity.setMaterialCategory(group.getMaterialCategory());
+	            adminEntity.setMaterialSubCategory(group.getMaterialSubCategory());
+	            adminEntity.setBrand(group.getBrand());
+	            adminEntity.setModelNo(m.getModelNo());
+	            adminEntity.setModelName(m.getModelName());
+	            adminEntity.setShape(m.getShape());
+	            adminEntity.setWidth(m.getWidth());
+	            adminEntity.setLength(m.getLength());
+	            adminEntity.setSize(m.getSize());
+	            adminEntity.setThickness(m.getThickness());
+	            adminEntity.setUpdatedBy(userInfo.userId);
+	            adminEntity.setUpdatedDate(new Date());
+	            adminEntity.setStatus("Active");
+	            adminEntitiesToSave.add(adminEntity);
+
+	            // --- Create MaterialMaster entity (shorter SKU version) ---
+	            MaterialMaster materialEntity = new MaterialMaster();
+	            materialEntity.setMsCatmsSubCatmsBrandSkuId(shortSku); // short SKU only
+	            materialEntity.setMaterialCategory(group.getMaterialCategory());
+	            materialEntity.setMaterialSubCategory(group.getMaterialSubCategory());
+	            materialEntity.setBrand(group.getBrand());
+	            materialEntity.setSku( m.getSkuId());
+	            materialEntity.setModelNo(m.getModelNo());
+	            materialEntity.setModelName(m.getModelName());
+	            materialEntity.setUpdatedBy(userInfo.userId);
+	            materialEntity.setSize(m.getSize());
+	            materialEntity.setShape(m.getShape());
+	            materialEntity.setWidth(m.getWidth());
+	            materialEntity.setLength(m.getLength());
+	            materialEntity.setThickness(m.getThickness());
+	            materialEntity.setUpdatedDate(LocalDateTime.now());
+	            
+	            materialEntity.setUserId(userInfo.userId);
+	            materialEntitiesToSave.add(materialEntity);
+	        }
+	    }
+
+	    // Save in both tables
+	    if (!adminEntitiesToSave.isEmpty()) {
+	        adminMaterialMasterRepository.saveAll(adminEntitiesToSave);
+	    }
+
+	    if (!materialEntitiesToSave.isEmpty()) {
+	        materialMasterRepository.saveAll(materialEntitiesToSave);
+	    }
+
+	    return requestGroups;
 	}
+
+//	public List<MaterialGroupDTO> createAdminMaterialMaster(List<MaterialGroupDTO> requestGroups, RegSource regSource)
+//			throws AccessDeniedException {
+//
+//		UserInfo userInfo = getLoggedInUserInfo(regSource);
+//
+//		// 1. Flatten materials and generate SKU
+//		List<AdminMaterialMaster> entitiesToSave = new ArrayList<>();
+//		for (MaterialGroupDTO group : requestGroups) {
+//			for (MaterialDTO m : group.getMaterials()) {
+//				if (m.getSkuId() == null) {
+//
+//					String skuId = userInfo.userId + "_" + m.getSkuId();
+//					m.setSkuId(skuId);
+//				}
+//				// Create entity
+//				AdminMaterialMaster entity = new AdminMaterialMaster();
+//				entity.setSkuId(userInfo.userId + "_" + m.getSkuId());
+//				entity.setMaterialCategory(group.getMaterialCategory());
+//				entity.setMaterialSubCategory(group.getMaterialSubCategory());
+//				entity.setBrand(group.getBrand());
+//				entity.setModelNo(m.getModelNo());
+//				entity.setModelName(m.getModelName());
+//				entity.setShape(m.getShape());
+//				entity.setWidth(m.getWidth());
+//				entity.setLength(m.getLength());
+//				entity.setSize(m.getSize());
+//				entity.setThickness(m.getThickness());
+//				entity.setUpdatedBy(userInfo.userId);
+//				entity.setUpdatedDate(new Date());
+//				entity.setStatus("Active");
+//
+//				entitiesToSave.add(entity);
+//			}
+//		}
+//
+//		// 2. Save all materials
+//		adminMaterialMasterRepository.saveAll(entitiesToSave);
+//
+//		// 3. Return same grouped structure
+//		return requestGroups;
+//	}
 
 	private static class UserInfo {
 

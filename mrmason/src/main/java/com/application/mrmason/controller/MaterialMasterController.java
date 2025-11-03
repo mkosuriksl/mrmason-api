@@ -62,20 +62,20 @@ public class MaterialMasterController {
 		return ResponseEntity.ok(response);
 	}
 
-	@GetMapping("/get-material-master")
+	@GetMapping("/get-admin-material-master")
 	public ResponseEntity<ResponseGetMaterialMasterDto> getTask(@RequestParam(required = false) String serviceCategory,
-			@RequestParam(required = false) String productCategory,
-			@RequestParam(required = false) String productSubCategory, @RequestParam(required = false) String brand,
-			@RequestParam(required = false) String model,
-			@RequestParam(required = false) String userIdSku,
+			@RequestParam(required = false) String materialCategory,
+			@RequestParam(required = false) String materialSubCategory, @RequestParam(required = false) String brand,
+			@RequestParam(required = false) String modelNo,@RequestParam(required = false) String modelName,
+			@RequestParam(required = false) String msCatmsSubCatmsBrandSkuId,
 			@RequestParam(required = false) String userId,
 			@RequestParam(required = false) RegSource regSource,
 			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size)
 			throws AccessDeniedException {
 
 		Pageable pageable = PageRequest.of(page, size);
-		Page<MaterialMaster> srpqPage = materialMasterService.get(serviceCategory, productCategory, productSubCategory,
-				brand, model, userIdSku,userId,regSource,pageable);
+		Page<MaterialMaster> srpqPage = materialMasterService.get(serviceCategory, materialCategory, materialSubCategory,
+				brand, modelNo,modelName, msCatmsSubCatmsBrandSkuId,userId,regSource,pageable);
 		ResponseGetMaterialMasterDto response = new ResponseGetMaterialMasterDto();
 
 		response.setMessage("Material Master is retrieved successfully.");

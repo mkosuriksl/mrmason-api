@@ -44,8 +44,8 @@ public class MaterialHomeService {
 	@PersistenceContext
 	private EntityManager entityManager;
 
-	public ResponseGetMasterDto getMaterialsWithPagination(String location, String productCategory,
-			String productSubCategory, String brand, String model, int page, int size) {
+	public ResponseGetMasterDto getMaterialsWithPagination(String location, String materialCategory,
+			String materialSubCategory, String brand, String modelName, int page, int size) {
 		Pageable pageable = PageRequest.of(page, size);
 
 		// 1. Get suppliers by location
@@ -92,14 +92,14 @@ public class MaterialHomeService {
 		List<Predicate> predicates = new ArrayList<>();
 		predicates.add(root.get("updatedBy").in(userIds));
 
-		if (productCategory != null && !productCategory.isEmpty())
-			predicates.add(cb.equal(root.get("materialCategory"), productCategory));
-		if (productSubCategory != null && !productSubCategory.isEmpty())
-			predicates.add(cb.equal(root.get("materialSubCategory"), productSubCategory));
+		if (materialCategory != null && !materialCategory.isEmpty())
+			predicates.add(cb.equal(root.get("materialCategory"), materialCategory));
+		if (materialSubCategory != null && !materialSubCategory.isEmpty())
+			predicates.add(cb.equal(root.get("materialSubCategory"), materialSubCategory));
 		if (brand != null && !brand.isEmpty())
 			predicates.add(cb.equal(root.get("brand"), brand));
-		if (model != null && !model.isEmpty())
-			predicates.add(cb.equal(root.get("modelName"), model));
+		if (modelName != null && !modelName.isEmpty())
+			predicates.add(cb.equal(root.get("modelName"), modelName));
 
 		query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
 		TypedQuery<AdminMaterialMaster> typedQuery = entityManager.createQuery(query);
@@ -113,14 +113,14 @@ public class MaterialHomeService {
 		List<Predicate> countPredicates = new ArrayList<>();
 		countPredicates.add(countRoot.get("updatedBy").in(userIds));
 
-		if (productCategory != null && !productCategory.isEmpty())
-			countPredicates.add(cb.equal(countRoot.get("materialCategory"), productCategory));
-		if (productSubCategory != null && !productSubCategory.isEmpty())
-			countPredicates.add(cb.equal(countRoot.get("materialSubCategory"), productSubCategory));
+		if (materialCategory != null && !materialCategory.isEmpty())
+			countPredicates.add(cb.equal(countRoot.get("materialCategory"), materialCategory));
+		if (materialSubCategory != null && !materialSubCategory.isEmpty())
+			countPredicates.add(cb.equal(countRoot.get("materialSubCategory"), materialSubCategory));
 		if (brand != null && !brand.isEmpty())
 			countPredicates.add(cb.equal(countRoot.get("brand"), brand));
-		if (model != null && !model.isEmpty())
-			countPredicates.add(cb.equal(countRoot.get("modelName"), model));
+		if (modelName != null && !modelName.isEmpty())
+			countPredicates.add(cb.equal(countRoot.get("modelName"), modelName));
 
 		countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
 		Long totalElements = entityManager.createQuery(countQuery).getSingleResult();
@@ -182,112 +182,105 @@ public class MaterialHomeService {
 
 		return locations;
 	}
-	
-	public ResponseGetAssetsDto getAssetsWithPagination(
-	        String assetSubCat, String assetBrand, String assetModel,
-	        String assetCat, String location,String userId, int page, int size) {
 
-	    Pageable pageable = PageRequest.of(page, size);
-	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+	public ResponseGetAssetsDto getAssetsWithPagination(String assetSubCat, String assetBrand, String assetModel,
+			String assetCat, String location, String userId, int page, int size) {
 
-	    // ✅ Step 1: Build main query
-	    CriteriaQuery<MaterialSupplierAssets> query = cb.createQuery(MaterialSupplierAssets.class);
-	    Root<MaterialSupplierAssets> root = query.from(MaterialSupplierAssets.class);
+		Pageable pageable = PageRequest.of(page, size);
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
-	    List<Predicate> predicates = new ArrayList<>();
+		// ✅ Step 1: Build main query
+		CriteriaQuery<MaterialSupplierAssets> query = cb.createQuery(MaterialSupplierAssets.class);
+		Root<MaterialSupplierAssets> root = query.from(MaterialSupplierAssets.class);
 
-	    if (assetSubCat != null && !assetSubCat.isEmpty())
-	        predicates.add(cb.equal(root.get("assetSubCat"), assetSubCat));
+		List<Predicate> predicates = new ArrayList<>();
 
-	    if (assetBrand != null && !assetBrand.isEmpty())
-	        predicates.add(cb.equal(root.get("assetBrand"), assetBrand));
+		if (assetSubCat != null && !assetSubCat.isEmpty())
+			predicates.add(cb.equal(root.get("assetSubCat"), assetSubCat));
 
-	    if (assetModel != null && !assetModel.isEmpty())
-	        predicates.add(cb.equal(root.get("assetModel"), assetModel));
+		if (assetBrand != null && !assetBrand.isEmpty())
+			predicates.add(cb.equal(root.get("assetBrand"), assetBrand));
 
-	    if (assetCat != null && !assetCat.isEmpty())
-	        predicates.add(cb.equal(root.get("assetCat"), assetCat));
+		if (assetModel != null && !assetModel.isEmpty())
+			predicates.add(cb.equal(root.get("assetModel"), assetModel));
 
-	    if (location != null && !location.trim().isEmpty())
-	        predicates.add(cb.like(cb.lower(root.get("location")), location.trim().toLowerCase() + "%"));
+		if (assetCat != null && !assetCat.isEmpty())
+			predicates.add(cb.equal(root.get("assetCat"), assetCat));
 
-	    if (userId != null && !userId.trim().isEmpty())
-	        predicates.add(cb.equal(root.get("userId"), userId.trim()));
-	    query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
+		if (location != null && !location.trim().isEmpty())
+			predicates.add(cb.like(cb.lower(root.get("location")), location.trim().toLowerCase() + "%"));
 
-	    // ✅ Step 2: Pagination
-	    TypedQuery<MaterialSupplierAssets> typedQuery = entityManager.createQuery(query);
-	    typedQuery.setFirstResult((int) pageable.getOffset());
-	    typedQuery.setMaxResults(pageable.getPageSize());
-	    List<MaterialSupplierAssets> assets = typedQuery.getResultList();
+		if (userId != null && !userId.trim().isEmpty())
+			predicates.add(cb.equal(root.get("userId"), userId.trim()));
+		query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
 
-	    // ✅ Step 3: Count total elements
-	    CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
-	    Root<MaterialSupplierAssets> countRoot = countQuery.from(MaterialSupplierAssets.class);
+		// ✅ Step 2: Pagination
+		TypedQuery<MaterialSupplierAssets> typedQuery = entityManager.createQuery(query);
+		typedQuery.setFirstResult((int) pageable.getOffset());
+		typedQuery.setMaxResults(pageable.getPageSize());
+		List<MaterialSupplierAssets> assets = typedQuery.getResultList();
 
-	    List<Predicate> countPredicates = new ArrayList<>();
+		// ✅ Step 3: Count total elements
+		CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+		Root<MaterialSupplierAssets> countRoot = countQuery.from(MaterialSupplierAssets.class);
 
-	    if (assetSubCat != null && !assetSubCat.isEmpty())
-	        countPredicates.add(cb.equal(countRoot.get("assetSubCat"), assetSubCat));
+		List<Predicate> countPredicates = new ArrayList<>();
 
-	    if (assetBrand != null && !assetBrand.isEmpty())
-	        countPredicates.add(cb.equal(countRoot.get("assetBrand"), assetBrand));
+		if (assetSubCat != null && !assetSubCat.isEmpty())
+			countPredicates.add(cb.equal(countRoot.get("assetSubCat"), assetSubCat));
 
-	    if (assetModel != null && !assetModel.isEmpty())
-	        countPredicates.add(cb.equal(countRoot.get("assetModel"), assetModel));
+		if (assetBrand != null && !assetBrand.isEmpty())
+			countPredicates.add(cb.equal(countRoot.get("assetBrand"), assetBrand));
 
-	    if (assetCat != null && !assetCat.isEmpty())
-	        countPredicates.add(cb.equal(countRoot.get("assetCat"), assetCat));
+		if (assetModel != null && !assetModel.isEmpty())
+			countPredicates.add(cb.equal(countRoot.get("assetModel"), assetModel));
 
-	    if (location != null && !location.trim().isEmpty())
-	        countPredicates.add(cb.like(cb.lower(countRoot.get("location")), location.trim().toLowerCase() + "%"));
+		if (assetCat != null && !assetCat.isEmpty())
+			countPredicates.add(cb.equal(countRoot.get("assetCat"), assetCat));
 
-	    if (userId != null && !userId.trim().isEmpty())
-	        countPredicates.add(cb.equal(countRoot.get("userId"), userId.trim()));
-	    countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
-	    Long totalElements = entityManager.createQuery(countQuery).getSingleResult();
+		if (location != null && !location.trim().isEmpty())
+			countPredicates.add(cb.like(cb.lower(countRoot.get("location")), location.trim().toLowerCase() + "%"));
 
-	    // ✅ Step 4: Get supplier IDs
-	    List<String> userIds = assets.stream()
-	            .map(MaterialSupplierAssets::getUserId)
-	            .filter(Objects::nonNull)
-	            .distinct()
-	            .toList();
+		if (userId != null && !userId.trim().isEmpty())
+			countPredicates.add(cb.equal(countRoot.get("userId"), userId.trim()));
+		countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
+		Long totalElements = entityManager.createQuery(countQuery).getSingleResult();
 
-	    // ✅ Step 5: Fetch supplier details
-	    List<MaterialSupplierQuotationUser> supplierEntities = userIds.isEmpty()
-	            ? Collections.emptyList()
-	            : materialSupplierQuotationUserDAO.findAllById(userIds);
+		// ✅ Step 4: Get supplier IDs
+		List<String> userIds = assets.stream().map(MaterialSupplierAssets::getUserId).filter(Objects::nonNull)
+				.distinct().toList();
 
-	    List<MaterialSupplierDto> suppliers = supplierEntities.stream().map(s -> {
-	        MaterialSupplierDto dto = new MaterialSupplierDto();
-	        dto.setBodSeqNo(s.getBodSeqNo());
-	        dto.setName(s.getName());
-	        dto.setBusinessName(s.getBusinessName());
-	        dto.setMobile(s.getMobile());
-	        dto.setEmail(s.getEmail());
-	        dto.setAddress(s.getAddress());
-	        dto.setCity(s.getCity());
-	        dto.setDistrict(s.getDistrict());
-	        dto.setState(s.getState());
-	        dto.setLocation(s.getLocation());
-	        return dto;
-	    }).toList();
+		// ✅ Step 5: Fetch supplier details
+		List<MaterialSupplierQuotationUser> supplierEntities = userIds.isEmpty() ? Collections.emptyList()
+				: materialSupplierQuotationUserDAO.findAllById(userIds);
 
-	    // ✅ Step 6: Prepare Response DTO
-	    ResponseGetAssetsDto responseDto = new ResponseGetAssetsDto();
-	    responseDto.setMessage("Assets retrieved successfully");
-	    responseDto.setStatus(true);
-	    responseDto.setAssets(assets);
-	    responseDto.setSuppliers(suppliers);
-	    responseDto.setCurrentPage(page);
-	    responseDto.setPageSize(size);
-	    responseDto.setTotalElements(totalElements);
-	    responseDto.setTotalPages((int) Math.ceil((double) totalElements / size));
+		List<MaterialSupplierDto> suppliers = supplierEntities.stream().map(s -> {
+			MaterialSupplierDto dto = new MaterialSupplierDto();
+			dto.setBodSeqNo(s.getBodSeqNo());
+			dto.setName(s.getName());
+			dto.setBusinessName(s.getBusinessName());
+			dto.setMobile(s.getMobile());
+			dto.setEmail(s.getEmail());
+			dto.setAddress(s.getAddress());
+			dto.setCity(s.getCity());
+			dto.setDistrict(s.getDistrict());
+			dto.setState(s.getState());
+			dto.setLocation(s.getLocation());
+			return dto;
+		}).toList();
 
-	    return responseDto;
+		// ✅ Step 6: Prepare Response DTO
+		ResponseGetAssetsDto responseDto = new ResponseGetAssetsDto();
+		responseDto.setMessage("Assets retrieved successfully");
+		responseDto.setStatus(true);
+		responseDto.setAssets(assets);
+		responseDto.setSuppliers(suppliers);
+		responseDto.setCurrentPage(page);
+		responseDto.setPageSize(size);
+		responseDto.setTotalElements(totalElements);
+		responseDto.setTotalPages((int) Math.ceil((double) totalElements / size));
+
+		return responseDto;
 	}
-
-
 
 }

@@ -12,7 +12,7 @@ import lombok.Setter;
 public class CustomerRegistrationDto {
 	
 	private long id;
-	private String userid;
+	private String userId;
 	private String userEmail;
 	private String userMobile;
 	private String usertype;

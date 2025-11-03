@@ -95,7 +95,7 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 		customerDto.setId(customer.getId());
 		customerDto.setUserName(customer.getUsername());
 		customerDto.setUserEmail(customer.getUserEmail());
-		customerDto.setUserid(customer.getUserid());
+		customerDto.setUserId(customer.getUserid());
 		customerDto.setUserMobile(customer.getUserMobile());
 		customerDto.setRegDate(customer.getRegDate());
 		customerDto.setUserPincode(customer.getUserPincode());
@@ -213,7 +213,7 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 		customerDto.setRegDate(user.get().getRegDate());
 		customerDto.setUserDistrict((user.get().getUserDistrict()));
 		customerDto.setUserEmail(user.get().getUserEmail());
-		customerDto.setUserid(user.get().getUserid());
+		customerDto.setUserId(user.get().getUserid());
 		customerDto.setUserMobile(user.get().getUserMobile());
 		customerDto.setUserName(user.get().getUsername());
 		customerDto.setUserPincode(user.get().getUserPincode());

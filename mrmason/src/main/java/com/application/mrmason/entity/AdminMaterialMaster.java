@@ -16,7 +16,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "admin_material_master")
+@Table(name = "ms_material_master")
 public class AdminMaterialMaster {
 
 	@Id

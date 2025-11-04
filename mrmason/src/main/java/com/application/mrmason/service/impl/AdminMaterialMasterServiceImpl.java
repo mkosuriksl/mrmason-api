@@ -39,6 +39,7 @@ import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.AdminMaterialMaster;
 import com.application.mrmason.entity.MaterialMaster;
 import com.application.mrmason.entity.MaterialSupplierQuotationUser;
+import com.application.mrmason.entity.UploadAdminMaterialMaster;
 import com.application.mrmason.entity.UploadMatericalMasterImages;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
@@ -47,6 +48,7 @@ import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.AdminMaterialMasterRepository;
 import com.application.mrmason.repository.MaterialMasterRepository;
 import com.application.mrmason.repository.MaterialSupplierQuotationUserDAO;
+import com.application.mrmason.repository.UploadAdminMaterialMasterRepository;
 import com.application.mrmason.repository.UploadMatericalMasterImagesRepository;
 import com.application.mrmason.security.AuthDetailsProvider;
 import com.application.mrmason.service.AdminMaterialMasterService;
@@ -83,6 +85,9 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 	
 	@Autowired
 	private MaterialMasterRepository materialMasterRepository;
+	
+	@Autowired
+	private UploadAdminMaterialMasterRepository uploadAdminMaterialMasterRepository;
 
 	@Override
 	public List<MaterialGroupDTO> createAdminMaterialMaster(List<MaterialGroupDTO> requestGroups, RegSource regSource)
@@ -400,42 +405,56 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 
 		// 3. Prepare new UploadMatericalMasterImages entity
 		UploadMatericalMasterImages uploadEntity = new UploadMatericalMasterImages();
+		UploadAdminMaterialMaster uploadAdminEntity = new UploadAdminMaterialMaster();
+
 		uploadEntity.setSkuId(msCatmsSubCatmsBrandSkuId);
 		uploadEntity.setUpdatedBy(userInfo.userId);
 		uploadEntity.setUpdatedDate(new Date());
+		
+		uploadAdminEntity.setSkuId(msCatmsSubCatmsBrandSkuId);
+		uploadAdminEntity.setUpdatedBy(userInfo.userId);
+		uploadAdminEntity.setUpdatedDate(new Date());
 
 		if (materialMasterImage1 != null && !materialMasterImage1.isEmpty()) {
 			String path1 = directoryPath + materialMasterImage1.getOriginalFilename();
 			String link1 = awsConfig.uploadFileToS3Bucket(path1, materialMasterImage1);
 			uploadEntity.setMaterialMasterImage1(link1);
+			uploadAdminEntity.setMaterialMasterImage1(link1);
 		}
 
 		if (materialMasterImage2 != null && !materialMasterImage2.isEmpty()) {
 			String path2 = directoryPath + materialMasterImage2.getOriginalFilename();
 			String link2 = awsConfig.uploadFileToS3Bucket(path2, materialMasterImage2);
 			uploadEntity.setMaterialMasterImage2(link2);
+			uploadAdminEntity.setMaterialMasterImage2(link2);
 		}
 
 		if (materialMasterImage3 != null && !materialMasterImage3.isEmpty()) {
 			String path3 = directoryPath + materialMasterImage3.getOriginalFilename();
 			String link3 = awsConfig.uploadFileToS3Bucket(path3, materialMasterImage3);
 			uploadEntity.setMaterialMasterImage3(link3);
+			uploadAdminEntity.setMaterialMasterImage3(link3);
+
 		}
 
 		if (materialMasterImage4 != null && !materialMasterImage4.isEmpty()) {
 			String path4 = directoryPath + materialMasterImage4.getOriginalFilename();
 			String link4 = awsConfig.uploadFileToS3Bucket(path4, materialMasterImage4);
 			uploadEntity.setMaterialMasterImage4(link4);
+			uploadAdminEntity.setMaterialMasterImage4(link4);
 		}
 
 		if (materialMasterImage5 != null && !materialMasterImage5.isEmpty()) {
 			String path5 = directoryPath + materialMasterImage5.getOriginalFilename();
 			String link5 = awsConfig.uploadFileToS3Bucket(path5, materialMasterImage5);
 			uploadEntity.setMaterialMasterImage5(link5);
+			uploadAdminEntity.setMaterialMasterImage5(link5);
+
 		}
 
 		// 4. Save to UploadMatericalMasterImages table
 		uploadMatericalMasterImagesRepository.save(uploadEntity);
+		uploadAdminMaterialMasterRepository.save(uploadAdminEntity);
 
 		// 5. Response
 		response.setError("false");

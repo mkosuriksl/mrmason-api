@@ -3,7 +3,9 @@ package com.application.mrmason.service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -18,9 +20,11 @@ import com.application.mrmason.entity.MaterialMaster;
 import com.application.mrmason.entity.MaterialPricing;
 import com.application.mrmason.entity.MaterialSupplierAssets;
 import com.application.mrmason.entity.MaterialSupplierQuotationUser;
+import com.application.mrmason.entity.UploadMatericalMasterImages;
 import com.application.mrmason.repository.MaterialMasterRepository;
 import com.application.mrmason.repository.MaterialPricingRepository;
 import com.application.mrmason.repository.MaterialSupplierQuotationUserDAO;
+import com.application.mrmason.repository.UploadMatericalMasterImagesRepository;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -44,6 +48,9 @@ public class MaterialHomeService {
 
 	@PersistenceContext
 	private EntityManager entityManager;
+	
+	@Autowired
+	private UploadMatericalMasterImagesRepository uploadMMRepo;
 
 	public ResponseGetMasterDto getMaterialsWithPagination(String location, String materialCategory,
 			String materialSubCategory, String brand, String modelName, int page, int size) {
@@ -129,6 +136,24 @@ public class MaterialHomeService {
 		// 4. Fetch pricing for current page SKUs
 		List<String> skuList = masterList.stream().map(MaterialMaster::getMsCatmsSubCatmsBrandSkuId).toList();
 		List<MaterialPricing> pricingList = pricingRepo.findByUserIdSkuIn(skuList);
+
+		List<UploadMatericalMasterImages> imageList = uploadMMRepo.findBySkuIdIn(skuList);
+
+	    // 6. Map SKU → Image Entity
+	    Map<String, UploadMatericalMasterImages> imageMap = imageList.stream()
+	            .collect(Collectors.toMap(UploadMatericalMasterImages::getSkuId, img -> img));
+
+	    // 7. Set image data in MaterialMaster transient fields
+	    for (MaterialMaster material : masterList) {
+	        UploadMatericalMasterImages img = imageMap.get(material.getMsCatmsSubCatmsBrandSkuId());
+	        if (img != null) {
+	            material.setMaterialMasterImage1(img.getMaterialMasterImage1());
+	            material.setMaterialMasterImage2(img.getMaterialMasterImage2());
+	            material.setMaterialMasterImage3(img.getMaterialMasterImage3());
+	            material.setMaterialMasterImage4(img.getMaterialMasterImage4());
+	            material.setMaterialMasterImage5(img.getMaterialMasterImage5());
+	        }
+	    }
 
 		// 5. Build Response DTO
 		ResponseGetMasterDto responseDto = new ResponseGetMasterDto();

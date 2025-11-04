@@ -6,6 +6,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Data;
 
 @Entity
@@ -34,6 +35,16 @@ public class MaterialMaster {
 	private String length;
 	private String thickness;
 	private String status;
+	@Transient
+    private String materialMasterImage1;
+    @Transient
+    private String materialMasterImage2;
+    @Transient
+    private String materialMasterImage3;
+    @Transient
+    private String materialMasterImage4;
+    @Transient
+    private String materialMasterImage5;
 	
 
 }

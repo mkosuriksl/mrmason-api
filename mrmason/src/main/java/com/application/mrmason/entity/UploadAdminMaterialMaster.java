@@ -16,8 +16,8 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "upload_materical_master_images")
-public class UploadMatericalMasterImages {
+@Table(name = "upload_admin_materical_master_images")
+public class UploadAdminMaterialMaster {
 
 	@Id
 	@Column(name = "skuId")

@@ -14,6 +14,7 @@ import com.application.mrmason.dto.MaterialSupplierDto;
 import com.application.mrmason.dto.ResponseGetAssetsDto;
 import com.application.mrmason.dto.ResponseGetMasterDto;
 import com.application.mrmason.entity.AdminMaterialMaster;
+import com.application.mrmason.entity.MaterialMaster;
 import com.application.mrmason.entity.MaterialPricing;
 import com.application.mrmason.entity.MaterialSupplierAssets;
 import com.application.mrmason.entity.MaterialSupplierQuotationUser;
@@ -72,7 +73,7 @@ public class MaterialHomeService {
 			ResponseGetMasterDto emptyResponse = new ResponseGetMasterDto();
 			emptyResponse.setMessage("No suppliers found for location: " + location);
 			emptyResponse.setStatus(false);
-			emptyResponse.setAdminMaterialMaster(Collections.emptyList());
+			emptyResponse.setMaterialMaster(Collections.emptyList());
 			emptyResponse.setMaterialSupplier(Collections.emptyList());
 			emptyResponse.setMasterPricing(Collections.emptyList());
 			emptyResponse.setCurrentPage(page);
@@ -86,8 +87,8 @@ public class MaterialHomeService {
 
 		// 2. Fetch MaterialMaster using CriteriaBuilder with pagination
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		CriteriaQuery<AdminMaterialMaster> query = cb.createQuery(AdminMaterialMaster.class);
-		Root<AdminMaterialMaster> root = query.from(AdminMaterialMaster.class);
+		CriteriaQuery<MaterialMaster> query = cb.createQuery(MaterialMaster.class);
+		Root<MaterialMaster> root = query.from(MaterialMaster.class);
 
 		List<Predicate> predicates = new ArrayList<>();
 		predicates.add(root.get("updatedBy").in(userIds));
@@ -102,14 +103,14 @@ public class MaterialHomeService {
 			predicates.add(cb.equal(root.get("modelName"), modelName));
 
 		query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
-		TypedQuery<AdminMaterialMaster> typedQuery = entityManager.createQuery(query);
+		TypedQuery<MaterialMaster> typedQuery = entityManager.createQuery(query);
 		typedQuery.setFirstResult((int) pageable.getOffset());
 		typedQuery.setMaxResults(pageable.getPageSize());
-		List<AdminMaterialMaster> masterList = typedQuery.getResultList();
+		List<MaterialMaster> masterList = typedQuery.getResultList();
 
 		// 3. Count query for pagination
 		CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
-		Root<AdminMaterialMaster> countRoot = countQuery.from(AdminMaterialMaster.class);
+		Root<MaterialMaster> countRoot = countQuery.from(MaterialMaster.class);
 		List<Predicate> countPredicates = new ArrayList<>();
 		countPredicates.add(countRoot.get("updatedBy").in(userIds));
 
@@ -126,14 +127,14 @@ public class MaterialHomeService {
 		Long totalElements = entityManager.createQuery(countQuery).getSingleResult();
 
 		// 4. Fetch pricing for current page SKUs
-		List<String> skuList = masterList.stream().map(AdminMaterialMaster::getSkuId).toList();
+		List<String> skuList = masterList.stream().map(MaterialMaster::getMsCatmsSubCatmsBrandSkuId).toList();
 		List<MaterialPricing> pricingList = pricingRepo.findByUserIdSkuIn(skuList);
 
 		// 5. Build Response DTO
 		ResponseGetMasterDto responseDto = new ResponseGetMasterDto();
 		responseDto.setMessage("Material Master is retrieved successfully.");
 		responseDto.setStatus(true);
-		responseDto.setAdminMaterialMaster(masterList);
+		responseDto.setMaterialMaster(masterList);
 		responseDto.setMaterialSupplier(suppliers);
 		responseDto.setMasterPricing(pricingList);
 		responseDto.setCurrentPage(page);

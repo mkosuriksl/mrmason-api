@@ -24,12 +24,12 @@ public interface AdminMaterialMasterRepository extends JpaRepository<AdminMateri
 	           "WHERE s.materialCategory IS NOT NULL AND s.materialSubCategory IS NOT NULL")
 	    List<Object[]> findCategoryAndSubCategory();
 
-	@Query("SELECT m FROM AdminMaterialMaster m "
-			+ "WHERE (:materialCategory IS NULL OR m.materialCategory = :materialCategory) "
-			+ "AND (:materialSubCategory IS NULL OR m.materialSubCategory = :materialSubCategory) "
-			+ "AND (:brand IS NULL OR m.brand = :brand)")
-	List<AdminMaterialMaster> searchMaterials(@Param("materialCategory") String materialCategory,
-			@Param("materialSubCategory") String materialSubCategory, @Param("brand") String brand);
+//	@Query("SELECT m FROM AdminMaterialMaster m "
+//			+ "WHERE (:materialCategory IS NULL OR m.materialCategory = :materialCategory) "
+//			+ "AND (:materialSubCategory IS NULL OR m.materialSubCategory = :materialSubCategory) "
+//			+ "AND (:brand IS NULL OR m.brand = :brand)")
+//	List<AdminMaterialMaster> searchMaterials(@Param("materialCategory") String materialCategory,
+//			@Param("materialSubCategory") String materialSubCategory, @Param("brand") String brand);
 
 	List<AdminMaterialMaster> findByUpdatedBy(@Param("updatedBy") String updatedBy);
 

@@ -293,8 +293,8 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 		}
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		CriteriaQuery<AdminMaterialMaster> query = cb.createQuery(AdminMaterialMaster.class);
-		Root<AdminMaterialMaster> root = query.from(AdminMaterialMaster.class);
+		CriteriaQuery<MaterialMaster> query = cb.createQuery(MaterialMaster.class);
+		Root<MaterialMaster> root = query.from(MaterialMaster.class);
 
 		List<Predicate> predicates = new ArrayList<>();
 		if (materialCategory != null && !materialCategory.trim().isEmpty())
@@ -313,14 +313,14 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 			predicates.add(cb.equal(root.get("updatedBy"), userId));
 
 		query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
-		TypedQuery<AdminMaterialMaster> typedQuery = entityManager.createQuery(query);
+		TypedQuery<MaterialMaster> typedQuery = entityManager.createQuery(query);
 		typedQuery.setFirstResult((int) pageable.getOffset());
 		typedQuery.setMaxResults(pageable.getPageSize());
 
-		List<AdminMaterialMaster> materials = typedQuery.getResultList();
+		List<MaterialMaster> materials = typedQuery.getResultList();
 
 		// ✅ Fetch all image records for the same SKUs
-		List<String> skuIds = materials.stream().map(AdminMaterialMaster::getSkuId).toList();
+		List<String> skuIds = materials.stream().map(MaterialMaster::getMsCatmsSubCatmsBrandSkuId).toList();
 		if (skuIds.isEmpty()) {
 			return new PageImpl<>(Collections.emptyList(), pageable, 0);
 		}
@@ -336,22 +336,26 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 
 		// ✅ Merge material + images
 		List<AdminMaterialMasterResponseWithImageDto> mergedList = materials.stream().map(mat -> {
-			AdminMaterialMasterResponseWithImageDto dto = new AdminMaterialMasterResponseWithImageDto();
-			BeanUtils.copyProperties(mat, dto);
-			UploadMatericalMasterImages img = imageMap.get(mat.getSkuId());
-			if (img != null) {
-				dto.setMaterialMasterImage1(img.getMaterialMasterImage1());
-				dto.setMaterialMasterImage2(img.getMaterialMasterImage2());
-				dto.setMaterialMasterImage3(img.getMaterialMasterImage3());
-				dto.setMaterialMasterImage4(img.getMaterialMasterImage4());
-				dto.setMaterialMasterImage5(img.getMaterialMasterImage5());
-			}
-			return dto;
+		    AdminMaterialMasterResponseWithImageDto dto = new AdminMaterialMasterResponseWithImageDto();
+		    BeanUtils.copyProperties(mat, dto);
+
+		    // 👇 Fix skuId null issue
+		    dto.setSkuId(mat.getMsCatmsSubCatmsBrandSkuId());
+
+		    UploadMatericalMasterImages img = imageMap.get(mat.getMsCatmsSubCatmsBrandSkuId());
+		    if (img != null) {
+		        dto.setMaterialMasterImage1(img.getMaterialMasterImage1());
+		        dto.setMaterialMasterImage2(img.getMaterialMasterImage2());
+		        dto.setMaterialMasterImage3(img.getMaterialMasterImage3());
+		        dto.setMaterialMasterImage4(img.getMaterialMasterImage4());
+		        dto.setMaterialMasterImage5(img.getMaterialMasterImage5());
+		    }
+		    return dto;
 		}).toList();
 
 		// ✅ Count query (REBUILD predicates for countRoot)
 		CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
-		Root<AdminMaterialMaster> countRoot = countQuery.from(AdminMaterialMaster.class);
+		Root<MaterialMaster> countRoot = countQuery.from(MaterialMaster.class);
 		List<Predicate> countPredicates = new ArrayList<>();
 
 		if (materialCategory != null && !materialCategory.trim().isEmpty())
@@ -377,14 +381,14 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 
 	@Transactional
 	@Override
-	public ResponseEntity<ResponseModel> uploadDoc(RegSource regSource, String skuId,
+	public ResponseEntity<ResponseModel> uploadDoc(RegSource regSource, String msCatmsSubCatmsBrandSkuId,
 			MultipartFile materialMasterImage1, MultipartFile materialMasterImage2, MultipartFile materialMasterImage3,
 			MultipartFile materialMasterImage4, MultipartFile materialMasterImage5) throws AccessDeniedException {
 		UserInfo userInfo = getLoggedInUserInfo(regSource);
 		ResponseModel response = new ResponseModel();
 
 		// 1. Check if skuId exists in AdminMaterialMaster
-		Optional<AdminMaterialMaster> adminMaterial = adminMaterialMasterRepository.findBySkuId(skuId);
+		Optional<MaterialMaster> adminMaterial = materialMasterRepository.findByMsCatmsSubCatmsBrandSkuId(msCatmsSubCatmsBrandSkuId);
 		if (adminMaterial.isEmpty()) {
 			response.setError("true");
 			response.setMsg("SKU ID not found in AdminMaterialMaster.");
@@ -392,11 +396,11 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 		}
 
 		// 2. Directory for S3
-		String directoryPath = "adminMaterialMaster/" + skuId + "/";
+		String directoryPath = "adminMaterialMaster/" + msCatmsSubCatmsBrandSkuId + "/";
 
 		// 3. Prepare new UploadMatericalMasterImages entity
 		UploadMatericalMasterImages uploadEntity = new UploadMatericalMasterImages();
-		uploadEntity.setSkuId(skuId);
+		uploadEntity.setSkuId(msCatmsSubCatmsBrandSkuId);
 		uploadEntity.setUpdatedBy(userInfo.userId);
 		uploadEntity.setUpdatedDate(new Date());
 
@@ -481,7 +485,7 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 	        String brand, String location) {
 
 	    // Step 1: Fetch all materials (based on category/brand/subCategory)
-	    List<AdminMaterialMaster> materials = adminMaterialMasterRepository.searchMaterials(materialCategory,
+	    List<MaterialMaster> materials = materialMasterRepository.searchMaterials(materialCategory,
 	            materialSubCategory, brand);
 
 	    if (materials.isEmpty()) {
@@ -495,7 +499,7 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 	    Set<String> seenSupplierIds = new HashSet<>();
 
 	    // Step 2: Fetch all images for materials
-	    List<String> skuIds = materials.stream().map(AdminMaterialMaster::getSkuId).toList();
+	    List<String> skuIds = materials.stream().map(MaterialMaster::getMsCatmsSubCatmsBrandSkuId).toList();
 	    List<UploadMatericalMasterImages> images = uploadMatericalMasterImagesRepository.findAllById(skuIds);
 
 	    // Map images by skuId
@@ -505,7 +509,7 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 	    // Step 3: Build final material DTO list with proper location filtering
 	    List<AdminMaterialMasterResponseWithImageDto> materialDtos = new ArrayList<>();
 
-	    for (AdminMaterialMaster material : materials) {
+	    for (MaterialMaster material : materials) {
 	        String userId = material.getUpdatedBy();
 
 	        // Fetch supplier for this material
@@ -522,7 +526,10 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 	        AdminMaterialMasterResponseWithImageDto dto = new AdminMaterialMasterResponseWithImageDto();
 	        BeanUtils.copyProperties(material, dto);
 
-	        UploadMatericalMasterImages img = imageMap.get(material.getSkuId());
+	        // 👇 Fix skuId being null
+	        dto.setSkuId(material.getMsCatmsSubCatmsBrandSkuId());
+
+	        UploadMatericalMasterImages img = imageMap.get(material.getMsCatmsSubCatmsBrandSkuId());
 	        if (img != null) {
 	            dto.setMaterialMasterImage1(img.getMaterialMasterImage1());
 	            dto.setMaterialMasterImage2(img.getMaterialMasterImage2());
@@ -544,6 +551,7 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 	            supplierDtos.add(toSupplierDto(supplier));
 	        }
 	    }
+
 
 	    return new AdminMaterialMasterResponseDTO(materialDtos, adminDtos, supplierDtos);
 	}

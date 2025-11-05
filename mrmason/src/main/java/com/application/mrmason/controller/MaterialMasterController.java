@@ -144,11 +144,13 @@ public class MaterialMasterController {
 	        @RequestParam(required = false) String assetModel,
 	        @RequestParam(required = false) String assetCat,
 	        @RequestParam(required = false) String location,
-	        @RequestParam(required = false) String userId,
+//	        @RequestParam(required = false) String userId,
 	        @RequestParam(defaultValue = "0") int page,
 	        @RequestParam(defaultValue = "10") int size
 	) {
-	    ResponseGetAssetsDto responseDto = homeService.getAssetsWithPagination(assetSubCat,assetBrand, assetModel, assetCat,location,userId, page, size);
+	    ResponseGetAssetsDto responseDto = homeService.getAssetsWithPagination(assetSubCat,assetBrand, assetModel, assetCat,location,
+//	    		userId, 
+	    		page, size);
 
 	    GenericResponse<ResponseGetAssetsDto> response = new GenericResponse<>(
 	            "Assets retrieved successfully",

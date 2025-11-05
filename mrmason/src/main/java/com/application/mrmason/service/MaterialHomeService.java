@@ -209,8 +209,9 @@ public class MaterialHomeService {
 		return locations;
 	}
 
-	public ResponseGetAssetsDto getAssetsWithPagination(String assetSubCat, String assetBrand, String assetModel,
-			String assetCat, String location, String userId, int page, int size) {
+	public ResponseGetAssetsDto getAssetsWithPagination(String assetSubCat, String assetBrand, String assetModel,String assetCat, String location, 
+//			String userId, 
+			int page, int size) {
 
 		Pageable pageable = PageRequest.of(page, size);
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -236,8 +237,8 @@ public class MaterialHomeService {
 		if (location != null && !location.trim().isEmpty())
 			predicates.add(cb.like(cb.lower(root.get("location")), location.trim().toLowerCase() + "%"));
 
-		if (userId != null && !userId.trim().isEmpty())
-			predicates.add(cb.equal(root.get("userId"), userId.trim()));
+//		if (userId != null && !userId.trim().isEmpty())
+//			predicates.add(cb.equal(root.get("userId"), userId.trim()));
 		query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
 
 		// ✅ Step 2: Pagination
@@ -267,8 +268,8 @@ public class MaterialHomeService {
 		if (location != null && !location.trim().isEmpty())
 			countPredicates.add(cb.like(cb.lower(countRoot.get("location")), location.trim().toLowerCase() + "%"));
 
-		if (userId != null && !userId.trim().isEmpty())
-			countPredicates.add(cb.equal(countRoot.get("userId"), userId.trim()));
+//		if (userId != null && !userId.trim().isEmpty())
+//			countPredicates.add(cb.equal(countRoot.get("userId"), userId.trim()));
 		countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
 		Long totalElements = entityManager.createQuery(countQuery).getSingleResult();
 

@@ -18,7 +18,7 @@ public interface CustomerAssetsService {
 
 //	List<CustomerAssets> getAssets(String userId,String assetId,String location,String assetCat,String assetSubCat,String assetModel,String assetBrand);
 
-	CustomerAssets updateAssets(CustomerAssetDto asset,RegSource regSource);
+	CustomerAssetDto updateAssets(CustomerAssetDto asset,RegSource regSource);
 
 	CustomerAssetDto getAssetByAssetId(CustomerAssets asset, RegSource regSource);
 	

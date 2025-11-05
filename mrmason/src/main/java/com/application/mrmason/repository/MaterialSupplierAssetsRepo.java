@@ -1,5 +1,7 @@
 package com.application.mrmason.repository;
 
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -7,6 +9,8 @@ import com.application.mrmason.entity.MaterialSupplierAssets;
 
 @Repository
 public interface MaterialSupplierAssetsRepo extends JpaRepository<MaterialSupplierAssets, Long> {
+
+	Optional<MaterialSupplierAssets> findByUserIdAndAssetId(String userId, String assetId);
 
 //	List<CustomerAssets> findByLocationOrderByIdDesc(String location);
 //

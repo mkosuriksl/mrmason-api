@@ -45,7 +45,7 @@ public class CustomerAssetsController {
 			@RequestParam RegSource regSource) {
 		try {
 			// Call service directly to get DTO
-			CustomerAssets assetDto = assetService.updateAssets(updateAsset, regSource);
+			CustomerAssetDto assetDto = assetService.updateAssets(updateAsset, regSource);
 
 			return ResponseEntity.ok(new GenericResponse<>("Asset added successfully.", true, assetDto));
 

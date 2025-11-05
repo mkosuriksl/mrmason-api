@@ -31,7 +31,7 @@ public class ServiceRequestBuildingConstructionQuotation {
 	@Column(name = "request_lineid_description")
 	private String requestLineIdDescription;
 
-	@Column(name = "request_id")
+	@Column(name = "quotation_id")
 	private String requestId;
 
 	@Column(name = "areas_in_sqft")
@@ -61,13 +61,18 @@ public class ServiceRequestBuildingConstructionQuotation {
 
 	@Column(name = "no_of_resources")
 	private String noOfResources;
-
-	@PrePersist
-	private void prePersist() {
-		if (this.requestLineId == null) {
-			this.requestLineId = this.requestId + "_0001";
-		}
-
-	}
+	
+	 @PrePersist
+	    private void prePersist() {
+	        if (this.requestId == null) {
+	            throw new IllegalStateException("requestId (quotationId) must be set before persisting!");
+	        }
+	        if (this.requestLineIdDescription == null || this.requestLineIdDescription.isEmpty()) {
+	            throw new IllegalStateException("requestLineIdDescription must not be null or empty!");
+	        }
+	        if (this.requestLineId == null) {
+	            this.requestLineId = this.requestId + "_" + this.requestLineIdDescription.replaceAll("\\s+", "").toUpperCase();
+	        }
+	    }
 
 }

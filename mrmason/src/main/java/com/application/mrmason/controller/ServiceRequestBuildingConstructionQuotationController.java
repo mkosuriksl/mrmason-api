@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.ResponseGetServiceRequestBuildingConstructionQuotationDto;
 import com.application.mrmason.dto.ServiceRequestBuildingConstructionQuotationWrapper;
+import com.application.mrmason.dto.ServiceRequestBuildingConstructionQuotationWrapper2;
 import com.application.mrmason.entity.ServiceRequestBuildingConstructionQuotation;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.service.ServiceRequestBuildingConstructionQuotationService;
@@ -71,11 +72,11 @@ public class ServiceRequestBuildingConstructionQuotationController {
 	
 	@PutMapping("/update-serviceRequestBuildingConstructionQuotation")
 	public ResponseEntity<GenericResponse<List<ServiceRequestBuildingConstructionQuotation>>> updateServiceRequestBuildingConstructionQuotation(
-	        @RequestBody ServiceRequestBuildingConstructionQuotationWrapper requestWrapper,
+	        @RequestBody ServiceRequestBuildingConstructionQuotationWrapper2 requestWrapper,
 	        @RequestParam RegSource regSource) {
 
 	    List<ServiceRequestBuildingConstructionQuotation> updatedAssignments = buildingConstructionQuotationService
-	            .updateServiceRequestBuildingConstructionQuotation(requestWrapper.getRequestId(), requestWrapper.getItems(),
+	            .updateServiceRequestBuildingConstructionQuotation(requestWrapper.getQuotationId(), requestWrapper.getItems(),
 	                    regSource);
 
 	    GenericResponse<List<ServiceRequestBuildingConstructionQuotation>> response = new GenericResponse<>(

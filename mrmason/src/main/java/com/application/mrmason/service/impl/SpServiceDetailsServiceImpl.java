@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import com.application.mrmason.dto.ResponseSpServiceDetailsDto;
 import com.application.mrmason.dto.ResponseSpServiceGetDto;
 import com.application.mrmason.dto.SpServiceDetailsDto;
+import com.application.mrmason.dto.UploadUserProfileImageDto;
 import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.AddServices;
 import com.application.mrmason.entity.AdminServiceName;
@@ -346,20 +347,31 @@ public class SpServiceDetailsServiceImpl implements SpServiceDetailsService {
 //	}
 
 	@Override
-	public List<UploadUserProfileImage> getByBodSeqNo(List<Userdto> users) {
+	public List<UploadUserProfileImageDto> getByBodSeqNo(List<Userdto> users) {
 	    if (users == null || users.isEmpty()) {
 	        return Collections.emptyList();
 	    }
 
-	    // Get all bodSeqNos from the users list
 	    List<String> bodSeqNos = users.stream()
 	        .map(Userdto::getBodSeqNo)
 	        .filter(Objects::nonNull)
 	        .collect(Collectors.toList());
 
-	    // Fetch profile photos for all matching bodSeqNos
-	    return serviceRepo.findAllByBodSeqNoIn(bodSeqNos);
+	    List<UploadUserProfileImage> entities = serviceRepo.findAllByBodSeqNoIn(bodSeqNos);
+
+	    // Convert to DTOs and map `photo` → `image`
+	    return entities.stream()
+	        .map(entity -> {
+	            UploadUserProfileImageDto dto = new UploadUserProfileImageDto();
+	            dto.setBodSeqNo(entity.getBodSeqNo());
+	            dto.setUpdatedBy(entity.getUpdatedBy());
+	            dto.setUpdatedDate(entity.getUpdatedDate());
+	            dto.setImage(entity.getPhoto()); // map photo → image
+	            return dto;
+	        })
+	        .collect(Collectors.toList());
 	}
+
 	
 	@Override
 	public List<AdminSpVerification> getByVerifiedStatus(List<Userdto> users) {

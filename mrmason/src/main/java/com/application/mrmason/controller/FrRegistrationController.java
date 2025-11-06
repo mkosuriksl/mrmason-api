@@ -11,6 +11,7 @@ import com.application.mrmason.dto.FrRegRequestDto;
 import com.application.mrmason.dto.FrRegResponseDto;
 import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.OtpDto;
+import com.application.mrmason.dto.ResetChangePassOtpDto;
 import com.application.mrmason.dto.ResponseFrLoginDto;
 import com.application.mrmason.entity.FrProfile;
 import com.application.mrmason.service.FrRegistrationService;
@@ -45,25 +46,28 @@ public class FrRegistrationController {
         return service.login(request);
     }
 
-//    @PostMapping("/forgot/send-otp")
-//    public GenericResponse<String> forgotSendOtp(@RequestBody OtpDto otp) {
-//        return service.forgotPasswordSendOtp(otp);
-//    }
-//
-//    @PostMapping("/forgot/verify-otp")
-//    public GenericResponse<String> forgotVerifyOtp(@RequestBody OtpDto dto) {
-//        return service.forgotPasswordVerifyOtp(dto);
-//    }
-//
-//    @PostMapping("/change-password")
-//    public GenericResponse<String> changePassword(@RequestBody ChangePasswordFrDto dto) {
-//        return service.changePassword(dto);
-//    }
-    
+    @PostMapping("/forgot/send-otp")
+    public GenericResponse<Void> forgotSendOtp(@RequestBody OtpDto dto) {
+        return service.forgotSendOtp(dto);
+    }
+
+    @PostMapping("/forgot/verify-otp")
+    public GenericResponse<Void> forgotVerifyOtp(@RequestBody OtpDto dto) {
+        return service.forgotVerifyOtp(dto);
+    }
+
+   
     @PostMapping("/fr-profile")
     public ResponseEntity<GenericResponse<FrProfile>> saveOrUpdateProfile(@RequestBody FrProfile profile) {
         GenericResponse<FrProfile> response = service.addOrUpdateProfile(profile);
         return ResponseEntity.ok(response);
     }
+    
+    @PostMapping("/change-password")
+    public GenericResponse<Void> changePassword(@RequestBody ResetChangePassOtpDto dto) {
+    	return service.changePassword(dto);
+
+    }
+
 }
 

@@ -17,5 +17,8 @@ public interface FrRegRepository extends JpaRepository<FrReg, String> {
 	Optional<FrReg> findByFrUserId(String frUserid);
 	Optional<FrReg> findByFrEmailOrFrMobileAndRegSource(String email, String mobile, RegSource regSource);
 	Optional<FrReg> findByFrEmailAndRegSource(String email, RegSource regSource);
+	
+    Optional<FrReg> findByFrEmailOrFrMobile(String frEmail, String frMobile);
+
 }
 

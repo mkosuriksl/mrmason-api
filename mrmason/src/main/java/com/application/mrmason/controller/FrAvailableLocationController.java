@@ -19,7 +19,7 @@ public class FrAvailableLocationController {
 
 	private final FrAvailableLocationService service;
 
-	@PostMapping("/avaiable-location")
+	@PostMapping("/available-location")
 	public ResponseEntity<GenericResponse<FrAvaiableLocation>> addAvaiable(@RequestBody FrAvaiableLocation availablelocation) {
 		GenericResponse<FrAvaiableLocation> response = service.addAvailableLocation(availablelocation);
 		return ResponseEntity.ok(response);

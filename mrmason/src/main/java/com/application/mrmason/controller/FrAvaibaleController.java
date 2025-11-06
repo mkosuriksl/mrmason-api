@@ -19,7 +19,7 @@ public class FrAvaibaleController {
 
 	private final FrAvaiableService service;
 
-	@PostMapping("/avaiable")
+	@PostMapping("/available")
 	public ResponseEntity<GenericResponse<FrAvailable>> addAvaiable(@RequestBody FrAvailable profile) {
 		GenericResponse<FrAvailable> response = service.addAvaiable(profile);
 		return ResponseEntity.ok(response);

@@ -1,5 +1,6 @@
 package com.application.mrmason.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,4 +15,6 @@ public interface FrPositionTypeRepository extends JpaRepository<FrPositionType, 
 	@Query("SELECT f FROM FrPositionType f WHERE f.frUserId = :frUserId")
 	Optional<FrPositionType> findByFrUserId(@Param("frUserId") String frUserId);
 
+	@Query("SELECT f FROM FrPositionType f WHERE LOWER(f.positionType) LIKE LOWER(CONCAT('%', :positionType, '%'))")
+    List<FrPositionType> findByPositionTypeContainingIgnoreCase(@Param("positionType") String positionType);
 }

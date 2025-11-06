@@ -18,4 +18,7 @@ public interface FrServiceRoleRepository extends JpaRepository<FrServiceRole, St
 	@Query("SELECT f FROM FrServiceRole f WHERE f.frUserId = :frUserId")
 	List<FrServiceRole> findAllByFrUserId(@Param("frUserId") String frUserId);
 
+	@Query("SELECT f FROM FrServiceRole f WHERE LOWER(f.training) LIKE LOWER(CONCAT('%', :training, '%'))")
+    List<FrServiceRole> findByTrainingContainingIgnoreCase(@Param("training") String training);
+	
 }

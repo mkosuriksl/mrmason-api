@@ -1,5 +1,6 @@
 package com.application.mrmason.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,6 +20,7 @@ public interface FrRegRepository extends JpaRepository<FrReg, String> {
 	Optional<FrReg> findByFrEmailAndRegSource(String email, RegSource regSource);
 	
     Optional<FrReg> findByFrEmailOrFrMobile(String frEmail, String frMobile);
+	List<FrReg> findByFrEmailIgnoreCase(String frEmail);
 
 }
 

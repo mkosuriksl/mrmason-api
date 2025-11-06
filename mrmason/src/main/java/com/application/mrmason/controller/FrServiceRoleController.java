@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/fr")
 @RequiredArgsConstructor
-public class FrServiceAvailablePostingLocationController {
+public class FrServiceRoleController {
 
 	private final FrServiceRolesService service;
 

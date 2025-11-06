@@ -7,8 +7,6 @@ import com.application.mrmason.entity.AdminServiceName;
 import com.application.mrmason.entity.AdminSpVerification;
 import com.application.mrmason.entity.SpServiceDetails;
 import com.application.mrmason.entity.SpServiceWithNoOfProject;
-import com.application.mrmason.entity.UploadUserProfileImage;
-import com.application.mrmason.entity.User;
 
 import lombok.Data;
 
@@ -22,6 +20,6 @@ public class ResponseUserUserServicesDto {
 	private List<AddServices> userServiceInDetail;
 	private List<AdminServiceName> serviceNames;
 	private List<SpServiceWithNoOfProject> noOfProjects;
-	private List<UploadUserProfileImage> profilePhoto;
+	private List<UploadUserProfileImageDto> profilePhoto;
 	private List<AdminSpVerification>adminSPVerification;
 }

@@ -19,6 +19,7 @@ import com.application.mrmason.dto.ResponseSpServiceDetailsDto;
 import com.application.mrmason.dto.ResponseSpServiceGetDto;
 import com.application.mrmason.dto.ResponseUserUserServicesDto;
 import com.application.mrmason.dto.SpServiceDetailsDto;
+import com.application.mrmason.dto.UploadUserProfileImageDto;
 import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.AddServices;
 import com.application.mrmason.entity.AdminServiceName;
@@ -99,7 +100,7 @@ public class SpServiceDetailsController {
 		List<AddServices> userIndetail = spService.getUserInDetails(serviceType, location);
 		List<AdminServiceName> serviceNames = spService.getServiceNames(serviceType, location);
 	    List<SpServiceWithNoOfProject> noOfProjects = spService.getByUserServicesId(userServices);
-	    List<UploadUserProfileImage> profileImage = spService.getByBodSeqNo(users);
+	    List<UploadUserProfileImageDto> profileImage = spService.getByBodSeqNo(users);
 	    List<AdminSpVerification>adminSpVerification=spService.getByVerifiedStatus(users);
 		ResponseUserUserServicesDto response = new ResponseUserUserServicesDto();
 		try {

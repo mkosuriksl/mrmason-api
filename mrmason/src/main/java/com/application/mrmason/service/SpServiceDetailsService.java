@@ -5,13 +5,13 @@ import java.util.List;
 import com.application.mrmason.dto.ResponseSpServiceDetailsDto;
 import com.application.mrmason.dto.ResponseSpServiceGetDto;
 import com.application.mrmason.dto.SpServiceDetailsDto;
+import com.application.mrmason.dto.UploadUserProfileImageDto;
 import com.application.mrmason.dto.Userdto;
 import com.application.mrmason.entity.AddServices;
 import com.application.mrmason.entity.AdminServiceName;
 import com.application.mrmason.entity.AdminSpVerification;
 import com.application.mrmason.entity.SpServiceDetails;
 import com.application.mrmason.entity.SpServiceWithNoOfProject;
-import com.application.mrmason.entity.UploadUserProfileImage;
 
 public interface SpServiceDetailsService {
 //	ResponseSpServiceDetailsDto addServiceRequest(SpServiceDetails service);
@@ -40,7 +40,7 @@ public interface SpServiceDetailsService {
 	
 	List<AdminServiceName> getServiceNames(String serviceType, String location);
 	
-	public List<UploadUserProfileImage> getByBodSeqNo(List<Userdto> users);
+	public List<UploadUserProfileImageDto> getByBodSeqNo(List<Userdto> users);
 	
 	public List<AdminSpVerification> getByVerifiedStatus(List<Userdto> users);
 

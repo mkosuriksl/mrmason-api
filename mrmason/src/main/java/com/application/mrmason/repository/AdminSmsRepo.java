@@ -20,4 +20,6 @@ public interface AdminSmsRepo extends JpaRepository<AdminSms, Long> {
 	List<AdminSms> findAllByActive();
 
 	Optional<AdminSms> findFirstByActiveTrue();
+	
+	
 }

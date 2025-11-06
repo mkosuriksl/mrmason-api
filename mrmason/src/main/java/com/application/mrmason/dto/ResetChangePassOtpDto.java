@@ -1,18 +1,24 @@
 package com.application.mrmason.dto;
 
 import com.application.mrmason.enums.RegSource;
-import lombok.*;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class OtpDto {
+public class ResetChangePassOtpDto {
     private String emailOrMobile;
-    private String otp;
     private String newPass;
     private String confPass;
+    private String oldPassword;
+    
     private RegSource regSource;
 }
 

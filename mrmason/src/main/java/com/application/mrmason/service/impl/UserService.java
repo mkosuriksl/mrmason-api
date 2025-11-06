@@ -130,8 +130,8 @@ public class UserService {
 		String emailMessage = "Thanks for registering with us. please verify your registered email and mobile.";
 		emailService.sendEmail(user.getEmail(), subject, emailMessage);
 		// Mobile sms sending
-//		String message = "Thanks for registering with us. please verify your registered email and mobile before login. - mekanik.in";
-//		smsService.registrationSendSMSMessage(user.getMobile(), message, user.getRegSource());
+		String message = "Thanks for registering with us. please verify your registered email and mobile before login. - mekanik.in";
+		smsService.registrationSendSMSMessage(user.getMobile(), message, user.getRegSource());
 		User data = userDAO.save(user);
 
 		ServicePersonLogin service = new ServicePersonLogin();

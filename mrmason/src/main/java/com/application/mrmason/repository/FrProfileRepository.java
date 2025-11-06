@@ -18,4 +18,10 @@ public interface FrProfileRepository extends JpaRepository<FrProfile, String> {
 	@Query("SELECT f FROM FrProfile f WHERE f.frUserId = :frUserId")
 	List<FrProfile> findAllByFrUserId(@Param("frUserId") String frUserId);
 
+	@Query("SELECT f FROM FrProfile f WHERE LOWER(f.primarySkill) LIKE LOWER(CONCAT('%', :skill, '%'))")
+	List<FrProfile> findByPrimarySkillLikeIgnoreCase(@Param("skill") String skill);
+
+	@Query("SELECT f FROM FrProfile f WHERE LOWER(f.secondarySkill) LIKE LOWER(CONCAT('%', :skill, '%'))")
+	List<FrProfile> findBySecondarySkillLikeIgnoreCase(@Param("skill") String skill);
+
 }

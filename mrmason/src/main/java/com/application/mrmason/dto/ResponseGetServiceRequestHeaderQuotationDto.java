@@ -2,15 +2,15 @@ package com.application.mrmason.dto;
 
 import java.util.List;
 
-import com.application.mrmason.entity.ServiceRequestPaintQuotation;
+import com.application.mrmason.entity.ServiceRequestHeaderAllQuotation;
 
 import lombok.Data;
 
 @Data
-public class ResponseGetServiceRequestPaintQuotationDto {
+public class ResponseGetServiceRequestHeaderQuotationDto {
 	private String message;
 	private boolean status;
-	private List<ServiceRequestPaintQuotation> serviceRequestPaintQuotation;
+	private List<ServiceRequestHeaderAllQuotation> serviceRequestHeaderQuotation;
 	private int currentPage;
 	private int pageSize;
 	private long totalElements;

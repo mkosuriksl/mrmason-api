@@ -4,6 +4,8 @@ import java.util.Date;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -30,6 +32,10 @@ public class ServiceRequestHeaderAllQuotation {
 
 	@Column(name = "quoted_date")
 	private Date quotedDate;
+	
+	@Enumerated(EnumType.STRING)
+	@Column(name="status")
+	private SPWAStatus status;
 	
 	@Column(name = "sp_id")
 	private String spId;

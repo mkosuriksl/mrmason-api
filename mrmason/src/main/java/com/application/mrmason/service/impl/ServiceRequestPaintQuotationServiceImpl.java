@@ -1,5 +1,8 @@
 package com.application.mrmason.service.impl;
 
+import java.nio.file.AccessDeniedException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -66,38 +69,48 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 
 		UserInfo userInfo = getLoggedInUserInfo(regSource);
 
-		Map<String, Integer> taskCounters = new HashMap<>(); // counter per taskId
+		Map<String, Integer> taskCounters = new HashMap<>();
 		List<ServiceRequestPaintQuotation> savedQuotations = new ArrayList<>();
 
-		List<ServiceRequestHeaderAllQuotation> existingAuditOpt = serviceRequestHeaderAllQuotationRepo
-				.findByRequestId(requestId);
-		ServiceRequestHeaderAllQuotation audit = existingAuditOpt.isEmpty() ? new ServiceRequestHeaderAllQuotation()
-				: existingAuditOpt.get(0);
+		// ✅ Find header by both requestId and spId
+		List<ServiceRequestHeaderAllQuotation> existingHeaders = serviceRequestHeaderAllQuotationRepo
+				.findByRequestIdAndSpId(requestId, userInfo.userId);
 
-		if (audit.getQuotationId() == null) {
-			// When new record
-			audit.setQuotationId("QT" + System.currentTimeMillis());
+		ServiceRequestHeaderAllQuotation header;
+
+		if (existingHeaders.isEmpty()) {
+			// ✅ Create new quotation header if not exists for this SP
+			header = new ServiceRequestHeaderAllQuotation();
+			header.setQuotationId("QT" + System.currentTimeMillis());
+		} else {
+			// ✅ Use existing one for same SP and request
+			header = existingHeaders.get(0);
 		}
-		audit.setRequestId(requestId);
-		audit.setQuotedDate(new Date());
-		audit.setUpdatedBy(userInfo.userId);
-		audit.setUpdatedDate(new Date());
-		audit.setSpId(userInfo.userId);
-		audit = serviceRequestHeaderAllQuotationRepo.save(audit);
-		String quotationId = audit.getQuotationId();
 
+		header.setRequestId(requestId);
+		header.setQuotedDate(new Date());
+		header.setUpdatedBy(userInfo.userId);
+		header.setUpdatedDate(new Date());
+		header.setStatus(SPWAStatus.NEW);
+		header.setSpId(userInfo.userId);
+		header = serviceRequestHeaderAllQuotationRepo.save(header);
+
+		String quotationId = header.getQuotationId();
+
+		// Generate line items
 		for (ServiceRequestItem item : items) {
 			String taskId = item.getTaskId();
-			taskCounters.putIfAbsent(taskId, 0); // initialize if not present
+			taskCounters.putIfAbsent(taskId, 0);
 
 			for (MeasurementDTO measurement : item.getMeasurements()) {
-				int currentCounter = taskCounters.compute(taskId, (k, v) -> v + 1); // increment for this taskId
-				String lineId = taskId + "_" + String.format("%04d", currentCounter)+"_"+quotationId; // e.g., PLUMBING_0001
+				int currentCounter = taskCounters.compute(taskId, (k, v) -> v + 1);
+				String lineId = taskId + "_" + String.format("%04d", currentCounter) + "_" + quotationId;
 
 				ServiceRequestPaintQuotation sRPQ = new ServiceRequestPaintQuotation();
-				sRPQ.setAdmintasklineId(lineId); // ✅ Fix: Set primary key manually
+				sRPQ.setAdmintasklineId(lineId);
 				sRPQ.setRequestId(requestId);
-				sRPQ.setTaskId(taskId); // Save original taskId if needed
+				sRPQ.setQuotationId(quotationId);
+				sRPQ.setTaskId(taskId);
 				sRPQ.setTaskDescription(
 						item.getTaskDescription() != null ? item.getTaskDescription() : item.getTaskId());
 				sRPQ.setServiceCategory(serviceCategory);
@@ -111,6 +124,7 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 				savedQuotations.add(serviceRequestPaintQuotationRepository.save(sRPQ));
 			}
 		}
+
 		return savedQuotations;
 	}
 
@@ -280,7 +294,7 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 	@Override
 	public Map<String, Object> getAllGroupedQuotations(String admintasklineId, String taskDescription,
 			String serviceCategory, String taskId, String measureNames, String status, String spId, String requestId,
-			int page, int size) {
+			String quotationId, int page, int size) {
 
 		// ✅ Step 1: Fetch all records
 		List<ServiceRequestPaintQuotation> allQuotations = serviceRequestPaintQuotationRepository.findAll();
@@ -294,6 +308,7 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 				.filter(q -> measureNames == null || q.getMeasureNames().equalsIgnoreCase(measureNames))
 				.filter(q -> status == null || (q.getStatus() != null && q.getStatus().name().equalsIgnoreCase(status)))
 				.filter(q -> requestId == null || q.getRequestId().equalsIgnoreCase(requestId))
+				.filter(q -> quotationId == null || q.getQuotationId().equalsIgnoreCase(quotationId))
 				.filter(q -> spId == null || q.getSpId().equalsIgnoreCase(spId)).collect(Collectors.toList());
 
 		// ✅ Step 3: Group by taskId (derived from admintasklineId before "_")
@@ -312,7 +327,6 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 			Map<String, Object> item = new LinkedHashMap<>();
 			item.put("taskDescription", parent.getTaskDescription());
 			item.put("taskId", groupedTaskId);
-
 			// Build measurements
 			List<Map<String, Object>> measurements = group.stream().map(child -> {
 				Map<String, Object> measurement = new LinkedHashMap<>();
@@ -344,6 +358,7 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 			response.put("updateddate", first.getUpdatedDate());
 			response.put("status", first.getStatus());
 			response.put("spId", first.getSpId());
+			response.put("quotationId", first.getQuotationId());
 		}
 
 		response.put("items", paginatedItems);
@@ -353,6 +368,83 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 		response.put("totalPages", totalPages);
 
 		return response;
+	}
+
+	@Override
+	public Page<ServiceRequestHeaderAllQuotation> getHeader(String quotationId, String requestId, String fromDate,
+			String toDate, String spId,String status,  Pageable pageable) throws AccessDeniedException {
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+		CriteriaQuery<ServiceRequestHeaderAllQuotation> query = cb.createQuery(ServiceRequestHeaderAllQuotation.class);
+		Root<ServiceRequestHeaderAllQuotation> root = query.from(ServiceRequestHeaderAllQuotation.class);
+		List<Predicate> predicates = new ArrayList<>();
+
+		if (quotationId != null && !quotationId.trim().isEmpty()) {
+			predicates.add(cb.equal(root.get("quotationId"), quotationId));
+		}
+		if (requestId != null && !requestId.trim().isEmpty()) {
+			predicates.add(cb.equal(root.get("requestId"), requestId));
+		}
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		Date from = null;
+		Date to = null;
+		try {
+			if (fromDate != null && !fromDate.trim().isEmpty()) {
+				from = sdf.parse(fromDate);
+			}
+			if (toDate != null && !toDate.trim().isEmpty()) {
+				to = sdf.parse(toDate);
+			}
+		} catch (ParseException e) {
+			throw new RuntimeException("Invalid date format. Expected yyyy-MM-dd");
+		}
+		if (spId != null && !spId.trim().isEmpty()) {
+			predicates.add(cb.equal(root.get("spId"), spId));
+		}
+		if (from != null && to != null) {
+			// Ensure inclusive range even if quotedDate has time
+			Date fromStart = Date.from(from.toInstant());
+			Date toEnd = new Date(to.getTime() + (24 * 60 * 60 * 1000) - 1); // add 1 day minus 1 ms
+			predicates.add(cb.between(root.get("quotedDate"), fromStart, toEnd));
+		} else if (from != null) {
+			predicates.add(cb.greaterThanOrEqualTo(root.get("quotedDate"), from));
+		} else if (to != null) {
+			Date toEnd = new Date(to.getTime() + (24 * 60 * 60 * 1000) - 1);
+			predicates.add(cb.lessThanOrEqualTo(root.get("quotedDate"), toEnd));
+		}
+		if (status != null && !status.trim().isEmpty()) {
+			predicates.add(cb.equal(root.get("status"), status));
+		}
+		query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
+		TypedQuery<ServiceRequestHeaderAllQuotation> typedQuery = entityManager.createQuery(query);
+		typedQuery.setFirstResult((int) pageable.getOffset());
+		typedQuery.setMaxResults(pageable.getPageSize());
+
+		// Count query
+		CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+		Root<ServiceRequestHeaderAllQuotation> countRoot = countQuery.from(ServiceRequestHeaderAllQuotation.class);
+		List<Predicate> countPredicates = new ArrayList<>();
+
+		if (quotationId != null && !quotationId.trim().isEmpty()) {
+			countPredicates.add(cb.equal(countRoot.get("quotationId"), quotationId));
+		}
+		if (requestId != null && !requestId.trim().isEmpty()) {
+			countPredicates.add(cb.equal(countRoot.get("requestId"), requestId));
+		}
+		if (from != null && to != null) {
+			countPredicates.add(cb.between(countRoot.get("quotedDate"), from, to));
+		} else if (from != null) {
+			countPredicates.add(cb.greaterThanOrEqualTo(countRoot.get("quotedDate"), from));
+		} else if (to != null) {
+			countPredicates.add(cb.lessThanOrEqualTo(countRoot.get("quotedDate"), to));
+		}
+		if (spId != null && !spId.trim().isEmpty()) {
+			countPredicates.add(cb.equal(countRoot.get("spId"), spId));
+		}
+
+		countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
+		Long total = entityManager.createQuery(countQuery).getSingleResult();
+
+		return new PageImpl<>(typedQuery.getResultList(), pageable, total);
 	}
 
 }

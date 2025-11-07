@@ -43,12 +43,29 @@ public class CustomerOrderDetailsEntity {
 	@Column(name = "total")
 	private Double total;
 
-
 	@Column(name = "orderQty")
 	private Integer orderQty;
+	
+	@Column(name = "materical_category")
+	private String materialCategory;
 
-//	@Column(name = "prescriptionRequired")
-//	private String prescriptionRequired;
+	@Column(name = "material_sub_category")
+	private String materialSubCategory;
+	
+	@Column(name = "model_name")
+	private String modelName;
+	
+	@Column(name = "shape")
+	private String shape;
+	
+	@Column(name = "width")
+	private String width;
+	
+	@Column(name = "size")
+	private String size;
+	
+	@Column(name = "thickness")
+	private String thickness;
 
 	@Column(name = "updated_date")
 	private Date updatedDate;

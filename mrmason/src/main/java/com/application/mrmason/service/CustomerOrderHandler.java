@@ -1,5 +1,6 @@
 package com.application.mrmason.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,6 +26,7 @@ import com.application.mrmason.entity.CustomerOrderHdrEntity;
 import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.entity.CustomerRetailerOrderDetailsEntity;
 import com.application.mrmason.entity.CustomerRetailerOrderHdrEntity;
+import com.application.mrmason.entity.MaterialRequirementByRequest;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.OrderStatus;
 import com.application.mrmason.enums.RegSource;
@@ -32,6 +34,7 @@ import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.repository.CustomerRetailerOrderDetailsRepo;
 import com.application.mrmason.repository.CustomerRetailerOrderHdrRepo;
+import com.application.mrmason.repository.MaterialRequirementByRequestRepository;
 import com.application.mrmason.security.AuthDetailsProvider;
 
 import jakarta.persistence.EntityManager;
@@ -57,6 +60,8 @@ public class CustomerOrderHandler {
 	private CustomerOrderDetailsRepo customerCartDetailsRepo;
 	@PersistenceContext
 	private EntityManager entityManager;
+	@Autowired
+	private MaterialRequirementByRequestRepository materialRequirementByRequestRepository;
 	@Transactional
 	public CustomerRetailerOrderHdrEntity placeOrder(OrderRequestDto dto) {
 	    // 1️⃣ Fetch customer cart header
@@ -116,6 +121,27 @@ public class CustomerOrderHandler {
 	        orderDetail.setSkuIdUserId(cartDetail.getSkuIdUserId());
 	        orderDetail.setCustomerRetailerOrderHdr(orderHdr);
 	        orderDetailsRepo.save(orderDetail);
+	        
+	        MaterialRequirementByRequest materialReq = new MaterialRequirementByRequest();
+	        materialReq.setReqIdLineId(orderDetail.getLineItemId()); // orderlineId -> reqIdLineId
+	        materialReq.setThickness(cartDetail.getThickness() != null ? new BigDecimal(cartDetail.getThickness()) : null);
+	        materialReq.setModelCode(cartDetail.getSkuIdUserId()); // skuIdUserId -> modelCode
+	        materialReq.setModelName(cartDetail.getModelName());
+	        materialReq.setBrand(cartDetail.getBrand());  
+	        materialReq.setGst(cartDetail.getGst() != null ? new BigDecimal(cartDetail.getGst()) : null);
+	        materialReq.setNoOfItems(cartDetail.getOrderQty());
+	        materialReq.setAmount(cartDetail.getMrp() != null ? new BigDecimal(cartDetail.getMrp()) : null);
+	        materialReq.setMaterialCategory(cartDetail.getMaterialCategory());
+	        materialReq.setShape(cartDetail.getShape());
+	        materialReq.setSizeInInch(cartDetail.getSize() != null ? new BigDecimal(cartDetail.getSize()) : null);
+	        materialReq.setWidth(cartDetail.getWidth() != null ? new BigDecimal(cartDetail.getWidth()) : null);
+	        materialReq.setMaterialSubCategory(cartDetail.getMaterialSubCategory());
+	        
+	        materialReq.setUpdatedBy("System");
+	        materialReq.setUpdatedDate(new Date());
+	        materialReq.setStatus(OrderStatus.NEW.name());
+	        materialRequirementByRequestRepository.save(materialReq);
+	        
 	        cartDetail.setStatus(OrderStatus.COMPLETED);
 	        cartDetail.setUpdatedDate(new Date());
 	        cartDetail.setUpdatedBy("System");

@@ -57,11 +57,12 @@ public class CustomerOrderMethodHandler {
 	private ModelMapper modelMapper;
 	@Autowired
 	private AdminMaterialMasterRepository adminMaterialMasterRepository;
-	
+
 	public CustomerOrderHdrEntity ceateCustomerOrderMethod(CustomerOrderRequestDto dto) {
 
 		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
-		Optional<CustomerRegistration> login = customerRegisterRepository.findByUserEmailAndUserTypeAndRegSource(loggedInUserEmail,UserType.EC,RegSource.MRMASON);
+		Optional<CustomerRegistration> login = customerRegisterRepository
+				.findByUserEmailAndUserTypeAndRegSource(loggedInUserEmail, UserType.EC, RegSource.MRMASON);
 		if (login.isEmpty()) {
 			throw new ResourceNotFoundException("Access denied. This API is restricted to customer users only.");
 		}
@@ -72,7 +73,6 @@ public class CustomerOrderMethodHandler {
 //		}
 		// pick first if needed
 //		AdminMaterialMaster store = storeList.get(0);
-
 
 		// 🔹 Step 1: Find existing PENDING order (fetch details eagerly)
 		Optional<CustomerOrderHdrEntity> existingOrderOpt = orderHdrRepo
@@ -114,48 +114,55 @@ public class CustomerOrderMethodHandler {
 
 		for (CustomerOrderDetailsDto orderDetails : orderDetailsList) {
 
-		    List<AdminMaterialMaster> stockList = adminMaterialMasterRepository
-		            .findBySkuIds(orderDetails.getSkuIdUserId());
+			List<AdminMaterialMaster> stockList = adminMaterialMasterRepository
+					.findBySkuIds(orderDetails.getSkuIdUserId());
 
-		    if (stockList.isEmpty()) {
-		        throw new ResourceNotFoundException("SkuIdUserId not found for item: " + orderDetails.getSkuIdUserId());
-		    }
+			if (stockList.isEmpty()) {
+				throw new ResourceNotFoundException("SkuIdUserId not found for item: " + orderDetails.getSkuIdUserId());
+			}
 
-		    // Optional: pick the correct one based on updatedBy / location
-		    AdminMaterialMaster stockEntity = stockList.get(0); // or filter by updatedBy
+			// Optional: pick the correct one based on updatedBy / location
+			AdminMaterialMaster stockEntity = stockList.get(0); // or filter by updatedBy
 
-		    String uniqueKey = stockEntity.getSkuId();
+			String uniqueKey = stockEntity.getSkuId();
 
-		    // Prevent duplicates in same order
-		    boolean exists = orderHdr.getCustomerOrderDetailsEntities() != null
-		            && orderHdr.getCustomerOrderDetailsEntities().stream()
-		                    .anyMatch(d -> d.getSkuIdUserId().equals(uniqueKey));
+			// Prevent duplicates in same order
+			boolean exists = orderHdr.getCustomerOrderDetailsEntities() != null && orderHdr
+					.getCustomerOrderDetailsEntities().stream().anyMatch(d -> d.getSkuIdUserId().equals(uniqueKey));
 
-		    if (exists) {
-		        throw new IllegalArgumentException("Item already exists in order: " + orderDetails.getSkuIdUserId());
-		    }
+			if (exists) {
+				throw new IllegalArgumentException("Item already exists in order: " + orderDetails.getSkuIdUserId());
+			}
 
-		    CustomerOrderDetailsEntity orderDetailsEntity = new CustomerOrderDetailsEntity();
+			CustomerOrderDetailsEntity orderDetailsEntity = new CustomerOrderDetailsEntity();
 
-		    orderDetailsEntity.setSkuIdUserId(stockEntity.getSkuId());
-		    orderDetailsEntity.setMsUserId(stockEntity.getUpdatedBy());
-		    orderDetailsEntity.setMrp(orderDetails.getMrp());
-		    orderDetailsEntity.setDiscount(orderDetails.getDiscount());
-		    orderDetailsEntity.setGst(orderDetails.getGst());
-		    orderDetailsEntity.setTotal(orderDetails.getTotal());
-		    orderDetailsEntity.setOrderQty(orderDetails.getOrderQty());
+			orderDetailsEntity.setSkuIdUserId(stockEntity.getSkuId());
+			orderDetailsEntity.setMsUserId(stockEntity.getUpdatedBy());
+			orderDetailsEntity.setMrp(orderDetails.getMrp());
+			orderDetailsEntity.setDiscount(orderDetails.getDiscount());
+			orderDetailsEntity.setGst(orderDetails.getGst());
+			orderDetailsEntity.setTotal(orderDetails.getTotal());
+			orderDetailsEntity.setOrderQty(orderDetails.getOrderQty());
+
 //		    orderDetailsEntity.setPrescriptionRequired(orderDetails.getPrescriptionRequired());
-		    orderDetailsEntity.setBrand(orderDetails.getBrand());
-		    orderDetailsEntity.setOrderlineId(baseOrderId + "_" + String.format("%03d", counter++));
-		    orderDetailsEntity.setStatus(OrderStatus.PENDING);
-		    orderDetailsEntity.setCustomerOrderOrderHdrEntity(orderHdr);
-		    orderDetailsEntity.setUpdatedBy(login.get().getUserid());
-		    orderDetailsEntity.setUpdatedDate(new Date());
 
-		    detailEntities.add(orderDetailsEntity);
-		    orderDetailsRepo.save(orderDetailsEntity);
+			orderDetailsEntity.setBrand(orderDetails.getBrand());
+			orderDetailsEntity.setMaterialCategory(stockEntity.getMaterialCategory());
+			orderDetailsEntity.setMaterialSubCategory(stockEntity.getMaterialSubCategory());
+			orderDetailsEntity.setModelName(stockEntity.getModelName());
+			orderDetailsEntity.setShape(stockEntity.getShape());
+			orderDetailsEntity.setWidth(stockEntity.getWidth());
+			orderDetailsEntity.setSize(stockEntity.getSize());
+			orderDetailsEntity.setThickness(stockEntity.getThickness());
+			orderDetailsEntity.setOrderlineId(baseOrderId + "_" + String.format("%03d", counter++));
+			orderDetailsEntity.setStatus(OrderStatus.PENDING);
+			orderDetailsEntity.setCustomerOrderOrderHdrEntity(orderHdr);
+			orderDetailsEntity.setUpdatedBy(login.get().getUserid());
+			orderDetailsEntity.setUpdatedDate(new Date());
+
+			detailEntities.add(orderDetailsEntity);
+			orderDetailsRepo.save(orderDetailsEntity);
 		}
-
 
 		// 🔹 Step 3: Attach details to header
 		if (orderHdr.getCustomerOrderDetailsEntities() == null) {
@@ -198,12 +205,12 @@ public class CustomerOrderMethodHandler {
 
 	@Transactional
 	public GenericResponse<List<CustomerGetOrderResponseDTO>> getOrderDetail(String customerId, String orderid,
-			String orderlineId,String skuIdUserId, String fromDate, String toDate, String msUserId, Integer page, Integer size) {
+			String orderlineId, String skuIdUserId, String fromDate, String toDate, String msUserId, Integer page,
+			Integer size) {
 
 		// 1️⃣ Fetch all matching records without pagination
 		List<CustomerOrderDetailsEntity> allEntities = fetchFilteredOrderDetailsWithoutPagination(customerId, orderid,
-				orderlineId,skuIdUserId, fromDate, toDate,
-				msUserId);
+				orderlineId, skuIdUserId, fromDate, toDate, msUserId);
 
 		if (allEntities.isEmpty()) {
 			return new GenericResponse<>("No records found", false, null);
@@ -250,10 +257,11 @@ public class CustomerOrderMethodHandler {
 	}
 
 	private List<CustomerOrderDetailsEntity> fetchFilteredOrderDetailsWithoutPagination(String customerId,
-			String orderid, String orderlineId,String skuIdUserId, String fromDate, String toDate, String msUserId) {
+			String orderid, String orderlineId, String skuIdUserId, String fromDate, String toDate, String msUserId) {
 
 		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
-		Optional<CustomerRegistration> login = customerRegisterRepository.findByUserEmailAndUserTypeAndRegSource(loggedInUserEmail,UserType.EC,RegSource.MRMASON);
+		Optional<CustomerRegistration> login = customerRegisterRepository
+				.findByUserEmailAndUserTypeAndRegSource(loggedInUserEmail, UserType.EC, RegSource.MRMASON);
 		if (login.isEmpty()) {
 			throw new ResourceNotFoundException("Access denied. This API is restricted to customer users only.");
 		}
@@ -278,7 +286,7 @@ public class CustomerOrderMethodHandler {
 
 		if (skuIdUserId != null && !skuIdUserId.trim().isEmpty())
 			predicates.add(cb.equal(root.get("skuIdUserId"), skuIdUserId));
-		
+
 		if (msUserId != null && !msUserId.trim().isEmpty())
 			predicates.add(cb.equal(root.get("msUserId"), msUserId));
 
@@ -312,60 +320,57 @@ public class CustomerOrderMethodHandler {
 
 		return "Order line deleted successfully. Header retained as it has other lines.";
 	}
-	
-	public GenericResponse<List<CustomerGetOrderResponseDTO>> getOrderDetailByCustomerId(
-	        String customerId, Integer page, Integer size) {
 
-	    // 1️⃣ Fetch all records for given customerId
-	    List<CustomerOrderDetailsEntity> allEntities = 
-	    		orderDetailsRepo.findByCustomerOrderOrderHdrEntity_UpdatedBy(customerId);
+	public GenericResponse<List<CustomerGetOrderResponseDTO>> getOrderDetailByCustomerId(String customerId,
+			Integer page, Integer size) {
 
-	    if (allEntities.isEmpty()) {
-	        return new GenericResponse<>("No records found for customerId: " + customerId, false, null);
-	    }
+		// 1️⃣ Fetch all records for given customerId
+		List<CustomerOrderDetailsEntity> allEntities = orderDetailsRepo
+				.findByCustomerOrderOrderHdrEntity_UpdatedBy(customerId);
 
-	    // 2️⃣ Group by orderId
-	    Map<String, List<CustomerOrderDetailsEntity>> groupedByOrderId = allEntities.stream()
-	            .collect(Collectors.groupingBy(
-	                    e -> e.getCustomerOrderOrderHdrEntity().getOrderId(),
-	                    LinkedHashMap::new,
-	                    Collectors.toList()
-	            ));
+		if (allEntities.isEmpty()) {
+			return new GenericResponse<>("No records found for customerId: " + customerId, false, null);
+		}
 
-	    List<CustomerGetOrderResponseDTO> allOrders = new ArrayList<>();
+		// 2️⃣ Group by orderId
+		Map<String, List<CustomerOrderDetailsEntity>> groupedByOrderId = allEntities.stream()
+				.collect(Collectors.groupingBy(e -> e.getCustomerOrderOrderHdrEntity().getOrderId(), LinkedHashMap::new,
+						Collectors.toList()));
 
-	    // 3️⃣ Build DTO for each order group
-	    for (Map.Entry<String, List<CustomerOrderDetailsEntity>> entry : groupedByOrderId.entrySet()) {
-	        String orderIdKey = entry.getKey();
-	        List<CustomerOrderDetailsEntity> orderDetailsEntities = entry.getValue();
+		List<CustomerGetOrderResponseDTO> allOrders = new ArrayList<>();
 
-	        CustomerGetOrderResponseDTO dto = new CustomerGetOrderResponseDTO();
-	        dto.setOrderId(orderIdKey);
-	        dto.setCustomerId(orderDetailsEntities.get(0).getCustomerOrderOrderHdrEntity().getUpdatedBy());
-	        dto.setOrderDetailsList(orderDetailsEntities.stream()
-	                .map(e -> modelMapper.map(e, CustomerOrderDetailsDto.class))
-	                .collect(Collectors.toList()));
+		// 3️⃣ Build DTO for each order group
+		for (Map.Entry<String, List<CustomerOrderDetailsEntity>> entry : groupedByOrderId.entrySet()) {
+			String orderIdKey = entry.getKey();
+			List<CustomerOrderDetailsEntity> orderDetailsEntities = entry.getValue();
 
-	        allOrders.add(dto);
-	    }
+			CustomerGetOrderResponseDTO dto = new CustomerGetOrderResponseDTO();
+			dto.setOrderId(orderIdKey);
+			dto.setCustomerId(orderDetailsEntities.get(0).getCustomerOrderOrderHdrEntity().getUpdatedBy());
+			dto.setOrderDetailsList(orderDetailsEntities.stream()
+					.map(e -> modelMapper.map(e, CustomerOrderDetailsDto.class)).collect(Collectors.toList()));
 
-	    // 4️⃣ Apply pagination on grouped orders
-	    int totalOrders = allOrders.size();
-	    int fromIndex = page * size;
-	    int toIndex = Math.min(fromIndex + size, totalOrders);
-	    if (fromIndex > toIndex) fromIndex = toIndex;
+			allOrders.add(dto);
+		}
 
-	    List<CustomerGetOrderResponseDTO> pagedOrders = allOrders.subList(fromIndex, toIndex);
+		// 4️⃣ Apply pagination on grouped orders
+		int totalOrders = allOrders.size();
+		int fromIndex = page * size;
+		int toIndex = Math.min(fromIndex + size, totalOrders);
+		if (fromIndex > toIndex)
+			fromIndex = toIndex;
 
-	    // 5️⃣ Set pagination metadata
-	    pagedOrders.forEach(dto -> {
-	        dto.setCurrentPage(page);
-	        dto.setPageSize(size);
-	        dto.setTotalElements(totalOrders);
-	        dto.setTotalPages((int) Math.ceil((double) totalOrders / size));
-	    });
+		List<CustomerGetOrderResponseDTO> pagedOrders = allOrders.subList(fromIndex, toIndex);
 
-	    return new GenericResponse<>("Customer orders retrieved successfully.", true, pagedOrders);
+		// 5️⃣ Set pagination metadata
+		pagedOrders.forEach(dto -> {
+			dto.setCurrentPage(page);
+			dto.setPageSize(size);
+			dto.setTotalElements(totalOrders);
+			dto.setTotalPages((int) Math.ceil((double) totalOrders / size));
+		});
+
+		return new GenericResponse<>("Customer orders retrieved successfully.", true, pagedOrders);
 	}
 
 }

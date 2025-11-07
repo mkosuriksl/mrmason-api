@@ -92,4 +92,7 @@ public class MaterialRequirementByRequest {
 
     @Column(name = "status")
     private String status; 
+    
+	@Column(name = "material_sub_category")
+	private String materialSubCategory;
 }

@@ -20,8 +20,8 @@ import lombok.Setter;
 @AllArgsConstructor
 @Entity
 @Builder
-@Table(name = "service_request_all_quotation_details")
-public class ServiceRequestPaintQuotation {
+@Table(name = "workorder_details_table")
+public class ServiceRequestPaintQuotation2 {
 	
 	@Id
 	@Column(name = "admin_task_lineId")
@@ -33,8 +33,8 @@ public class ServiceRequestPaintQuotation {
 	@Column(name = "request_lineid_description")
 	private String taskDescription;
 
-	@Column(name = "request_id")
-	private String requestId;
+	@Column(name = "quotation_id")
+	private String quotationId;
 	
 	@Column(name = "task_id")
 	private String taskId;
@@ -61,7 +61,7 @@ public class ServiceRequestPaintQuotation {
 	@Column(name = "sp_id")
 	private String spId;
 	
-    @Column(name = "quotation_id")
-    private String quotationId;
+    @Column(name = "workorder_id", unique = true)
+    private String workOrderId;
 
 }

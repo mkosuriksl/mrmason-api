@@ -174,15 +174,12 @@ public class MaterialHomeService {
 			String brand, String model) {
 		String safeInput = (locationPrefix == null) ? "" : locationPrefix.trim();
 
-// Base search — all matching locations
 		List<String> locations = materialSupplierQuotationUserDAO.findDistinctLocationsByPrefix(safeInput);
 
-// Optional filters (category, brand, etc.) — only if you want to filter using AdminMaterialMaster
 		if ((materialCategory != null && !materialCategory.isEmpty())
 				|| (materialSubCategory != null && !materialSubCategory.isEmpty())
 				|| (brand != null && !brand.isEmpty()) || (model != null && !model.isEmpty())) {
 
-// Build query to narrow down suppliers based on material filters
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			CriteriaQuery<String> query = cb.createQuery(String.class);
 			Root<AdminMaterialMaster> root = query.from(AdminMaterialMaster.class);
@@ -201,7 +198,6 @@ public class MaterialHomeService {
 			query.select(root.get("updatedBy")).where(cb.and(predicates.toArray(new Predicate[0])));
 			List<String> supplierIds = entityManager.createQuery(query).getResultList();
 
-// Filter locations belonging to these suppliers
 			locations = materialSupplierQuotationUserDAO
 					.findDistinctByBodSeqNoInAndLocationStartingWithIgnoreCase(supplierIds, safeInput);
 		}
@@ -308,6 +304,35 @@ public class MaterialHomeService {
 		responseDto.setTotalPages((int) Math.ceil((double) totalElements / size));
 
 		return responseDto;
+	}
+	
+	public List<String> autoSearchLocationsByMachine(String assetCat, String assetSubCat, String assetBrand, String assetModel, String locationPrefix) {
+	    String safeInput = (locationPrefix == null) ? "" : locationPrefix.trim();
+
+	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+	    CriteriaQuery<String> query = cb.createQuery(String.class);
+	    Root<MaterialSupplierAssets> root = query.from(MaterialSupplierAssets.class);
+
+	    List<Predicate> predicates = new ArrayList<>();
+
+	    if (assetCat != null && !assetCat.isEmpty())
+	        predicates.add(cb.equal(root.get("assetCat"), assetCat));
+	    if (assetSubCat != null && !assetSubCat.isEmpty())
+	        predicates.add(cb.equal(root.get("assetSubCat"), assetSubCat));
+	    if (assetBrand != null && !assetBrand.isEmpty())
+	        predicates.add(cb.equal(root.get("assetBrand"), assetBrand));
+	    if (assetModel != null && !assetModel.isEmpty())
+	        predicates.add(cb.equal(root.get("assetModel"), assetModel));
+	    if (safeInput != null && !safeInput.isEmpty())
+	        predicates.add(cb.like(cb.lower(root.get("location")), safeInput.toLowerCase() + "%"));
+
+	    query.select(cb.lower(root.get("location"))).distinct(true);
+
+	    if (!predicates.isEmpty()) {
+	        query.where(cb.and(predicates.toArray(new Predicate[0])));
+	    }
+
+	    return entityManager.createQuery(query).getResultList();
 	}
 
 }

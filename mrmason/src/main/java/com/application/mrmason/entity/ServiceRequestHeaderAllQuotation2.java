@@ -20,48 +20,30 @@ import lombok.Setter;
 @AllArgsConstructor
 @Entity
 @Builder
-@Table(name = "service_request_all_quotation_details")
-public class ServiceRequestPaintQuotation {
+@Table(name = "workorder_header_table")
+public class ServiceRequestHeaderAllQuotation2 {
 	
 	@Id
-	@Column(name = "admin_task_lineId")
-	private String admintasklineId;
+    @Column(name = "workorder_id", unique = true)
+    private String workOrderId;
 	
-	@Column(name = "service_category")
-	private String serviceCategory;
-
-	@Column(name = "request_lineid_description")
-	private String taskDescription;
-
-	@Column(name = "request_id")
-	private String requestId;
-	
-	@Column(name = "task_id")
-	private String taskId;
+	@Column(name = "quotation_id")
+	private String quotationId;
 
 	@Column(name = "quoted_date")
 	private Date quotedDate;
 	
-	@Column(name = "measurenames")
-	private String measureNames;
-	
-	@Column(name = "value")
-	private String value;
-
 	@Enumerated(EnumType.STRING)
 	@Column(name="status")
 	private SPWAStatus status;
+	
+	@Column(name = "sp_id")
+	private String spId;
 
 	@Column(name = "updated_by")
 	private String updatedBy;
 
 	@Column(name = "updated_date")
 	private Date updatedDate;
-
-	@Column(name = "sp_id")
-	private String spId;
-	
-    @Column(name = "quotation_id")
-    private String quotationId;
 
 }

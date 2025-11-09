@@ -161,6 +161,25 @@ public class MaterialMasterController {
 	    return ResponseEntity.ok(response);
 	}
 
+	@GetMapping("/distinct-location-by-machine")
+	public ResponseEntity<GenericResponse<List<String>>> autoSearchLocationsByMachine(
+	        @RequestParam(required = false) String assetCat,
+	        @RequestParam(required = false) String assetSubCat,
+	        @RequestParam(required = false) String assetBrand,
+	        @RequestParam(required = false) String assetModel,
+	        @RequestParam(required = false) String location) {
 
+	    List<String> locations = homeService.autoSearchLocationsByMachine(assetCat, assetSubCat, assetBrand, assetModel, location);
+
+	    GenericResponse<List<String>> response;
+
+	    if (locations.isEmpty()) {
+	        response = new GenericResponse<>("No records match", false, Collections.emptyList());
+	    } else {
+	        response = new GenericResponse<>("Locations retrieved successfully", true, locations);
+	    }
+
+	    return ResponseEntity.ok(response);
+	}
 
 }

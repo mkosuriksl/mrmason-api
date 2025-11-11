@@ -81,11 +81,12 @@ public class MaterialSupplierController {
 			@RequestParam(required = false) String quotationId,
 			@RequestParam(required = false) String cmatRequestId,@RequestParam(required = false) String materialLineItem,
 			@RequestParam(required = false) String supplierId,
-			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+			 @RequestParam RegSource regSource,
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) throws AccessDeniedException {
 
 		Pageable pageable = PageRequest.of(page, size);
 		Page<MaterialSupplier> srpqPage = materialSupplierService
-				.getMaterialSupplierDetails( quotationId,cmatRequestId,materialLineItem,supplierId, pageable);
+				.getMaterialSupplierDetails( quotationId,cmatRequestId,materialLineItem,supplierId,regSource, pageable);
 		ResponseGetMaterialSupplierQuotationdetailsDto response = new ResponseGetMaterialSupplierQuotationdetailsDto();
 
 		response.setMessage("Material Supplier Quotation details retrieved successfully.");
@@ -108,14 +109,15 @@ public class MaterialSupplierController {
             @RequestParam(required = false) String supplierId,          // <-- Added
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromQuotedDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toQuotedDate,
+            @RequestParam RegSource regSource,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size) throws AccessDeniedException {
 
         Pageable pageable = PageRequest.of(page, size);
 
         Page<MaterialSupplierQuotationHeader> pageData =
                 materialSupplierService.getQuotationsByUserMobile(cmatRequestId,
-                        userMobile, supplierId, fromQuotedDate, toQuotedDate, pageable);
+                        userMobile, supplierId, fromQuotedDate, toQuotedDate,regSource, pageable);
 
         ResponseGetMaterialSupplierQuotationsheaderDto response = new ResponseGetMaterialSupplierQuotationsheaderDto();
         response.setMessage("Material supplier quotations fetched successfully.");
@@ -153,17 +155,18 @@ public class MaterialSupplierController {
             @RequestParam(required = false) String invoiceNumber,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromInvoiceDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toInvoiceDate,
+            @RequestParam RegSource regSource,
             @RequestParam(defaultValue = "0") int invoicePage,
             @RequestParam(defaultValue = "10") int invoiceSize,
             @RequestParam(defaultValue = "0") int supplierPage,
-            @RequestParam(defaultValue = "10") int supplierSize) {
+            @RequestParam(defaultValue = "10") int supplierSize) throws AccessDeniedException {
 
         // Create Pageable objects
         Pageable invoicePageable = PageRequest.of(invoicePage, invoiceSize);
         Pageable supplierPageable = PageRequest.of(supplierPage, supplierSize);
 
         ResponseInvoiceAndDetailsDto response = materialSupplierService.getInvoicesAndDetails(
-                updatedBy, quotedAmount, cmatRequestId, invoiceNumber, fromInvoiceDate, toInvoiceDate,
+                updatedBy, quotedAmount, cmatRequestId, invoiceNumber, fromInvoiceDate, toInvoiceDate,regSource,
                 invoicePageable);
 
         return new ResponseEntity<>(response, HttpStatus.OK);

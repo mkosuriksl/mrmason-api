@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.QuotationStatusUpdateRequest;
 import com.application.mrmason.dto.ResponseInvoiceAndDetailsDto;
+import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.CMaterialReqHeaderDetailsEntity;
 import com.application.mrmason.entity.CMaterialRequestHeaderEntity;
 import com.application.mrmason.entity.CustomerRegistration;
@@ -41,6 +42,7 @@ import com.application.mrmason.enums.Status;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.CMaterialReqHeaderDetailsRepository;
+import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.repository.InvoiceRepository;
 import com.application.mrmason.repository.MaterialSupplierQuotationHeaderRepository;
 import com.application.mrmason.repository.MaterialSupplierQuotationUserDAO;
@@ -90,101 +92,8 @@ public class materialSupplierService {
 	private MaterialSupplierQuotationUserDAO materialSupplierQuotationUserDAO;
 	@Autowired
 	private JavaMailSender mailsender;
-
-//	@Transactional
-//	public GenericResponse<List<MaterialSupplier>> saveItems(
-//	        List<MaterialSupplier> materialQuotation,
-//	        String cMatRequestId,String invoiceNumber,Status invoiceStatus,Status quotationStatus,LocalDate invoiceDate,
-//	        RegSource regSource) {
-//
-//	    UserInfo userInfo = getLoggedInUserInfo(regSource);
-//
-//	    // ✅ Validate by Optional
-//	    Optional<CMaterialReqHeaderDetailsEntity> headerOpt =
-//	            cMaterialReqHeaderDetailsRepository.findFirstByCMatRequestId(cMatRequestId);
-//
-//	    if (headerOpt.isEmpty()) {
-//	        throw new ResourceNotFoundException(
-//	                "cMatRequestId not found in CMaterialReqHeaderDetailsEntity: " + cMatRequestId);
-//	    }
-//
-//	    List<MaterialSupplier> validatedItems = new ArrayList<>();
-//	    Set<String> seenLineItems = new HashSet<>();
-//
-//	    for (MaterialSupplier item : materialQuotation) {
-//
-//	        // Validate that materialLineItem starts with cMatRequestId + "_"
-//	        if (!item.getMaterialLineItem().startsWith(cMatRequestId + "_")) {
-//	            throw new IllegalArgumentException(
-//	                "MaterialLineItem '" + item.getMaterialLineItem() +
-//	                "' does not belong to cMatRequestId '" + cMatRequestId + "'");
-//	        }
-//
-//	        item.setQuotationId(null);
-//	        item.setCmatRequestId(cMatRequestId);
-//
-//	        if (!seenLineItems.add(item.getMaterialLineItem())) {
-//	            throw new IllegalArgumentException(
-//	                "Duplicate materialLineItem found in request: " + item.getMaterialLineItem());
-//	        }
-//
-//	        boolean exists = materialSupplierRepository
-//	                .existsBySupplierIdAndMaterialLineItem(userInfo.userId, item.getMaterialLineItem());
-//	        if (exists) {
-//	            throw new IllegalArgumentException(
-//	                "MaterialLineItem already exists for this supplier: " + item.getMaterialLineItem());
-//	        }
-//
-//	        Optional<CMaterialReqHeaderDetailsEntity> materialReqOpt =
-//	                cMaterialReqHeaderDetailsRepository.findById(item.getMaterialLineItem());
-//	        if (materialReqOpt.isEmpty()) {
-//	            throw new ResourceNotFoundException(
-//	                "MaterialLineItem not found in CMaterialReqHeaderDetailsEntity: " + item.getMaterialLineItem());
-//	        }
-//	        item.setInvoiceNumber(invoiceNumber);
-//	        item.setInvoiceStatus(invoiceStatus);
-//	        item.setQuotationStatus(quotationStatus);
-//	        item.setInvoiceDate(LocalDate.now());
-//	        item.setUpdatedDate(LocalDate.now());
-//	        item.setSupplierId(userInfo.userId);
-//	        item.setStatus(Status.QUOTED);
-//	        item.setQuotedDate(LocalDate.now());
-//
-//	        validatedItems.add(item);
-//	    }
-//
-//	    // ✅ Save detail quotations
-//	    List<MaterialSupplier> saved = materialSupplierRepository.saveAll(validatedItems);
-//
-//	    // ✅ Calculate total quoted amount (sum of quotedAmount)
-//	    BigDecimal totalQuotedAmount = saved.stream()
-//	            .map(MaterialSupplier::getQuotedAmount)
-//	            .filter(Objects::nonNull)
-//	            .reduce(BigDecimal.ZERO, BigDecimal::add);
-//
-//	    // ✅ Save header record
-//	    MaterialSupplierQuotationHeader quotationHeader = new MaterialSupplierQuotationHeader();
-//	    quotationHeader.setCmatRequestId(cMatRequestId);
-//	    quotationHeader.setInvoiceNumber(invoiceNumber);
-//	    quotationHeader.setInvoiceStatus(invoiceStatus);
-//	    quotationHeader.setInvoiceDate(LocalDate.now());
-//	    quotationHeader.setQuotationStatus(quotationStatus);
-//	    
-//	    quotationHeader.setQuotationId(saved.get(0).getQuotationId()); // pick any from saved, or generate
-//	    quotationHeader.setQuotedAmount(totalQuotedAmount);
-//	    quotationHeader.setSupplierId(userInfo.userId);
-//	    quotationHeader.setQuotedDate(LocalDate.now());
-//	    quotationHeader.setUpdatedDate(LocalDate.now());
-//	    
-//	    
-//	    materialSupplierQuotationHeaderRepository.save(quotationHeader);
-//
-//	    return new GenericResponse<>(
-//	            "Material Quotations saved successfully by user: " + userInfo.userId,
-//	            true,
-//	            saved
-//	    );
-//	}
+	@Autowired
+	private CustomerRegistrationRepo customerRegistrationRepo;
 
 	@Transactional
 	public GenericResponse<List<MaterialSupplier>> saveItems(List<MaterialSupplier> materialQuotation,
@@ -489,8 +398,15 @@ public class materialSupplierService {
         }
 	}
 	public Page<MaterialSupplier> getMaterialSupplierDetails(String quotationId, String cmatRequestId,
-			String materialLineItem, String supplierId, Pageable pageable) {
+			String materialLineItem, String supplierId, RegSource regSource ,Pageable pageable) throws AccessDeniedException {
+		SecurityInfo securityInfo = getLoggedInCustomerAndServiceAndAdmin(regSource);
 
+		// ALLOW only Admin or Developer, block others
+		if (!securityInfo.role.equals("Adm") && !securityInfo.role.equals("Developer")
+				&& !securityInfo.role.equals("EC")) {
+			throw new AccessDeniedException(
+					"Access denied: only Admin And Customer , Developer roles are allowed to access this resource.");
+		}
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
 		// === Main query ===
@@ -538,188 +454,16 @@ public class materialSupplierService {
 		return new PageImpl<>(typedQuery.getResultList(), pageable, total);
 	}
 
-//	    public Page<MaterialSupplierQuotationHeader> getQuotationsByUserMobile(
-//	    		String cmatRequestId,
-//	            String userMobile,
-//	            String supplierId,
-//	            LocalDate fromQuotedDate,
-//	            LocalDate toQuotedDate,
-//	            Pageable pageable) {
-//
-//	        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-//
-//	        // --- Main query ---
-//	        CriteriaQuery<MaterialSupplierQuotationHeader> cq = cb.createQuery(MaterialSupplierQuotationHeader.class);
-//	        Root<MaterialSupplierQuotationHeader> msqhRoot = cq.from(MaterialSupplierQuotationHeader.class);
-//
-//	        List<Predicate> predicates = new ArrayList<>();
-//
-//	        // If userMobile is provided → join via subqueries (both tables)
-//	        if (userMobile != null && !userMobile.trim().isEmpty()) {
-//
-//	            // Subquery from CustomerRegistration
-//	            Subquery<String> subqueryCustomer = cq.subquery(String.class);
-//	            Root<CMaterialRequestHeaderEntity> cmrRootC = subqueryCustomer.from(CMaterialRequestHeaderEntity.class);
-//	            Root<CustomerRegistration> crRoot = subqueryCustomer.from(CustomerRegistration.class);
-//
-//	            subqueryCustomer.select(cmrRootC.get("materialRequestId"))
-//	                    .where(
-//	                            cb.and(
-//	                                    cb.equal(cmrRootC.get("requestedBy"), crRoot.get("userid")),
-//	                                    cb.equal(crRoot.get("userMobile"), userMobile)
-//	                            )
-//	                    );
-//
-//	            // Subquery from User table
-//	            Subquery<String> subqueryUser = cq.subquery(String.class);
-//	            Root<CMaterialRequestHeaderEntity> cmrRootU = subqueryUser.from(CMaterialRequestHeaderEntity.class);
-//	            Root<User> userRoot = subqueryUser.from(User.class);
-//
-//	            subqueryUser.select(cmrRootU.get("materialRequestId"))
-//	                    .where(
-//	                            cb.and(
-//	                                    cb.equal(cmrRootU.get("requestedBy"), userRoot.get("bodSeqNo")),
-//	                                    cb.equal(userRoot.get("mobile"), userMobile)
-//	                            )
-//	                    );
-//	            
-//	            // Subquery from Material table
-//	            Subquery<String> subqueryMaterial= cq.subquery(String.class);
-//	            Root<CMaterialRequestHeaderEntity> cmrRootU1 = subqueryUser.from(CMaterialRequestHeaderEntity.class);
-//	            Root<MaterialSupplierQuotationUser> userRoot1 = subqueryUser.from(MaterialSupplierQuotationUser.class);
-//
-//	            subqueryUser.select(cmrRootU1.get("materialRequestId"))
-//	                    .where(
-//	                            cb.and(
-//	                                    cb.equal(cmrRootU1.get("requestedBy"), userRoot1.get("bodSeqNo")),
-//	                                    cb.equal(userRoot1.get("mobile"), userMobile)
-//	                            )
-//	                    );
-//
-//	            // Combine with OR
-//	            Predicate userMobilePredicate = cb.or(
-//	                    msqhRoot.get("cmatRequestId").in(subqueryCustomer),
-//	                    msqhRoot.get("cmatRequestId").in(subqueryUser),
-//	                    msqhRoot.get("cmatRequestId").in(subqueryMaterial)
-//	            );
-//
-//	            predicates.add(userMobilePredicate);
-//	        }
-//
-//	        // Supplier filter
-//	        if (supplierId != null && !supplierId.trim().isEmpty()) {
-//	            predicates.add(cb.equal(msqhRoot.get("supplierId"), supplierId));
-//	        }
-//	        if (cmatRequestId != null && !cmatRequestId.trim().isEmpty()) {
-//	            predicates.add(cb.equal(msqhRoot.get("cmatRequestId"), cmatRequestId));
-//	        }
-//
-//	        // Date range filters
-//	        if (fromQuotedDate != null && toQuotedDate != null) {
-//	            predicates.add(cb.between(msqhRoot.get("quotedDate"), fromQuotedDate, toQuotedDate));
-//	        } else if (fromQuotedDate != null) {
-//	            predicates.add(cb.greaterThanOrEqualTo(msqhRoot.get("quotedDate"), fromQuotedDate));
-//	        } else if (toQuotedDate != null) {
-//	            predicates.add(cb.lessThanOrEqualTo(msqhRoot.get("quotedDate"), toQuotedDate));
-//	        }
-//
-//	        cq.select(msqhRoot);
-//	        if (!predicates.isEmpty()) {
-//	            cq.where(cb.and(predicates.toArray(new Predicate[0])));
-//	        }
-//
-//	        TypedQuery<MaterialSupplierQuotationHeader> query = entityManager.createQuery(cq);
-//	        query.setFirstResult((int) pageable.getOffset());
-//	        query.setMaxResults(pageable.getPageSize());
-//	        List<MaterialSupplierQuotationHeader> results = query.getResultList();
-//
-//	        // --- Count query ---
-//	        CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
-//	        Root<MaterialSupplierQuotationHeader> countRoot = countQuery.from(MaterialSupplierQuotationHeader.class);
-//
-//	        List<Predicate> countPredicates = new ArrayList<>();
-//
-//	        if (userMobile != null && !userMobile.trim().isEmpty()) {
-//
-//	            // Count subquery (Customer)
-//	            Subquery<String> countSubqueryCustomer = countQuery.subquery(String.class);
-//	            Root<CMaterialRequestHeaderEntity> cmrRootCountC = countSubqueryCustomer.from(CMaterialRequestHeaderEntity.class);
-//	            Root<CustomerRegistration> crRootCount = countSubqueryCustomer.from(CustomerRegistration.class);
-//
-//	            countSubqueryCustomer.select(cmrRootCountC.get("materialRequestId"))
-//	                    .where(
-//	                            cb.and(
-//	                                    cb.equal(cmrRootCountC.get("requestedBy"), crRootCount.get("userid")),
-//	                                    cb.equal(crRootCount.get("userMobile"), userMobile)
-//	                            )
-//	                    );
-//
-//	            // Count subquery (User)
-//	            Subquery<String> countSubqueryUser = countQuery.subquery(String.class);
-//	            Root<CMaterialRequestHeaderEntity> cmrRootCountU = countSubqueryUser.from(CMaterialRequestHeaderEntity.class);
-//	            Root<User> userRootCount = countSubqueryUser.from(User.class);
-//
-//	            countSubqueryUser.select(cmrRootCountU.get("materialRequestId"))
-//	                    .where(
-//	                            cb.and(
-//	                                    cb.equal(cmrRootCountU.get("requestedBy"), userRootCount.get("bodSeqNo")),
-//	                                    cb.equal(userRootCount.get("mobile"), userMobile)
-//	                            )
-//	                    );
-//	            // Count subquery (Material)
-//
-//	            Subquery<String> countSubqueryMaterial= countQuery.subquery(String.class);
-//	            Root<CMaterialRequestHeaderEntity> cmrRootCountU1 = countSubqueryMaterial.from(CMaterialRequestHeaderEntity.class);
-//	            Root<MaterialSupplierQuotationUser> userRootCount1 = countSubqueryMaterial.from(MaterialSupplierQuotationUser.class);
-//
-//	            countSubqueryMaterial.select(cmrRootCountU1.get("materialRequestId"))
-//	                    .where(
-//	                            cb.and(
-//	                                    cb.equal(cmrRootCountU1.get("requestedBy"), userRootCount1.get("bodSeqNo")),
-//	                                    cb.equal(cmrRootCountU1.get("mobile"), userMobile)
-//	                            )
-//	                    );
-//
-//	            countPredicates.add(
-//	                    cb.or(
-//	                            countRoot.get("cmatRequestId").in(countSubqueryCustomer),
-//	                            countRoot.get("cmatRequestId").in(countSubqueryUser),
-//	                            countRoot.get("cmatRequestId").in(countSubqueryMaterial)
-//
-//	                    )
-//	            );
-//	        }
-//
-//	        // Supplier filter
-//	        
-//	        if (supplierId != null && !supplierId.trim().isEmpty()) {
-//	            countPredicates.add(cb.equal(countRoot.get("supplierId"), supplierId));
-//	        }
-//	        if (cmatRequestId != null && !cmatRequestId.trim().isEmpty()) {
-//	            countPredicates.add(cb.equal(countRoot.get("cmatRequestId"), cmatRequestId));
-//	        }
-//
-//	        // Date range filters for count query
-//	        if (fromQuotedDate != null && toQuotedDate != null) {
-//	            countPredicates.add(cb.between(countRoot.get("quotedDate"), fromQuotedDate, toQuotedDate));
-//	        } else if (fromQuotedDate != null) {
-//	            countPredicates.add(cb.greaterThanOrEqualTo(countRoot.get("quotedDate"), fromQuotedDate));
-//	        } else if (toQuotedDate != null) {
-//	            countPredicates.add(cb.lessThanOrEqualTo(countRoot.get("quotedDate"), toQuotedDate));
-//	        }
-//
-//	        countQuery.select(cb.count(countRoot));
-//	        if (!countPredicates.isEmpty()) {
-//	            countQuery.where(cb.and(countPredicates.toArray(new Predicate[0])));
-//	        }
-//
-//	        Long total = entityManager.createQuery(countQuery).getSingleResult();
-//
-//	        return new PageImpl<>(results, pageable, total);
-//	    }
 	public Page<MaterialSupplierQuotationHeader> getQuotationsByUserMobile(String cmatRequestId, String userMobile,
-			String supplierId, LocalDate fromQuotedDate, LocalDate toQuotedDate, Pageable pageable) {
+			String supplierId, LocalDate fromQuotedDate, LocalDate toQuotedDate,RegSource regSource, Pageable pageable) throws AccessDeniedException {
+		SecurityInfo securityInfo = getLoggedInCustomerAndServiceAndAdmin(regSource);
 
+		// ALLOW only Admin or Developer, block others
+		if (!securityInfo.role.equals("Adm") && !securityInfo.role.equals("Developer")
+				&& !securityInfo.role.equals("EC")) {
+			throw new AccessDeniedException(
+					"Access denied: only Admin And Customer , Developer roles are allowed to access this resource.");
+		}
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
 		// --------------------------
@@ -849,8 +593,16 @@ public class materialSupplierService {
 	@Transactional
 	public ResponseInvoiceAndDetailsDto getInvoicesAndDetails(String updatedBy, BigDecimal quotedAmount,
 			String cmatRequestId, String invoiceNumber, LocalDate fromInvoiceDate, LocalDate toInvoiceDate,
-			Pageable invoicePageable) {
+			RegSource regSource,
+			Pageable invoicePageable) throws AccessDeniedException {
+		SecurityInfo securityInfo = getLoggedInCustomerAndServiceAndAdmin(regSource);
 
+		// ALLOW only Admin or Developer, block others
+		if (!securityInfo.role.equals("Adm") && !securityInfo.role.equals("Developer")
+				&& !securityInfo.role.equals("EC")) {
+			throw new AccessDeniedException(
+					"Access denied: only Admin And Customer , Developer roles are allowed to access this resource.");
+		}
 		ResponseInvoiceAndDetailsDto response = new ResponseInvoiceAndDetailsDto();
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
@@ -937,5 +689,50 @@ public class materialSupplierService {
 			predicates.add(cb.lessThanOrEqualTo(root.get("invoiceDate"), toInvoiceDate));
 		}
 		return predicates;
+	}
+	
+	private static class SecurityInfo {
+		String userId;
+		String role;
+
+		SecurityInfo(String userId, String role) {
+			this.userId = userId;
+			this.role = role;
+		}
+	}
+
+	private SecurityInfo getLoggedInCustomerAndServiceAndAdmin(RegSource regSource) {
+		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
+		Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
+
+		List<String> roleNames = loggedInRole.stream().map(GrantedAuthority::getAuthority)
+				.map(role -> role.replace("ROLE_", "")).collect(Collectors.toList());
+
+		String userId;
+		String role = roleNames.get(0); // Assuming only one role
+
+		UserType userType = UserType.valueOf(role);
+
+		if (userType == UserType.Adm) {
+			AdminDetails admin = adminRepo.findByEmailAndUserType(loggedInUserEmail, userType)
+					.orElseThrow(() -> new ResourceNotFoundException("Admin not found: " + loggedInUserEmail));
+			userId = admin.getEmail();
+		} else if (userType == UserType.EC) {
+			CustomerRegistration customer = customerRegistrationRepo
+					.findByUserEmailAndUserTypeAndRegSources(loggedInUserEmail, userType, regSource);
+
+			if (customer == null) {
+				throw new ResourceNotFoundException("No Customer found for email: " + loggedInUserEmail + ", userType: "
+						+ userType + ", regSource: " + regSource);
+			}
+			userId = customer.getUserid();
+
+		} else {
+			MaterialSupplierQuotationUser user = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource)
+					.orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
+			userId = user.getBodSeqNo();
+		}
+
+		return new SecurityInfo(userId, role);
 	}
 }

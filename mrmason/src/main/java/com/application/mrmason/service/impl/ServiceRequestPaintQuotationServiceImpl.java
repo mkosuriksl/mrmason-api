@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import com.application.mrmason.dto.MeasurementDTO;
 import com.application.mrmason.dto.ServiceRequestItem;
 import com.application.mrmason.entity.AdminDetails;
+import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.entity.SPWAStatus;
 import com.application.mrmason.entity.ServiceRequestHeaderAllQuotation;
 import com.application.mrmason.entity.ServiceRequestPaintQuotation;
@@ -31,6 +32,7 @@ import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.AdminDetailsRepo;
+import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.repository.ServiceRequestHeaderAllQuotationRepo;
 import com.application.mrmason.repository.ServiceRequestPaintQuotationRepository;
 import com.application.mrmason.repository.UserDAO;
@@ -62,6 +64,9 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 
 	@Autowired
 	ServiceRequestHeaderAllQuotationRepo serviceRequestHeaderAllQuotationRepo;
+
+	@Autowired
+	private CustomerRegistrationRepo customerRegistrationRepo;
 
 	@Override
 	public List<ServiceRequestPaintQuotation> createServiceRequestPaintQuotationService(String requestId,
@@ -168,7 +173,6 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 	public Page<ServiceRequestPaintQuotation> getServiceRequestPaintQuotationService(String admintasklineId,
 			String taskDescription, String taskId, String serviceCategory, String measureNames, String status,
 			String spId, Pageable pageable) {
-
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
 		// === Main query ===
@@ -294,7 +298,16 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 	@Override
 	public Map<String, Object> getAllGroupedQuotations(String admintasklineId, String taskDescription,
 			String serviceCategory, String taskId, String measureNames, String status, String spId, String requestId,
-			String quotationId, int page, int size) {
+			String quotationId, RegSource regSource, int page, int size) throws AccessDeniedException {
+
+		SecurityInfo securityInfo = getLoggedInCustomerAndServiceAndAdmin(regSource);
+
+		// ALLOW only Admin or Developer, block others
+		if (!securityInfo.role.equals("Adm") && !securityInfo.role.equals("Developer")
+				&& !securityInfo.role.equals("EC")) {
+			throw new AccessDeniedException(
+					"Access denied: only Admin And Customer , Developer roles are allowed to access this resource.");
+		}
 
 		// ✅ Step 1: Fetch all records
 		List<ServiceRequestPaintQuotation> allQuotations = serviceRequestPaintQuotationRepository.findAll();
@@ -372,8 +385,16 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 
 	@Override
 	public Page<ServiceRequestHeaderAllQuotation> getHeader(String quotationId, String requestId, String fromDate,
-			String toDate, String spId,String status,  Pageable pageable) throws AccessDeniedException {
+			String toDate, String spId, String status,RegSource regSource, Pageable pageable) throws AccessDeniedException {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+		SecurityInfo securityInfo = getLoggedInCustomerAndServiceAndAdmin(regSource);
+
+		// ALLOW only Admin or Developer, block others
+		if (!securityInfo.role.equals("Adm") && !securityInfo.role.equals("Developer")
+				&& !securityInfo.role.equals("EC")) {
+			throw new AccessDeniedException(
+					"Access denied: only Admin And Customer , Developer roles are allowed to access this resource.");
+		}
 		CriteriaQuery<ServiceRequestHeaderAllQuotation> query = cb.createQuery(ServiceRequestHeaderAllQuotation.class);
 		Root<ServiceRequestHeaderAllQuotation> root = query.from(ServiceRequestHeaderAllQuotation.class);
 		List<Predicate> predicates = new ArrayList<>();
@@ -445,6 +466,51 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 		Long total = entityManager.createQuery(countQuery).getSingleResult();
 
 		return new PageImpl<>(typedQuery.getResultList(), pageable, total);
+	}
+
+	private static class SecurityInfo {
+		String userId;
+		String role;
+
+		SecurityInfo(String userId, String role) {
+			this.userId = userId;
+			this.role = role;
+		}
+	}
+
+	private SecurityInfo getLoggedInCustomerAndServiceAndAdmin(RegSource regSource) {
+		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
+		Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
+
+		List<String> roleNames = loggedInRole.stream().map(GrantedAuthority::getAuthority)
+				.map(role -> role.replace("ROLE_", "")).collect(Collectors.toList());
+
+		String userId;
+		String role = roleNames.get(0); // Assuming only one role
+
+		UserType userType = UserType.valueOf(role);
+
+		if (userType == UserType.Adm) {
+			AdminDetails admin = adminRepo.findByEmailAndUserType(loggedInUserEmail, userType)
+					.orElseThrow(() -> new ResourceNotFoundException("Admin not found: " + loggedInUserEmail));
+			userId = admin.getEmail();
+		} else if (userType == UserType.EC) {
+			CustomerRegistration customer = customerRegistrationRepo
+					.findByUserEmailAndUserTypeAndRegSources(loggedInUserEmail, userType, regSource);
+
+			if (customer == null) {
+				throw new ResourceNotFoundException("No Customer found for email: " + loggedInUserEmail + ", userType: "
+						+ userType + ", regSource: " + regSource);
+			}
+			userId = customer.getUserid();
+
+		} else {
+			User user = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource)
+					.orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
+			userId = user.getBodSeqNo();
+		}
+
+		return new SecurityInfo(userId, role);
 	}
 
 }

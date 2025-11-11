@@ -16,6 +16,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.entity.AdminDetails;
+import com.application.mrmason.entity.SPWAStatus;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.entity.WorkBreakdownElements;
@@ -52,25 +53,24 @@ public class WorkBreakdownElementsServiceImpl implements WorkBreakdownElementsSe
 		UserInfo userInfo = getLoggedInUserInfo(regSource);
 		// Try to find existing entity by PK
 		WorkBreakdownElements existing = entityManager.find(WorkBreakdownElements.class,
-				workBreakdownElements.getWoOrderNo());
+				workBreakdownElements.getSubTaskId());
 		Date now = new Date();
 		if (existing != null) {
 			existing.setTaskId(workBreakdownElements.getTaskId());
-			existing.setSubTaskId(workBreakdownElements.getSubTaskId());
+			existing.setWoOrderNo(workBreakdownElements.getWoOrderNo());
 			existing.setUpdatedBy(userInfo.userId);
 			existing.setUpdatedDate(now);
 			existing.setActualStartDate(workBreakdownElements.getActualStartDate());
 			existing.setActualEndDate(workBreakdownElements.getActualEndDate());
 			existing.setTentativeStartdate(workBreakdownElements.getTentativeStartdate());
 			existing.setActualEndDate(workBreakdownElements.getActualEndDate());
-
-			WorkBreakdownElements merged = entityManager.merge(existing);
-			return merged;
+			existing.setStatus(SPWAStatus.NEW);
+	        return entityManager.merge(existing);
 		} else {
-			workBreakdownElements.setWoOrderNo(workBreakdownElements.getWoOrderNo());
+			workBreakdownElements.setSubTaskId(workBreakdownElements.getSubTaskId());
 			workBreakdownElements.setUpdatedBy(userInfo.userId);
 			workBreakdownElements.setUpdatedDate(now);
-
+			workBreakdownElements.setStatus(SPWAStatus.NEW);
 			entityManager.persist(workBreakdownElements);
 			return workBreakdownElements;
 		}
@@ -116,7 +116,7 @@ public class WorkBreakdownElementsServiceImpl implements WorkBreakdownElementsSe
 	@Transactional
 	public WorkBreakdownElements updateWorkBreakdownElements(WorkBreakdownElements workBreakdownElements,RegSource regSource) {
 		UserInfo userInfo = getLoggedInUserInfo(regSource);
-		String pk = workBreakdownElements.getWoOrderNo();
+		String pk = workBreakdownElements.getSubTaskId();
 		if (pk == null || pk.isEmpty()) {
 			throw new IllegalArgumentException("work order number is required for update");
 		}
@@ -127,8 +127,8 @@ public class WorkBreakdownElementsServiceImpl implements WorkBreakdownElementsSe
 		if (workBreakdownElements.getTaskId() != null) {
 			existing.setTaskId(workBreakdownElements.getTaskId());
 		}
-		if (workBreakdownElements.getSubTaskId() != null) {
-			existing.setSubTaskId(workBreakdownElements.getSubTaskId());
+		if (workBreakdownElements.getWoOrderNo() != null) {
+			existing.setWoOrderNo(workBreakdownElements.getWoOrderNo());
 		}
 		if (workBreakdownElements.getActualEndDate() != null) {
 			existing.setActualEndDate(workBreakdownElements.getActualEndDate());
@@ -141,6 +141,9 @@ public class WorkBreakdownElementsServiceImpl implements WorkBreakdownElementsSe
 		}
 		if (workBreakdownElements.getTentaiveEnddate() != null) {
 			existing.setTentaiveEnddate(workBreakdownElements.getTentaiveEnddate());
+		}
+		if (workBreakdownElements.getStatus() != null) {
+			existing.setStatus(workBreakdownElements.getStatus());
 		}
 		existing.setUpdatedBy(userInfo.userId);
 		existing.setUpdatedDate(new Date());

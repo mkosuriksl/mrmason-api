@@ -4,6 +4,8 @@ import java.util.Date;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -22,14 +24,14 @@ import lombok.Setter;
 public class WorkBreakdownElements {
 
 	@Id
+	@Column(name = "sub_task_id")
+	private String subTaskId;
+	
 	@Column(name = "wo_order_no")
 	private String woOrderNo;
 
 	@Column(name = "task_id")
 	private String taskId;
-
-	@Column(name = "sub_task_id")
-	private String subTaskId;
 
 	@Column(name = "actual_start_date")
 	private Date actualStartDate;
@@ -48,5 +50,9 @@ public class WorkBreakdownElements {
 
 	@Column(name = "updated_date")
 	private Date updatedDate;
+	
+	@Enumerated(EnumType.STRING)
+	@Column(name="status")
+	private SPWAStatus status;
 
 }

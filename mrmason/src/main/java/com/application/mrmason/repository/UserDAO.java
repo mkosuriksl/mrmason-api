@@ -48,6 +48,9 @@ public interface UserDAO extends JpaRepository<User, String> {
 
 	User findByBodSeqNo(String bodSeqNo);
 
+	@Query("SELECT c FROM User c WHERE c.bodSeqNo = :bodSeqNo")
+	Optional<User> findByBodSeqNos(String bodSeqNo);
+	
 	User findByAddress(String address);
 
 	List<User> findByEmailOrMobileOrStatusOrderByRegisteredDateDesc(String email, String mobile, String status);

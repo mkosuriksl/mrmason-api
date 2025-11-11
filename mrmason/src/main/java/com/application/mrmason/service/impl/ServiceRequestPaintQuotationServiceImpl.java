@@ -1,5 +1,6 @@
 package com.application.mrmason.service.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.file.AccessDeniedException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -10,6 +11,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -20,12 +22,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
+import com.application.mrmason.dto.HeaderQuotationStatusRequest;
 import com.application.mrmason.dto.MeasurementDTO;
 import com.application.mrmason.dto.ServiceRequestItem;
+import com.application.mrmason.dto.WorkOrderRequest;
 import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.entity.SPWAStatus;
 import com.application.mrmason.entity.ServiceRequestHeaderAllQuotation;
+import com.application.mrmason.entity.ServiceRequestHeaderAllQuotationHistory;
 import com.application.mrmason.entity.ServiceRequestPaintQuotation;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
@@ -33,11 +38,24 @@ import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
+import com.application.mrmason.repository.ServiceRequestHeaderAllQuotationHistoryRepo;
 import com.application.mrmason.repository.ServiceRequestHeaderAllQuotationRepo;
 import com.application.mrmason.repository.ServiceRequestPaintQuotationRepository;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.AuthDetailsProvider;
 import com.application.mrmason.service.ServiceRequestPaintQuotationService;
+import com.itextpdf.io.font.constants.StandardFonts;
+import com.itextpdf.kernel.colors.ColorConstants;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.property.TextAlignment;
+import com.itextpdf.layout.property.UnitValue;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -67,6 +85,12 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 
 	@Autowired
 	private CustomerRegistrationRepo customerRegistrationRepo;
+
+	@Autowired
+	private EmailServiceImpl emailService;
+
+	@Autowired
+	private ServiceRequestHeaderAllQuotationHistoryRepo serviceRequestHeaderAllQuotationHistoryRepo;
 
 	@Override
 	public List<ServiceRequestPaintQuotation> createServiceRequestPaintQuotationService(String requestId,
@@ -385,7 +409,8 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 
 	@Override
 	public Page<ServiceRequestHeaderAllQuotation> getHeader(String quotationId, String requestId, String fromDate,
-			String toDate, String spId, String status,RegSource regSource, Pageable pageable) throws AccessDeniedException {
+			String toDate, String spId, String status, RegSource regSource, Pageable pageable)
+			throws AccessDeniedException {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		SecurityInfo securityInfo = getLoggedInCustomerAndServiceAndAdmin(regSource);
 
@@ -512,5 +537,169 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 
 		return new SecurityInfo(userId, role);
 	}
+
+	public byte[] generateSRHPdfFromHistory(ServiceRequestHeaderAllQuotation header, User customer) {
+		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
+			PdfWriter writer = new PdfWriter(outputStream);
+			PdfDocument pdf = new PdfDocument(writer);
+			Document document = new Document(pdf);
+
+			PdfFont font = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+			float fontSize = 8f; // increased slightly for readability
+
+			// Date formatter
+			SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+
+			// ✅ Header Section
+			document.add(new Paragraph("Service Request All Quotation Report").setFont(font).setFontSize(14).setBold()
+					.setTextAlignment(TextAlignment.CENTER));
+			document.add(new Paragraph("Customer: " + customer.getEmail()).setFont(font).setFontSize(fontSize));
+			document.add(new Paragraph("Service Request ID: " + header.getQuotationId()).setFont(font)
+					.setFontSize(fontSize));
+			document.add(new Paragraph(" ")); // spacer
+
+			// ✅ Table Section
+			String[] headers = { "Quotation ID", "Request ID", "Quoted Date", "Status", "SP ID", "Updated By",
+					"Updated Date" };
+
+			Table table = new Table(headers.length).useAllAvailableWidth();
+
+			// Table Headers
+			for (String h : headers) {
+				table.addHeaderCell(new Cell().add(new Paragraph(h)).setFont(font).setFontSize(fontSize).setBold()
+						.setBackgroundColor(ColorConstants.LIGHT_GRAY));
+			}
+
+			// ✅ Safely format each field
+			table.addCell(new Cell().add(new Paragraph(header.getQuotationId() != null ? header.getQuotationId() : "-"))
+					.setFont(font).setFontSize(fontSize));
+
+			table.addCell(new Cell().add(new Paragraph(header.getRequestId() != null ? header.getRequestId() : "-"))
+					.setFont(font).setFontSize(fontSize));
+
+			table.addCell(new Cell()
+					.add(new Paragraph(header.getQuotedDate() != null ? sdf.format(header.getQuotedDate()) : "-"))
+					.setFont(font).setFontSize(fontSize));
+
+			table.addCell(new Cell().add(new Paragraph(header.getStatus() != null ? header.getStatus().name() : "-"))
+					.setFont(font).setFontSize(fontSize));
+
+			table.addCell(new Cell().add(new Paragraph(header.getSpId() != null ? header.getSpId() : "-")).setFont(font)
+					.setFontSize(fontSize));
+
+			table.addCell(new Cell().add(new Paragraph(header.getUpdatedBy() != null ? header.getUpdatedBy() : "-"))
+					.setFont(font).setFontSize(fontSize));
+
+			table.addCell(new Cell()
+					.add(new Paragraph(header.getUpdatedDate() != null ? sdf.format(header.getUpdatedDate()) : "-"))
+					.setFont(font).setFontSize(fontSize));
+
+			document.add(table);
+
+			// ✅ Footer
+			document.add(new Paragraph("\nThank you,\nMr Mason Team").setFont(font).setFontSize(fontSize));
+
+			document.close();
+			return outputStream.toByteArray();
+
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to generate PDF", e);
+		}
+	}
+
+	public ServiceRequestHeaderAllQuotation updateServiceRequestHeaderAllQuotation(
+	        HeaderQuotationStatusRequest header, RegSource regSource) {
+
+	    String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
+	    Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
+
+	    List<String> roleNames = loggedInRole.stream()
+	            .map(GrantedAuthority::getAuthority)
+	            .map(role -> role.replace("ROLE_", ""))
+	            .collect(Collectors.toList());
+
+	    // Restrict Developer role
+	    if (roleNames.contains("Developer")) {
+	        throw new ResourceNotFoundException("Restricted role: " + roleNames);
+	    }
+
+	    UserType userType = UserType.valueOf(roleNames.get(0));
+	    String userId;
+
+	    // ✅ Identify the logged-in user
+	    if (userType == UserType.EC) {
+	        CustomerRegistration customer = customerRegistrationRepo
+	                .findByUserEmailAndUserType(loggedInUserEmail, userType)
+	                .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + loggedInUserEmail));
+	        userId = customer.getUserid();
+	    } else {
+	        User user = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource)
+	                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
+	        userId = user.getBodSeqNo();
+	    }
+
+	    // ✅ Find existing quotation
+	    ServiceRequestHeaderAllQuotation existingHeader = serviceRequestHeaderAllQuotationRepo
+	            .findByQuotationId(header.getQuotationId());
+
+	    if (existingHeader == null) {
+	        throw new ResourceNotFoundException("Quotation ID not found: " + header.getQuotationId());
+	    }
+
+	    Date now = new Date();
+
+	    // ✅ Update main table
+	    existingHeader.setStatus(header.getStatus());
+	    existingHeader.setUpdatedBy(userId);
+	    existingHeader.setUpdatedDate(now);
+	    ServiceRequestHeaderAllQuotation saved = serviceRequestHeaderAllQuotationRepo.save(existingHeader);
+
+	    // ✅ Insert record into history table
+	    ServiceRequestHeaderAllQuotationHistory history = ServiceRequestHeaderAllQuotationHistory.builder()
+	            .quotationId(saved.getQuotationId())
+	            .requestId(saved.getRequestId())
+	            .quotedDate(saved.getQuotedDate())
+	            .status(saved.getStatus())
+	            .spId(saved.getSpId())
+	            .updatedBy(saved.getUpdatedBy())
+	            .updatedDate(saved.getUpdatedDate())
+	            .userType(userType.name())
+	            .build();
+
+	    serviceRequestHeaderAllQuotationHistoryRepo.save(history);
+
+	    // ✅ Prepare email data
+	    String subject = "Service Request Quotation Updated Successfully";
+	    String body = "Dear User,<br><br>"
+	            + "The Service Request Quotation has been updated successfully.<br>"
+	            + "Quotation ID: <b>" + saved.getQuotationId() + "</b><br>"
+	            + "Status: <b>" + saved.getStatus() + "</b><br><br>"
+	            + "Regards,<br>Mr Mason Team";
+
+	    // ✅ Generate PDF once
+	    User servicePerson = userDAO.findByBodSeqNos(saved.getSpId())
+	            .orElseThrow(() -> new ResourceNotFoundException("Service Person not found for ID: " + saved.getSpId()));
+	    byte[] pdf = generateSRHPdfFromHistory(saved, servicePerson);
+
+	    // ✅ Send email to Service Person
+	    emailService.sendEmailWithAttachment(servicePerson.getEmail(), subject, body, pdf, "UpdatedQuotation.pdf");
+
+	    // ✅ Send email to UpdatedBy (can be in User or CustomerRegistration)
+	    Optional<User> updatedUserOpt = userDAO.findByBodSeqNos(saved.getUpdatedBy());
+	    Optional<CustomerRegistration> updatedCustomerOpt = customerRegistrationRepo.findByUserids(saved.getUpdatedBy());
+
+	    String updatedByEmail = updatedUserOpt.map(User::getEmail)
+	            .orElseGet(() -> updatedCustomerOpt.map(CustomerRegistration::getUserEmail).orElse(null));
+
+	    if (updatedByEmail != null) {
+	        emailService.sendEmailWithAttachment(updatedByEmail, subject, body, pdf, "UpdatedQuotation.pdf");
+	    } else {
+	        throw new ResourceNotFoundException("Email not found for UpdatedBy ID: " + saved.getUpdatedBy());
+	    }
+
+	    return saved;
+	}
+
 
 }

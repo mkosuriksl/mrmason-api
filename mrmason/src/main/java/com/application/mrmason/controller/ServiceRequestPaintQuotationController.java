@@ -65,12 +65,12 @@ public class ServiceRequestPaintQuotationController {
 			@RequestParam(required = false) String serviceCategory, @RequestParam(required = false) String taskId,
 			@RequestParam(required = false) String measureNames, @RequestParam(required = false) String status,
 			@RequestParam(required = false) String spId, @RequestParam(required = false) String requestId,
-			@RequestParam(required = false) String quotationId, @RequestParam(defaultValue = "0") int page,
-			@RequestParam(defaultValue = "10") int size) {
+			@RequestParam(required = false) String quotationId, @RequestParam RegSource regSource,
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) throws AccessDeniedException {
 
 		Map<String, Object> response = serviceRequestPaintQuotationService.getAllGroupedQuotations(admintasklineId,
-				taskDescription, serviceCategory, taskId, measureNames, status, spId, requestId, quotationId, page,
-				size);
+				taskDescription, serviceCategory, taskId, measureNames, status, spId, requestId, quotationId, regSource,
+				page, size);
 
 		return ResponseEntity.ok(response);
 	}
@@ -78,16 +78,16 @@ public class ServiceRequestPaintQuotationController {
 	@GetMapping("/get-header-serviceRequestQuotation")
 	public ResponseEntity<ResponseGetServiceRequestHeaderQuotationDto> getHeader(
 			@RequestParam(required = false) String quotationId, @RequestParam(required = false) String requestId,
-			@RequestParam(required = false) String fromQuotatedDate, 
-			@RequestParam(required = false) String toQuotatedDate, 
-			@RequestParam(required = false) String spId,
+			@RequestParam(required = false) String fromQuotatedDate,
+			@RequestParam(required = false) String toQuotatedDate, @RequestParam(required = false) String spId,
 			@RequestParam(required = false) String status,
+			 @RequestParam RegSource regSource,
 			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size)
 			throws AccessDeniedException {
 
 		Pageable pageable = PageRequest.of(page, size);
 		Page<ServiceRequestHeaderAllQuotation> srpqPage = serviceRequestPaintQuotationService.getHeader(quotationId,
-				requestId, fromQuotatedDate, toQuotatedDate,spId,status,pageable);
+				requestId, fromQuotatedDate, toQuotatedDate, spId, status,regSource, pageable);
 		ResponseGetServiceRequestHeaderQuotationDto response = new ResponseGetServiceRequestHeaderQuotationDto();
 
 		response.setMessage("Service Request  Quotation header retrieved successfully.");

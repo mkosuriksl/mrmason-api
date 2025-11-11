@@ -25,8 +25,9 @@ public interface ServiceRequestPaintQuotationService {
 			List<ServiceRequestPaintQuotation> dtoList, RegSource regSource);
 	
 	public Page<ServiceRequestHeaderAllQuotation> getHeader(String quotationId, String requestId, String fromDate, String toDate,
-			String spId, String status,Pageable pageable) throws AccessDeniedException;
+			String spId, String status,RegSource regSource,Pageable pageable) throws AccessDeniedException;
 
 	public Map<String, Object> getAllGroupedQuotations(String admintasklineId, String taskDescription,
-			String serviceCategory, String taskId, String measureNames, String status, String spId,String requestId,String quotationId, int page, int size);
+			String serviceCategory, String taskId, String measureNames, String status, String spId,String requestId,String quotationId, 
+			RegSource regSource,int page, int size)throws AccessDeniedException ;
 }

@@ -81,7 +81,7 @@ public class AdminAllQuotationTasksManagemntController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	
-	@GetMapping("/get-paint-tasks-measureNames")
+	@GetMapping("/get-by-service-category")
 	public ResponseEntity<List<TaskResponseDto>> getTaskDetails(
 	        @RequestParam(required = false) String serviceCategory,
 	        @RequestParam(required = false) String taskId,

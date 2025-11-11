@@ -73,6 +73,7 @@ public class WorkProgressDetailsServiceImpl implements WorkProgressDetailsServic
             existing.setNoOfResource(entity.getNoOfResource());
             existing.setUpdatedBy(userInfo.userId);
             existing.setUpdatedDate(now);
+            existing.setPcWorkCompletion(entity.getPcWorkCompletion());
 
             return detailsRepo.save(existing);
         } else {
@@ -144,6 +145,9 @@ public class WorkProgressDetailsServiceImpl implements WorkProgressDetailsServic
         }
         if (entity.getWorkDescription() != null) {
             existing.setWorkDescription(entity.getWorkDescription());
+        }
+        if (entity.getPcWorkCompletion() != null) {
+            existing.setPcWorkCompletion(entity.getPcWorkCompletion());
         }
      
         existing.setUpdatedBy(userInfo.userId);

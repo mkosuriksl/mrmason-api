@@ -1,7 +1,7 @@
 package com.application.mrmason.entity;
 
-import java.util.Date;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -50,6 +50,9 @@ public class WorkProgressDetails {
 
     @Column(name = "updated_date")
     private Date updatedDate;
+    
+    @Column(name = "pc_work_completion")
+    private Integer pcWorkCompletion;
 
     @PrePersist
     private void prePersist() {

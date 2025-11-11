@@ -7,7 +7,9 @@ import java.util.Map;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import com.application.mrmason.dto.HeaderQuotationStatusRequest;
 import com.application.mrmason.dto.ServiceRequestItem;
+import com.application.mrmason.dto.WorkOrderRequest;
 import com.application.mrmason.entity.ServiceRequestHeaderAllQuotation;
 import com.application.mrmason.entity.ServiceRequestPaintQuotation;
 import com.application.mrmason.enums.RegSource;
@@ -30,4 +32,6 @@ public interface ServiceRequestPaintQuotationService {
 	public Map<String, Object> getAllGroupedQuotations(String admintasklineId, String taskDescription,
 			String serviceCategory, String taskId, String measureNames, String status, String spId,String requestId,String quotationId, 
 			RegSource regSource,int page, int size)throws AccessDeniedException ;
+	
+	public ServiceRequestHeaderAllQuotation updateServiceRequestHeaderAllQuotation(HeaderQuotationStatusRequest header, RegSource regSource);
 }

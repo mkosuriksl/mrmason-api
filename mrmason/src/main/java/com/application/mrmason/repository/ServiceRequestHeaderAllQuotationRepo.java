@@ -16,4 +16,5 @@ public interface ServiceRequestHeaderAllQuotationRepo extends JpaRepository<Serv
 	@Query("SELECT q FROM ServiceRequestHeaderAllQuotation q WHERE q.requestId = :requestId")
 	List<ServiceRequestHeaderAllQuotation> findByRequestIds(@Param("requestId") String requestId);
 	List<ServiceRequestHeaderAllQuotation> findByRequestIdAndSpId(String requestId, String userId);
+	ServiceRequestHeaderAllQuotation findByQuotationId(String quotationId);
 }

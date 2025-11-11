@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.GenericResponse;
+import com.application.mrmason.dto.HeaderQuotationStatusRequest;
 import com.application.mrmason.dto.ResponseGetServiceRequestHeaderQuotationDto;
 import com.application.mrmason.dto.ServiceRequestItem;
 import com.application.mrmason.dto.ServiceRequestPaintQuotationWrapper;
@@ -66,7 +67,8 @@ public class ServiceRequestPaintQuotationController {
 			@RequestParam(required = false) String measureNames, @RequestParam(required = false) String status,
 			@RequestParam(required = false) String spId, @RequestParam(required = false) String requestId,
 			@RequestParam(required = false) String quotationId, @RequestParam RegSource regSource,
-			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) throws AccessDeniedException {
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size)
+			throws AccessDeniedException {
 
 		Map<String, Object> response = serviceRequestPaintQuotationService.getAllGroupedQuotations(admintasklineId,
 				taskDescription, serviceCategory, taskId, measureNames, status, spId, requestId, quotationId, regSource,
@@ -80,14 +82,13 @@ public class ServiceRequestPaintQuotationController {
 			@RequestParam(required = false) String quotationId, @RequestParam(required = false) String requestId,
 			@RequestParam(required = false) String fromQuotatedDate,
 			@RequestParam(required = false) String toQuotatedDate, @RequestParam(required = false) String spId,
-			@RequestParam(required = false) String status,
-			 @RequestParam RegSource regSource,
+			@RequestParam(required = false) String status, @RequestParam RegSource regSource,
 			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size)
 			throws AccessDeniedException {
 
 		Pageable pageable = PageRequest.of(page, size);
 		Page<ServiceRequestHeaderAllQuotation> srpqPage = serviceRequestPaintQuotationService.getHeader(quotationId,
-				requestId, fromQuotatedDate, toQuotatedDate, spId, status,regSource, pageable);
+				requestId, fromQuotatedDate, toQuotatedDate, spId, status, regSource, pageable);
 		ResponseGetServiceRequestHeaderQuotationDto response = new ResponseGetServiceRequestHeaderQuotationDto();
 
 		response.setMessage("Service Request  Quotation header retrieved successfully.");
@@ -131,4 +132,22 @@ public class ServiceRequestPaintQuotationController {
 		}
 	}
 
+	@PutMapping("/header-status")
+	public ResponseEntity<?> updateServiceRequestHeaderAllQuotation(
+			@RequestBody HeaderQuotationStatusRequest header, @RequestParam RegSource regSource) {
+		try {
+			ServiceRequestHeaderAllQuotation updatedHeader = serviceRequestPaintQuotationService
+					.updateServiceRequestHeaderAllQuotation(header, regSource);
+
+			if (updatedHeader != null) {
+				return ResponseEntity.ok(updatedHeader);
+			} else {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+						.body("Quotation ID not found: " + header.getQuotationId());
+			}
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("Error updating Service Request All Quotation: " + e.getMessage());
+		}
+	}
 }

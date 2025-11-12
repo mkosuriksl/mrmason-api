@@ -8,10 +8,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -25,7 +27,6 @@ import org.springframework.stereotype.Service;
 import com.application.mrmason.dto.HeaderQuotationStatusRequest;
 import com.application.mrmason.dto.MeasurementDTO;
 import com.application.mrmason.dto.ServiceRequestItem;
-import com.application.mrmason.dto.WorkOrderRequest;
 import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.entity.SPWAStatus;
@@ -55,7 +56,6 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.TextAlignment;
-import com.itextpdf.layout.property.UnitValue;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -64,8 +64,10 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPaintQuotationService {
 
 	@Autowired
@@ -538,7 +540,7 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 		return new SecurityInfo(userId, role);
 	}
 
-	public byte[] generateSRHPdfFromHistory(ServiceRequestHeaderAllQuotation header, User customer) {
+	public byte[] generateSRHPdfFromHistory(ServiceRequestHeaderAllQuotationHistory header, User customer) {
 		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
 			PdfWriter writer = new PdfWriter(outputStream);
@@ -607,7 +609,6 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 			throw new RuntimeException("Failed to generate PDF", e);
 		}
 	}
-
 	public ServiceRequestHeaderAllQuotation updateServiceRequestHeaderAllQuotation(
 	        HeaderQuotationStatusRequest header, RegSource regSource) {
 
@@ -619,11 +620,7 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 	            .map(role -> role.replace("ROLE_", ""))
 	            .collect(Collectors.toList());
 
-	    // Restrict Developer role
-	    if (roleNames.contains("Developer")) {
-	        throw new ResourceNotFoundException("Restricted role: " + roleNames);
-	    }
-
+	    // ✅ Identify userType (Developer also allowed now)
 	    UserType userType = UserType.valueOf(roleNames.get(0));
 	    String userId;
 
@@ -649,25 +646,33 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 
 	    Date now = new Date();
 
-	    // ✅ Update main table
-	    existingHeader.setStatus(header.getStatus());
-	    existingHeader.setUpdatedBy(userId);
-	    existingHeader.setUpdatedDate(now);
+	    // ✅ Update rules by user type
+	    if (userType == UserType.EC) {
+	        // EC users are allowed, but skip restricted fields
+	        log.info("Skipping status, updatedBy, and updatedDate update for End-Customer: {}", userId);
+	    } else {
+	        // All other users (SP, CU, Developer, etc.) can update
+	        existingHeader.setStatus(header.getStatus());
+	        existingHeader.setUpdatedBy(userId);
+	        existingHeader.setUpdatedDate(now);
+	    }
+
+	    // ✅ Save main table record
 	    ServiceRequestHeaderAllQuotation saved = serviceRequestHeaderAllQuotationRepo.save(existingHeader);
 
-	    // ✅ Insert record into history table
+	    // ✅ Insert record into history table (for all user types)
 	    ServiceRequestHeaderAllQuotationHistory history = ServiceRequestHeaderAllQuotationHistory.builder()
 	            .quotationId(saved.getQuotationId())
 	            .requestId(saved.getRequestId())
 	            .quotedDate(saved.getQuotedDate())
-	            .status(saved.getStatus())
+	            .status(userType == UserType.EC ? header.getStatus() : header.getStatus()) // EC keeps old status
 	            .spId(saved.getSpId())
-	            .updatedBy(saved.getUpdatedBy())
-	            .updatedDate(saved.getUpdatedDate())
+	            .updatedBy(userId)
+	            .updatedDate(now)
 	            .userType(userType.name())
 	            .build();
 
-	    serviceRequestHeaderAllQuotationHistoryRepo.save(history);
+	    ServiceRequestHeaderAllQuotationHistory historySaved=serviceRequestHeaderAllQuotationHistoryRepo.save(history);
 
 	    // ✅ Prepare email data
 	    String subject = "Service Request Quotation Updated Successfully";
@@ -678,28 +683,49 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 	            + "Regards,<br>Mr Mason Team";
 
 	    // ✅ Generate PDF once
-	    User servicePerson = userDAO.findByBodSeqNos(saved.getSpId())
+	    User servicePerson = userDAO.findByBodSeqNos(historySaved.getSpId())
 	            .orElseThrow(() -> new ResourceNotFoundException("Service Person not found for ID: " + saved.getSpId()));
-	    byte[] pdf = generateSRHPdfFromHistory(saved, servicePerson);
+	    byte[] pdf = generateSRHPdfFromHistory(historySaved, servicePerson);
 
-	    // ✅ Send email to Service Person
-	    emailService.sendEmailWithAttachment(servicePerson.getEmail(), subject, body, pdf, "UpdatedQuotation.pdf");
+	    // ✅ Collect all recipients (to avoid duplicate emails)
+	    Set<String> recipients = new HashSet<>();
 
-	    // ✅ Send email to UpdatedBy (can be in User or CustomerRegistration)
-	    Optional<User> updatedUserOpt = userDAO.findByBodSeqNos(saved.getUpdatedBy());
-	    Optional<CustomerRegistration> updatedCustomerOpt = customerRegistrationRepo.findByUserids(saved.getUpdatedBy());
+	    // 1️⃣ Service Person
+	    recipients.add(servicePerson.getEmail());
 
-	    String updatedByEmail = updatedUserOpt.map(User::getEmail)
-	            .orElseGet(() -> updatedCustomerOpt.map(CustomerRegistration::getUserEmail).orElse(null));
+	    // 2️⃣ UpdatedBy (check both tables)
+	    String updatedByEmail = null;
+	    if (saved.getUpdatedBy() != null) {
+	        Optional<User> updatedUserOpt = userDAO.findByBodSeqNos(saved.getUpdatedBy());
+	        if (updatedUserOpt.isPresent()) {
+	            updatedByEmail = updatedUserOpt.get().getEmail();
+	        } else {
+	            Optional<CustomerRegistration> updatedCustomerOpt =
+	                    customerRegistrationRepo.findByUserids(saved.getUpdatedBy());
+	            if (updatedCustomerOpt.isPresent()) {
+	                updatedByEmail = updatedCustomerOpt.get().getUserEmail();
+	            }
+	        }
+	    }
+	    if (updatedByEmail != null && !updatedByEmail.isEmpty()) {
+	        recipients.add(updatedByEmail);
+	    }
 
-	    if (updatedByEmail != null) {
-	        emailService.sendEmailWithAttachment(updatedByEmail, subject, body, pdf, "UpdatedQuotation.pdf");
-	    } else {
-	        throw new ResourceNotFoundException("Email not found for UpdatedBy ID: " + saved.getUpdatedBy());
+	    // 3️⃣ Optionally send to logged-in EC (if EC triggered update)
+	    if (userType == UserType.EC) {
+	        recipients.add(loggedInUserEmail);
+	    }
+
+	    // ✅ Send emails
+	    for (String recipient : recipients) {
+	        try {
+	            emailService.sendEmailWithAttachment(recipient, subject, body, pdf, "UpdatedQuotation.pdf");
+	            log.info("📧 Email sent successfully to {}", recipient);
+	        } catch (Exception e) {
+	            log.error("❌ Failed to send email to {}: {}", recipient, e.getMessage());
+	        }
 	    }
 
 	    return saved;
 	}
-
-
 }

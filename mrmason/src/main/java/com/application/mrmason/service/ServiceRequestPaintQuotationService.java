@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.application.mrmason.dto.HeaderQuotationStatusRequest;
+import com.application.mrmason.dto.ResponseGetServiceRequestHeaderQuotationDto;
 import com.application.mrmason.dto.ServiceRequestItem;
 import com.application.mrmason.dto.WorkOrderRequest;
 import com.application.mrmason.entity.ServiceRequestHeaderAllQuotation;
@@ -34,4 +35,9 @@ public interface ServiceRequestPaintQuotationService {
 			RegSource regSource,int page, int size)throws AccessDeniedException ;
 	
 	public ServiceRequestHeaderAllQuotation updateServiceRequestHeaderAllQuotation(HeaderQuotationStatusRequest header, RegSource regSource);
+	
+	public ResponseGetServiceRequestHeaderQuotationDto getHeaderWithHistory(
+	        String quotationId, String requestId, String fromDate,
+	        String toDate, String spId, String status,
+	        RegSource regSource, Pageable pageable) throws AccessDeniedException;
 }

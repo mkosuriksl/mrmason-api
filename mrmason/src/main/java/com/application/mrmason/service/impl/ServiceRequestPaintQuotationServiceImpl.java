@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import com.application.mrmason.dto.HeaderQuotationStatusRequest;
 import com.application.mrmason.dto.MeasurementDTO;
+import com.application.mrmason.dto.ResponseGetServiceRequestHeaderQuotationDto;
 import com.application.mrmason.dto.ServiceRequestItem;
 import com.application.mrmason.entity.AdminDetails;
 import com.application.mrmason.entity.CustomerRegistration;
@@ -493,6 +494,45 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 		Long total = entityManager.createQuery(countQuery).getSingleResult();
 
 		return new PageImpl<>(typedQuery.getResultList(), pageable, total);
+	}
+	public ResponseGetServiceRequestHeaderQuotationDto getHeaderWithHistory(
+	        String quotationId, String requestId, String fromDate,
+	        String toDate, String spId, String status,
+	        RegSource regSource, Pageable pageable) throws AccessDeniedException {
+
+	    Page<ServiceRequestHeaderAllQuotation> mainPage = getHeader(
+	            quotationId, requestId, fromDate, toDate, spId, status, regSource, pageable
+	    );
+
+	    // Fetch history only if quotationId is provided
+	    List<ServiceRequestHeaderAllQuotationHistory> historyResults = new ArrayList<>();
+	    if (quotationId != null && !quotationId.trim().isEmpty()) {
+	        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+	        CriteriaQuery<ServiceRequestHeaderAllQuotationHistory> historyQuery =
+	                cb.createQuery(ServiceRequestHeaderAllQuotationHistory.class);
+	        Root<ServiceRequestHeaderAllQuotationHistory> historyRoot =
+	                historyQuery.from(ServiceRequestHeaderAllQuotationHistory.class);
+
+	        historyQuery.select(historyRoot)
+	                .where(cb.equal(historyRoot.get("quotationId"), quotationId));
+
+	        historyResults = entityManager.createQuery(historyQuery).getResultList();
+	    }
+
+	    ResponseGetServiceRequestHeaderQuotationDto response = new ResponseGetServiceRequestHeaderQuotationDto();
+	    response.setServiceRequestHeaderQuotation(mainPage.getContent());
+	    response.setRequestHeaderAllQuotationHistories(historyResults);
+
+	    // Pagination info for main list
+	    response.setCurrentPage(mainPage.getNumber());
+	    response.setPageSize(mainPage.getSize());
+	    response.setTotalElements(mainPage.getTotalElements());
+	    response.setTotalPages(mainPage.getTotalPages());
+
+	    response.setStatus(true);
+	    response.setMessage("Service Request Quotation header and history retrieved successfully.");
+
+	    return response;
 	}
 
 	private static class SecurityInfo {

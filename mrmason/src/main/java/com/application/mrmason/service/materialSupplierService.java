@@ -3,6 +3,7 @@ package com.application.mrmason.service;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.nio.file.AccessDeniedException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,6 +26,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.application.mrmason.dto.GenericResponse;
+import com.application.mrmason.dto.MaterialSupplierHeaderQuotationStatusRequest;
+import com.application.mrmason.dto.MaterialSupplierQuotationCombinedResponse;
 import com.application.mrmason.dto.QuotationStatusUpdateRequest;
 import com.application.mrmason.dto.ResponseInvoiceAndDetailsDto;
 import com.application.mrmason.entity.AdminDetails;
@@ -34,6 +37,7 @@ import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.entity.Invoice;
 import com.application.mrmason.entity.MaterialSupplier;
 import com.application.mrmason.entity.MaterialSupplierQuotationHeader;
+import com.application.mrmason.entity.MaterialSupplierQuotationHeaderHistory;
 import com.application.mrmason.entity.MaterialSupplierQuotationUser;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserType;
@@ -44,10 +48,13 @@ import com.application.mrmason.repository.AdminDetailsRepo;
 import com.application.mrmason.repository.CMaterialReqHeaderDetailsRepository;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.repository.InvoiceRepository;
+import com.application.mrmason.repository.MaterialSupplierQuotationHeaderHistoryRepo;
 import com.application.mrmason.repository.MaterialSupplierQuotationHeaderRepository;
 import com.application.mrmason.repository.MaterialSupplierQuotationUserDAO;
 import com.application.mrmason.repository.MaterialSupplierRepository;
 import com.application.mrmason.security.AuthDetailsProvider;
+import com.application.mrmason.service.impl.EmailServiceImpl;
+import com.itextpdf.io.font.constants.StandardFonts;
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
@@ -70,8 +77,10 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class materialSupplierService {
 
 	@Autowired
@@ -94,6 +103,10 @@ public class materialSupplierService {
 	private JavaMailSender mailsender;
 	@Autowired
 	private CustomerRegistrationRepo customerRegistrationRepo;
+	@Autowired
+	private MaterialSupplierQuotationHeaderHistoryRepo materialSupplierQuotationHeaderHistoryRepo;
+	@Autowired
+	private EmailServiceImpl emailService;
 
 	@Transactional
 	public GenericResponse<List<MaterialSupplier>> saveItems(List<MaterialSupplier> materialQuotation,
@@ -109,7 +122,7 @@ public class materialSupplierService {
 			throw new ResourceNotFoundException(
 					"cMatRequestId not found in CMaterialReqHeaderDetailsEntity: " + cMatRequestId);
 		}
-	    String quotationId = userInfo.userId + "_" + ((int)(Math.random() * 900000) + 100000);
+		String quotationId = userInfo.userId + "_" + ((int) (Math.random() * 900000) + 100000);
 
 		List<MaterialSupplier> validatedItems = new ArrayList<>();
 		Set<String> seenLineItems = new HashSet<>();
@@ -177,7 +190,7 @@ public class materialSupplierService {
 
 		MaterialSupplierQuotationUser supplier = materialSupplierQuotationUserDAO.findByBodSeqNo(userInfo.userId);
 		if (supplier == null) {
-		    throw new ResourceNotFoundException("Supplier not found for id: " + userInfo.userId);
+			throw new ResourceNotFoundException("Supplier not found for id: " + userInfo.userId);
 		}
 		// ✅ Send PDF email
 		sendQuotationEmail(supplier.getEmail(), saved);
@@ -206,76 +219,71 @@ public class materialSupplierService {
 	}
 
 	private byte[] generateQuotationPdf(List<MaterialSupplier> suppliers) throws Exception {
-	    ByteArrayOutputStream out = new ByteArrayOutputStream();
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-	    PdfWriter writer = new PdfWriter(out);
-	    PdfDocument pdf = new PdfDocument(writer);
+		PdfWriter writer = new PdfWriter(out);
+		PdfDocument pdf = new PdfDocument(writer);
 
-	    // ✅ Use A4 Landscape for more width
-	    Document document = new Document(pdf, PageSize.A4.rotate());
-	    document.setMargins(20, 20, 20, 20);
+		// ✅ Use A4 Landscape for more width
+		Document document = new Document(pdf, PageSize.A4.rotate());
+		document.setMargins(20, 20, 20, 20);
 
-	    PdfFont bold = PdfFontFactory.createFont(com.itextpdf.io.font.constants.StandardFonts.HELVETICA_BOLD);
-	    PdfFont normal = PdfFontFactory.createFont(com.itextpdf.io.font.constants.StandardFonts.HELVETICA);
+		PdfFont bold = PdfFontFactory.createFont(com.itextpdf.io.font.constants.StandardFonts.HELVETICA_BOLD);
+		PdfFont normal = PdfFontFactory.createFont(com.itextpdf.io.font.constants.StandardFonts.HELVETICA);
 
-	    // Title
-	    Paragraph title = new Paragraph("Material Supplier Quotation")
-	            .setFont(bold)
-	            .setFontSize(15)
-	            .setTextAlignment(TextAlignment.CENTER);
-	    document.add(title);
-	    document.add(new Paragraph("\n"));
+		// Title
+		Paragraph title = new Paragraph("Material Supplier Quotation").setFont(bold).setFontSize(15)
+				.setTextAlignment(TextAlignment.CENTER);
+		document.add(title);
+		document.add(new Paragraph("\n"));
 
-	    // ✅ Flexible column widths, auto-fit page
-	    float[] columnWidths = {3, 3, 3, 2, 2, 3, 3, 3, 3};
-	    Table table = new Table(UnitValue.createPercentArray(columnWidths))
-	            .useAllAvailableWidth();
+		// ✅ Flexible column widths, auto-fit page
+		float[] columnWidths = { 3, 3, 3, 2, 2, 3, 3, 3, 3 };
+		Table table = new Table(UnitValue.createPercentArray(columnWidths)).useAllAvailableWidth();
 
-	    // Headers
-	    String[] headers = {"Material Line Item", "Quotation Id", "CmatRequest Id", "MRP",
-	                        "Discount", "Quoted Amount", "Supplier Id", "Quoted Date", "gst"};
+		// Headers
+		String[] headers = { "Material Line Item", "Quotation Id", "CmatRequest Id", "MRP", "Discount", "Quoted Amount",
+				"Supplier Id", "Quoted Date", "gst" };
 
-	    for (String header : headers) {
-	        table.addHeaderCell(new Cell()
-	                .add(new Paragraph(header).setFont(bold).setFontSize(10))
-	                .setBackgroundColor(ColorConstants.LIGHT_GRAY)
-	                .setTextAlignment(TextAlignment.CENTER));
-	    }
+		for (String header : headers) {
+			table.addHeaderCell(new Cell().add(new Paragraph(header).setFont(bold).setFontSize(10))
+					.setBackgroundColor(ColorConstants.LIGHT_GRAY).setTextAlignment(TextAlignment.CENTER));
+		}
 
-	    // Data rows
-	    for (MaterialSupplier s : suppliers) {
-	    	String itemName = "";
-	        Optional<CMaterialReqHeaderDetailsEntity> headerOpt =
-	                cMaterialReqHeaderDetailsRepository.findById(s.getMaterialLineItem());
-	        if (headerOpt.isPresent()) {
-	            itemName = headerOpt.get().getItemName();
-	        }
-	        table.addCell(new Cell().add(new Paragraph(itemName)
-	                .setFont(normal).setFontSize(9).setTextAlignment(TextAlignment.CENTER)));
-	        table.addCell(new Cell().add(new Paragraph(s.getQuotationId() != null ? s.getQuotationId() : "")
-	                .setFont(normal).setFontSize(9).setTextAlignment(TextAlignment.CENTER)));
-	        table.addCell(new Cell().add(new Paragraph(s.getCmatRequestId() != null ? s.getCmatRequestId() : "")
-	                .setFont(normal).setFontSize(9).setTextAlignment(TextAlignment.CENTER)));
-	        table.addCell(new Cell().add(new Paragraph(s.getMrp() != null ? s.getMrp().toString() : "")
-	                .setFont(normal).setFontSize(9).setTextAlignment(TextAlignment.CENTER)));
-	        table.addCell(new Cell().add(new Paragraph(s.getDiscount() != null ? s.getDiscount().toString() : "")
-	                .setFont(normal).setFontSize(9).setTextAlignment(TextAlignment.CENTER)));
-	        table.addCell(new Cell().add(new Paragraph(s.getQuotedAmount() != null ? s.getQuotedAmount().toString() : "")
-	                .setFont(normal).setFontSize(9).setTextAlignment(TextAlignment.CENTER)));
-	        table.addCell(new Cell().add(new Paragraph(s.getSupplierId() != null ? s.getSupplierId() : "")
-	                .setFont(normal).setFontSize(9).setTextAlignment(TextAlignment.CENTER)));
-	        table.addCell(new Cell().add(new Paragraph(s.getQuotedDate() != null ? s.getQuotedDate().toString() : "")
-	                .setFont(normal).setFontSize(9).setTextAlignment(TextAlignment.CENTER)));
-	        table.addCell(new Cell().add(new Paragraph(String.valueOf(s.getGst()))
-	                .setFont(normal).setFontSize(9).setTextAlignment(TextAlignment.CENTER)));
-	    }
+		// Data rows
+		for (MaterialSupplier s : suppliers) {
+			String itemName = "";
+			Optional<CMaterialReqHeaderDetailsEntity> headerOpt = cMaterialReqHeaderDetailsRepository
+					.findById(s.getMaterialLineItem());
+			if (headerOpt.isPresent()) {
+				itemName = headerOpt.get().getItemName();
+			}
+			table.addCell(new Cell().add(
+					new Paragraph(itemName).setFont(normal).setFontSize(9).setTextAlignment(TextAlignment.CENTER)));
+			table.addCell(new Cell().add(new Paragraph(s.getQuotationId() != null ? s.getQuotationId() : "")
+					.setFont(normal).setFontSize(9).setTextAlignment(TextAlignment.CENTER)));
+			table.addCell(new Cell().add(new Paragraph(s.getCmatRequestId() != null ? s.getCmatRequestId() : "")
+					.setFont(normal).setFontSize(9).setTextAlignment(TextAlignment.CENTER)));
+			table.addCell(new Cell().add(new Paragraph(s.getMrp() != null ? s.getMrp().toString() : "").setFont(normal)
+					.setFontSize(9).setTextAlignment(TextAlignment.CENTER)));
+			table.addCell(new Cell().add(new Paragraph(s.getDiscount() != null ? s.getDiscount().toString() : "")
+					.setFont(normal).setFontSize(9).setTextAlignment(TextAlignment.CENTER)));
+			table.addCell(
+					new Cell().add(new Paragraph(s.getQuotedAmount() != null ? s.getQuotedAmount().toString() : "")
+							.setFont(normal).setFontSize(9).setTextAlignment(TextAlignment.CENTER)));
+			table.addCell(new Cell().add(new Paragraph(s.getSupplierId() != null ? s.getSupplierId() : "")
+					.setFont(normal).setFontSize(9).setTextAlignment(TextAlignment.CENTER)));
+			table.addCell(new Cell().add(new Paragraph(s.getQuotedDate() != null ? s.getQuotedDate().toString() : "")
+					.setFont(normal).setFontSize(9).setTextAlignment(TextAlignment.CENTER)));
+			table.addCell(new Cell().add(new Paragraph(String.valueOf(s.getGst())).setFont(normal).setFontSize(9)
+					.setTextAlignment(TextAlignment.CENTER)));
+		}
 
-	    document.add(table);
-	    document.close();
+		document.add(table);
+		document.close();
 
-	    return out.toByteArray();
+		return out.toByteArray();
 	}
-
 
 	private static class UserInfo {
 		String userId;
@@ -372,40 +380,37 @@ public class materialSupplierService {
 	@Transactional
 	public void updateQuotationStatuses(RegSource regSource, List<QuotationStatusUpdateRequest> updates) {
 
-        for (QuotationStatusUpdateRequest req : updates) {
-            
-            // 1️⃣ Generate invoice number
-            String invoiceNumber = "INV-" + System.currentTimeMillis();
-            int updatedDetails = materialSupplierRepository.updateInvoiceStatusByQuotationId(
-                    req.getQuotationId(),
-                    req.getStatus(),   // This sets invoiceStatus
-                    invoiceNumber);
+		for (QuotationStatusUpdateRequest req : updates) {
 
+			// 1️⃣ Generate invoice number
+			String invoiceNumber = "INV-" + System.currentTimeMillis();
+			int updatedDetails = materialSupplierRepository.updateInvoiceStatusByQuotationId(req.getQuotationId(),
+					req.getStatus(), // This sets invoiceStatus
+					invoiceNumber);
 
-            // 3️⃣ Update header table (invoice status + invoice number)
-            int updatedHeader = materialSupplierQuotationHeaderRepository.updateInvoiceStatusByQuotationId(
-                    req.getQuotationId(),
-                    req.getStatus(),
-                    invoiceNumber);
+			// 3️⃣ Update header table (invoice status + invoice number)
+			int updatedHeader = materialSupplierQuotationHeaderRepository
+					.updateInvoiceStatusByQuotationId(req.getQuotationId(), req.getStatus(), invoiceNumber);
 
-            // 4️⃣ (Optional) Add debug logs or validation
-            if (updatedDetails == 0) {
-                System.out.println("No details found for quotation: " + req.getQuotationId());
-            }
-            if (updatedHeader == 0) {
-                System.out.println("No header found for quotation: " + req.getQuotationId());
-            }
-        }
+			// 4️⃣ (Optional) Add debug logs or validation
+			if (updatedDetails == 0) {
+				System.out.println("No details found for quotation: " + req.getQuotationId());
+			}
+			if (updatedHeader == 0) {
+				System.out.println("No header found for quotation: " + req.getQuotationId());
+			}
+		}
 	}
+
 	public Page<MaterialSupplier> getMaterialSupplierDetails(String quotationId, String cmatRequestId,
-			String materialLineItem, String supplierId, RegSource regSource ,Pageable pageable) throws AccessDeniedException {
+			String materialLineItem, String supplierId, RegSource regSource, Pageable pageable)
+			throws AccessDeniedException {
 		SecurityInfo securityInfo = getLoggedInCustomerAndServiceAndAdmin(regSource);
 
 		// ALLOW only Admin or Developer, block others
-		if (!securityInfo.role.equals("Adm") && !securityInfo.role.equals("Developer")
-				&& !securityInfo.role.equals("EC")) {
+		if (!securityInfo.role.equals("Adm") && !securityInfo.role.equals("MS") && !securityInfo.role.equals("EC")) {
 			throw new AccessDeniedException(
-					"Access denied: only Admin And Customer , Developer roles are allowed to access this resource.");
+					"Access denied: only Admin And Customer , MS roles are allowed to access this resource.");
 		}
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
@@ -455,14 +460,14 @@ public class materialSupplierService {
 	}
 
 	public Page<MaterialSupplierQuotationHeader> getQuotationsByUserMobile(String cmatRequestId, String userMobile,
-			String supplierId, LocalDate fromQuotedDate, LocalDate toQuotedDate,RegSource regSource, Pageable pageable) throws AccessDeniedException {
+			String supplierId, LocalDate fromQuotedDate, LocalDate toQuotedDate, RegSource regSource, Pageable pageable)
+			throws AccessDeniedException {
 		SecurityInfo securityInfo = getLoggedInCustomerAndServiceAndAdmin(regSource);
 
 		// ALLOW only Admin or Developer, block others
-		if (!securityInfo.role.equals("Adm") && !securityInfo.role.equals("Developer")
-				&& !securityInfo.role.equals("EC")) {
+		if (!securityInfo.role.equals("Adm") && !securityInfo.role.equals("MS") && !securityInfo.role.equals("EC")) {
 			throw new AccessDeniedException(
-					"Access denied: only Admin And Customer , Developer roles are allowed to access this resource.");
+					"Access denied: only Admin And Customer , MS roles are allowed to access this resource.");
 		}
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
@@ -589,19 +594,53 @@ public class materialSupplierService {
 
 		return new PageImpl<>(results, pageable, total);
 	}
+	
+	public MaterialSupplierQuotationCombinedResponse getQuotationsByUserMobileWithHistory(
+	        String cmatRequestId, String userMobile,
+	        String supplierId, LocalDate fromQuotedDate, LocalDate toQuotedDate,
+	        RegSource regSource, Pageable pageable) throws AccessDeniedException {
+
+	    // 🔹 Existing logic for filtering quotations
+	    Page<MaterialSupplierQuotationHeader> quotationsPage = getQuotationsByUserMobile(
+	            cmatRequestId, userMobile, supplierId, fromQuotedDate, toQuotedDate, regSource, pageable);
+
+	    List<MaterialSupplierQuotationHeader> quotations = quotationsPage.getContent();
+
+	    // 🔹 Collect all cmatRequestIds from quotations
+	    List<String> cmatRequestIds = quotations.stream()
+	            .map(MaterialSupplierQuotationHeader::getCmatRequestId)
+	            .filter(Objects::nonNull)
+	            .distinct()
+	            .collect(Collectors.toList());
+
+	    // 🔹 Fetch matching history records
+	    List<MaterialSupplierQuotationHeaderHistory> historyList =
+	            materialSupplierQuotationHeaderHistoryRepo.findByCmatRequestIdIn(cmatRequestIds);
+
+	    // 🔹 Build combined response
+	    MaterialSupplierQuotationCombinedResponse response = new MaterialSupplierQuotationCombinedResponse();
+	    response.setMessage("Material supplier quotations fetched successfully.");
+	    response.setStatus(true);
+	    response.setMaterialSupplierQuotationHeaders(quotations);
+	    response.setMaterialSupplierQuotationHeadersHistory(historyList);
+	    response.setCurrentPage(pageable.getPageNumber());
+	    response.setPageSize(pageable.getPageSize());
+	    response.setTotalElements(quotationsPage.getTotalElements());
+	    response.setTotalPages(quotationsPage.getTotalPages());
+
+	    return response;
+	}
 
 	@Transactional
 	public ResponseInvoiceAndDetailsDto getInvoicesAndDetails(String updatedBy, BigDecimal quotedAmount,
 			String cmatRequestId, String invoiceNumber, LocalDate fromInvoiceDate, LocalDate toInvoiceDate,
-			RegSource regSource,
-			Pageable invoicePageable) throws AccessDeniedException {
+			RegSource regSource, Pageable invoicePageable) throws AccessDeniedException {
 		SecurityInfo securityInfo = getLoggedInCustomerAndServiceAndAdmin(regSource);
 
 		// ALLOW only Admin or Developer, block others
-		if (!securityInfo.role.equals("Adm") && !securityInfo.role.equals("Developer")
-				&& !securityInfo.role.equals("EC")) {
+		if (!securityInfo.role.equals("Adm") && !securityInfo.role.equals("MS") && !securityInfo.role.equals("EC")) {
 			throw new AccessDeniedException(
-					"Access denied: only Admin And Customer , Developer roles are allowed to access this resource.");
+					"Access denied: only Admin And Customer , MS roles are allowed to access this resource.");
 		}
 		ResponseInvoiceAndDetailsDto response = new ResponseInvoiceAndDetailsDto();
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -690,7 +729,7 @@ public class materialSupplierService {
 		}
 		return predicates;
 	}
-	
+
 	private static class SecurityInfo {
 		String userId;
 		String role;
@@ -728,11 +767,339 @@ public class materialSupplierService {
 			userId = customer.getUserid();
 
 		} else {
-			MaterialSupplierQuotationUser user = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource)
+			MaterialSupplierQuotationUser user = userDAO
+					.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource)
 					.orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
 			userId = user.getBodSeqNo();
 		}
 
 		return new SecurityInfo(userId, role);
+	}
+
+//	public byte[] generateSRHPdfFromHistory(MaterialSupplierQuotationHeaderHistory header,
+//			MaterialSupplierQuotationUser customer) {
+//		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+//
+//			PdfWriter writer = new PdfWriter(outputStream);
+//			PdfDocument pdf = new PdfDocument(writer);
+//			Document document = new Document(pdf);
+//
+//			PdfFont font = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+//			float fontSize = 8f; // increased slightly for readability
+//
+//			// Date formatter
+//			SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+//
+//			// ✅ Header Section
+//			document.add(new Paragraph("Material Suppiler Request All Quotation Report").setFont(font).setFontSize(14)
+//					.setBold().setTextAlignment(TextAlignment.CENTER));
+//			document.add(new Paragraph("Customer: " + customer.getEmail()).setFont(font).setFontSize(fontSize));
+//			document.add(new Paragraph("Service Request ID: " + header.getQuotationId()).setFont(font)
+//					.setFontSize(fontSize));
+//			document.add(new Paragraph(" ")); // spacer
+//
+//			String[] headers = { "cmatRequestId", "quotationId", "quotedAmount", "supplierId", "quotedDate",
+//					"updatedDate", 
+////					"invoiceNumber", "invoiceStatus", 
+//					"quotationStatus",
+////					"invoiceDate",
+//					"updatedBy",
+//					"updatedDate","userType" };
+//
+//			Table table = new Table(headers.length).useAllAvailableWidth();
+//			// ✅ Table Section
+//			// Table Headers
+//			for (String h : headers) {
+//				table.addHeaderCell(new Cell().add(new Paragraph(h)).setFont(font).setFontSize(fontSize).setBold()
+//						.setBackgroundColor(ColorConstants.LIGHT_GRAY));
+//			}
+//
+//			// ✅ Safely format each field
+//			table.addCell(
+//					new Cell().add(new Paragraph(header.getCmatRequestId() != null ? header.getCmatRequestId() : "-"))
+//							.setFont(font).setFontSize(fontSize));
+//
+//			table.addCell(new Cell().add(new Paragraph(header.getQuotationId() != null ? header.getQuotationId() : "-"))
+//					.setFont(font).setFontSize(fontSize));
+//
+//			table.addCell(new Cell()
+//					.add(new Paragraph(header.getQuotedAmount() != null ? sdf.format(header.getQuotedAmount()) : "-"))
+//					.setFont(font).setFontSize(fontSize));
+//
+//			table.addCell(new Cell().add(new Paragraph(header.getSupplierId() != null ? header.getSupplierId() : "-"))
+//					.setFont(font).setFontSize(fontSize));
+//
+//			table.addCell(new Cell()
+//					.add(new Paragraph(header.getQuotedDate() != null ? sdf.format(header.getQuotedDate()) : "-"))
+//					.setFont(font).setFontSize(fontSize));
+//
+//			table.addCell(new Cell()
+//					.add(new Paragraph(header.getUpdatedDate() != null ? sdf.format(header.getUpdatedDate()) : "-"))
+//					.setFont(font).setFontSize(fontSize));
+//			
+////			table.addCell(new Cell()
+////					.add(new Paragraph(header.getInvoiceNumber() != null ? sdf.format(header.getInvoiceNumber()) : "-"))
+////					.setFont(font).setFontSize(fontSize));
+////
+////			table.addCell(new Cell()
+////					.add(new Paragraph(header.getInvoiceStatus() != null ? sdf.format(header.getInvoiceStatus()) : "-"))
+////					.setFont(font).setFontSize(fontSize));
+//
+//			table.addCell(new Cell()
+//					.add(new Paragraph(
+//							header.getQuotationStatus() != null ? sdf.format(header.getQuotationStatus()) : "-"))
+//					.setFont(font).setFontSize(fontSize));
+//
+////			table.addCell(new Cell()
+////					.add(new Paragraph(header.getInvoiceDate() != null ? sdf.format(header.getInvoiceDate()) : "-"))
+////					.setFont(font).setFontSize(fontSize));
+//
+//			table.addCell(new Cell()
+//					.add(new Paragraph(header.getUpdatedBy() != null ? sdf.format(header.getUpdatedBy()) : "-"))
+//					.setFont(font).setFontSize(fontSize));
+//			
+//			table.addCell(new Cell()
+//					.add(new Paragraph(header.getUpdatedDate() != null ? sdf.format(header.getUpdatedDate()) : "-"))
+//					.setFont(font).setFontSize(fontSize));
+//			
+//			table.addCell(new Cell()
+//					.add(new Paragraph(header.getUserType() != null ? sdf.format(header.getUserType()) : "-"))
+//					.setFont(font).setFontSize(fontSize));
+//
+//			document.add(table);
+//
+//			// ✅ Footer
+//			document.add(new Paragraph("\nThank you,\nMr Mason Team").setFont(font).setFontSize(fontSize));
+//
+//			document.close();
+//			return outputStream.toByteArray();
+//
+//		} catch (Exception e) {
+//			throw new RuntimeException("Failed to generate PDF", e);
+//		}
+//	}
+	public byte[] generateSRHPdfFromHistory(MaterialSupplierQuotationHeaderHistory header,
+	        MaterialSupplierQuotationUser customer) {
+	    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
+	        PdfWriter writer = new PdfWriter(outputStream);
+	        PdfDocument pdf = new PdfDocument(writer);
+
+	        // ✅ Use landscape orientation for more width
+	        pdf.setDefaultPageSize(PageSize.A4.rotate());
+
+	        Document document = new Document(pdf);
+	        document.setMargins(20, 20, 20, 20);
+
+	        // ✅ Fonts
+	        PdfFont font = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+	        float headerFontSize = 13f;
+	        float contentFontSize = 8f;
+
+	        // ✅ Date formatter
+	        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+
+	        // ✅ Title
+	        document.add(new Paragraph("Material Supplier Request All Quotation Report")
+	                .setFont(font)
+	                .setFontSize(headerFontSize)
+	                .setBold()
+	                .setTextAlignment(TextAlignment.CENTER)
+	                .setMarginBottom(10));
+
+	        // ✅ Customer info
+	        document.add(new Paragraph("Customer Email: " + safe(customer.getEmail()))
+	                .setFont(font)
+	                .setFontSize(contentFontSize));
+	        document.add(new Paragraph("Quotation ID: " + safe(header.getQuotationId()))
+	                .setFont(font)
+	                .setFontSize(contentFontSize));
+	        document.add(new Paragraph(" ").setFont(font)); // spacer
+
+	        // ✅ Table headers
+	        String[] columns = { "cmatRequestId", "quotationId", "quotedAmount", "supplierId",
+	                "quotedDate", "updatedDate", "quotationStatus", "updatedBy", "userType" };
+
+	        Table table = new Table(UnitValue.createPercentArray(columns.length))
+	                .useAllAvailableWidth();
+
+	        for (String col : columns) {
+	            table.addHeaderCell(new Cell()
+	                    .add(new Paragraph(col))
+	                    .setFont(font)
+	                    .setFontSize(contentFontSize)
+	                    .setBold()
+	                    .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+	                    .setTextAlignment(TextAlignment.CENTER)
+	                    .setPadding(3));
+	        }
+
+	        // ✅ Data rows
+	        table.addCell(makeCell(safe(header.getCmatRequestId()), font, contentFontSize));
+	        table.addCell(makeCell(safe(header.getQuotationId()), font, contentFontSize));
+	        table.addCell(makeCell(header.getQuotedAmount() != null ? header.getQuotedAmount().toString() : "-", font, contentFontSize));
+	        table.addCell(makeCell(safe(header.getSupplierId()), font, contentFontSize));
+
+	        // ✅ Format LocalDate safely
+	        table.addCell(makeCell(
+	                header.getQuotedDate() != null ? sdf.format(java.sql.Date.valueOf(header.getQuotedDate())) : "-",
+	                font, contentFontSize));
+
+	        table.addCell(makeCell(
+	                header.getUpdatedDate() != null ? sdf.format(java.sql.Date.valueOf(header.getUpdatedDate())) : "-",
+	                font, contentFontSize));
+
+	        table.addCell(makeCell(header.getQuotationStatus() != null ? header.getQuotationStatus().name() : "-", font, contentFontSize));
+	        table.addCell(makeCell(safe(header.getUpdatedBy()), font, contentFontSize));
+	        table.addCell(makeCell(safe(header.getUserType()), font, contentFontSize));
+
+	        document.add(table);
+
+	        // ✅ Footer
+	        document.add(new Paragraph("\nThank you,\nMr Mason Team")
+	                .setFont(font)
+	                .setFontSize(contentFontSize)
+	                .setTextAlignment(TextAlignment.RIGHT));
+
+	        document.close();
+	        return outputStream.toByteArray();
+
+	    } catch (Exception e) {
+	        throw new RuntimeException("Failed to generate PDF: " + e.getMessage(), e);
+	    }
+	}
+
+	// ✅ Helper for null-safe text
+	private String safe(Object value) {
+	    return value == null ? "-" : value.toString();
+	}
+
+	// ✅ Helper to create uniform table cells
+	private Cell makeCell(String text, PdfFont font, float fontSize) {
+	    return new Cell()
+	            .add(new Paragraph(text))
+	            .setFont(font)
+	            .setFontSize(fontSize)
+	            .setTextAlignment(TextAlignment.CENTER)
+	            .setPadding(3);
+	}
+
+
+	public MaterialSupplierQuotationHeader updateServiceRequestHeaderAllQuotation(
+			MaterialSupplierHeaderQuotationStatusRequest header, RegSource regSource) {
+
+		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
+		Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
+
+		List<String> roleNames = loggedInRole.stream().map(GrantedAuthority::getAuthority)
+				.map(role -> role.replace("ROLE_", "")).collect(Collectors.toList());
+
+		// ✅ Identify userType (Developer also allowed now)
+		UserType userType = UserType.valueOf(roleNames.get(0));
+		String userId;
+
+		// ✅ Identify the logged-in user
+		if (userType == UserType.EC) {
+			CustomerRegistration customer = customerRegistrationRepo
+					.findByUserEmailAndUserType(loggedInUserEmail, userType)
+					.orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + loggedInUserEmail));
+			userId = customer.getUserid();
+		} else {
+			MaterialSupplierQuotationUser user = userDAO
+					.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource)
+					.orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
+			userId = user.getBodSeqNo();
+		}
+
+		// ✅ Find existing quotation
+		MaterialSupplierQuotationHeader existingHeader = materialSupplierQuotationHeaderRepository
+				.findByCmatRequestId(header.getCmatRequestId());
+
+		if (existingHeader == null) {
+			throw new ResourceNotFoundException("Material Request ID not found: " + header.getCmatRequestId());
+		}
+
+		// ✅ Update rules by user type
+		if (userType == UserType.EC) {
+			// EC users are allowed, but skip restricted fields
+			log.info("Skipping status, updatedBy, and updatedDate update for End-Customer: {}", userId);
+		} else {
+			// All other users (SP, CU, Developer, etc.) can update
+//			existingHeader.setInvoiceStatus(header.getInvoiceStatus());
+			existingHeader.setQuotationStatus(header.getQuotationStatus());
+			existingHeader.setUpdatedBy(userId);
+			existingHeader.setUpdatedDate(LocalDate.now());
+		}
+
+		// ✅ Save main table record
+		MaterialSupplierQuotationHeader saved = materialSupplierQuotationHeaderRepository.save(existingHeader);
+
+		// ✅ Insert record into history table (for all user types)
+
+		MaterialSupplierQuotationHeaderHistory history = MaterialSupplierQuotationHeaderHistory.builder()
+				.cmatRequestId(saved.getCmatRequestId()).quotationId(saved.getQuotationId())
+				.quotedAmount(saved.getQuotedAmount()).supplierId(saved.getSupplierId())
+				.quotedDate(saved.getQuotedDate()).updatedDate(saved.getUpdatedDate())
+//				.invoiceNumber(saved.getInvoiceNumber())
+//				.invoiceStatus(userType == UserType.EC ? header.getInvoiceStatus() : header.getInvoiceStatus()) // EC
+				.quotationStatus(userType == UserType.EC ? header.getQuotationStatus() : header.getQuotationStatus())
+//				.invoiceDate(saved.getInvoiceDate()).
+				.updatedBy(userId).updatedDate(LocalDate.now()).userType(userType.name()).build();
+
+		MaterialSupplierQuotationHeaderHistory historySaved = materialSupplierQuotationHeaderHistoryRepo.save(history);
+
+		// ✅ Prepare email data
+		String subject = "Service Request Quotation Updated Successfully";
+		String body = "Dear User,<br><br>" + "The Service Request Quotation has been updated successfully.<br>"
+				+ "Quotation ID: <b>" + saved.getQuotationId() + "</b><br>" + "Status: <b>" + saved.getQuotationStatus()
+				+ "</b><br><br>" + "Regards,<br>Mr Mason Team";
+
+		// ✅ Generate PDF once
+		MaterialSupplierQuotationUser servicePerson = userDAO.findByBodSeqNoUploadImage(historySaved.getSupplierId())
+				.orElseThrow(() -> new ResourceNotFoundException(
+						"Service Person not found for ID: " + saved.getSupplierId()));
+		byte[] pdf = generateSRHPdfFromHistory(historySaved, servicePerson);
+
+		// ✅ Collect all recipients (to avoid duplicate emails)
+		Set<String> recipients = new HashSet<>();
+
+		// 1️⃣ Service Person
+		recipients.add(servicePerson.getEmail());
+
+		// 2️⃣ UpdatedBy (check both tables)
+		String updatedByEmail = null;
+		if (saved.getUpdatedBy() != null) {
+			Optional<MaterialSupplierQuotationUser> updatedUserOpt = userDAO
+					.findByBodSeqNoUploadImage(saved.getUpdatedBy());
+			if (updatedUserOpt.isPresent()) {
+				updatedByEmail = updatedUserOpt.get().getEmail();
+			} else {
+				Optional<CustomerRegistration> updatedCustomerOpt = customerRegistrationRepo
+						.findByUserids(saved.getUpdatedBy());
+				if (updatedCustomerOpt.isPresent()) {
+					updatedByEmail = updatedCustomerOpt.get().getUserEmail();
+				}
+			}
+		}
+		if (updatedByEmail != null && !updatedByEmail.isEmpty()) {
+			recipients.add(updatedByEmail);
+		}
+
+		// 3️⃣ Optionally send to logged-in EC (if EC triggered update)
+		if (userType == UserType.EC) {
+			recipients.add(loggedInUserEmail);
+		}
+
+		// ✅ Send emails
+		for (String recipient : recipients) {
+			try {
+				emailService.sendEmailWithAttachment(recipient, subject, body, pdf, "UpdatedQuotation.pdf");
+				log.info("📧 Email sent successfully to {}", recipient);
+			} catch (Exception e) {
+				log.error("❌ Failed to send email to {}: {}", recipient, e.getMessage());
+			}
+		}
+
+		return saved;
 	}
 }

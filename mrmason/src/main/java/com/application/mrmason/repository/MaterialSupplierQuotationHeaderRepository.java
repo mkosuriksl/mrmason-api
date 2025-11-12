@@ -20,4 +20,6 @@ public interface MaterialSupplierQuotationHeaderRepository extends JpaRepository
 	                                         @Param("invoiceStatus") Status invoiceStatus,
 	                                         @Param("invoiceNumber") String invoiceNumber);
 
+	MaterialSupplierQuotationHeader findByCmatRequestId(String cmatRequestId);
+
 }

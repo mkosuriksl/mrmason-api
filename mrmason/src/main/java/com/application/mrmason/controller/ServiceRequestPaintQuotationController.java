@@ -79,30 +79,53 @@ public class ServiceRequestPaintQuotationController {
 
 	@GetMapping("/get-header-serviceRequestQuotation")
 	public ResponseEntity<ResponseGetServiceRequestHeaderQuotationDto> getHeader(
-			@RequestParam(required = false) String quotationId, @RequestParam(required = false) String requestId,
-			@RequestParam(required = false) String fromQuotatedDate,
-			@RequestParam(required = false) String toQuotatedDate, @RequestParam(required = false) String spId,
-			@RequestParam(required = false) String status, @RequestParam RegSource regSource,
-			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size)
-			throws AccessDeniedException {
+	        @RequestParam(required = false) String quotationId,
+	        @RequestParam(required = false) String requestId,
+	        @RequestParam(required = false) String fromQuotatedDate,
+	        @RequestParam(required = false) String toQuotatedDate,
+	        @RequestParam(required = false) String spId,
+	        @RequestParam(required = false) String status,
+	        @RequestParam RegSource regSource,
+	        @RequestParam(defaultValue = "0") int page,
+	        @RequestParam(defaultValue = "10") int size)
+	        throws AccessDeniedException {
 
-		Pageable pageable = PageRequest.of(page, size);
-		Page<ServiceRequestHeaderAllQuotation> srpqPage = serviceRequestPaintQuotationService.getHeader(quotationId,
-				requestId, fromQuotatedDate, toQuotatedDate, spId, status, regSource, pageable);
-		ResponseGetServiceRequestHeaderQuotationDto response = new ResponseGetServiceRequestHeaderQuotationDto();
+	    Pageable pageable = PageRequest.of(page, size);
 
-		response.setMessage("Service Request  Quotation header retrieved successfully.");
-		response.setStatus(true);
-		response.setServiceRequestHeaderQuotation(srpqPage.getContent());
+	    ResponseGetServiceRequestHeaderQuotationDto response =
+	            serviceRequestPaintQuotationService.getHeaderWithHistory(
+	                    quotationId, requestId, fromQuotatedDate, toQuotatedDate,
+	                    spId, status, regSource, pageable
+	            );
 
-		// Set pagination fields
-		response.setCurrentPage(srpqPage.getNumber());
-		response.setPageSize(srpqPage.getSize());
-		response.setTotalElements(srpqPage.getTotalElements());
-		response.setTotalPages(srpqPage.getTotalPages());
-
-		return new ResponseEntity<>(response, HttpStatus.OK);
+	    return new ResponseEntity<>(response, HttpStatus.OK);
 	}
+
+//	public ResponseEntity<ResponseGetServiceRequestHeaderQuotationDto> getHeader(
+//			@RequestParam(required = false) String quotationId, @RequestParam(required = false) String requestId,
+//			@RequestParam(required = false) String fromQuotatedDate,
+//			@RequestParam(required = false) String toQuotatedDate, @RequestParam(required = false) String spId,
+//			@RequestParam(required = false) String status, @RequestParam RegSource regSource,
+//			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size)
+//			throws AccessDeniedException {
+//
+//		Pageable pageable = PageRequest.of(page, size);
+//		Page<ServiceRequestHeaderAllQuotation> srpqPage = serviceRequestPaintQuotationService.getHeader(quotationId,
+//				requestId, fromQuotatedDate, toQuotatedDate, spId, status, regSource, pageable);
+//		ResponseGetServiceRequestHeaderQuotationDto response = new ResponseGetServiceRequestHeaderQuotationDto();
+//
+//		response.setMessage("Service Request  Quotation header retrieved successfully.");
+//		response.setStatus(true);
+//		response.setServiceRequestHeaderQuotation(srpqPage.getContent());
+//
+//		// Set pagination fields
+//		response.setCurrentPage(srpqPage.getNumber());
+//		response.setPageSize(srpqPage.getSize());
+//		response.setTotalElements(srpqPage.getTotalElements());
+//		response.setTotalPages(srpqPage.getTotalPages());
+//
+//		return new ResponseEntity<>(response, HttpStatus.OK);
+//	}
 
 	@PutMapping("/update-serviceRequestAllquotation")
 	public ResponseEntity<GenericResponse<List<ServiceRequestPaintQuotation>>> updateServiceRequestQuotation(

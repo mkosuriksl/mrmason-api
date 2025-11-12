@@ -10,7 +10,7 @@ import lombok.*;
 @AllArgsConstructor
 @Entity
 @Builder
-@Table(name = "service_request_all_quotation_dev_history")
+@Table(name = "service_request_all_quotation_updated_by_customer")
 public class ServiceRequestHeaderAllQuotationHistory {
 
 	@Id

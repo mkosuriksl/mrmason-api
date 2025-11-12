@@ -10,5 +10,6 @@ public enum Status {
     IN_PROGRESS, 
     COMPLETED,
     INVOICED,
-    CANCELED;
+    CANCELED,
+    APPROVED;
 }

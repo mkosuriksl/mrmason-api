@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.MaterialSupplierHeaderQuotationStatusRequest;
+import com.application.mrmason.dto.MaterialSupplierQuotationCombinedResponse;
 import com.application.mrmason.dto.QuotationStatusUpdateRequest;
 import com.application.mrmason.dto.ResponseInvoiceAndDetailsDto;
 import com.application.mrmason.entity.AdminDetails;
@@ -592,6 +593,42 @@ public class materialSupplierService {
 		Long total = entityManager.createQuery(countQuery).getSingleResult();
 
 		return new PageImpl<>(results, pageable, total);
+	}
+	
+	public MaterialSupplierQuotationCombinedResponse getQuotationsByUserMobileWithHistory(
+	        String cmatRequestId, String userMobile,
+	        String supplierId, LocalDate fromQuotedDate, LocalDate toQuotedDate,
+	        RegSource regSource, Pageable pageable) throws AccessDeniedException {
+
+	    // 🔹 Existing logic for filtering quotations
+	    Page<MaterialSupplierQuotationHeader> quotationsPage = getQuotationsByUserMobile(
+	            cmatRequestId, userMobile, supplierId, fromQuotedDate, toQuotedDate, regSource, pageable);
+
+	    List<MaterialSupplierQuotationHeader> quotations = quotationsPage.getContent();
+
+	    // 🔹 Collect all cmatRequestIds from quotations
+	    List<String> cmatRequestIds = quotations.stream()
+	            .map(MaterialSupplierQuotationHeader::getCmatRequestId)
+	            .filter(Objects::nonNull)
+	            .distinct()
+	            .collect(Collectors.toList());
+
+	    // 🔹 Fetch matching history records
+	    List<MaterialSupplierQuotationHeaderHistory> historyList =
+	            materialSupplierQuotationHeaderHistoryRepo.findByCmatRequestIdIn(cmatRequestIds);
+
+	    // 🔹 Build combined response
+	    MaterialSupplierQuotationCombinedResponse response = new MaterialSupplierQuotationCombinedResponse();
+	    response.setMessage("Material supplier quotations fetched successfully.");
+	    response.setStatus(true);
+	    response.setMaterialSupplierQuotationHeaders(quotations);
+	    response.setMaterialSupplierQuotationHeadersHistory(historyList);
+	    response.setCurrentPage(pageable.getPageNumber());
+	    response.setPageSize(pageable.getPageSize());
+	    response.setTotalElements(quotationsPage.getTotalElements());
+	    response.setTotalPages(quotationsPage.getTotalPages());
+
+	    return response;
 	}
 
 	@Transactional

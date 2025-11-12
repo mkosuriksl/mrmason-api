@@ -3,6 +3,7 @@ package com.application.mrmason.controller;
 import java.math.BigDecimal;
 import java.nio.file.AccessDeniedException;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.MaterialSupplierHeaderQuotationStatusRequest;
+import com.application.mrmason.dto.MaterialSupplierQuotationCombinedResponse;
 import com.application.mrmason.dto.MaterialSupplierQuotations;
 import com.application.mrmason.dto.QuotationStatusUpdateRequest;
 import com.application.mrmason.dto.ResponseGetMaterialSupplierQuotationdetailsDto;
@@ -29,7 +31,9 @@ import com.application.mrmason.dto.ResponseGetMaterialSupplierQuotationsheaderDt
 import com.application.mrmason.dto.ResponseInvoiceAndDetailsDto;
 import com.application.mrmason.entity.MaterialSupplier;
 import com.application.mrmason.entity.MaterialSupplierQuotationHeader;
+import com.application.mrmason.entity.MaterialSupplierQuotationHeaderHistory;
 import com.application.mrmason.enums.RegSource;
+import com.application.mrmason.repository.MaterialSupplierQuotationHeaderHistoryRepo;
 import com.application.mrmason.service.materialSupplierService;
 
 import lombok.RequiredArgsConstructor;
@@ -41,6 +45,9 @@ public class MaterialSupplierController {
 
 	@Autowired
 	private materialSupplierService materialSupplierService;
+	
+	@Autowired
+	private MaterialSupplierQuotationHeaderHistoryRepo materialSupplierQuotationHeaderHistoryRepo;
 
 //    @PostMapping("/add-quotations")
 //    public ResponseEntity<GenericResponse<List<MaterialSupplier>>> saveQuotations(
@@ -96,30 +103,63 @@ public class MaterialSupplierController {
 	}
 
 	@GetMapping("/get-material-supplier-quotation-header")
-	public ResponseEntity<ResponseGetMaterialSupplierQuotationsheaderDto> getQuotationsByUserMobile(
-			@RequestParam(required = false) String cmatRequestId, @RequestParam(required = false) String userMobile,
-			@RequestParam(required = false) String supplierId, // <-- Added
-			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromQuotedDate,
-			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toQuotedDate,
-			@RequestParam RegSource regSource, @RequestParam(defaultValue = "0") int page,
-			@RequestParam(defaultValue = "10") int size) throws AccessDeniedException {
+	public ResponseEntity<MaterialSupplierQuotationCombinedResponse> getQuotationsByUserMobile(
+	        @RequestParam(required = false) String cmatRequestId,
+	        @RequestParam(required = false) String userMobile,
+	        @RequestParam(required = false) String supplierId,
+	        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromQuotedDate,
+	        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toQuotedDate,
+	        @RequestParam RegSource regSource,
+	        @RequestParam(defaultValue = "0") int page,
+	        @RequestParam(defaultValue = "10") int size) throws AccessDeniedException {
 
-		Pageable pageable = PageRequest.of(page, size);
+	    Pageable pageable = PageRequest.of(page, size);
 
-		Page<MaterialSupplierQuotationHeader> pageData = materialSupplierService.getQuotationsByUserMobile(
-				cmatRequestId, userMobile, supplierId, fromQuotedDate, toQuotedDate, regSource, pageable);
+	    Page<MaterialSupplierQuotationHeader> pageData = materialSupplierService.getQuotationsByUserMobile(
+	            cmatRequestId, userMobile, supplierId, fromQuotedDate, toQuotedDate, regSource, pageable);
 
-		ResponseGetMaterialSupplierQuotationsheaderDto response = new ResponseGetMaterialSupplierQuotationsheaderDto();
-		response.setMessage("Material supplier quotations fetched successfully.");
-		response.setStatus(true);
-		response.setMaterialSupplierQuotationHeaders(pageData.getContent());
-		response.setCurrentPage(pageData.getNumber());
-		response.setPageSize(pageData.getSize());
-		response.setTotalElements(pageData.getTotalElements());
-		response.setTotalPages(pageData.getTotalPages());
+	    List<MaterialSupplierQuotationHeaderHistory> historyList = new ArrayList<>();
+	    if (cmatRequestId != null && !cmatRequestId.trim().isEmpty()) {
+	        historyList = materialSupplierQuotationHeaderHistoryRepo.findByCmatRequestId(cmatRequestId);
+	    }
 
-		return ResponseEntity.ok(response);
+	    MaterialSupplierQuotationCombinedResponse response = new MaterialSupplierQuotationCombinedResponse();
+	    response.setMessage("Material supplier quotations fetched successfully.");
+	    response.setStatus(true);
+	    response.setMaterialSupplierQuotationHeaders(pageData.getContent());
+	    response.setMaterialSupplierQuotationHeadersHistory(historyList);
+	    response.setCurrentPage(pageData.getNumber());
+	    response.setPageSize(pageData.getSize());
+	    response.setTotalElements(pageData.getTotalElements());
+	    response.setTotalPages(pageData.getTotalPages());
+
+	    return ResponseEntity.ok(response);
 	}
+
+//	public ResponseEntity<ResponseGetMaterialSupplierQuotationsheaderDto> getQuotationsByUserMobile(
+//			@RequestParam(required = false) String cmatRequestId, @RequestParam(required = false) String userMobile,
+//			@RequestParam(required = false) String supplierId, // <-- Added
+//			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromQuotedDate,
+//			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toQuotedDate,
+//			@RequestParam RegSource regSource, @RequestParam(defaultValue = "0") int page,
+//			@RequestParam(defaultValue = "10") int size) throws AccessDeniedException {
+//
+//		Pageable pageable = PageRequest.of(page, size);
+//
+//		Page<MaterialSupplierQuotationHeader> pageData = materialSupplierService.getQuotationsByUserMobile(
+//				cmatRequestId, userMobile, supplierId, fromQuotedDate, toQuotedDate, regSource, pageable);
+//
+//		ResponseGetMaterialSupplierQuotationsheaderDto response = new ResponseGetMaterialSupplierQuotationsheaderDto();
+//		response.setMessage("Material supplier quotations fetched successfully.");
+//		response.setStatus(true);
+//		response.setMaterialSupplierQuotationHeaders(pageData.getContent());
+//		response.setCurrentPage(pageData.getNumber());
+//		response.setPageSize(pageData.getSize());
+//		response.setTotalElements(pageData.getTotalElements());
+//		response.setTotalPages(pageData.getTotalPages());
+//
+//		return ResponseEntity.ok(response);
+//	}
 
 	@PutMapping("/update-status-with-Invoiced")
 	public ResponseEntity<?> updateQuotationStatuses(@RequestParam RegSource regSource,

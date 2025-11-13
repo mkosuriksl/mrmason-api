@@ -22,5 +22,8 @@ public interface MaterialMasterRepository extends JpaRepository<MaterialMaster, 
 			+ "AND (:brand IS NULL OR m.brand = :brand)")
 	List<MaterialMaster> searchMaterials(@Param("materialCategory") String materialCategory,
 			@Param("materialSubCategory") String materialSubCategory, @Param("brand") String brand);
+	
+	@Query("SELECT a FROM MaterialMaster a WHERE a.msCatmsSubCatmsBrandSkuId = :msCatmsSubCatmsBrandSkuId")
+    List<MaterialMaster> findByMsCatmsSubCatmsBrandSkuIdS(@Param("msCatmsSubCatmsBrandSkuId") String msCatmsSubCatmsBrandSkuId);
 }
 

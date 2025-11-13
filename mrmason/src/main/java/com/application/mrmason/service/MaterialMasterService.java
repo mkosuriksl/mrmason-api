@@ -75,11 +75,11 @@ public class MaterialMasterService {
 			material.setImage(dto.getImage());
 			material.setSize(dto.getSize());
 			material.setUpdatedBy(userId);
-//			material.setShape(dto.getShape());
-//			material.setWidth(dto.getWidth());
-//			material.setLength(dto.getLength());
-//			material.setThickness(dto.getServiceCategory());
-//			material.setStatus(dto.getStatus());
+			material.setShape(dto.getShape());
+			material.setWidth(dto.getWidth());
+			material.setLength(dto.getLength());
+			material.setThickness(dto.getThickness());
+			material.setStatus("NEW");
 			material.setUpdatedDate(LocalDateTime.now());
 
 			materials.add(material);

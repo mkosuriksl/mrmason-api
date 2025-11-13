@@ -124,7 +124,8 @@ public class CustomerOrderHandler {
 	        
 	        MaterialRequirementByRequest materialReq = new MaterialRequirementByRequest();
 	        materialReq.setReqIdLineId(orderDetail.getLineItemId()); // orderlineId -> reqIdLineId
-	        materialReq.setThickness(cartDetail.getThickness() != null ? new BigDecimal(cartDetail.getThickness()) : null);
+//	        materialReq.setThickness(cartDetail.getThickness() != null ? new BigDecimal(cartDetail.getThickness()) : null);
+	        materialReq.setThickness(cartDetail.getThickness());
 	        materialReq.setModelCode(cartDetail.getSkuIdUserId()); // skuIdUserId -> modelCode
 	        materialReq.setModelName(cartDetail.getModelName());
 	        materialReq.setBrand(cartDetail.getBrand());  
@@ -133,10 +134,10 @@ public class CustomerOrderHandler {
 	        materialReq.setAmount(cartDetail.getMrp() != null ? new BigDecimal(cartDetail.getMrp()) : null);
 	        materialReq.setMaterialCategory(cartDetail.getMaterialCategory());
 	        materialReq.setShape(cartDetail.getShape());
-	        materialReq.setSizeInInch(cartDetail.getSize() != null ? new BigDecimal(cartDetail.getSize()) : null);
-	        materialReq.setWidth(cartDetail.getWidth() != null ? new BigDecimal(cartDetail.getWidth()) : null);
+	        materialReq.setSizeInInch(cartDetail.getSize());
+	        materialReq.setWidth(cartDetail.getWidth());
 	        materialReq.setMaterialSubCategory(cartDetail.getMaterialSubCategory());
-	        
+//	        materialReq.setLength(cartDetail);
 	        materialReq.setUpdatedBy("System");
 	        materialReq.setUpdatedDate(new Date());
 	        materialReq.setStatus(OrderStatus.NEW.name());

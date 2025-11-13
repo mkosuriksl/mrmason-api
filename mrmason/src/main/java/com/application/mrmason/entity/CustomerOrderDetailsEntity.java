@@ -1,5 +1,6 @@
 package com.application.mrmason.entity;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import com.application.mrmason.enums.OrderStatus;
@@ -59,13 +60,13 @@ public class CustomerOrderDetailsEntity {
 	private String shape;
 	
 	@Column(name = "width")
-	private String width;
+    private BigDecimal width;
 	
 	@Column(name = "size")
-	private String size;
+	  private BigDecimal size;
 	
 	@Column(name = "thickness")
-	private String thickness;
+	private BigDecimal thickness;
 
 	@Column(name = "updated_date")
 	private Date updatedDate;

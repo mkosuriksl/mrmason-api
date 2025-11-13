@@ -1,5 +1,7 @@
 package com.application.mrmason.dto;
 
+import java.math.BigDecimal;
+
 import lombok.Data;
 
 @Data
@@ -15,10 +17,10 @@ public class MaterialMasterRequestDto {
     private String modelName;
     private String description;
     private String image;
-    private String size;
+    private BigDecimal size;
 	private String shape;
-	private String width;
-	private String length;
-	private String thickness;
+	private BigDecimal width;
+	private BigDecimal length;
+	private BigDecimal thickness;
 	private String status;
 }

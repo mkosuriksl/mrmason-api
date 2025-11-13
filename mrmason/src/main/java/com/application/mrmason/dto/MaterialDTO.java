@@ -1,5 +1,7 @@
 package com.application.mrmason.dto;
 
+import java.math.BigDecimal;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,9 +18,9 @@ public class MaterialDTO {
     private String modelNo;
     private String modelName;
     private String shape;
-    private String width;
-    private String length;
-    private String size;
-    private String thickness;
+    private BigDecimal width;
+    private BigDecimal length;
+    private BigDecimal size;
+    private BigDecimal thickness;
 }
 

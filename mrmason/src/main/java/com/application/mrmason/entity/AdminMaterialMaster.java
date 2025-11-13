@@ -1,5 +1,6 @@
 package com.application.mrmason.entity;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import jakarta.persistence.Column;
@@ -42,16 +43,16 @@ public class AdminMaterialMaster {
 	private String shape;
 	
 	@Column(name = "width")
-	private String width;
+	private BigDecimal width;
 	
 	@Column(name = "length")
-	private String length;
+	private BigDecimal length;
 	
 	@Column(name = "size")
-	private String size;
+	private BigDecimal size;
 	
 	@Column(name = "thickness")
-	private String thickness;
+	private BigDecimal thickness;
 	
 	@Column(name = "status")
 	private String status;

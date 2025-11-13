@@ -31,7 +31,6 @@ public class CustomerRetailerOrderDetailsEntity {
     private Double totalAmount;
     private String manufactureName;
 	private String skuIdUserId;
-	private String prescriptionRequired;
 	private Date updatedDate;
 	private String updatedBy;
 	private String userId;

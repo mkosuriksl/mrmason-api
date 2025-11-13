@@ -23,12 +23,14 @@ import com.application.mrmason.entity.AdminMaterialMaster;
 import com.application.mrmason.entity.CustomerOrderDetailsEntity;
 import com.application.mrmason.entity.CustomerOrderHdrEntity;
 import com.application.mrmason.entity.CustomerRegistration;
+import com.application.mrmason.entity.MaterialMaster;
 import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.OrderStatus;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.AdminMaterialMasterRepository;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
+import com.application.mrmason.repository.MaterialMasterRepository;
 import com.application.mrmason.security.AuthDetailsProvider;
 
 import jakarta.persistence.EntityManager;
@@ -56,7 +58,7 @@ public class CustomerOrderMethodHandler {
 	@Autowired
 	private ModelMapper modelMapper;
 	@Autowired
-	private AdminMaterialMasterRepository adminMaterialMasterRepository;
+	private MaterialMasterRepository materialMasterRepository;
 
 	public CustomerOrderHdrEntity ceateCustomerOrderMethod(CustomerOrderRequestDto dto) {
 
@@ -114,17 +116,17 @@ public class CustomerOrderMethodHandler {
 
 		for (CustomerOrderDetailsDto orderDetails : orderDetailsList) {
 
-			List<AdminMaterialMaster> stockList = adminMaterialMasterRepository
-					.findBySkuIds(orderDetails.getSkuIdUserId());
+			List<MaterialMaster> stockList = materialMasterRepository
+					.findByMsCatmsSubCatmsBrandSkuIdS(orderDetails.getSkuIdUserId());
 
 			if (stockList.isEmpty()) {
 				throw new ResourceNotFoundException("SkuIdUserId not found for item: " + orderDetails.getSkuIdUserId());
 			}
 
 			// Optional: pick the correct one based on updatedBy / location
-			AdminMaterialMaster stockEntity = stockList.get(0); // or filter by updatedBy
+			MaterialMaster stockEntity = stockList.get(0); // or filter by updatedBy
 
-			String uniqueKey = stockEntity.getSkuId();
+			String uniqueKey = stockEntity.getMsCatmsSubCatmsBrandSkuId();
 
 			// Prevent duplicates in same order
 			boolean exists = orderHdr.getCustomerOrderDetailsEntities() != null && orderHdr
@@ -136,7 +138,7 @@ public class CustomerOrderMethodHandler {
 
 			CustomerOrderDetailsEntity orderDetailsEntity = new CustomerOrderDetailsEntity();
 
-			orderDetailsEntity.setSkuIdUserId(stockEntity.getSkuId());
+			orderDetailsEntity.setSkuIdUserId(stockEntity.getMsCatmsSubCatmsBrandSkuId());
 			orderDetailsEntity.setMsUserId(stockEntity.getUpdatedBy());
 			orderDetailsEntity.setMrp(orderDetails.getMrp());
 			orderDetailsEntity.setDiscount(orderDetails.getDiscount());

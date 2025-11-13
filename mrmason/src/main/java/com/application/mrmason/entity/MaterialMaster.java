@@ -1,5 +1,6 @@
 package com.application.mrmason.entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -26,14 +27,14 @@ public class MaterialMaster {
 	private String modelName;
 	private String description;
 	private String image;
-	private String size;
+	private BigDecimal size;
 	private String updatedBy;
 	private LocalDateTime updatedDate;
 	private String userId;
 	private String shape;
-	private String width;
-	private String length;
-	private String thickness;
+	private BigDecimal width;
+	private BigDecimal length;
+	private BigDecimal thickness;
 	private String status;
 	@Transient
     private String materialMasterImage1;

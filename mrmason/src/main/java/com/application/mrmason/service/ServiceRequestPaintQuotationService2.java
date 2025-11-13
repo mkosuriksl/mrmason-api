@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.application.mrmason.dto.GenericResponse;
+import com.application.mrmason.dto.ResponseGetWorkOrderSRHdrAndCustomerDto;
 import com.application.mrmason.dto.WorkOrderRequest;
 import com.application.mrmason.entity.ServiceRequestHeaderAllQuotation2;
 import com.application.mrmason.entity.ServiceRequestPaintQuotation2;
@@ -16,7 +17,7 @@ public interface ServiceRequestPaintQuotationService2 {
 
 	public GenericResponse<Map<String, Object>> duplicateQuotationToRepo2(WorkOrderRequest workOrderRequest,RegSource regSource);
 	public Page<ServiceRequestHeaderAllQuotation2> getHeaderWorkOrder(String workOrderId, String requestId, 
-	        String fromDate, String toDate, String spId, String status, Pageable pageable);
+	        String fromDate, String toDate, String spId, String status, Pageable pageable,Map<String, String> requestParams);
 	
 	public List<ServiceRequestPaintQuotation2> getWorkOrderDetails(
 	        String admintasklineId,
@@ -27,9 +28,13 @@ public interface ServiceRequestPaintQuotationService2 {
 	        String status,
 	        String spId,
 	        String requestId,
-	        String workOrderId);
+	        String workOrderId,Map<String, String> requestParams);
 	
 	public List<ServiceRequestPaintQuotation2> updateWorkOrderQuotation(String taskId,
 			List<ServiceRequestPaintQuotation2> dtoList, RegSource regSource) ;
+	
+	public ResponseGetWorkOrderSRHdrAndCustomerDto getWorkOrderWithCustomerDetails(
+	        String workOrderId, String quotationId, String fromQuotatedDate, String toQuotatedDate,
+	        String status, String spId, String userid, String userEmail, String userMobile, Pageable pageable,Map<String, String> requestParams);
 
 }

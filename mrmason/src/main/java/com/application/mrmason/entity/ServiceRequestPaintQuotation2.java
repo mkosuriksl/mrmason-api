@@ -20,12 +20,12 @@ import lombok.Setter;
 @AllArgsConstructor
 @Entity
 @Builder
-@Table(name = "workorder_details_table")
+@Table(name = "workorder_details")
 public class ServiceRequestPaintQuotation2 {
 	
 	@Id
-	@Column(name = "admin_task_lineId")
-	private String admintasklineId;
+	@Column(name = "admin_order_line_id")
+	private String workOrderLineId;
 	
 	@Column(name = "service_category")
 	private String serviceCategory;

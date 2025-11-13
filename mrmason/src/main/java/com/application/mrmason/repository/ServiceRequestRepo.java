@@ -17,6 +17,7 @@ public interface ServiceRequestRepo extends JpaRepository<ServiceRequest, Long>{
 	ServiceRequest findByRequestId(String requestId);
 
 	List<ServiceRequest> findByServiceRequestDateBetween(String startDate, String endDate);
+	List<ServiceRequest> findByRequestIdIn(List<String> requestIds);
 
  
 

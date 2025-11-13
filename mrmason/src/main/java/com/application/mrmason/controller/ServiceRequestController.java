@@ -151,7 +151,7 @@ public class ServiceRequestController {
 	                dto.setUserName(customer.getUsername());
 	                dto.setUserEmail(customer.getUserEmail());
 	                dto.setUserMobile(customer.getUserMobile());
-	                dto.setLocation(customer.getUserTown());
+//	                dto.setLocation(customer.getUserTown());
 	                dto.setUserDistrict(customer.getUserDistrict());
 	                dto.setUserState(customer.getUserState());
 	                dto.setUserPincode(customer.getUserPincode());

@@ -20,7 +20,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Entity
 @Builder
-@Table(name = "workorder_header_table")
+@Table(name = "workorder_header")
 public class ServiceRequestHeaderAllQuotation2 {
 	
 	@Id

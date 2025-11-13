@@ -147,7 +147,7 @@ public class ServiceRequestPaintQuotationServiceImp2 implements ServiceRequestPa
 			}
 
 			ServiceRequestPaintQuotation2 q2 = new ServiceRequestPaintQuotation2();
-			q2.setAdmintasklineId(newLineId); // ✅ replaced with WO ID
+			q2.setWorkOrderLineId(newLineId); // ✅ replaced with WO ID
 			q2.setServiceCategory(item.getServiceCategory());
 			q2.setTaskDescription(item.getTaskDescription());
 			q2.setQuotationId(item.getQuotationId());
@@ -302,7 +302,7 @@ public class ServiceRequestPaintQuotationServiceImp2 implements ServiceRequestPa
 
 	@Override
 	public List<ServiceRequestPaintQuotation2> getWorkOrderDetails(
-	        String admintasklineId,
+	        String workOrderLineId,
 	        String taskDescription,
 	        String serviceCategory,
 	        String taskId,
@@ -318,8 +318,8 @@ public class ServiceRequestPaintQuotationServiceImp2 implements ServiceRequestPa
 
 	    List<Predicate> predicates = new ArrayList<>();
 
-	    if (admintasklineId != null && !admintasklineId.isEmpty())
-	        predicates.add(cb.equal(root.get("admintasklineId"), admintasklineId));
+	    if (workOrderLineId != null && !workOrderLineId.isEmpty())
+	        predicates.add(cb.equal(root.get("workOrderLineId"), workOrderLineId));
 
 	    if (taskDescription != null && !taskDescription.isEmpty())
 	        predicates.add(cb.like(root.get("taskDescription"), "%" + taskDescription + "%"));
@@ -381,13 +381,13 @@ public class ServiceRequestPaintQuotationServiceImp2 implements ServiceRequestPa
 	    }
 
 	    Map<String, ServiceRequestPaintQuotation2> existingMap = existingQuotations.stream()
-	            .collect(Collectors.toMap(ServiceRequestPaintQuotation2::getAdmintasklineId, Function.identity()));
+	            .collect(Collectors.toMap(ServiceRequestPaintQuotation2::getWorkOrderLineId, Function.identity()));
 
 	    List<ServiceRequestPaintQuotation2> updatedQuotations = new ArrayList<>();
 
 	    // ✅ Step 3: Update child details based on admintasklineId
 	    for (ServiceRequestPaintQuotation2 dto : dtoList) {
-	        ServiceRequestPaintQuotation2 existing = existingMap.get(dto.getAdmintasklineId());
+	        ServiceRequestPaintQuotation2 existing = existingMap.get(dto.getWorkOrderLineId());
 
 	        if (existing != null) {
 	            existing.setMeasureNames(dto.getMeasureNames());
@@ -398,7 +398,7 @@ public class ServiceRequestPaintQuotationServiceImp2 implements ServiceRequestPa
 	            updatedQuotations.add(serviceRequestPaintQuotationRepository2.save(existing));
 	        } else {
 	            throw new ResourceNotFoundException(
-	                    "Quotation line not found for admintasklineId: " + dto.getAdmintasklineId());
+	                    "Quotation line not found for admintasklineId: " + dto.getWorkOrderLineId());
 	        }
 	    }
 

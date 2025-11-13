@@ -69,7 +69,7 @@ public class WordeOrderServiceRequestQuotationController {
 	
 	@GetMapping("/get-workorder-details")
 	public ResponseEntity<GenericResponse<List<ServiceRequestPaintQuotation2>>> getWorkOrderDetails(
-	        @RequestParam(required = false) String admintasklineId,
+	        @RequestParam(required = false) String workOrderLineId,
 	        @RequestParam(required = false) String taskDescription,
 	        @RequestParam(required = false) String serviceCategory,
 	        @RequestParam(required = false) String taskId,
@@ -80,7 +80,7 @@ public class WordeOrderServiceRequestQuotationController {
 	        @RequestParam(required = false) String workOrderId) {
 
 	    List<ServiceRequestPaintQuotation2> workOrders = serviceRequestPaintQuotationService.getWorkOrderDetails(
-	            admintasklineId, taskDescription, serviceCategory, taskId, measureNames, 
+	    		workOrderLineId, taskDescription, serviceCategory, taskId, measureNames, 
 	            status, spId, quotationId, workOrderId);
 
 	    GenericResponse<List<ServiceRequestPaintQuotation2>> response = new GenericResponse<>(

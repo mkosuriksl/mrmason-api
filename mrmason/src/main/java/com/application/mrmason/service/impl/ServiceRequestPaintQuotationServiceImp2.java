@@ -1,13 +1,18 @@
 package com.application.mrmason.service.impl;
 
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -19,10 +24,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
+import com.application.mrmason.dto.CustomerBasicDto;
 import com.application.mrmason.dto.GenericResponse;
+import com.application.mrmason.dto.ResponseGetWorkOrderSRHdrAndCustomerDto;
+import com.application.mrmason.dto.WorkOrderCustomerResponseDto;
 import com.application.mrmason.dto.WorkOrderRequest;
 import com.application.mrmason.entity.AdminDetails;
+import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.entity.SPWAStatus;
+import com.application.mrmason.entity.ServiceRequest;
 import com.application.mrmason.entity.ServiceRequestHeaderAllQuotation;
 import com.application.mrmason.entity.ServiceRequestHeaderAllQuotation2;
 import com.application.mrmason.entity.ServiceRequestPaintQuotation;
@@ -32,10 +42,12 @@ import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.AdminDetailsRepo;
+import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.repository.ServiceRequestHeaderAllQuotationRepo;
 import com.application.mrmason.repository.ServiceRequestHeaderAllQuotationRepo2;
 import com.application.mrmason.repository.ServiceRequestPaintQuotationRepository;
 import com.application.mrmason.repository.ServiceRequestPaintQuotationRepository2;
+import com.application.mrmason.repository.ServiceRequestRepo;
 import com.application.mrmason.repository.UserDAO;
 import com.application.mrmason.security.AuthDetailsProvider;
 import com.application.mrmason.service.ServiceRequestPaintQuotationService2;
@@ -62,6 +74,12 @@ public class ServiceRequestPaintQuotationServiceImp2 implements ServiceRequestPa
 
 	@Autowired
 	private ServiceRequestPaintQuotationRepository2 serviceRequestPaintQuotationRepository2;
+	
+	@Autowired
+	private ServiceRequestRepo serviceRequestRepo;
+	
+	@Autowired
+	private CustomerRegistrationRepo customerRegistrationRepo;
 
 	@Autowired
 	public AdminDetailsRepo adminRepo;
@@ -391,5 +409,118 @@ public class ServiceRequestPaintQuotationServiceImp2 implements ServiceRequestPa
 
 	    return updatedQuotations;
 	}
+
+	@Override
+	public ResponseGetWorkOrderSRHdrAndCustomerDto getWorkOrderWithCustomerDetails(
+	        String workOrderId, String quotationId, String fromQuotatedDate, String toQuotatedDate,
+	        String status, String spId, String userid, String userEmail, String userMobile, Pageable pageable) {
+
+	    ResponseGetWorkOrderSRHdrAndCustomerDto response = new ResponseGetWorkOrderSRHdrAndCustomerDto();
+
+	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+	    CriteriaQuery<ServiceRequestHeaderAllQuotation2> cq = cb.createQuery(ServiceRequestHeaderAllQuotation2.class);
+	    Root<ServiceRequestHeaderAllQuotation2> root = cq.from(ServiceRequestHeaderAllQuotation2.class);
+
+	    List<Predicate> predicates = new ArrayList<>();
+
+	    if (workOrderId != null && !workOrderId.isEmpty())
+	        predicates.add(cb.equal(root.get("workOrderId"), workOrderId));
+
+	    if (quotationId != null && !quotationId.isEmpty())
+	        predicates.add(cb.equal(root.get("quotationId"), quotationId));
+
+	    if (status != null && !status.isEmpty())
+	        predicates.add(cb.equal(root.get("status"), status));
+
+	    if (spId != null && !spId.isEmpty())
+	        predicates.add(cb.equal(root.get("spId"), spId));
+
+	    if (fromQuotatedDate != null && toQuotatedDate != null) {
+	        try {
+	            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+	            LocalDate fromDate = LocalDate.parse(fromQuotatedDate, formatter);
+	            LocalDate toDate = LocalDate.parse(toQuotatedDate, formatter);
+
+	            // Convert LocalDate to LocalDateTime and then to Timestamp
+	            Timestamp fromTimestamp = Timestamp.valueOf(fromDate.atStartOfDay());
+	            Timestamp toTimestamp = Timestamp.valueOf(toDate.atTime(23, 59, 59)); // include full day
+
+	            predicates.add(cb.between(root.get("quotedDate"), fromTimestamp, toTimestamp));
+	        } catch (DateTimeParseException e) {
+	            throw new IllegalArgumentException("Invalid date format. Please use yyyy-MM-dd");
+	        }
+	    }
+
+
+	    cq.where(predicates.toArray(new Predicate[0]));
+	    cq.orderBy(cb.desc(root.get("updatedDate")));
+
+	    TypedQuery<ServiceRequestHeaderAllQuotation2> query = entityManager.createQuery(cq);
+	    query.setFirstResult((int) pageable.getOffset());
+	    query.setMaxResults(pageable.getPageSize());
+
+	    List<ServiceRequestHeaderAllQuotation2> workOrders = query.getResultList();
+
+	    if (workOrders.isEmpty()) {
+	        response.setMessage("No Work Orders Found!");
+	        response.setStatus(false);
+	        return response;
+	    }
+
+	    // ✅ Collect quotationIds → requestIds → requestedBy (userIds)
+	    List<String> quotationIds = workOrders.stream()
+	            .map(ServiceRequestHeaderAllQuotation2::getQuotationId)
+	            .filter(Objects::nonNull)
+	            .toList();
+
+	    List<ServiceRequestHeaderAllQuotation> quotations =
+	            serviceRequestHeaderAllQuotationRepo.findByQuotationIdIn(quotationIds);
+
+	    List<String> requestIds = quotations.stream()
+	            .map(ServiceRequestHeaderAllQuotation::getRequestId)
+	            .filter(Objects::nonNull)
+	            .toList();
+
+	    List<ServiceRequest> serviceRequests = serviceRequestRepo.findByRequestIdIn(requestIds);
+
+	    List<String> requestedByIds = serviceRequests.stream()
+	            .map(ServiceRequest::getRequestedBy)
+	            .filter(Objects::nonNull)
+	            .toList();
+
+	    // ✅ Fetch customers based on filters
+	    List<CustomerRegistration> customers = customerRegistrationRepo.findByUserFilters(userid, userEmail, userMobile, requestedByIds);
+
+	    // ✅ Map Work Order Headers (no nested customer)
+	    List<WorkOrderCustomerResponseDto> workOrderDtos = workOrders.stream()
+	            .map(wo -> new WorkOrderCustomerResponseDto(
+	                    wo.getWorkOrderId(),
+	                    wo.getQuotationId(),
+	                    wo.getQuotedDate() != null ? wo.getQuotedDate().toString() : null,
+	                    wo.getStatus(),
+	                    wo.getSpId(),
+	                    wo.getUpdatedBy(),
+	                    wo.getUpdatedDate() != null ? wo.getUpdatedDate().toString() : null
+	            ))
+	            .collect(Collectors.toList());
+
+	    // ✅ Map customers list
+	    List<CustomerBasicDto> customerDtos = customers.stream()
+	            .map(c -> new CustomerBasicDto(c.getUserid(), c.getUserEmail(), c.getUserMobile()))
+	            .collect(Collectors.toList());
+
+	    // ✅ Set in response
+	    response.setMessage("Data fetched successfully!");
+	    response.setStatus(true);
+	    response.setWorkSRHeaderQuotation(workOrderDtos);
+	    response.setCustomerBasicDtos(customerDtos);
+	    response.setCurrentPage(pageable.getPageNumber());
+	    response.setPageSize(pageable.getPageSize());
+	    response.setTotalElements(workOrderDtos.size());
+	    response.setTotalPages((int) Math.ceil((double) workOrderDtos.size() / pageable.getPageSize()));
+
+	    return response;
+	}
+
 
 }

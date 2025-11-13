@@ -5,7 +5,9 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.GenericResponse;
+import com.application.mrmason.dto.ResponseGetWorkOrderSRHdrAndCustomerDto;
 import com.application.mrmason.dto.ResponseGetWorkOrderSRHeaderQuotationDto;
 import com.application.mrmason.dto.WorkOrderRequest;
 import com.application.mrmason.entity.ServiceRequestHeaderAllQuotation2;
@@ -101,4 +104,21 @@ public class WordeOrderServiceRequestQuotationController {
 	    return ResponseEntity.ok(response);
 	}
 
+	@GetMapping("/get-workorderheaderAndCustomer")
+	public ResponseEntity<ResponseGetWorkOrderSRHdrAndCustomerDto> getWorkOrderSRHdrAndCustomer(
+			@RequestParam(required = false) String workOrderId, @RequestParam(required = false) String quotationId,
+			@RequestParam(required = false) String fromQuotatedDate,
+			@RequestParam(required = false) String toQuotatedDate, @RequestParam(required = false) String status,
+			@RequestParam(required = false) String spId, @RequestParam(required = false) String userid,
+			@RequestParam(required = false) String userEmail, @RequestParam(required = false) String userMobile,
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+
+		Pageable pageable = PageRequest.of(page, size, Sort.by("updatedDate").descending());
+
+		ResponseGetWorkOrderSRHdrAndCustomerDto response = serviceRequestPaintQuotationService
+				.getWorkOrderWithCustomerDetails(workOrderId, quotationId, fromQuotatedDate, toQuotatedDate, status,
+						spId, userid, userEmail, userMobile, pageable);
+
+		return ResponseEntity.ok(response);
+	}
 }

@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -213,8 +214,13 @@ public class ServiceRequestPaintQuotationServiceImp2 implements ServiceRequestPa
 	@Override
 	public Page<ServiceRequestHeaderAllQuotation2> getHeaderWorkOrder(
 	        String workOrderId, String quotationId, String fromDate, String toDate,
-	        String spId, String status, Pageable pageable) {
-
+	        String spId, String status, Pageable pageable,Map<String, String> requestParams) {
+		List<String> expectedParams = Arrays.asList("workOrderId","quotationId","fromDate","toDate","spId","status");
+	    for (String paramName : requestParams.keySet()) {
+	        if (!expectedParams.contains(paramName)) {
+	            throw new IllegalArgumentException("Unexpected parameter '" + paramName + "' is not allowed.");
+	        }
+	    }
 	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
 	    // --- MAIN QUERY ---
@@ -310,8 +316,14 @@ public class ServiceRequestPaintQuotationServiceImp2 implements ServiceRequestPa
 	        String status,
 	        String spId,
 	        String quotationId,
-	        String workOrderId) {
-
+	        String workOrderId,Map<String, String> requestParams) {
+		List<String> expectedParams = Arrays.asList("workOrderLineId","taskDescription","serviceCategory","taskId","measureNames",
+				"status","spId","quotationId","workOrderId");
+	    for (String paramName : requestParams.keySet()) {
+	        if (!expectedParams.contains(paramName)) {
+	            throw new IllegalArgumentException("Unexpected parameter '" + paramName + "' is not allowed.");
+	        }
+	    }
 	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 	    CriteriaQuery<ServiceRequestPaintQuotation2> query = cb.createQuery(ServiceRequestPaintQuotation2.class);
 	    Root<ServiceRequestPaintQuotation2> root = query.from(ServiceRequestPaintQuotation2.class);
@@ -413,8 +425,14 @@ public class ServiceRequestPaintQuotationServiceImp2 implements ServiceRequestPa
 	@Override
 	public ResponseGetWorkOrderSRHdrAndCustomerDto getWorkOrderWithCustomerDetails(
 	        String workOrderId, String quotationId, String fromQuotatedDate, String toQuotatedDate,
-	        String status, String spId, String userid, String userEmail, String userMobile, Pageable pageable) {
-
+	        String status, String spId, String userid, String userEmail, String userMobile, Pageable pageable,Map<String, String> requestParams) {
+		List<String> expectedParams = Arrays.asList("workOrderId","quotationId","fromQuotatedDate","toQuotatedDate","status",
+				"spId","userid","userEmail","userMobile");
+	    for (String paramName : requestParams.keySet()) {
+	        if (!expectedParams.contains(paramName)) {
+	            throw new IllegalArgumentException("Unexpected parameter '" + paramName + "' is not allowed.");
+	        }
+	    }
 	    ResponseGetWorkOrderSRHdrAndCustomerDto response = new ResponseGetWorkOrderSRHdrAndCustomerDto();
 
 	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();

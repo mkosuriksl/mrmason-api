@@ -39,7 +39,7 @@ public class FrAvaibaleController {
 		return ResponseEntity.ok(response);
 	}
 
-	@PutMapping("/update-avaiable")
+	@PutMapping("/update-available")
 	public ResponseEntity<GenericResponse<FrAvailable>> updateLocation(@RequestBody FrAvailable dto) {
 
 		GenericResponse<FrAvailable> response = service.updateAvaiable(dto);

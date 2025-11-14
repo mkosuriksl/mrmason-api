@@ -1,6 +1,5 @@
 package com.application.mrmason.service.impl;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -11,7 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.application.mrmason.dto.GenericResponse;
-import com.application.mrmason.dto.ResponseAvailableDto;
+import com.application.mrmason.dto.ResponseAvailableLocationDto;
 import com.application.mrmason.entity.FrAvaiableLocation;
 import com.application.mrmason.entity.FrReg;
 import com.application.mrmason.repository.FrAvailableLocationRepository;
@@ -63,7 +62,7 @@ public class FrAvailableLocationServiceImpl implements FrAvailableLocationServic
 	}
 
 	@Override
-	public ResponseAvailableDto getAvailableLocations(
+	public ResponseAvailableLocationDto getAvailableLocations(
 	        String frUserId, String city, String countrycode,
 	        int page, int size) {
 
@@ -85,7 +84,7 @@ public class FrAvailableLocationServiceImpl implements FrAvailableLocationServic
 	            .map(this::convertToDto)
 	            .toList();
 
-	    ResponseAvailableDto response = new ResponseAvailableDto();
+	    ResponseAvailableLocationDto response = new ResponseAvailableLocationDto();
 	    response.setMessage("Available Locations fetched successfully");
 	    response.setStatus(true);
 	    response.setAvaiableLocations(dtoList);

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.application.mrmason.dto.GenericResponse;
-import com.application.mrmason.dto.ResponseAvailableDto;
+import com.application.mrmason.dto.ResponseAvailableLocationDto;
 import com.application.mrmason.entity.FrAvaiableLocation;
 import com.application.mrmason.service.FrAvailableLocationService;
 
@@ -31,11 +31,11 @@ public class FrAvailableLocationController {
 	}
 
 	@GetMapping("/get-available-location")
-	public ResponseEntity<ResponseAvailableDto> getLocation(@RequestParam(required = false) String frUserId,
+	public ResponseEntity<ResponseAvailableLocationDto> getLocation(@RequestParam(required = false) String frUserId,
 			@RequestParam(required = false) String city, @RequestParam(required = false) String countrycode,
 			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
 
-		ResponseAvailableDto response = service.getAvailableLocations(frUserId, city, countrycode, page, size);
+		ResponseAvailableLocationDto response = service.getAvailableLocations(frUserId, city, countrycode, page, size);
 
 		return ResponseEntity.ok(response);
 	}

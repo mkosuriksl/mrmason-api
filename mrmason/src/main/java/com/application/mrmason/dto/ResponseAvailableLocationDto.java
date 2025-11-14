@@ -2,16 +2,16 @@ package com.application.mrmason.dto;
 
 import java.util.List;
 
-import com.application.mrmason.entity.FrAvailable;
+import com.application.mrmason.entity.FrAvaiableLocation;
 
 import lombok.Data;
 
 @Data
-public class ResponseAvailableDto {
+public class ResponseAvailableLocationDto {
 	private String message;
 	private boolean status;
 
-	private List<FrAvailable> available;
+	private List<FrAvaiableLocation> avaiableLocations;
 
 	private int currentPage;
 	private int pageSize;

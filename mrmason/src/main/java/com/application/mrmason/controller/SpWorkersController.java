@@ -1,5 +1,7 @@
 package com.application.mrmason.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.application.mrmason.dto.ResponseSpWorkersDto;
 import com.application.mrmason.dto.ResponsesGetWorkerDto;
 import com.application.mrmason.dto.SpWorkersDto;
+import com.application.mrmason.dto.WorkerListResponseDto;
 import com.application.mrmason.entity.SpWorkers;
 import com.application.mrmason.repository.SpWorkersRepo;
 import com.application.mrmason.repository.UserDAO;
@@ -120,6 +123,24 @@ public class SpWorkersController {
 	    return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
+	@GetMapping("/getWorkerDetailsWithoutPagination")
+	public ResponseEntity<WorkerListResponseDto> getWorkersWithoutPagination(
+	        @RequestParam(required = false) String spId,
+	        @RequestParam(required = false) String workerId,
+	        @RequestParam(required = false) String phno,
+	        @RequestParam(required = false) String location,
+	        @RequestParam(required = false) String workerAvail) {
+
+	    List<SpWorkers> workersList = service.getWorkersWithoutPagination(
+	            spId, workerId, phno, location, workerAvail);
+
+	    WorkerListResponseDto response = new WorkerListResponseDto();
+	    response.setMessage("Worker details retrieved successfully.");
+	    response.setStatus(true);
+	    response.setWorkersData(workersList);
+	    return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
 
 	@PutMapping("/updateWorkerDetails")
 	public ResponseEntity<ResponseSpWorkersDto> updateAssetDetails(@RequestBody SpWorkersDto worker) {
@@ -127,9 +148,6 @@ public class SpWorkersController {
 		try {
 			String spData= service.updateWorkers(worker);
 			if (spData=="updated") {
-//				SpWorkers workerData= repo.findByWorkerIdAndServicePersonId(worker.getWorkerId(), worker.getServicePersonId());
-//				
-//				response.setData(service.getDetails(workerData.getWorkPhoneNum(),workerData.getWorkerEmail()));
 				response.setMessage("Worker details updated successfully..");
 				response.setStatus(true);
 				return new ResponseEntity<>(response, HttpStatus.OK);

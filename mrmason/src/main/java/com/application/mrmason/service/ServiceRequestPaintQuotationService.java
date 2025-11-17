@@ -34,7 +34,7 @@ public interface ServiceRequestPaintQuotationService {
 			String serviceCategory, String taskId, String measureNames, String status, String spId,String requestId,String quotationId, 
 			RegSource regSource,int page, int size)throws AccessDeniedException ;
 	
-	public ServiceRequestHeaderAllQuotation updateServiceRequestHeaderAllQuotation(HeaderQuotationStatusRequest header, RegSource regSource);
+	public Object updateServiceRequestHeaderAllQuotation(HeaderQuotationStatusRequest header, RegSource regSource);
 	
 	public ResponseGetServiceRequestHeaderQuotationDto getHeaderWithHistory(
 	        String quotationId, String requestId, String fromDate,

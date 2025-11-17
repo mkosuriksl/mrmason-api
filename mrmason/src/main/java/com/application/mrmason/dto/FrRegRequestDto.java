@@ -16,4 +16,7 @@ public class FrRegRequestDto {
     private String frLinkedInProfile;
     private UserType userType;
     private RegSource regSource;
+    private String country;
+    private String category;
+    private String subCategory;
 }

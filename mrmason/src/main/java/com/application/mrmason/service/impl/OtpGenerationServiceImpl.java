@@ -185,7 +185,7 @@ public class OtpGenerationServiceImpl implements OtpGenerationService {
 	        user.setMOtp(otp);
 	        userDAO.save(user);
 	    }
-		smsService.sendSMSMessage(mobile, otp, regSource);
+		smsService.registrationSendSMSMessage(mobile, otp, regSource);
 		return otp;
 	}
 	

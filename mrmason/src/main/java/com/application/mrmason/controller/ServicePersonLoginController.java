@@ -110,11 +110,6 @@ public class ServicePersonLoginController {
 			servicePersonDao.save(user);
 			response.setStatus(true);
 			response.setMessage("Otp sent to the registered mobile number.");
-			//findByMobileAndRegSource
-//			User userStatus = userDAO.findByMobileAndRegSource(login.getContactDetail(), login.getRegSource()).orElseThrow(
-//					() -> new ResourceNotFoundException("User Not Found By : " + login.getContactDetail()));
-//			userStatus.setStatus("active");
-//			userDAO.save(userStatus);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}

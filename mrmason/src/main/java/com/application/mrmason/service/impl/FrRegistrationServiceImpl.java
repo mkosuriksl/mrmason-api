@@ -12,10 +12,12 @@ import org.springframework.stereotype.Service;
 import com.application.mrmason.dto.FrLoginRequest;
 import com.application.mrmason.dto.FrRegRequestDto;
 import com.application.mrmason.dto.FrRegResponseDto;
+import com.application.mrmason.dto.FrRegistrationResponseDto;
 import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.OtpDto;
 import com.application.mrmason.dto.ResetChangePassOtpDto;
 import com.application.mrmason.dto.ResponseFrLoginDto;
+import com.application.mrmason.dto.ResponseFrRegistrationDto;
 import com.application.mrmason.dto.UserFrDto;
 import com.application.mrmason.entity.FrLogin;
 import com.application.mrmason.entity.FrProfile;
@@ -70,7 +72,11 @@ public class FrRegistrationServiceImpl implements FrRegistrationService {
 		FrReg reg = FrReg.builder().frUserId(userId).frEmail(dto.getFrEmail()).frMobile(dto.getFrMobile())
 				.password(passwordEncoder.encode(dto.getFrPassword())).frLinkedInProfile(dto.getFrLinkedInProfile())
 				.emailVerified("no").mobileVerified("no").regSource(dto.getRegSource()).userType(dto.getUserType())
-				.status("INACTIVE").updatedDate(LocalDateTime.now()).build();
+				.status("INACTIVE").updatedDate(LocalDateTime.now())
+				.category(dto.getCategory())
+				.subCategory(dto.getSubCategory())
+				.country(dto.getCountry())
+				.build();
 
 		frRegRepo.save(reg);
 
@@ -88,7 +94,11 @@ public class FrRegistrationServiceImpl implements FrRegistrationService {
 				.frMobile(reg.getFrMobile()).frLinkedInProfile(reg.getFrLinkedInProfile())
 				.emailVerified(reg.getEmailVerified()).mobileVerified(reg.getMobileVerified())
 				.regSource(reg.getRegSource()).userType(reg.getUserType()).status(reg.getStatus())
-				.updatedDate(reg.getUpdatedDate().format(DateTimeFormatter.ofPattern("dd-MM-yyyy hh:mm a"))).build();
+				.updatedDate(reg.getUpdatedDate().format(DateTimeFormatter.ofPattern("dd-MM-yyyy hh:mm a")))
+				.country(reg.getCountry())
+				.category(reg.getCategory())
+				.subCategory(reg.getSubCategory())
+				.build();
 
 		return new GenericResponse<>(
 				"Thanks for registering with us. Please verify your registered email. OTP has been sent.", true,
@@ -98,70 +108,70 @@ public class FrRegistrationServiceImpl implements FrRegistrationService {
 	@Override
 	public GenericResponse<Void> sendOtp(OtpDto dto) {
 
-	    int otp = (int) (Math.random() * 900000) + 100000;
-	    String otpStr = String.valueOf(otp);
+		int otp = (int) (Math.random() * 900000) + 100000;
+		String otpStr = String.valueOf(otp);
 
-	    FrUserOtp frUserOtp;
+		FrUserOtp frUserOtp;
 
-	    boolean isEmail = dto.getEmailOrMobile().contains("@");
+		boolean isEmail = dto.getEmailOrMobile().contains("@");
 
-	    // Fetch existing user OTP record based on email or mobile
-	    Optional<FrUserOtp> existing = isEmail 
-	        ? otpRepo.findByFrEmailAndRegSource(dto.getEmailOrMobile(), dto.getRegSource())
-	        : otpRepo.findByFrMobileAndRegSource(dto.getEmailOrMobile(), dto.getRegSource());
+		// Fetch existing user OTP record based on email or mobile
+		Optional<FrUserOtp> existing = isEmail
+				? otpRepo.findByFrEmailAndRegSource(dto.getEmailOrMobile(), dto.getRegSource())
+				: otpRepo.findByFrMobileAndRegSource(dto.getEmailOrMobile(), dto.getRegSource());
 
-	    // -------------------------------
-	    // ❌ Block if already verified
-	    // -------------------------------
-	    if (existing.isPresent()) {
+		// -------------------------------
+		// ❌ Block if already verified
+		// -------------------------------
+		if (existing.isPresent()) {
 
-	        FrUserOtp existingOtp = existing.get();
+			FrUserOtp existingOtp = existing.get();
 
-	        if (isEmail && "yes".equalsIgnoreCase(existingOtp.getEmailVerified())) {
-	            return new GenericResponse<>("Email already verified. OTP cannot be sent again.", false, null);
-	        }
+			if (isEmail && "yes".equalsIgnoreCase(existingOtp.getEmailVerified())) {
+				return new GenericResponse<>("Email already verified. OTP cannot be sent again.", false, null);
+			}
 
-	        if (!isEmail && "yes".equalsIgnoreCase(existingOtp.getMobileVerified())) {
-	            return new GenericResponse<>("Mobile number already verified. OTP cannot be sent again.", false, null);
-	        }
-	    }
-	    // -------------------------------
+			if (!isEmail && "yes".equalsIgnoreCase(existingOtp.getMobileVerified())) {
+				return new GenericResponse<>("Mobile number already verified. OTP cannot be sent again.", false, null);
+			}
+		}
+		// -------------------------------
 
-	    // Create or update OTP
-	    if (existing.isPresent()) {
-	        frUserOtp = existing.get();
-	        if (isEmail) frUserOtp.setFrEmailOtp(otpStr);
-	        else frUserOtp.setFrMobileOtp(otpStr);
-	    } else {
-	        frUserOtp = FrUserOtp.builder()
-	                .regSource(dto.getRegSource())
-	                .updatedDate(LocalDateTime.now())
-	                .build();
+		// Create or update OTP
+		if (existing.isPresent()) {
+			frUserOtp = existing.get();
+			if (isEmail)
+				frUserOtp.setFrEmailOtp(otpStr);
+			else
+				frUserOtp.setFrMobileOtp(otpStr);
+		} else {
+			frUserOtp = FrUserOtp.builder().regSource(dto.getRegSource()).updatedDate(LocalDateTime.now()).build();
 
-	        if (isEmail) frUserOtp.setFrEmail(dto.getEmailOrMobile());
-	        else frUserOtp.setFrMobile(dto.getEmailOrMobile());
+			if (isEmail)
+				frUserOtp.setFrEmail(dto.getEmailOrMobile());
+			else
+				frUserOtp.setFrMobile(dto.getEmailOrMobile());
 
-	        // Initial verified flags
-	        frUserOtp.setEmailVerified("no");
-	        frUserOtp.setMobileVerified("no");
-	    }
+			// Initial verified flags
+			frUserOtp.setEmailVerified("no");
+			frUserOtp.setMobileVerified("no");
+		}
 
-	    frUserOtp.setUpdatedDate(LocalDateTime.now());
-	    otpRepo.save(frUserOtp);
+		frUserOtp.setUpdatedDate(LocalDateTime.now());
+		otpRepo.save(frUserOtp);
 
-	    // Send OTP
-	    boolean sent = false;
+		// Send OTP
+		boolean sent = false;
 
-	    if (isEmail) {
-	        emailService.sendEmail(dto.getEmailOrMobile(), otpStr, dto.getRegSource());
-	        sent = true;
-	    } else {
-	        sent = smsService.sendSMSMessage(dto.getEmailOrMobile(), otpStr, dto.getRegSource());
-	    }
+		if (isEmail) {
+			emailService.sendEmail(dto.getEmailOrMobile(), otpStr, dto.getRegSource());
+			sent = true;
+		} else {
+			sent = smsService.sendSMSMessage(dto.getEmailOrMobile(), otpStr, dto.getRegSource());
+		}
 
-	    return sent
-	            ? new GenericResponse<>("OTP sent successfully", true, null)
-	            : new GenericResponse<>("Failed to send OTP. Please try again.", false, null);
+		return sent ? new GenericResponse<>("OTP sent successfully", true, null)
+				: new GenericResponse<>("Failed to send OTP. Please try again.", false, null);
 	}
 
 //	public GenericResponse<Void> sendOtp(OtpDto dto) {
@@ -283,8 +293,6 @@ public class FrRegistrationServiceImpl implements FrRegistrationService {
 
 		return new GenericResponse<>("Invalid OTP", false, null);
 	}
-
-	
 
 	@Override
 	public GenericResponse<FrProfile> addOrUpdateProfile(FrProfile profile) {
@@ -425,173 +433,242 @@ public class FrRegistrationServiceImpl implements FrRegistrationService {
 
 	@Override
 	public GenericResponse<Void> forgotSendOtp(OtpDto dto) {
-	    String emailOrMobile = dto.getEmailOrMobile();
-	    RegSource regSource = dto.getRegSource();
+		String emailOrMobile = dto.getEmailOrMobile();
+		RegSource regSource = dto.getRegSource();
 
-	    // ✅ Find user by email or mobile
-	    Optional<FrLogin> existingUser;
-	    if (emailOrMobile.contains("@")) {
-	        existingUser = frLoginRepo.findByFrEmailAndRegSource(emailOrMobile, regSource);
-	    } else {
-	        existingUser = frLoginRepo.findByFrMobileAndRegSource(emailOrMobile, regSource);
-	    }
+		// ✅ Find user by email or mobile
+		Optional<FrLogin> existingUser;
+		if (emailOrMobile.contains("@")) {
+			existingUser = frLoginRepo.findByFrEmailAndRegSource(emailOrMobile, regSource);
+		} else {
+			existingUser = frLoginRepo.findByFrMobileAndRegSource(emailOrMobile, regSource);
+		}
 
-	    if (!existingUser.isPresent()) {
-	        return new GenericResponse<>("User not found. Please check your email or mobile.", false, null);
-	    }
+		if (!existingUser.isPresent()) {
+			return new GenericResponse<>("User not found. Please check your email or mobile.", false, null);
+		}
 
-	    // ✅ Generate OTP
-	    String otp = String.valueOf((int) (Math.random() * 900000) + 100000);
+		// ✅ Generate OTP
+		String otp = String.valueOf((int) (Math.random() * 900000) + 100000);
 
-	    // ✅ Store OTP
-	    FrUserOtp frUserOtp;
-	    if (emailOrMobile.contains("@")) {
-	        Optional<FrUserOtp> existingOtp = otpRepo.findByFrEmailAndRegSource(emailOrMobile, regSource);
-	        frUserOtp = existingOtp.orElse(new FrUserOtp());
-	        frUserOtp.setFrEmail(emailOrMobile);
-	        frUserOtp.setFrEmailOtp(otp);
-	    } else {
-	        Optional<FrUserOtp> existingOtp = otpRepo.findByFrMobileAndRegSource(emailOrMobile, regSource);
-	        frUserOtp = existingOtp.orElse(new FrUserOtp());
-	        frUserOtp.setFrMobile(emailOrMobile);
-	        frUserOtp.setFrMobileOtp(otp);
-	    }
-	    frUserOtp.setRegSource(regSource);
-	    frUserOtp.setUpdatedDate(LocalDateTime.now());
-	    otpRepo.save(frUserOtp);
+		// ✅ Store OTP
+		FrUserOtp frUserOtp;
+		if (emailOrMobile.contains("@")) {
+			Optional<FrUserOtp> existingOtp = otpRepo.findByFrEmailAndRegSource(emailOrMobile, regSource);
+			frUserOtp = existingOtp.orElse(new FrUserOtp());
+			frUserOtp.setFrEmail(emailOrMobile);
+			frUserOtp.setFrEmailOtp(otp);
+		} else {
+			Optional<FrUserOtp> existingOtp = otpRepo.findByFrMobileAndRegSource(emailOrMobile, regSource);
+			frUserOtp = existingOtp.orElse(new FrUserOtp());
+			frUserOtp.setFrMobile(emailOrMobile);
+			frUserOtp.setFrMobileOtp(otp);
+		}
+		frUserOtp.setRegSource(regSource);
+		frUserOtp.setUpdatedDate(LocalDateTime.now());
+		otpRepo.save(frUserOtp);
 
-	    // ✅ Send OTP (email or SMS)
-	    boolean sent = false;
-	    if (emailOrMobile.contains("@")) {
-	        emailService.sendEmail(emailOrMobile, otp, regSource);
-	        sent = true;
-	    } else {
-	        boolean smsSent = smsService.sendSMSMessage(emailOrMobile, otp, regSource);
-	        if (smsSent) sent = true;
-	    }
+		// ✅ Send OTP (email or SMS)
+		boolean sent = false;
+		if (emailOrMobile.contains("@")) {
+			emailService.sendEmail(emailOrMobile, otp, regSource);
+			sent = true;
+		} else {
+			boolean smsSent = smsService.sendSMSMessage(emailOrMobile, otp, regSource);
+			if (smsSent)
+				sent = true;
+		}
 
-	    if (sent) {
-	        return new GenericResponse<>("Forgot OTP sent successfully.", true, null);
-	    } else {
-	        return new GenericResponse<>("Failed to send OTP. Please try again.", false, null);
-	    }
+		if (sent) {
+			return new GenericResponse<>("Forgot OTP sent successfully.", true, null);
+		} else {
+			return new GenericResponse<>("Failed to send OTP. Please try again.", false, null);
+		}
 	}
 
 	@Override
 	public GenericResponse<Void> forgotVerifyOtp(OtpDto dto) {
-	    String emailOrMobile = dto.getEmailOrMobile();
-	    String otp = dto.getOtp();
-	    String newPassword = dto.getNewPass();
-	    String confPassword = dto.getConfPass();
-	    RegSource regSource = dto.getRegSource();
+		String emailOrMobile = dto.getEmailOrMobile();
+		String otp = dto.getOtp();
+		String newPassword = dto.getNewPass();
+		String confPassword = dto.getConfPass();
+		RegSource regSource = dto.getRegSource();
 
-	    if (!newPassword.equals(confPassword)) {
-	        return new GenericResponse<>("New password and confirm password do not match.", false, null);
-	    }
+		if (!newPassword.equals(confPassword)) {
+			return new GenericResponse<>("New password and confirm password do not match.", false, null);
+		}
 
-	    Optional<FrUserOtp> otpRecord;
-	    if (emailOrMobile.contains("@")) {
-	        otpRecord = otpRepo.findByFrEmailAndRegSource(emailOrMobile, regSource);
-	    } else {
-	        otpRecord = otpRepo.findByFrMobileAndRegSource(emailOrMobile, regSource);
-	    }
+		Optional<FrUserOtp> otpRecord;
+		if (emailOrMobile.contains("@")) {
+			otpRecord = otpRepo.findByFrEmailAndRegSource(emailOrMobile, regSource);
+		} else {
+			otpRecord = otpRepo.findByFrMobileAndRegSource(emailOrMobile, regSource);
+		}
 
-	    if (otpRecord.isEmpty()) {
-	        return new GenericResponse<>("OTP not found. Please request again.", false, null);
-	    }
+		if (otpRecord.isEmpty()) {
+			return new GenericResponse<>("OTP not found. Please request again.", false, null);
+		}
 
-	    FrUserOtp userOtp = otpRecord.get();
+		FrUserOtp userOtp = otpRecord.get();
 
-	    // ✅ Verify OTP
-	    if (!(otp.equals(userOtp.getFrEmailOtp()) || otp.equals(userOtp.getFrMobileOtp()))) {
-	        return new GenericResponse<>("Invalid OTP.", false, null);
-	    }
+		// ✅ Verify OTP
+		if (!(otp.equals(userOtp.getFrEmailOtp()) || otp.equals(userOtp.getFrMobileOtp()))) {
+			return new GenericResponse<>("Invalid OTP.", false, null);
+		}
 
-	    // ✅ Find user in FrLogin
-	    Optional<FrLogin> userOpt;
-	    if (emailOrMobile.contains("@")) {
-	        userOpt = frLoginRepo.findByFrEmailAndRegSource(emailOrMobile, regSource);
-	    } else {
-	        userOpt = frLoginRepo.findByFrMobileAndRegSource(emailOrMobile, regSource);
-	    }
+		// ✅ Find user in FrLogin
+		Optional<FrLogin> userOpt;
+		if (emailOrMobile.contains("@")) {
+			userOpt = frLoginRepo.findByFrEmailAndRegSource(emailOrMobile, regSource);
+		} else {
+			userOpt = frLoginRepo.findByFrMobileAndRegSource(emailOrMobile, regSource);
+		}
 
-	    if (!userOpt.isPresent()) {
-	        return new GenericResponse<>("User not found.", false, null);
-	    }
+		if (!userOpt.isPresent()) {
+			return new GenericResponse<>("User not found.", false, null);
+		}
 
-	    FrLogin user = userOpt.get();
-	    String encodedPass = byCrypt.encode(newPassword);
+		FrLogin user = userOpt.get();
+		String encodedPass = byCrypt.encode(newPassword);
 
-	    // ✅ Update password in FrLogin
-	    user.setPassword(encodedPass);
-	    user.setUpdatedDate(LocalDateTime.now());
-	    frLoginRepo.save(user);
+		// ✅ Update password in FrLogin
+		user.setPassword(encodedPass);
+		user.setUpdatedDate(LocalDateTime.now());
+		frLoginRepo.save(user);
 
-	    // ✅ Also update in FrReg (keep both in sync)
-	    Optional<FrReg> frRegOpt = frRegRepo.findByFrUserId(user.getFrUserid());
-	    if (frRegOpt.isPresent()) {
-	        FrReg reg = frRegOpt.get();
-	        reg.setPassword(encodedPass);
-	        reg.setUpdatedDate(LocalDateTime.now());
-	        frRegRepo.save(reg);
-	    }
+		// ✅ Also update in FrReg (keep both in sync)
+		Optional<FrReg> frRegOpt = frRegRepo.findByFrUserId(user.getFrUserid());
+		if (frRegOpt.isPresent()) {
+			FrReg reg = frRegOpt.get();
+			reg.setPassword(encodedPass);
+			reg.setUpdatedDate(LocalDateTime.now());
+			frRegRepo.save(reg);
+		}
 
-	    // ✅ Mark OTP used
-	    userOtp.setFrEmailOtp(null);
-	    userOtp.setFrMobileOtp(null);
-	    otpRepo.save(userOtp);
+		// ✅ Mark OTP used
+		userOtp.setFrEmailOtp(null);
+		userOtp.setFrMobileOtp(null);
+		otpRepo.save(userOtp);
 
-	    return new GenericResponse<>("OTP verified successfully. You can now reset your password.", true, null);
+		return new GenericResponse<>("OTP verified successfully. You can now reset your password.", true, null);
 	}
 
 	@Override
 	public GenericResponse<Void> changePassword(ResetChangePassOtpDto dto) {
-	    String emailOrMobile = dto.getEmailOrMobile();
-	    String oldPassword = dto.getOldPassword();
-	    String newPassword = dto.getNewPass();
-	    String confirmPassword = dto.getConfPass();
-	    RegSource regSource = dto.getRegSource();
+		String emailOrMobile = dto.getEmailOrMobile();
+		String oldPassword = dto.getOldPassword();
+		String newPassword = dto.getNewPass();
+		String confirmPassword = dto.getConfPass();
+		RegSource regSource = dto.getRegSource();
 
-	    // ✅ Check new password match
-	    if (!newPassword.equals(confirmPassword)) {
-	        return new GenericResponse<>("New password and confirm password do not match.", false, null);
-	    }
+		// ✅ Check new password match
+		if (!newPassword.equals(confirmPassword)) {
+			return new GenericResponse<>("New password and confirm password do not match.", false, null);
+		}
 
-	    // ✅ Find user by email or mobile
-	    Optional<FrLogin> userOpt;
-	    if (emailOrMobile.contains("@")) {
-	        userOpt = frLoginRepo.findByFrEmailAndRegSource(emailOrMobile, regSource);
-	    } else {
-	        userOpt = frLoginRepo.findByFrMobileAndRegSource(emailOrMobile, regSource);
-	    }
+		// ✅ Find user by email or mobile
+		Optional<FrLogin> userOpt;
+		if (emailOrMobile.contains("@")) {
+			userOpt = frLoginRepo.findByFrEmailAndRegSource(emailOrMobile, regSource);
+		} else {
+			userOpt = frLoginRepo.findByFrMobileAndRegSource(emailOrMobile, regSource);
+		}
 
-	    if (userOpt.isEmpty()) {
-	        return new GenericResponse<>("User not found.", false, null);
-	    }
+		if (userOpt.isEmpty()) {
+			return new GenericResponse<>("User not found.", false, null);
+		}
 
-	    FrLogin user = userOpt.get();
+		FrLogin user = userOpt.get();
 
-	    // ✅ Verify old password
-	    if (!byCrypt.matches(oldPassword, user.getPassword())) {
-	        return new GenericResponse<>("Invalid old password.", false, null);
-	    }
+		// ✅ Verify old password
+		if (!byCrypt.matches(oldPassword, user.getPassword())) {
+			return new GenericResponse<>("Invalid old password.", false, null);
+		}
 
-	    // ✅ Encode and update new password
-	    String encodedNewPassword = byCrypt.encode(newPassword);
-	    user.setPassword(encodedNewPassword);
-	    user.setUpdatedDate(LocalDateTime.now());
-	    frLoginRepo.save(user);
+		// ✅ Encode and update new password
+		String encodedNewPassword = byCrypt.encode(newPassword);
+		user.setPassword(encodedNewPassword);
+		user.setUpdatedDate(LocalDateTime.now());
+		frLoginRepo.save(user);
 
-	    // ✅ Also update password in FrReg (keep consistency)
-	    Optional<FrReg> frRegOpt = frRegRepo.findByFrUserId(user.getFrUserid());
-	    if (frRegOpt.isPresent()) {
-	        FrReg reg = frRegOpt.get();
-	        reg.setPassword(encodedNewPassword);
-	        reg.setUpdatedDate(LocalDateTime.now());
-	        frRegRepo.save(reg);
-	    }
+		// ✅ Also update password in FrReg (keep consistency)
+		Optional<FrReg> frRegOpt = frRegRepo.findByFrUserId(user.getFrUserid());
+		if (frRegOpt.isPresent()) {
+			FrReg reg = frRegOpt.get();
+			reg.setPassword(encodedNewPassword);
+			reg.setUpdatedDate(LocalDateTime.now());
+			frRegRepo.save(reg);
+		}
 
-	    return new GenericResponse<>("Password changed successfully.", true, null);
+		return new GenericResponse<>("Password changed successfully.", true, null);
 	}
+
+	@Override
+	public ResponseFrRegistrationDto getFrReg(
+	        String frUserId,
+	        String frEmail,
+	        String frMobile,
+	        String frLinkedInProfile,
+	        String regSource,
+	        String userType,
+	        String country,
+	        String category,
+	        String subCategory,
+	        int page,
+	        int size) {
+
+	    // Fetch all records
+	    List<FrReg> allRecords = frRegRepo.findAll();
+
+	    // Apply filters dynamically
+	    List<FrReg> filtered = allRecords.stream()
+	            .filter(r -> frUserId == null || r.getFrUserId().equals(frUserId))
+	            .filter(r -> frEmail == null || r.getFrEmail().equals(frEmail))
+	            .filter(r -> frMobile == null || r.getFrMobile().equals(frMobile))
+	            .filter(r -> frLinkedInProfile == null || (r.getFrLinkedInProfile() != null &&
+	                    r.getFrLinkedInProfile().equals(frLinkedInProfile)))
+	            .filter(r -> regSource == null || r.getRegSource().name().equals(regSource))
+	            .filter(r -> userType == null || r.getUserType().name().equals(userType))
+	            .filter(r -> category == null || (r.getCategory() != null &&
+                r.getCategory().equals(category)))
+	            .filter(r -> subCategory == null || (r.getSubCategory() != null &&
+                r.getSubCategory().equals(subCategory)))
+	            .filter(r -> country == null || (r.getCountry() != null &&
+                r.getCountry().equals(country)))
+	            .toList();
+
+	    // Pagination
+	    int totalElements = filtered.size();
+	    int totalPages = (int) Math.ceil((double) totalElements / size);
+	    int fromIndex = Math.min(page * size, totalElements);
+	    int toIndex = Math.min(fromIndex + size, totalElements);
+
+	    List<FrRegistrationResponseDto> pagedList = filtered.subList(fromIndex, toIndex).stream()
+	            .map(r -> FrRegistrationResponseDto.builder()
+	                    .frUserId(r.getFrUserId())
+	                    .frEmail(r.getFrEmail())
+	                    .frMobile(r.getFrMobile())
+	                    .frLinkedInProfile(r.getFrLinkedInProfile())
+	                    .regSource(r.getRegSource().name())
+	                    .userType(r.getUserType().name())
+	                    .country(r.getCountry())
+	                    .category(r.getCategory())
+	                    .subCategory(r.getSubCategory())
+	                    .build())
+	            .toList();
+
+	    // Build response
+	    ResponseFrRegistrationDto response = new ResponseFrRegistrationDto();
+	    response.setMessage("Profile fetched successfully");
+	    response.setStatus(true);
+	    response.setFrReg(pagedList);
+	    response.setCurrentPage(page);
+	    response.setPageSize(size);
+	    response.setTotalElements(totalElements);
+	    response.setTotalPages(totalPages);
+
+	    return response;
+	}
+
 
 }

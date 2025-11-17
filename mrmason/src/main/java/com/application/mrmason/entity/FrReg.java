@@ -70,6 +70,15 @@ public class FrReg implements UserDetails {
     @Enumerated(EnumType.STRING)
     @Column(name = "user_type")
     private UserType userType;
+    
+    @Column(name = "country")
+    private String country;
+    
+    @Column(name = "category")
+    private String category;
+    
+    @Column(name = "subCategory")
+    private String subCategory;
 
     @PrePersist
     private void prePersist() {

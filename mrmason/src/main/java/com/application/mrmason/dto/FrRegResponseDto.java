@@ -24,4 +24,7 @@ public class FrRegResponseDto {
 	private UserType userType;
 	private String status;
 	private String updatedDate;
+    private String country;
+    private String category;
+    private String subCategory;
 }

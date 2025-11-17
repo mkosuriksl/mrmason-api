@@ -25,6 +25,7 @@ import com.application.mrmason.dto.ServiceRequestPaintQuotationWrapper;
 import com.application.mrmason.entity.ServiceRequestHeaderAllQuotation;
 import com.application.mrmason.entity.ServiceRequestPaintQuotation;
 import com.application.mrmason.enums.RegSource;
+import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.service.ServiceRequestPaintQuotationService;
 
 @RestController
@@ -157,20 +158,40 @@ public class ServiceRequestPaintQuotationController {
 
 	@PutMapping("/header-status")
 	public ResponseEntity<?> updateServiceRequestHeaderAllQuotation(
-			@RequestBody HeaderQuotationStatusRequest header, @RequestParam RegSource regSource) {
-		try {
-			ServiceRequestHeaderAllQuotation updatedHeader = serviceRequestPaintQuotationService
-					.updateServiceRequestHeaderAllQuotation(header, regSource);
+	        @RequestBody HeaderQuotationStatusRequest header,
+	        @RequestParam RegSource regSource) {
 
-			if (updatedHeader != null) {
-				return ResponseEntity.ok(updatedHeader);
-			} else {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body("Quotation ID not found: " + header.getQuotationId());
-			}
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body("Error updating Service Request All Quotation: " + e.getMessage());
-		}
+	    try {
+	        // Service now returns Object (EC → History, others → Main)
+	        Object response = serviceRequestPaintQuotationService
+	                .updateServiceRequestHeaderAllQuotation(header, regSource);
+
+	        return ResponseEntity.ok(response);
+
+	    } catch (ResourceNotFoundException e) {
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body("Error updating Service Request All Quotation: " + e.getMessage());
+	    }
 	}
+
+//	public ResponseEntity<?> updateServiceRequestHeaderAllQuotation(
+//			@RequestBody HeaderQuotationStatusRequest header, @RequestParam RegSource regSource) {
+//		try {
+//			ServiceRequestHeaderAllQuotation updatedHeader = serviceRequestPaintQuotationService
+//					.updateServiceRequestHeaderAllQuotation(header, regSource);
+//
+//			if (updatedHeader != null) {
+//				return ResponseEntity.ok(updatedHeader);
+//			} else {
+//				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//						.body("Quotation ID not found: " + header.getQuotationId());
+//			}
+//		} catch (Exception e) {
+//			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//					.body("Error updating Service Request All Quotation: " + e.getMessage());
+//		}
+//	}
 }

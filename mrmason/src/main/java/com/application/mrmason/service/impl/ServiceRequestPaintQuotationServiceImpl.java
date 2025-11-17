@@ -649,9 +649,14 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 			throw new RuntimeException("Failed to generate PDF", e);
 		}
 	}
-	public ServiceRequestHeaderAllQuotation updateServiceRequestHeaderAllQuotation(
-	        HeaderQuotationStatusRequest header, RegSource regSource) {
+	@Override
+	public Object updateServiceRequestHeaderAllQuotation(
+	        HeaderQuotationStatusRequest header,
+	        RegSource regSource) {
 
+	    // ---------------------------
+	    // 1️⃣ Get Logged-In User Details
+	    // ---------------------------
 	    String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
 	    Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
 
@@ -660,25 +665,33 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 	            .map(role -> role.replace("ROLE_", ""))
 	            .collect(Collectors.toList());
 
-	    // ✅ Identify userType (Developer also allowed now)
 	    UserType userType = UserType.valueOf(roleNames.get(0));
 	    String userId;
 
-	    // ✅ Identify the logged-in user
+	    // ---------------------------
+	    // 2️⃣ Identify User ID
+	    // ---------------------------
 	    if (userType == UserType.EC) {
 	        CustomerRegistration customer = customerRegistrationRepo
 	                .findByUserEmailAndUserType(loggedInUserEmail, userType)
-	                .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + loggedInUserEmail));
+	                .orElseThrow(() ->
+	                        new ResourceNotFoundException("Customer not found: " + loggedInUserEmail));
+
 	        userId = customer.getUserid();
+
 	    } else {
 	        User user = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource)
-	                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
+	                .orElseThrow(() ->
+	                        new ResourceNotFoundException("User not found: " + loggedInUserEmail));
+
 	        userId = user.getBodSeqNo();
 	    }
 
-	    // ✅ Find existing quotation
-	    ServiceRequestHeaderAllQuotation existingHeader = serviceRequestHeaderAllQuotationRepo
-	            .findByQuotationId(header.getQuotationId());
+	    // ---------------------------
+	    // 3️⃣ Fetch Existing Quotation
+	    // ---------------------------
+	    ServiceRequestHeaderAllQuotation existingHeader =
+	            serviceRequestHeaderAllQuotationRepo.findByQuotationId(header.getQuotationId());
 
 	    if (existingHeader == null) {
 	        throw new ResourceNotFoundException("Quotation ID not found: " + header.getQuotationId());
@@ -686,86 +699,244 @@ public class ServiceRequestPaintQuotationServiceImpl implements ServiceRequestPa
 
 	    Date now = new Date();
 
-	    // ✅ Update rules by user type
+	    // ---------------------------
+	    // 4️⃣ Update Logic
+	    // ---------------------------
 	    if (userType == UserType.EC) {
-	        // EC users are allowed, but skip restricted fields
-	        log.info("Skipping status, updatedBy, and updatedDate update for End-Customer: {}", userId);
+
+	        // EC cannot update status or meta fields
+	        log.info("Skipping status, updatedBy, updatedDate update for EC: {}", userId);
+
 	    } else {
-	        // All other users (SP, CU, Developer, etc.) can update
+
+	        // Developer / SP / CU can update fully
 	        existingHeader.setStatus(header.getStatus());
 	        existingHeader.setUpdatedBy(userId);
 	        existingHeader.setUpdatedDate(now);
 	    }
 
-	    // ✅ Save main table record
-	    ServiceRequestHeaderAllQuotation saved = serviceRequestHeaderAllQuotationRepo.save(existingHeader);
+	    // ---------------------------
+	    // 5️⃣ Save Updated Main Record
+	    // ---------------------------
+	    ServiceRequestHeaderAllQuotation saved =
+	            serviceRequestHeaderAllQuotationRepo.save(existingHeader);
 
-	    // ✅ Insert record into history table (for all user types)
+	    // ---------------------------
+	    // 6️⃣ Insert Into History Table
+	    // ---------------------------
 	    ServiceRequestHeaderAllQuotationHistory history = ServiceRequestHeaderAllQuotationHistory.builder()
 	            .quotationId(saved.getQuotationId())
 	            .requestId(saved.getRequestId())
 	            .quotedDate(saved.getQuotedDate())
-	            .status(userType == UserType.EC ? header.getStatus() : header.getStatus()) // EC keeps old status
+	            .status(header.getStatus())
 	            .spId(saved.getSpId())
 	            .updatedBy(userId)
 	            .updatedDate(now)
 	            .userType(userType.name())
 	            .build();
 
-	    ServiceRequestHeaderAllQuotationHistory historySaved=serviceRequestHeaderAllQuotationHistoryRepo.save(history);
+	    ServiceRequestHeaderAllQuotationHistory historySaved =
+	            serviceRequestHeaderAllQuotationHistoryRepo.save(history);
 
-	    // ✅ Prepare email data
+	    // ---------------------------
+	    // 7️⃣ Prepare Email Content
+	    // ---------------------------
 	    String subject = "Service Request Quotation Updated Successfully";
-	    String body = "Dear User,<br><br>"
-	            + "The Service Request Quotation has been updated successfully.<br>"
-	            + "Quotation ID: <b>" + saved.getQuotationId() + "</b><br>"
-	            + "Status: <b>" + saved.getStatus() + "</b><br><br>"
-	            + "Regards,<br>Mr Mason Team";
+	    String body = "Dear User,<br><br>" +
+	            "The Service Request Quotation has been updated successfully.<br>" +
+	            "Quotation ID: <b>" + saved.getQuotationId() + "</b><br>" +
+	            "Status: <b>" + saved.getStatus() + "</b><br><br>" +
+	            "Regards,<br>Mr Mason Team";
 
-	    // ✅ Generate PDF once
+	    // ---------------------------
+	    // 8️⃣ Generate PDF
+	    // ---------------------------
 	    User servicePerson = userDAO.findByBodSeqNos(historySaved.getSpId())
-	            .orElseThrow(() -> new ResourceNotFoundException("Service Person not found for ID: " + saved.getSpId()));
+	            .orElseThrow(() ->
+	                    new ResourceNotFoundException("Service Person not found for ID: " + saved.getSpId()));
+
 	    byte[] pdf = generateSRHPdfFromHistory(historySaved, servicePerson);
 
-	    // ✅ Collect all recipients (to avoid duplicate emails)
+	    // ---------------------------
+	    // 9️⃣ Collect Email Recipients
+	    // ---------------------------
 	    Set<String> recipients = new HashSet<>();
 
-	    // 1️⃣ Service Person
+	    // Service Person
 	    recipients.add(servicePerson.getEmail());
 
-	    // 2️⃣ UpdatedBy (check both tables)
+	    // Updated By Email
 	    String updatedByEmail = null;
+
 	    if (saved.getUpdatedBy() != null) {
 	        Optional<User> updatedUserOpt = userDAO.findByBodSeqNos(saved.getUpdatedBy());
+
 	        if (updatedUserOpt.isPresent()) {
 	            updatedByEmail = updatedUserOpt.get().getEmail();
 	        } else {
 	            Optional<CustomerRegistration> updatedCustomerOpt =
 	                    customerRegistrationRepo.findByUserids(saved.getUpdatedBy());
+
 	            if (updatedCustomerOpt.isPresent()) {
 	                updatedByEmail = updatedCustomerOpt.get().getUserEmail();
 	            }
 	        }
 	    }
+
 	    if (updatedByEmail != null && !updatedByEmail.isEmpty()) {
 	        recipients.add(updatedByEmail);
 	    }
 
-	    // 3️⃣ Optionally send to logged-in EC (if EC triggered update)
+	    // Send also to logged-in EC
 	    if (userType == UserType.EC) {
 	        recipients.add(loggedInUserEmail);
 	    }
 
-	    // ✅ Send emails
+	    // ---------------------------
+	    // 🔟 Send Emails
+	    // ---------------------------
 	    for (String recipient : recipients) {
 	        try {
-	            emailService.sendEmailWithAttachment(recipient, subject, body, pdf, "UpdatedQuotation.pdf");
-	            log.info("📧 Email sent successfully to {}", recipient);
+	            emailService.sendEmailWithAttachment(
+	                    recipient, subject, body, pdf, "UpdatedQuotation.pdf"
+	            );
+	            log.info("Email sent successfully to {}", recipient);
+
 	        } catch (Exception e) {
-	            log.error("❌ Failed to send email to {}: {}", recipient, e.getMessage());
+	            log.error("Failed to send email to {} -> {}", recipient, e.getMessage());
 	        }
 	    }
 
+	    // ---------------------------
+	    // 1️⃣1️⃣ Return Response Based on Role
+	    // ---------------------------
+	    if (userType == UserType.EC) {
+
+	        // Return EC-only table response
+	        return historySaved;
+	    }
+
+	    // Return full main table for Developer / SP / CU
 	    return saved;
 	}
+
+//	public ServiceRequestHeaderAllQuotation updateServiceRequestHeaderAllQuotation(
+//	        HeaderQuotationStatusRequest header, RegSource regSource) {
+//
+//	    String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
+//	    Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
+//
+//	    List<String> roleNames = loggedInRole.stream()
+//	            .map(GrantedAuthority::getAuthority)
+//	            .map(role -> role.replace("ROLE_", ""))
+//	            .collect(Collectors.toList());
+//
+//	    // ✅ Identify userType (Developer also allowed now)
+//	    UserType userType = UserType.valueOf(roleNames.get(0));
+//	    String userId;
+//
+//	    // ✅ Identify the logged-in user
+//	    if (userType == UserType.EC) {
+//	        CustomerRegistration customer = customerRegistrationRepo
+//	                .findByUserEmailAndUserType(loggedInUserEmail, userType)
+//	                .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + loggedInUserEmail));
+//	        userId = customer.getUserid();
+//	    } else {
+//	        User user = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource)
+//	                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
+//	        userId = user.getBodSeqNo();
+//	    }
+//
+//	    // ✅ Find existing quotation
+//	    ServiceRequestHeaderAllQuotation existingHeader = serviceRequestHeaderAllQuotationRepo
+//	            .findByQuotationId(header.getQuotationId());
+//
+//	    if (existingHeader == null) {
+//	        throw new ResourceNotFoundException("Quotation ID not found: " + header.getQuotationId());
+//	    }
+//
+//	    Date now = new Date();
+//
+//	    // ✅ Update rules by user type
+//	    if (userType == UserType.EC) {
+//	        // EC users are allowed, but skip restricted fields
+//	        log.info("Skipping status, updatedBy, and updatedDate update for End-Customer: {}", userId);
+//	    } else {
+//	        // All other users (SP, CU, Developer, etc.) can update
+//	        existingHeader.setStatus(header.getStatus());
+//	        existingHeader.setUpdatedBy(userId);
+//	        existingHeader.setUpdatedDate(now);
+//	    }
+//
+//	    // ✅ Save main table record
+//	    ServiceRequestHeaderAllQuotation saved = serviceRequestHeaderAllQuotationRepo.save(existingHeader);
+//
+//	    // ✅ Insert record into history table (for all user types)
+//	    ServiceRequestHeaderAllQuotationHistory history = ServiceRequestHeaderAllQuotationHistory.builder()
+//	            .quotationId(saved.getQuotationId())
+//	            .requestId(saved.getRequestId())
+//	            .quotedDate(saved.getQuotedDate())
+//	            .status(userType == UserType.EC ? header.getStatus() : header.getStatus()) // EC keeps old status
+//	            .spId(saved.getSpId())
+//	            .updatedBy(userId)
+//	            .updatedDate(now)
+//	            .userType(userType.name())
+//	            .build();
+//
+//	    ServiceRequestHeaderAllQuotationHistory historySaved=serviceRequestHeaderAllQuotationHistoryRepo.save(history);
+//
+//	    // ✅ Prepare email data
+//	    String subject = "Service Request Quotation Updated Successfully";
+//	    String body = "Dear User,<br><br>"
+//	            + "The Service Request Quotation has been updated successfully.<br>"
+//	            + "Quotation ID: <b>" + saved.getQuotationId() + "</b><br>"
+//	            + "Status: <b>" + saved.getStatus() + "</b><br><br>"
+//	            + "Regards,<br>Mr Mason Team";
+//
+//	    // ✅ Generate PDF once
+//	    User servicePerson = userDAO.findByBodSeqNos(historySaved.getSpId())
+//	            .orElseThrow(() -> new ResourceNotFoundException("Service Person not found for ID: " + saved.getSpId()));
+//	    byte[] pdf = generateSRHPdfFromHistory(historySaved, servicePerson);
+//
+//	    // ✅ Collect all recipients (to avoid duplicate emails)
+//	    Set<String> recipients = new HashSet<>();
+//
+//	    // 1️⃣ Service Person
+//	    recipients.add(servicePerson.getEmail());
+//
+//	    // 2️⃣ UpdatedBy (check both tables)
+//	    String updatedByEmail = null;
+//	    if (saved.getUpdatedBy() != null) {
+//	        Optional<User> updatedUserOpt = userDAO.findByBodSeqNos(saved.getUpdatedBy());
+//	        if (updatedUserOpt.isPresent()) {
+//	            updatedByEmail = updatedUserOpt.get().getEmail();
+//	        } else {
+//	            Optional<CustomerRegistration> updatedCustomerOpt =
+//	                    customerRegistrationRepo.findByUserids(saved.getUpdatedBy());
+//	            if (updatedCustomerOpt.isPresent()) {
+//	                updatedByEmail = updatedCustomerOpt.get().getUserEmail();
+//	            }
+//	        }
+//	    }
+//	    if (updatedByEmail != null && !updatedByEmail.isEmpty()) {
+//	        recipients.add(updatedByEmail);
+//	    }
+//
+//	    // 3️⃣ Optionally send to logged-in EC (if EC triggered update)
+//	    if (userType == UserType.EC) {
+//	        recipients.add(loggedInUserEmail);
+//	    }
+//
+//	    // ✅ Send emails
+//	    for (String recipient : recipients) {
+//	        try {
+//	            emailService.sendEmailWithAttachment(recipient, subject, body, pdf, "UpdatedQuotation.pdf");
+//	            log.info("📧 Email sent successfully to {}", recipient);
+//	        } catch (Exception e) {
+//	            log.error("❌ Failed to send email to {}: {}", recipient, e.getMessage());
+//	        }
+//	    }
+//
+//	    return saved;
+//	}
 }

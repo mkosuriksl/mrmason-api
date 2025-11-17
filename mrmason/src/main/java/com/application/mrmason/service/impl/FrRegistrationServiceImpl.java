@@ -97,53 +97,121 @@ public class FrRegistrationServiceImpl implements FrRegistrationService {
 
 	@Override
 	public GenericResponse<Void> sendOtp(OtpDto dto) {
-		int otp = (int) (Math.random() * 900000) + 100000;
-		String otpStr = String.valueOf(otp);
 
-		FrUserOtp frUserOtp;
+	    int otp = (int) (Math.random() * 900000) + 100000;
+	    String otpStr = String.valueOf(otp);
 
-		// ✅ Case 1: Email
-		if (dto.getEmailOrMobile().contains("@")) {
-			Optional<FrUserOtp> existing = otpRepo.findByFrEmailAndRegSource(dto.getEmailOrMobile(),
-					dto.getRegSource());
-			if (existing.isPresent()) {
-				frUserOtp = existing.get();
-				frUserOtp.setFrEmailOtp(otpStr);
-			} else {
-				frUserOtp = FrUserOtp.builder().frEmail(dto.getEmailOrMobile()).frEmailOtp(otpStr)
-						.regSource(dto.getRegSource()).updatedDate(LocalDateTime.now()).build();
-			}
-		}
-		// ✅ Case 2: Mobile
-		else {
-			Optional<FrUserOtp> existing = otpRepo.findByFrMobileAndRegSource(dto.getEmailOrMobile(),
-					dto.getRegSource());
-			if (existing.isPresent()) {
-				frUserOtp = existing.get();
-				frUserOtp.setFrMobileOtp(otpStr);
-			} else {
-				frUserOtp = FrUserOtp.builder().frMobile(dto.getEmailOrMobile()).frMobileOtp(otpStr)
-						.regSource(dto.getRegSource()).updatedDate(LocalDateTime.now()).build();
-			}
-		}
+	    FrUserOtp frUserOtp;
 
-		frUserOtp.setUpdatedDate(LocalDateTime.now());
-		otpRepo.save(frUserOtp);
+	    boolean isEmail = dto.getEmailOrMobile().contains("@");
 
-		// ✅ Send OTP
-		boolean sent = false;
-		if (dto.getEmailOrMobile().contains("@")) {
-			emailService.sendEmail(dto.getEmailOrMobile(), otpStr, dto.getRegSource());
-			sent = true;
-		} else {
-			boolean smsSent = smsService.sendSMSMessage(dto.getEmailOrMobile(), otpStr, dto.getRegSource());
-			if (smsSent)
-				sent = true;
-		}
+	    // Fetch existing user OTP record based on email or mobile
+	    Optional<FrUserOtp> existing = isEmail 
+	        ? otpRepo.findByFrEmailAndRegSource(dto.getEmailOrMobile(), dto.getRegSource())
+	        : otpRepo.findByFrMobileAndRegSource(dto.getEmailOrMobile(), dto.getRegSource());
 
-		return sent ? new GenericResponse<>("OTP sent successfully", true, null)
-				: new GenericResponse<>("Failed to send OTP. Please try again.", false, null);
+	    // -------------------------------
+	    // ❌ Block if already verified
+	    // -------------------------------
+	    if (existing.isPresent()) {
+
+	        FrUserOtp existingOtp = existing.get();
+
+	        if (isEmail && "yes".equalsIgnoreCase(existingOtp.getEmailVerified())) {
+	            return new GenericResponse<>("Email already verified. OTP cannot be sent again.", false, null);
+	        }
+
+	        if (!isEmail && "yes".equalsIgnoreCase(existingOtp.getMobileVerified())) {
+	            return new GenericResponse<>("Mobile number already verified. OTP cannot be sent again.", false, null);
+	        }
+	    }
+	    // -------------------------------
+
+	    // Create or update OTP
+	    if (existing.isPresent()) {
+	        frUserOtp = existing.get();
+	        if (isEmail) frUserOtp.setFrEmailOtp(otpStr);
+	        else frUserOtp.setFrMobileOtp(otpStr);
+	    } else {
+	        frUserOtp = FrUserOtp.builder()
+	                .regSource(dto.getRegSource())
+	                .updatedDate(LocalDateTime.now())
+	                .build();
+
+	        if (isEmail) frUserOtp.setFrEmail(dto.getEmailOrMobile());
+	        else frUserOtp.setFrMobile(dto.getEmailOrMobile());
+
+	        // Initial verified flags
+	        frUserOtp.setEmailVerified("no");
+	        frUserOtp.setMobileVerified("no");
+	    }
+
+	    frUserOtp.setUpdatedDate(LocalDateTime.now());
+	    otpRepo.save(frUserOtp);
+
+	    // Send OTP
+	    boolean sent = false;
+
+	    if (isEmail) {
+	        emailService.sendEmail(dto.getEmailOrMobile(), otpStr, dto.getRegSource());
+	        sent = true;
+	    } else {
+	        sent = smsService.sendSMSMessage(dto.getEmailOrMobile(), otpStr, dto.getRegSource());
+	    }
+
+	    return sent
+	            ? new GenericResponse<>("OTP sent successfully", true, null)
+	            : new GenericResponse<>("Failed to send OTP. Please try again.", false, null);
 	}
+
+//	public GenericResponse<Void> sendOtp(OtpDto dto) {
+//		int otp = (int) (Math.random() * 900000) + 100000;
+//		String otpStr = String.valueOf(otp);
+//
+//		FrUserOtp frUserOtp;
+//
+//		// ✅ Case 1: Email
+//		if (dto.getEmailOrMobile().contains("@")) {
+//			Optional<FrUserOtp> existing = otpRepo.findByFrEmailAndRegSource(dto.getEmailOrMobile(),
+//					dto.getRegSource());
+//			if (existing.isPresent()) {
+//				frUserOtp = existing.get();
+//				frUserOtp.setFrEmailOtp(otpStr);
+//			} else {
+//				frUserOtp = FrUserOtp.builder().frEmail(dto.getEmailOrMobile()).frEmailOtp(otpStr)
+//						.regSource(dto.getRegSource()).updatedDate(LocalDateTime.now()).build();
+//			}
+//		}
+//		// ✅ Case 2: Mobile
+//		else {
+//			Optional<FrUserOtp> existing = otpRepo.findByFrMobileAndRegSource(dto.getEmailOrMobile(),
+//					dto.getRegSource());
+//			if (existing.isPresent()) {
+//				frUserOtp = existing.get();
+//				frUserOtp.setFrMobileOtp(otpStr);
+//			} else {
+//				frUserOtp = FrUserOtp.builder().frMobile(dto.getEmailOrMobile()).frMobileOtp(otpStr)
+//						.regSource(dto.getRegSource()).updatedDate(LocalDateTime.now()).build();
+//			}
+//		}
+//
+//		frUserOtp.setUpdatedDate(LocalDateTime.now());
+//		otpRepo.save(frUserOtp);
+//
+//		// ✅ Send OTP
+//		boolean sent = false;
+//		if (dto.getEmailOrMobile().contains("@")) {
+//			emailService.sendEmail(dto.getEmailOrMobile(), otpStr, dto.getRegSource());
+//			sent = true;
+//		} else {
+//			boolean smsSent = smsService.sendSMSMessage(dto.getEmailOrMobile(), otpStr, dto.getRegSource());
+//			if (smsSent)
+//				sent = true;
+//		}
+//
+//		return sent ? new GenericResponse<>("OTP sent successfully", true, null)
+//				: new GenericResponse<>("Failed to send OTP. Please try again.", false, null);
+//	}
 
 	@Override
 	public GenericResponse<String> verifyOtp(OtpDto dto) {

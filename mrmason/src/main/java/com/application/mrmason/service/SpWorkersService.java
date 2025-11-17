@@ -15,5 +15,5 @@ public interface SpWorkersService {
     SpWorkersDto getDetails(String phno,String email);
     public SpWorkers getWorkerById(String workerId);
 	public List<SpWorkers> getWorkersWithoutPagination(
-	        String spId, String workerId, String phno, String location, String workerAvail);
+	        String spId, String workerId, String phno, String location, String workerAvail,String workerName);
 }

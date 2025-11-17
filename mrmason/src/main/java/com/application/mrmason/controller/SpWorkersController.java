@@ -129,10 +129,11 @@ public class SpWorkersController {
 	        @RequestParam(required = false) String workerId,
 	        @RequestParam(required = false) String phno,
 	        @RequestParam(required = false) String location,
-	        @RequestParam(required = false) String workerAvail) {
+	        @RequestParam(required = false) String workerAvail,
+	        @RequestParam(required = false) String workerName) {
 
 	    List<SpWorkers> workersList = service.getWorkersWithoutPagination(
-	            spId, workerId, phno, location, workerAvail);
+	            spId, workerId, phno, location, workerAvail,workerName);
 
 	    WorkerListResponseDto response = new WorkerListResponseDto();
 	    response.setMessage("Worker details retrieved successfully.");

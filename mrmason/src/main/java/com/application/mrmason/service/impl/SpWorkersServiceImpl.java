@@ -184,7 +184,7 @@ public class SpWorkersServiceImpl implements SpWorkersService {
 
 	@Override
 	public List<SpWorkers> getWorkersWithoutPagination(
-	        String spId, String workerId, String phno, String location, String workerAvail) {
+	        String spId, String workerId, String phno, String location, String workerAvail,String workerName) {
 
 	    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 	    CriteriaQuery<SpWorkers> query = cb.createQuery(SpWorkers.class);
@@ -206,7 +206,9 @@ public class SpWorkersServiceImpl implements SpWorkersService {
 	    if (workerAvail != null && !workerAvail.trim().isEmpty()) {
 	        predicates.add(cb.equal(root.get("workerAvail"), workerAvail));
 	    }
-
+	    if (workerName != null && !workerName.trim().isEmpty()) {
+	        predicates.add(cb.like(cb.lower(root.get("workerName")), workerName.toLowerCase() + "%"));
+	    }
 	    query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
 	    return entityManager.createQuery(query).getResultList();
 	}

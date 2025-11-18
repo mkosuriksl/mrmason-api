@@ -1,11 +1,12 @@
 package com.application.mrmason.service.impl;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,17 +14,24 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
-import com.application.mrmason.entity.CustomerAssets;
 import com.application.mrmason.entity.CustomerRegistration;
 import com.application.mrmason.entity.ServiceRequest;
 import com.application.mrmason.entity.ServiceStatusUpate;
+import com.application.mrmason.entity.User;
+import com.application.mrmason.entity.UserType;
+import com.application.mrmason.entity.WalkInServiceRequest;
 import com.application.mrmason.enums.RegSource;
+import com.application.mrmason.exceptions.ResourceNotFoundException;
 import com.application.mrmason.repository.CustomerAssetsRepo;
 import com.application.mrmason.repository.CustomerRegistrationRepo;
 import com.application.mrmason.repository.ServiceRequestRepo;
 import com.application.mrmason.repository.ServiceStatusUpateRepo;
+import com.application.mrmason.repository.UserDAO;
+import com.application.mrmason.repository.WalkInServiceRequestRepo;
+import com.application.mrmason.security.AuthDetailsProvider;
 import com.application.mrmason.service.ServiceRequestService;
 
 import jakarta.persistence.EntityManager;
@@ -56,19 +64,74 @@ public class ServiceRequestServiceImpl implements ServiceRequestService {
 	@Autowired
 	private JavaMailSender mailsender;
 
+	@Autowired
+	private WalkInServiceRequestRepo walkInServiceRequestRepo;
+
+	@Autowired
+	private CustomerRegistrationRepo customerRegistrationRepo;
+
+	@Autowired
+	UserDAO userDAO;
+
 	@Override
-	public ServiceRequest addRequest(ServiceRequest requestData) {
-		Optional<CustomerAssets> serviceRequestData = assetRepo.findByUserIdAndAssetId(requestData.getRequestedBy(),
-				requestData.getAssetId());
-		if (serviceRequestData.isPresent()) {
-			ServiceRequest service = requestRepo.save(requestData);
-			statusUpdate.setServiceRequestId(service.getRequestId());
-			statusUpdate.setUpdatedBy(service.getRequestedBy());
-			statusRepo.save(statusUpdate);
-			return service;
+	public Object addRequest(ServiceRequest requestData, RegSource regSource) {
+
+		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
+		Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
+
+		List<String> roleNames = loggedInRole.stream().map(GrantedAuthority::getAuthority)
+				.map(role -> role.replace("ROLE_", "")).collect(Collectors.toList());
+
+		UserType userType = UserType.valueOf(roleNames.get(0));
+		String userId;
+		Date now = new Date();
+
+		if (userType == UserType.EC) {
+			CustomerRegistration customer = customerRegistrationRepo
+					.findByUserEmailAndUserType(loggedInUserEmail, userType)
+					.orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + loggedInUserEmail));
+
+			userId = customer.getUserid();
+
+			ServiceRequest serviceRequest = ServiceRequest.builder()
+					.serviceSubCategory(requestData.getServiceSubCategory()).serviceName(requestData.getServiceName())
+					.requestedBy(requestData.getRequestedBy()).location(requestData.getLocation())
+					.description(requestData.getDescription()).assetId(requestData.getAssetId()).bookedBy(userId)
+					.build();
+			ServiceRequest saved = requestRepo.save(serviceRequest);
+			return saved;
+		} else if (userType == UserType.Developer) {
+			// Store in duplicate table
+			User user = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource)
+					.orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
+
+			userId = user.getBodSeqNo();
+			WalkInServiceRequest walkinserviceRequest = WalkInServiceRequest.builder()
+					.serviceSubCategory(requestData.getServiceSubCategory()).serviceName(requestData.getServiceName())
+					.requestedBy(requestData.getRequestedBy()).location(requestData.getLocation())
+					.description(requestData.getDescription()).assetId(requestData.getAssetId())
+					.bookedBy(user.getBodSeqNo()).status(requestData.getStatus())
+					.requestedMode("NEW").build();
+
+			WalkInServiceRequest saved = walkInServiceRequestRepo.save(walkinserviceRequest);
+			return saved;
 		}
-		return null;
+
+		throw new RuntimeException("Unsupported user type for adding request: " + userType);
 	}
+
+//	public ServiceRequest addRequest(ServiceRequest requestData) {
+//		Optional<CustomerAssets> serviceRequestData = assetRepo.findByUserIdAndAssetId(requestData.getRequestedBy(),
+//				requestData.getAssetId());
+//		if (serviceRequestData.isPresent()) {
+//			ServiceRequest service = requestRepo.save(requestData);
+//			statusUpdate.setServiceRequestId(service.getRequestId());
+//			statusUpdate.setUpdatedBy(service.getRequestedBy());
+//			statusRepo.save(statusUpdate);
+//			return service;
+//		}
+//		return null;
+//	}
 
 	@Override
 	public Page<ServiceRequest> getServiceReq(String userId, String assetId, String location, String serviceSubCategory,

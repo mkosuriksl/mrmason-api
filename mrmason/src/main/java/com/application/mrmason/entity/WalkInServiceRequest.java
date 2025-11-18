@@ -23,8 +23,8 @@ import lombok.Setter;
 @AllArgsConstructor
 @Entity
 @Builder
-@Table(name = "service_request_details")
-public class ServiceRequest {
+@Table(name = "walk_in_service_request")
+public class WalkInServiceRequest {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "req_seq_id")
@@ -52,14 +52,9 @@ public class ServiceRequest {
 	@Column(name = "description") // Corrected the column name
 	private String description;
 	
-	
-
 	@Builder.Default
 	@Column(name = "status")
 	private String status = "NEW";
-
-//    @Transient
-//    private LocalDate serviceDate;
 
 	@Column(name = "service_date")
 	private String serviceDateDb;
@@ -69,6 +64,9 @@ public class ServiceRequest {
 	
 	@Column(name = "booked_by")
 	private String bookedBy;
+	
+	@Column(name = "requested_mode")
+	private String requestedMode="WALK-IN";
 
 	@PrePersist
 	private void prePersist() {

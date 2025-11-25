@@ -82,91 +82,89 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 
 	@Autowired
 	private MaterialSupplierQuotationUserDAO materialSupplierQuotationUserDAO;
-	
+
 	@Autowired
 	private MaterialMasterRepository materialMasterRepository;
-	
+
 	@Autowired
 	private UploadAdminMaterialMasterRepository uploadAdminMaterialMasterRepository;
 
 	@Override
 	public List<MaterialGroupDTO> createAdminMaterialMaster(List<MaterialGroupDTO> requestGroups, RegSource regSource)
-	        throws AccessDeniedException {
+			throws AccessDeniedException {
 
-	    UserInfo userInfo = getLoggedInUserInfo(regSource);
+		UserInfo userInfo = getLoggedInUserInfo(regSource);
 
-	    List<AdminMaterialMaster> adminEntitiesToSave = new ArrayList<>();
-	    List<MaterialMaster> materialEntitiesToSave = new ArrayList<>();
+		List<AdminMaterialMaster> adminEntitiesToSave = new ArrayList<>();
+		List<MaterialMaster> materialEntitiesToSave = new ArrayList<>();
 
-	    for (MaterialGroupDTO group : requestGroups) {
-	        for (MaterialDTO m : group.getMaterials()) {
+		for (MaterialGroupDTO group : requestGroups) {
+			for (MaterialDTO m : group.getMaterials()) {
 
-	            // Generate SKU base (short version)
-	            String shortSku = group.getMaterialCategory() + "_"
-	                    + group.getMaterialSubCategory() + "_"
-	                    + group.getBrand() + "_"
-	                    + m.getSkuId();
+				// Generate SKU base (short version)
+				String shortSku = group.getMaterialCategory() + "_" + group.getMaterialSubCategory() + "_"
+						+ group.getBrand() + "_" + m.getSkuId();
 
-	            // Full SKU for AdminMaterialMaster
-	            String fullSku = userInfo.userId + "_" + shortSku;
+				// Full SKU for AdminMaterialMaster
+				String fullSku = userInfo.userId + "_" + shortSku;
 
-	            // Check duplicate in admin_material_master
-	            boolean exists = materialMasterRepository.existsByMsCatmsSubCatmsBrandSkuId(shortSku);
-	            if (exists) {
-	                // Skip duplicate SKU
-	                continue;
-	            }
+				// Check duplicate in admin_material_master
+				boolean exists = materialMasterRepository.existsByMsCatmsSubCatmsBrandSkuId(shortSku);
+				if (exists) {
+					// Skip duplicate SKU
+					continue;
+				}
 
-	            // --- Create AdminMaterialMaster entity ---
-	            AdminMaterialMaster adminEntity = new AdminMaterialMaster();
-	            adminEntity.setSkuId(fullSku);
-	            adminEntity.setMaterialCategory(group.getMaterialCategory());
-	            adminEntity.setMaterialSubCategory(group.getMaterialSubCategory());
-	            adminEntity.setBrand(group.getBrand());
-	            adminEntity.setModelNo(m.getModelNo());
-	            adminEntity.setModelName(m.getModelName());
-	            adminEntity.setShape(m.getShape());
-	            adminEntity.setWidth(m.getWidth());
-	            adminEntity.setLength(m.getLength());
-	            adminEntity.setSize(m.getSize());
-	            adminEntity.setThickness(m.getThickness());
-	            adminEntity.setUpdatedBy(userInfo.userId);
-	            adminEntity.setUpdatedDate(new Date());
-	            adminEntity.setStatus("Active");
-	            adminEntitiesToSave.add(adminEntity);
+				// --- Create AdminMaterialMaster entity ---
+				AdminMaterialMaster adminEntity = new AdminMaterialMaster();
+				adminEntity.setSkuId(fullSku);
+				adminEntity.setMaterialCategory(group.getMaterialCategory());
+				adminEntity.setMaterialSubCategory(group.getMaterialSubCategory());
+				adminEntity.setBrand(group.getBrand());
+				adminEntity.setModelNo(m.getModelNo());
+				adminEntity.setModelName(m.getModelName());
+				adminEntity.setShape(m.getShape());
+				adminEntity.setWidth(m.getWidth());
+				adminEntity.setLength(m.getLength());
+				adminEntity.setSize(m.getSize());
+				adminEntity.setThickness(m.getThickness());
+				adminEntity.setUpdatedBy(userInfo.userId);
+				adminEntity.setUpdatedDate(new Date());
+				adminEntity.setStatus("Active");
+				adminEntitiesToSave.add(adminEntity);
 
-	            // --- Create MaterialMaster entity (shorter SKU version) ---
-	            MaterialMaster materialEntity = new MaterialMaster();
-	            materialEntity.setMsCatmsSubCatmsBrandSkuId(shortSku); // short SKU only
-	            materialEntity.setMaterialCategory(group.getMaterialCategory());
-	            materialEntity.setMaterialSubCategory(group.getMaterialSubCategory());
-	            materialEntity.setBrand(group.getBrand());
-	            materialEntity.setSku( m.getSkuId());
-	            materialEntity.setModelNo(m.getModelNo());
-	            materialEntity.setModelName(m.getModelName());
-	            materialEntity.setUpdatedBy(userInfo.userId);
-	            materialEntity.setSize(m.getSize());
-	            materialEntity.setShape(m.getShape());
-	            materialEntity.setWidth(m.getWidth());
-	            materialEntity.setLength(m.getLength());
-	            materialEntity.setThickness(m.getThickness());
-	            materialEntity.setUpdatedDate(LocalDateTime.now());
-	            
-	            materialEntity.setUserId(userInfo.userId);
-	            materialEntitiesToSave.add(materialEntity);
-	        }
-	    }
+				// --- Create MaterialMaster entity (shorter SKU version) ---
+				MaterialMaster materialEntity = new MaterialMaster();
+				materialEntity.setMsCatmsSubCatmsBrandSkuId(shortSku); // short SKU only
+				materialEntity.setMaterialCategory(group.getMaterialCategory());
+				materialEntity.setMaterialSubCategory(group.getMaterialSubCategory());
+				materialEntity.setBrand(group.getBrand());
+				materialEntity.setSku(m.getSkuId());
+				materialEntity.setModelNo(m.getModelNo());
+				materialEntity.setModelName(m.getModelName());
+				materialEntity.setUpdatedBy(userInfo.userId);
+				materialEntity.setSize(m.getSize());
+				materialEntity.setShape(m.getShape());
+				materialEntity.setWidth(m.getWidth());
+				materialEntity.setLength(m.getLength());
+				materialEntity.setThickness(m.getThickness());
+				materialEntity.setUpdatedDate(LocalDateTime.now());
 
-	    // Save in both tables
-	    if (!adminEntitiesToSave.isEmpty()) {
-	        adminMaterialMasterRepository.saveAll(adminEntitiesToSave);
-	    }
+				materialEntity.setUserId(userInfo.userId);
+				materialEntitiesToSave.add(materialEntity);
+			}
+		}
 
-	    if (!materialEntitiesToSave.isEmpty()) {
-	        materialMasterRepository.saveAll(materialEntitiesToSave);
-	    }
+		// Save in both tables
+		if (!adminEntitiesToSave.isEmpty()) {
+			adminMaterialMasterRepository.saveAll(adminEntitiesToSave);
+		}
 
-	    return requestGroups;
+		if (!materialEntitiesToSave.isEmpty()) {
+			materialMasterRepository.saveAll(materialEntitiesToSave);
+		}
+
+		return requestGroups;
 	}
 
 //	public List<MaterialGroupDTO> createAdminMaterialMaster(List<MaterialGroupDTO> requestGroups, RegSource regSource)
@@ -341,21 +339,21 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 
 		// ✅ Merge material + images
 		List<AdminMaterialMasterResponseWithImageDto> mergedList = materials.stream().map(mat -> {
-		    AdminMaterialMasterResponseWithImageDto dto = new AdminMaterialMasterResponseWithImageDto();
-		    BeanUtils.copyProperties(mat, dto);
+			AdminMaterialMasterResponseWithImageDto dto = new AdminMaterialMasterResponseWithImageDto();
+			BeanUtils.copyProperties(mat, dto);
 
-		    // 👇 Fix skuId null issue
-		    dto.setSkuId(mat.getMsCatmsSubCatmsBrandSkuId());
+			// 👇 Fix skuId null issue
+			dto.setSkuId(mat.getMsCatmsSubCatmsBrandSkuId());
 
-		    UploadMatericalMasterImages img = imageMap.get(mat.getMsCatmsSubCatmsBrandSkuId());
-		    if (img != null) {
-		        dto.setMaterialMasterImage1(img.getMaterialMasterImage1());
-		        dto.setMaterialMasterImage2(img.getMaterialMasterImage2());
-		        dto.setMaterialMasterImage3(img.getMaterialMasterImage3());
-		        dto.setMaterialMasterImage4(img.getMaterialMasterImage4());
-		        dto.setMaterialMasterImage5(img.getMaterialMasterImage5());
-		    }
-		    return dto;
+			UploadMatericalMasterImages img = imageMap.get(mat.getMsCatmsSubCatmsBrandSkuId());
+			if (img != null) {
+				dto.setMaterialMasterImage1(img.getMaterialMasterImage1());
+				dto.setMaterialMasterImage2(img.getMaterialMasterImage2());
+				dto.setMaterialMasterImage3(img.getMaterialMasterImage3());
+				dto.setMaterialMasterImage4(img.getMaterialMasterImage4());
+				dto.setMaterialMasterImage5(img.getMaterialMasterImage5());
+			}
+			return dto;
 		}).toList();
 
 		// ✅ Count query (REBUILD predicates for countRoot)
@@ -393,7 +391,8 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 		ResponseModel response = new ResponseModel();
 
 		// 1. Check if skuId exists in AdminMaterialMaster
-		Optional<MaterialMaster> adminMaterial = materialMasterRepository.findByMsCatmsSubCatmsBrandSkuId(msCatmsSubCatmsBrandSkuId);
+		Optional<MaterialMaster> adminMaterial = materialMasterRepository
+				.findByMsCatmsSubCatmsBrandSkuId(msCatmsSubCatmsBrandSkuId);
 		if (adminMaterial.isEmpty()) {
 			response.setError("true");
 			response.setMsg("SKU ID not found in AdminMaterialMaster.");
@@ -410,7 +409,7 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 		uploadEntity.setSkuId(msCatmsSubCatmsBrandSkuId);
 		uploadEntity.setUpdatedBy(userInfo.userId);
 		uploadEntity.setUpdatedDate(new Date());
-		
+
 		uploadAdminEntity.setSkuId(msCatmsSubCatmsBrandSkuId);
 		uploadAdminEntity.setUpdatedBy(userInfo.userId);
 		uploadAdminEntity.setUpdatedDate(new Date());
@@ -474,12 +473,8 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 		return adminMaterialMasterRepository.findDistinctBrandByMaterialCategory(materialCategory, materialSubCategory);
 	}
 
-	@Override
-//	public List<String> findDistinctMaterialCategory() {
-//		return adminMaterialMasterRepository.findDistinctMaterialCategory();
-//	}
 	public List<Map<String, Object>> findDistinctMaterialCategoryWithSubCategory() {
-		List<Object[]> results = adminMaterialMasterRepository.findCategoryAndSubCategory();
+		List<Object[]> results = materialMasterRepository.findCategoryAndSubCategory();
 		Map<String, Set<String>> grouped = new LinkedHashMap<>();
 
 		for (Object[] row : results) {
@@ -501,80 +496,78 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 
 	@Override
 	public AdminMaterialMasterResponseDTO getMaterialsWithUserInfo(String materialCategory, String materialSubCategory,
-	        String brand, String location) {
+			String brand, String location) {
 
-	    // Step 1: Fetch all materials (based on category/brand/subCategory)
-	    List<MaterialMaster> materials = materialMasterRepository.searchMaterials(materialCategory,
-	            materialSubCategory, brand);
+		// Step 1: Fetch all materials (based on category/brand/subCategory)
+		List<MaterialMaster> materials = materialMasterRepository.searchMaterials(materialCategory, materialSubCategory,
+				brand);
 
-	    if (materials.isEmpty()) {
-	        return new AdminMaterialMasterResponseDTO(Collections.emptyList(), Collections.emptyList(),
-	                Collections.emptyList());
-	    }
+		if (materials.isEmpty()) {
+			return new AdminMaterialMasterResponseDTO(Collections.emptyList(), Collections.emptyList(),
+					Collections.emptyList());
+		}
 
-	    List<AdminDetailsDto> adminDtos = new ArrayList<>();
-	    List<MaterialSupplierDto> supplierDtos = new ArrayList<>();
-	    Set<String> seenAdminIds = new HashSet<>();
-	    Set<String> seenSupplierIds = new HashSet<>();
+		List<AdminDetailsDto> adminDtos = new ArrayList<>();
+		List<MaterialSupplierDto> supplierDtos = new ArrayList<>();
+		Set<String> seenAdminIds = new HashSet<>();
+		Set<String> seenSupplierIds = new HashSet<>();
 
-	    // Step 2: Fetch all images for materials
-	    List<String> skuIds = materials.stream().map(MaterialMaster::getMsCatmsSubCatmsBrandSkuId).toList();
-	    List<UploadMatericalMasterImages> images = uploadMatericalMasterImagesRepository.findAllById(skuIds);
+		// Step 2: Fetch all images for materials
+		List<String> skuIds = materials.stream().map(MaterialMaster::getMsCatmsSubCatmsBrandSkuId).toList();
+		List<UploadMatericalMasterImages> images = uploadMatericalMasterImagesRepository.findAllById(skuIds);
 
-	    // Map images by skuId
-	    Map<String, UploadMatericalMasterImages> imageMap = images.stream()
-	            .collect(Collectors.toMap(UploadMatericalMasterImages::getSkuId, img -> img));
+		// Map images by skuId
+		Map<String, UploadMatericalMasterImages> imageMap = images.stream()
+				.collect(Collectors.toMap(UploadMatericalMasterImages::getSkuId, img -> img));
 
-	    // Step 3: Build final material DTO list with proper location filtering
-	    List<AdminMaterialMasterResponseWithImageDto> materialDtos = new ArrayList<>();
+		// Step 3: Build final material DTO list with proper location filtering
+		List<AdminMaterialMasterResponseWithImageDto> materialDtos = new ArrayList<>();
 
-	    for (MaterialMaster material : materials) {
-	        String userId = material.getUpdatedBy();
+		for (MaterialMaster material : materials) {
+			String userId = material.getUpdatedBy();
 
-	        // Fetch supplier for this material
-	        MaterialSupplierQuotationUser supplier = materialSupplierQuotationUserDAO.findByBodSeqNo(userId);
+			// Fetch supplier for this material
+			MaterialSupplierQuotationUser supplier = materialSupplierQuotationUserDAO.findByBodSeqNo(userId);
 
-	        // Apply location filter if provided
-	        if (location != null && !location.isEmpty()) {
-	            if (supplier == null || !location.equalsIgnoreCase(supplier.getLocation())) {
-	                continue; // skip this material if location doesn't match
-	            }
-	        }
+			// Apply location filter if provided
+			if (location != null && !location.isEmpty()) {
+				if (supplier == null || !location.equalsIgnoreCase(supplier.getLocation())) {
+					continue; // skip this material if location doesn't match
+				}
+			}
 
-	        // --- Map material + images ---
-	        AdminMaterialMasterResponseWithImageDto dto = new AdminMaterialMasterResponseWithImageDto();
-	        BeanUtils.copyProperties(material, dto);
+			// --- Map material + images ---
+			AdminMaterialMasterResponseWithImageDto dto = new AdminMaterialMasterResponseWithImageDto();
+			BeanUtils.copyProperties(material, dto);
 
-	        // 👇 Fix skuId being null
-	        dto.setSkuId(material.getMsCatmsSubCatmsBrandSkuId());
+			// 👇 Fix skuId being null
+			dto.setSkuId(material.getMsCatmsSubCatmsBrandSkuId());
 
-	        UploadMatericalMasterImages img = imageMap.get(material.getMsCatmsSubCatmsBrandSkuId());
-	        if (img != null) {
-	            dto.setMaterialMasterImage1(img.getMaterialMasterImage1());
-	            dto.setMaterialMasterImage2(img.getMaterialMasterImage2());
-	            dto.setMaterialMasterImage3(img.getMaterialMasterImage3());
-	            dto.setMaterialMasterImage4(img.getMaterialMasterImage4());
-	            dto.setMaterialMasterImage5(img.getMaterialMasterImage5());
-	        }
+			UploadMatericalMasterImages img = imageMap.get(material.getMsCatmsSubCatmsBrandSkuId());
+			if (img != null) {
+				dto.setMaterialMasterImage1(img.getMaterialMasterImage1());
+				dto.setMaterialMasterImage2(img.getMaterialMasterImage2());
+				dto.setMaterialMasterImage3(img.getMaterialMasterImage3());
+				dto.setMaterialMasterImage4(img.getMaterialMasterImage4());
+				dto.setMaterialMasterImage5(img.getMaterialMasterImage5());
+			}
 
-	        materialDtos.add(dto);
+			materialDtos.add(dto);
 
-	        // --- Admin details ---
-	        AdminDetails user = adminRepo.findByAdminId(userId);
-	        if (user != null && seenAdminIds.add(user.getAdminId())) {
-	            adminDtos.add(toAdminDto(user));
-	        }
+			// --- Admin details ---
+			AdminDetails user = adminRepo.findByAdminId(userId);
+			if (user != null && seenAdminIds.add(user.getAdminId())) {
+				adminDtos.add(toAdminDto(user));
+			}
 
-	        // --- Supplier details ---
-	        if (supplier != null && seenSupplierIds.add(supplier.getBodSeqNo())) {
-	            supplierDtos.add(toSupplierDto(supplier));
-	        }
-	    }
+			// --- Supplier details ---
+			if (supplier != null && seenSupplierIds.add(supplier.getBodSeqNo())) {
+				supplierDtos.add(toSupplierDto(supplier));
+			}
+		}
 
-
-	    return new AdminMaterialMasterResponseDTO(materialDtos, adminDtos, supplierDtos);
+		return new AdminMaterialMasterResponseDTO(materialDtos, adminDtos, supplierDtos);
 	}
-
 
 	// --- Mapping helpers ---
 	private AdminDetailsDto toAdminDto(AdminDetails admin) {

@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.GrantedAuthority;
@@ -479,9 +480,8 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 //		return adminMaterialMasterRepository.findDistinctMaterialCategory();
 //	}
 	public List<Map<String, Object>> findDistinctMaterialCategoryWithSubCategory() {
-		List<Object[]> results = adminMaterialMasterRepository.findCategoryAndSubCategory();
+		List<Object[]> results = materialMasterRepository.findCategoryAndSubCategory();
 		Map<String, Set<String>> grouped = new LinkedHashMap<>();
-
 		for (Object[] row : results) {
 			String category = (String) row[0];
 			String subCategory = (String) row[1];

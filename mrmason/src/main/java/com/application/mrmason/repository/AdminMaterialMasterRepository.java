@@ -13,9 +13,6 @@ public interface AdminMaterialMasterRepository extends JpaRepository<AdminMateri
 
 	Optional<AdminMaterialMaster> findBySkuId(String skuId);
 
-	@Query("SELECT DISTINCT amm.brand FROM AdminMaterialMaster amm WHERE amm.materialCategory = :materialCategory And amm.materialSubCategory = :materialSubCategory")
-	List<String> findDistinctBrandByMaterialCategory(String materialCategory, String materialSubCategory);
-
 	List<AdminMaterialMaster> findByUpdatedBy(@Param("updatedBy") String updatedBy);
 
 	@Query("SELECT a FROM AdminMaterialMaster a WHERE a.skuId = :skuId")

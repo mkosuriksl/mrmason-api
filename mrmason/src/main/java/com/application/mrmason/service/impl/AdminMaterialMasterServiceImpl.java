@@ -470,7 +470,7 @@ public class AdminMaterialMasterServiceImpl implements AdminMaterialMasterServic
 				throw new IllegalArgumentException("Unexpected parameter '" + paramName + "' is not allowed.");
 			}
 		}
-		return adminMaterialMasterRepository.findDistinctBrandByMaterialCategory(materialCategory, materialSubCategory);
+		return materialMasterRepository.findDistinctBrandByMaterialCategory(materialCategory, materialSubCategory);
 	}
 
 	public List<Map<String, Object>> findDistinctMaterialCategoryWithSubCategory() {

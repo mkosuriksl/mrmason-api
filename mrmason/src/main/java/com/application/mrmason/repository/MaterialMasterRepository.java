@@ -30,4 +30,7 @@ public interface MaterialMasterRepository extends JpaRepository<MaterialMaster, 
 	@Query("SELECT s.materialCategory, s.materialSubCategory " + "FROM MaterialMaster s "
 			+ "WHERE s.materialCategory IS NOT NULL AND s.materialSubCategory IS NOT NULL")
 	List<Object[]> findCategoryAndSubCategory();
+	
+	@Query("SELECT DISTINCT amm.brand FROM MaterialMaster amm WHERE amm.materialCategory = :materialCategory And amm.materialSubCategory = :materialSubCategory")
+	List<String> findDistinctBrandByMaterialCategory(String materialCategory, String materialSubCategory);
 }

@@ -97,6 +97,8 @@ public class JwtService {
 			return UserType.MS;
 		}else if (userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_FR"))) {
 			return UserType.FR;
+		}else if (userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_RT"))) {
+			return UserType.RT;
 		}
 		
 		return null;

@@ -88,7 +88,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 					String userType = jwtService.extractUserType(token);
 					RegSource regSource=jwtService.extractRegSource(token);
 					UserDetails userDetails = null;
-					if (userType.equals("Developer") || userType.equals("worker")) {
+					if (userType.equals("Developer") || userType.equals("worker") ||userType.equals("RT")) {
 						User user = userDAO.findByMobileOrEmailAndBodSeqNo(username, userId).get();
 						userDetails = user;
 					}

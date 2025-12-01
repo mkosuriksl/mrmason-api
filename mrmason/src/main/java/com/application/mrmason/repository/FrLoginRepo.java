@@ -20,5 +20,10 @@ public interface FrLoginRepo extends JpaRepository<FrLogin, Long>{
 	Optional<FrLogin> findByFrEmailOrFrMobileAndRegSource(String frEmail, String frMobile, RegSource regSource);
 
     Optional<FrLogin> findByFrEmailOrFrMobile(String email, String mobile);
+    
+    Optional<FrLogin> findByFrEmailAndRegSource(String email, String regSource);
+
+    Optional<FrLogin> findByFrMobileAndRegSource(String mobile, String regSource);
+
 
 }

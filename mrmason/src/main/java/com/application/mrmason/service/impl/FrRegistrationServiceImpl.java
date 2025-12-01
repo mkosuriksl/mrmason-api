@@ -333,13 +333,26 @@ public class FrRegistrationServiceImpl implements FrRegistrationService {
 	@Override
 	public ResponseFrLoginDto login(FrLoginRequest login) {
 
-		Optional<FrLogin> loginDb = frLoginRepo.findByFrEmailOrFrMobileAndRegSource(login.getEmail(), login.getMobile(),
-				login.getRegSource());
+		Optional<FrLogin> loginDb;
+
+		if (login.getEmail() != null) {
+		    loginDb = frLoginRepo.findByFrEmailAndRegSource(login.getEmail(), login.getRegSource());
+		} else {
+		    loginDb = frLoginRepo.findByFrMobileAndRegSource(login.getMobile(), login.getRegSource());
+		}
+
 		ResponseFrLoginDto response = new ResponseFrLoginDto();
 
 		if (loginDb.isPresent()) {
-			Optional<FrReg> userEmailMobile = frRegRepo.findByFrEmailOrFrMobileAndRegSource(login.getEmail(),
-					login.getMobile(), login.getRegSource());
+			Optional<FrReg> userEmailMobile = java.util.Optional.empty();
+
+			if (login.getEmail() != null) {
+				userEmailMobile = frRegRepo.findByFrEmailAndRegSource(login.getEmail(), login.getRegSource());
+			} else {
+				userEmailMobile = frRegRepo.findByFrMobileAndRegSource(login.getMobile(), login.getRegSource());
+			}
+//			Optional<FrReg> userEmailMobile = frRegRepo.findByFrEmailOrFrMobileAndRegSource(login.getEmail(),
+//					login.getMobile(), login.getRegSource());
 			FrReg user = userEmailMobile.get();
 			String status = user.getStatus();
 

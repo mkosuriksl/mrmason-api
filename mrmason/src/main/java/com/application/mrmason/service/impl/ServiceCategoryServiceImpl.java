@@ -94,13 +94,6 @@ public class ServiceCategoryServiceImpl implements ServiceCategoryService {
 
 	}
 
-//	@Override
-//	public List<ServiceCategory> getServiceCategoryNonCivil(String category) {
-//
-//		List<ServiceCategory> user = (serviceRepo.findByServiceCategoryNotOrderByCreateDateDesc(category));
-//		return user;
-//	}
-	
 	@Override
 	public Page<ServiceCategory> getServiceCategoryNonCivil(String category, int page, int size) {
 	    Pageable pageable = PageRequest.of(page, size, Sort.by("createDate").descending());

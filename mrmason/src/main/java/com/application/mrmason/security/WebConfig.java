@@ -59,6 +59,7 @@ public class WebConfig {
 						"/api/fr/register","/api/fr/send-otp","/api/fr/verify-otp",
 						"/api/fr/login","/api/fr/forgot/verify-otp","/api/fr/forgot/send-otp",
 						"/api/distinct-location-by-machine","/admin-machine-assets/get",
+						"/getBhatServiceCategory","/getBhatServiceCategory/nonCivil/{serviceCategory}","/getBhatServiceCategory/civil/{serviceCategory}",
 						"/swagger-resources", "/swagger-resources/**", "/configuration/ui", "/configuration/security","/api/distinct-location-by-ms","/distinct-location-by-sp",
 						"/swagger-ui/**", "/webjars/**", "/swagger-ui.html", "/getRentalAssetsNoAuth","/getAdminUiEndPoint","/api/home-search-by-location","/api/home-search-by-machine").permitAll()
 						.anyRequest().authenticated());

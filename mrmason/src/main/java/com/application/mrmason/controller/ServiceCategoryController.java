@@ -97,24 +97,6 @@ public class ServiceCategoryController {
 
 	}
 
-//	@GetMapping("/getServiceCategory/nonCivil/{serviceCategory}")
-//	public ResponseEntity<ResponseListServiceCatDto> getServiceCategoryNonCivil(@PathVariable String serviceCategory) {
-//		try {
-//			List<ServiceCategory> entity = categoryService.getServiceCategoryNonCivil(serviceCategory);
-//
-//			response2.setMessage("Non-Civil service data fetched successfully.!");
-//			response2.setStatus(true);
-//			response2.setData(entity);
-//			return new ResponseEntity<>(response2, HttpStatus.OK);
-//
-//		} catch (Exception e) {
-//			response2.setMessage(e.getMessage());
-//			response2.setStatus(false);
-//			return new ResponseEntity<>(response2, HttpStatus.OK);
-//		}
-//
-//	}
-
 	@GetMapping("/getServiceCategory/nonCivil/{serviceCategory}")
 	public ResponseEntity<ResponseListServiceCatDto> getServiceCategoryNonCivil(
 	        @PathVariable String serviceCategory,

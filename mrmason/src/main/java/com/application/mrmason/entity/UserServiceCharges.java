@@ -40,7 +40,8 @@ public class UserServiceCharges {
 		private String model;
 		@Column(name="subcategory")
 		private String subcategory;
-		
+		@Column(name="service_name")
+		private String serviceName;
 		
 		@Transient
 		private String bodSeqNo;

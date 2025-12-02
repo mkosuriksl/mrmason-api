@@ -19,6 +19,7 @@ import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.ResponseCustomerAssetsDto;
 import com.application.mrmason.dto.ResponseListCustomerAssets;
 import com.application.mrmason.entity.CustomerAssets;
+import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.service.CustomerAssetsService;
 
@@ -66,7 +67,8 @@ public class CustomerAssetsController {
 	        @RequestParam(required = false) String assetBrand,
 	        @RequestParam(defaultValue = "0") int page,
 	        @RequestParam(defaultValue = "10") int size,
-	        @RequestParam RegSource regSource) {
+	        @RequestParam RegSource regSource
+	        ) {
 
 	    Pageable pageable = PageRequest.of(page, size);
 	    Page<?> assetsPage = assetService.getAssets(userId, assetId, location, assetCat, assetSubCat, assetModel, assetBrand, pageable, regSource);
@@ -82,26 +84,5 @@ public class CustomerAssetsController {
 
 	    return new ResponseEntity<>(response, HttpStatus.OK);
 	}
-//	public ResponseEntity<ResponseCustomerAssetsDto> getAssets(@RequestParam(required = false) String userId,
-//			@RequestParam(required = false) String assetId, @RequestParam(required = false) String location,
-//			@RequestParam(required = false) String assetCat, @RequestParam(required = false) String assetSubCat,
-//			@RequestParam(required = false) String assetModel, @RequestParam(required = false) String assetBrand,
-//			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
-//
-//		Pageable pageable = PageRequest.of(page, size);
-//		Page<CustomerAssets> assetsPage = assetService.getCustomerAssets(userId, assetId, location, assetCat,
-//				assetSubCat, assetModel, assetBrand, pageable);
-//
-//		ResponseCustomerAssetsDto response = new ResponseCustomerAssetsDto();
-//		response.setMessage("Customer assets retrieved successfully.");
-//		response.setStatus(true);
-//		response.setAssets(assetsPage.getContent());
-//		response.setCurrentPage(assetsPage.getNumber());
-//		response.setPageSize(assetsPage.getSize());
-//		response.setTotalElements(assetsPage.getTotalElements());
-//		response.setTotalPages(assetsPage.getTotalPages());
-//
-//		return new ResponseEntity<>(response, HttpStatus.OK);
-//	}
 
 }

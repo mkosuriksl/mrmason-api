@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.application.mrmason.dto.ResponseUserServiceChargesDto;
 import com.application.mrmason.dto.ResponseUserServiceChargesDto1;
 import com.application.mrmason.dto.ResponseUserServiceChargesDto2;
+import com.application.mrmason.dto.UserChargeResponseDTO;
 import com.application.mrmason.dto.UserServiceChargeRequest;
 import com.application.mrmason.entity.UserServiceCharges;
 import com.application.mrmason.exceptions.ResourceNotFoundException;
@@ -85,6 +86,22 @@ public class UserServiceChargesController {
 			return ResponseEntity.status(HttpStatus.OK).body(e.getMessage());
 		}
 
+	}
+
+	@GetMapping("/getUserServiceCharegs-withoutSecurity")
+	public ResponseEntity<?> getUserCharge(@RequestParam(required = false) String serviceChargeKey,
+			@RequestParam(required = false) String serviceId, @RequestParam(required = false) String location,
+			@RequestParam(required = false) String brand, @RequestParam(required = false) String model,
+			@RequestParam String userId, @RequestParam(required = false) String subcategory) {
+
+		List<UserChargeResponseDTO> response = service.getUserCharges(serviceChargeKey, serviceId, location, brand,
+				model, userId, subcategory);
+
+		if (response == null) {
+			return ResponseEntity.ok("No Records Found");
+		}
+
+		return ResponseEntity.ok(response);
 	}
 
 	@PutMapping("/update-UserServiceCharges")

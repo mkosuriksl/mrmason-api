@@ -11,5 +11,4 @@ public class UserServiceChargeRequest {
 
 	private List<UserServiceCharges> chargesList;
 	private String subCategory;
-
 }

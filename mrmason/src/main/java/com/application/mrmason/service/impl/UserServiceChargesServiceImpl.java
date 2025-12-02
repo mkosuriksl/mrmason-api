@@ -3,10 +3,15 @@ package com.application.mrmason.service.impl;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.application.mrmason.dto.UserChargeChildDTO;
+import com.application.mrmason.dto.UserChargeResponseDTO;
 import com.application.mrmason.dto.UserServiceChargeRequest;
 import com.application.mrmason.entity.User;
 import com.application.mrmason.entity.UserServiceCharges;
@@ -90,6 +95,75 @@ public class UserServiceChargesServiceImpl implements UserServiceChargesService 
 		 */
 		return root;
 	}
+
+	@Override
+	public List<UserChargeResponseDTO> getUserCharges(String serviceChargeKey, String serviceId, String location,
+	        String brand, String model, String updatedBy, String subcategory) {
+
+	    List<UserServiceCharges> list = repo.searchCharges(
+	            serviceChargeKey, serviceId, location, brand, model, subcategory, updatedBy);
+
+	    if (list == null || list.isEmpty()) {
+	        return new ArrayList<>();
+	    }
+
+	    // 1️⃣ Fetch User (updatedBy = bodSeqNo)
+	    User user = userDAO.findByBodSeqNo(updatedBy);
+
+	    String userName = (user != null) ? user.getName() : null;
+
+	    // 2️⃣ Group by unique parent fields (NO updatedDate)
+	    Map<String, List<UserServiceCharges>> grouped = list.stream()
+	            .collect(Collectors.groupingBy(u ->
+	                    u.getLocation() + "|" +
+	                    u.getBrand() + "|" +
+	                    u.getModel() + "|" +
+	                    u.getSubcategory() + "|" +
+	                    u.getUpdatedBy()
+	            ));
+
+	    List<UserChargeResponseDTO> finalList = new ArrayList<>();
+
+	    for (Map.Entry<String, List<UserServiceCharges>> entry : grouped.entrySet()) {
+
+	        List<UserServiceCharges> groupItems = entry.getValue();
+	        UserServiceCharges first = groupItems.get(0);
+
+	        UserChargeResponseDTO parent = new UserChargeResponseDTO();
+	        parent.setLocation(first.getLocation());
+
+	        // Take newest updatedDate among children
+	        parent.setUpdatedDate(groupItems.stream()
+	                .map(UserServiceCharges::getUpdatedDate)
+	                .max(String::compareTo)
+	                .orElse(first.getUpdatedDate()));
+
+	        parent.setUpdatedBy(first.getUpdatedBy());
+	        parent.setBodSeqNo(first.getUpdatedBy());     // same as updatedBy
+	        parent.setName(userName);                     // USER NAME FROM USER TABLE
+	        parent.setBrand(first.getBrand());
+	        parent.setModel(first.getModel());
+	        parent.setSubcategory(first.getSubcategory());
+
+	        // Child Records
+	        List<UserChargeChildDTO> childList = new ArrayList<>();
+
+	        for (UserServiceCharges e : groupItems) {
+	            UserChargeChildDTO child = new UserChargeChildDTO();
+	            child.setServiceId(e.getServiceId());
+	            child.setServiceName(e.getServiceName());
+	            child.setServiceCharge(e.getServiceCharge());
+	            child.setServiceChargeKey(e.getServiceChargeKey());
+	            childList.add(child);
+	        }
+
+	        parent.setCharges(childList);
+	        finalList.add(parent);
+	    }
+
+	    return finalList;
+	}
+
 
 	@Override
 	public UserServiceCharges updateCharges(UserServiceCharges charges) {

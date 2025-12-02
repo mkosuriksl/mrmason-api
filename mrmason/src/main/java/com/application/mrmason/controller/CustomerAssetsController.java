@@ -19,6 +19,7 @@ import com.application.mrmason.dto.GenericResponse;
 import com.application.mrmason.dto.ResponseCustomerAssetsDto;
 import com.application.mrmason.dto.ResponseListCustomerAssets;
 import com.application.mrmason.entity.CustomerAssets;
+import com.application.mrmason.entity.UserType;
 import com.application.mrmason.enums.RegSource;
 import com.application.mrmason.service.CustomerAssetsService;
 
@@ -32,20 +33,20 @@ public class CustomerAssetsController {
 
 	@PostMapping("/addAssets")
 	public ResponseEntity<GenericResponse<CustomerAssetDto>> addAsset(@RequestBody CustomerAssets asset,
-			@RequestParam RegSource regSource) {
+			@RequestParam RegSource regSource,@RequestParam UserType userType) {
 
 			// Call service directly to get DTO
-			CustomerAssetDto assetDto = assetService.getAssetByAssetId(asset, regSource);
+			CustomerAssetDto assetDto = assetService.getAssetByAssetId(asset, regSource,userType);
 
 			return ResponseEntity.ok(new GenericResponse<>("Asset added successfully.", true, assetDto));
 	}
 
 	@PutMapping("/updateAssets")
 	public ResponseEntity<?> updateAssetDetails(@RequestBody CustomerAssetDto updateAsset,
-			@RequestParam RegSource regSource) {
+			@RequestParam RegSource regSource,@RequestParam UserType userType) {
 		try {
 			// Call service directly to get DTO
-			CustomerAssetDto assetDto = assetService.updateAssets(updateAsset, regSource);
+			CustomerAssetDto assetDto = assetService.updateAssets(updateAsset, regSource,userType);
 
 			return ResponseEntity.ok(new GenericResponse<>("Asset added successfully.", true, assetDto));
 
@@ -66,10 +67,12 @@ public class CustomerAssetsController {
 	        @RequestParam(required = false) String assetBrand,
 	        @RequestParam(defaultValue = "0") int page,
 	        @RequestParam(defaultValue = "10") int size,
-	        @RequestParam RegSource regSource) {
+	        @RequestParam RegSource regSource,
+	        @RequestParam UserType userType
+	        ) {
 
 	    Pageable pageable = PageRequest.of(page, size);
-	    Page<?> assetsPage = assetService.getAssets(userId, assetId, location, assetCat, assetSubCat, assetModel, assetBrand, pageable, regSource);
+	    Page<?> assetsPage = assetService.getAssets(userId, assetId, location, assetCat, assetSubCat, assetModel, assetBrand, pageable, regSource,userType);
 
 	    ResponseCustomerAssetsDto response = new ResponseCustomerAssetsDto();
 	    response.setMessage("Assets retrieved successfully.");

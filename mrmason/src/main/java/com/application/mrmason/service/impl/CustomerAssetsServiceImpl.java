@@ -67,8 +67,8 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 	}
 
 	@Override
-	public CustomerAssetDto updateAssets(CustomerAssetDto asset, RegSource regSource) {
-	    UserInfo userInfo = getLoggedInUserInfo(regSource);
+	public CustomerAssetDto updateAssets(CustomerAssetDto asset, RegSource regSource,UserType userType) {
+	    UserInfo userInfo = getLoggedInUserInfo(regSource,userType);
 	    String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
 	    Collection<? extends GrantedAuthority> roles = AuthDetailsProvider.getLoggedRole();
 
@@ -79,7 +79,7 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 	            .findFirst()
 	            .orElseThrow(() -> new ResourceNotFoundException("User role not found"));
 
-	    UserType userType = UserType.valueOf(roleName);
+//	    UserType userType = UserType.valueOf(roleName);
 
 	    // Prepare DTO for response
 	    CustomerAssetDto responseDto = new CustomerAssetDto();
@@ -210,7 +210,9 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 
 	@Override
 	public Page<?> getAssets(String userId, String assetId, String location, String assetCat, String assetSubCat,
-			String assetModel, String assetBrand, Pageable pageable, RegSource regSource) {
+			String assetModel, String assetBrand, Pageable pageable, RegSource regSource,
+			UserType userType
+			) {
 
 		// Determine logged-in user type
 		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
@@ -220,7 +222,7 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 				.findFirst()
 				.orElseThrow(() -> new ResourceNotFoundException("User role not found for: " + loggedInUserEmail));
 
-		UserType userType = UserType.valueOf(roleName);
+//		UserType userType = UserType.valueOf(roleName);
 
 		if (userType == UserType.MS || userType==UserType.Developer) {
 			return getMaterialSupplierAssets(userId, assetId, location, assetCat, assetSubCat, assetModel, assetBrand,
@@ -442,8 +444,8 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 //		return assetDto;
 //
 //	}
-	public CustomerAssetDto getAssetByAssetId(CustomerAssets asset, RegSource regSource) {
-		UserInfo userInfo = getLoggedInUserInfo(regSource);
+	public CustomerAssetDto getAssetByAssetId(CustomerAssets asset, RegSource regSource,UserType userType) {
+		UserInfo userInfo = getLoggedInUserInfo(regSource,userType);
 		asset.setUserId(userInfo.userId);
 
 		// Save based on user type
@@ -453,7 +455,7 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 		String roleName = roles.stream().map(GrantedAuthority::getAuthority).map(r -> r.replace("ROLE_", ""))
 				.findFirst().orElseThrow(() -> new ResourceNotFoundException("User role not found"));
 
-		UserType userType = UserType.valueOf(roleName);
+//		UserType userType = UserType.valueOf(roleName);
 
 		if (userType == UserType.MS || userType ==UserType.Developer) {
 			// Map CustomerAssets -> MaterialSupplierAssets
@@ -515,7 +517,7 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 
 	}
 
-	private UserInfo getLoggedInUserInfo(RegSource regSource) {
+	private UserInfo getLoggedInUserInfo(RegSource regSource,UserType userType) {
 		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
 		Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
 
@@ -526,19 +528,19 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 			throw new ResourceNotFoundException("No roles assigned for user: " + loggedInUserEmail);
 		}
 
-		UserType userType = UserType.valueOf(roleNames.get(0));
+//		userType = UserType.valueOf(roleNames.get(0));
 		String userId;
 
 		switch (userType) {
 		case Adm:
-			AdminDetails admin = adminRepo.findByEmailAndUserType(loggedInUserEmail, UserType.Adm)
+			AdminDetails admin = adminRepo.findByEmailAndUserType(loggedInUserEmail,userType)
 					.orElseThrow(() -> new ResourceNotFoundException("Admin not found: " + loggedInUserEmail));
 			userId = admin.getEmail();
 			break;
 
 		case MS:
 			MaterialSupplierQuotationUser msUser = materialSupplierQuotationUserDAO
-					.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, UserType.MS, regSource)
+					.findByEmailAndUserTypeAndRegSource(loggedInUserEmail,userType, regSource)
 					.orElseThrow(() -> new ResourceNotFoundException("Material User not found: " + loggedInUserEmail));
 			userId = msUser.getBodSeqNo();
 			break;
@@ -547,13 +549,13 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 		case Developer:
 			// Try CustomerRegistration first
 			CustomerRegistration customer = regiRepo
-					.findByUserEmailAndUserTypeAndRegSource(loggedInUserEmail, UserType.EC, regSource).orElse(null);
+					.findByUserEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource).orElse(null);
 
 			if (customer != null) {
 				userId = customer.getUserid();
 			} else {
 				// If not found in Customer, try User table
-				User user = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, UserType.Developer, regSource)
+				User user = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource)
 						.orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
 				userId = user.getBodSeqNo();
 			}

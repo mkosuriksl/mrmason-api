@@ -33,20 +33,20 @@ public class CustomerAssetsController {
 
 	@PostMapping("/addAssets")
 	public ResponseEntity<GenericResponse<CustomerAssetDto>> addAsset(@RequestBody CustomerAssets asset,
-			@RequestParam RegSource regSource,@RequestParam UserType userType) {
+			@RequestParam RegSource regSource) {
 
 			// Call service directly to get DTO
-			CustomerAssetDto assetDto = assetService.getAssetByAssetId(asset, regSource,userType);
+			CustomerAssetDto assetDto = assetService.getAssetByAssetId(asset, regSource);
 
 			return ResponseEntity.ok(new GenericResponse<>("Asset added successfully.", true, assetDto));
 	}
 
 	@PutMapping("/updateAssets")
 	public ResponseEntity<?> updateAssetDetails(@RequestBody CustomerAssetDto updateAsset,
-			@RequestParam RegSource regSource,@RequestParam UserType userType) {
+			@RequestParam RegSource regSource) {
 		try {
 			// Call service directly to get DTO
-			CustomerAssetDto assetDto = assetService.updateAssets(updateAsset, regSource,userType);
+			CustomerAssetDto assetDto = assetService.updateAssets(updateAsset, regSource);
 
 			return ResponseEntity.ok(new GenericResponse<>("Asset added successfully.", true, assetDto));
 
@@ -67,12 +67,11 @@ public class CustomerAssetsController {
 	        @RequestParam(required = false) String assetBrand,
 	        @RequestParam(defaultValue = "0") int page,
 	        @RequestParam(defaultValue = "10") int size,
-	        @RequestParam RegSource regSource,
-	        @RequestParam UserType userType
+	        @RequestParam RegSource regSource
 	        ) {
 
 	    Pageable pageable = PageRequest.of(page, size);
-	    Page<?> assetsPage = assetService.getAssets(userId, assetId, location, assetCat, assetSubCat, assetModel, assetBrand, pageable, regSource,userType);
+	    Page<?> assetsPage = assetService.getAssets(userId, assetId, location, assetCat, assetSubCat, assetModel, assetBrand, pageable, regSource);
 
 	    ResponseCustomerAssetsDto response = new ResponseCustomerAssetsDto();
 	    response.setMessage("Assets retrieved successfully.");
@@ -85,26 +84,5 @@ public class CustomerAssetsController {
 
 	    return new ResponseEntity<>(response, HttpStatus.OK);
 	}
-//	public ResponseEntity<ResponseCustomerAssetsDto> getAssets(@RequestParam(required = false) String userId,
-//			@RequestParam(required = false) String assetId, @RequestParam(required = false) String location,
-//			@RequestParam(required = false) String assetCat, @RequestParam(required = false) String assetSubCat,
-//			@RequestParam(required = false) String assetModel, @RequestParam(required = false) String assetBrand,
-//			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
-//
-//		Pageable pageable = PageRequest.of(page, size);
-//		Page<CustomerAssets> assetsPage = assetService.getCustomerAssets(userId, assetId, location, assetCat,
-//				assetSubCat, assetModel, assetBrand, pageable);
-//
-//		ResponseCustomerAssetsDto response = new ResponseCustomerAssetsDto();
-//		response.setMessage("Customer assets retrieved successfully.");
-//		response.setStatus(true);
-//		response.setAssets(assetsPage.getContent());
-//		response.setCurrentPage(assetsPage.getNumber());
-//		response.setPageSize(assetsPage.getSize());
-//		response.setTotalElements(assetsPage.getTotalElements());
-//		response.setTotalPages(assetsPage.getTotalPages());
-//
-//		return new ResponseEntity<>(response, HttpStatus.OK);
-//	}
 
 }

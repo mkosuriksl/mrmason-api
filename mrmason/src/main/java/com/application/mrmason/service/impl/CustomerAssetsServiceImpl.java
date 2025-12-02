@@ -53,8 +53,6 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 	@Autowired
 	public AdminDetailsRepo adminRepo;
 	@Autowired
-	private MaterialSupplierQuotationUserDAO materialSupplierQuotationUserDAO;
-	@Autowired
 	UserDAO userDAO;
 
 	@Override
@@ -67,171 +65,119 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 	}
 
 	@Override
-	public CustomerAssetDto updateAssets(CustomerAssetDto asset, RegSource regSource,UserType userType) {
-	    UserInfo userInfo = getLoggedInUserInfo(regSource,userType);
-	    String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
-	    Collection<? extends GrantedAuthority> roles = AuthDetailsProvider.getLoggedRole();
+	public CustomerAssetDto updateAssets(CustomerAssetDto asset, RegSource regSource) {
 
-	    // Extract role name from token
-	    String roleName = roles.stream()
-	            .map(GrantedAuthority::getAuthority)
-	            .map(r -> r.replace("ROLE_", ""))
-	            .findFirst()
-	            .orElseThrow(() -> new ResourceNotFoundException("User role not found"));
+		String prefix = asset.getUserId().substring(0, 2).toUpperCase();
 
-//	    UserType userType = UserType.valueOf(roleName);
+		CustomerAssetDto responseDto = new CustomerAssetDto();
+		if (prefix.equals("MS") || prefix.equals("SP")) {
+			Optional<MaterialSupplierAssets> msAssetOpt = materialSupplierAssetsRepo
+					.findByUserIdAndAssetId(asset.getUserId(), asset.getAssetId());
 
-	    // Prepare DTO for response
-	    CustomerAssetDto responseDto = new CustomerAssetDto();
+			if (msAssetOpt.isPresent()) {
+				MaterialSupplierAssets msAsset = msAssetOpt.get();
 
-	    // =========================
-	    // CASE 1: MS or Developer
-	    // =========================
-	    if (userType == UserType.MS || userType == UserType.Developer) {
-	        Optional<MaterialSupplierAssets> msAssetOpt = materialSupplierAssetsRepo
-	                .findByUserIdAndAssetId(userInfo.userId, asset.getAssetId());
+				// Update fields
+				msAsset.setAssetCat(asset.getAssetCat());
+				msAsset.setAssetSubCat(asset.getAssetSubCat());
+				msAsset.setDistrict(asset.getDistrict());
+				msAsset.setDoorNo(asset.getDoorNo());
+				msAsset.setLocation(asset.getLocation());
+				msAsset.setPinCode(asset.getPinCode());
+				msAsset.setState(asset.getState());
+				msAsset.setStreet(asset.getStreet());
+				msAsset.setTown(asset.getTown());
+				msAsset.setAssetBrand(asset.getAssetBrand());
+				msAsset.setAssetModel(asset.getAssetModel());
 
-	        if (msAssetOpt.isPresent()) {
-	            MaterialSupplierAssets msAsset = msAssetOpt.get();
+				MaterialSupplierAssets updated = materialSupplierAssetsRepo.save(msAsset);
 
-	            // Update fields
-	            msAsset.setAssetCat(asset.getAssetCat());
-	            msAsset.setAssetSubCat(asset.getAssetSubCat());
-	            msAsset.setDistrict(asset.getDistrict());
-	            msAsset.setDoorNo(asset.getDoorNo());
-	            msAsset.setLocation(asset.getLocation());
-	            msAsset.setPinCode(asset.getPinCode());
-	            msAsset.setState(asset.getState());
-	            msAsset.setStreet(asset.getStreet());
-	            msAsset.setTown(asset.getTown());
-	            msAsset.setAssetBrand(asset.getAssetBrand());
-	            msAsset.setAssetModel(asset.getAssetModel());
+				// Map to DTO for response
+				responseDto.setAssetCat(updated.getAssetCat());
+				responseDto.setAssetSubCat(updated.getAssetSubCat());
+				responseDto.setDistrict(updated.getDistrict());
+				responseDto.setDoorNo(updated.getDoorNo());
+				responseDto.setLocation(updated.getLocation());
+				responseDto.setPinCode(updated.getPinCode());
+				responseDto.setState(updated.getState());
+				responseDto.setStreet(updated.getStreet());
+				responseDto.setTown(updated.getTown());
+				responseDto.setAssetBrand(updated.getAssetBrand());
+				responseDto.setAssetModel(updated.getAssetModel());
+				responseDto.setAssetId(updated.getAssetId());
+				responseDto.setUserId(updated.getUserId());
+				responseDto.setPlanId(updated.getPlanId());
+				responseDto.setMembershipExp(updated.getMembershipExpDb());
+				responseDto.setRegDate(updated.getRegDateFormatted());
+			} else {
+				throw new ResourceNotFoundException("Asset not found for user: " + asset.getUserId());
+			}
+		}
 
-	            MaterialSupplierAssets updated = materialSupplierAssetsRepo.save(msAsset);
+		// =========================
+		// CASE 2: EC
+		// =========================
+		else if (prefix.equals("CU")) {
+			Optional<CustomerAssets> assetDb = assetRepo.findByUserIdAndAssetId(asset.getUserId(), asset.getAssetId());
 
-	            // Map to DTO for response
-	            responseDto.setAssetCat(updated.getAssetCat());
-	            responseDto.setAssetSubCat(updated.getAssetSubCat());
-	            responseDto.setDistrict(updated.getDistrict());
-	            responseDto.setDoorNo(updated.getDoorNo());
-	            responseDto.setLocation(updated.getLocation());
-	            responseDto.setPinCode(updated.getPinCode());
-	            responseDto.setState(updated.getState());
-	            responseDto.setStreet(updated.getStreet());
-	            responseDto.setTown(updated.getTown());
-	            responseDto.setAssetBrand(updated.getAssetBrand());
-	            responseDto.setAssetModel(updated.getAssetModel());
-	            responseDto.setAssetId(updated.getAssetId());
-	            responseDto.setUserId(updated.getUserId());
-	            responseDto.setPlanId(updated.getPlanId());
-	            responseDto.setMembershipExp(updated.getMembershipExpDb());
-	            responseDto.setRegDate(updated.getRegDateFormatted());
-	        } else {
-	            throw new ResourceNotFoundException("Asset not found for user: " + userInfo.userId);
-	        }
-	    }
+			if (assetDb.isPresent()) {
+				CustomerAssets userAsset = assetDb.get();
 
-	    // =========================
-	    // CASE 2: EC
-	    // =========================
-	    else if (userType == UserType.EC) {
-	        Optional<CustomerAssets> assetDb = assetRepo.findByUserIdAndAssetId(userInfo.userId, asset.getAssetId());
+				userAsset.setAssetCat(asset.getAssetCat());
+				userAsset.setAssetSubCat(asset.getAssetSubCat());
+				userAsset.setDistrict(asset.getDistrict());
+				userAsset.setDoorNo(asset.getDoorNo());
+				userAsset.setLocation(asset.getLocation());
+				userAsset.setPinCode(asset.getPinCode());
+				userAsset.setState(asset.getState());
+				userAsset.setStreet(asset.getStreet());
+				userAsset.setTown(asset.getTown());
+				userAsset.setAssetBrand(asset.getAssetBrand());
+				userAsset.setAssetModel(asset.getAssetModel());
 
-	        if (assetDb.isPresent()) {
-	            CustomerAssets userAsset = assetDb.get();
+				CustomerAssets updated = assetRepo.save(userAsset);
 
-	            userAsset.setAssetCat(asset.getAssetCat());
-	            userAsset.setAssetSubCat(asset.getAssetSubCat());
-	            userAsset.setDistrict(asset.getDistrict());
-	            userAsset.setDoorNo(asset.getDoorNo());
-	            userAsset.setLocation(asset.getLocation());
-	            userAsset.setPinCode(asset.getPinCode());
-	            userAsset.setState(asset.getState());
-	            userAsset.setStreet(asset.getStreet());
-	            userAsset.setTown(asset.getTown());
-	            userAsset.setAssetBrand(asset.getAssetBrand());
-	            userAsset.setAssetModel(asset.getAssetModel());
+				// Map to DTO
+				responseDto.setAssetCat(updated.getAssetCat());
+				responseDto.setAssetSubCat(updated.getAssetSubCat());
+				responseDto.setDistrict(updated.getDistrict());
+				responseDto.setDoorNo(updated.getDoorNo());
+				responseDto.setLocation(updated.getLocation());
+				responseDto.setPinCode(updated.getPinCode());
+				responseDto.setState(updated.getState());
+				responseDto.setStreet(updated.getStreet());
+				responseDto.setTown(updated.getTown());
+				responseDto.setAssetBrand(updated.getAssetBrand());
+				responseDto.setAssetModel(updated.getAssetModel());
+				responseDto.setAssetId(updated.getAssetId());
+				responseDto.setUserId(updated.getUserId());
+				responseDto.setPlanId(updated.getPlanId());
+				responseDto.setMembershipExp(updated.getMembershipExpDb());
+				responseDto.setRegDate(updated.getRegDateFormatted());
+			} else {
+				throw new ResourceNotFoundException("Asset not found for user: " + asset.getUserId());
+			}
+		} else {
+			throw new ResourceNotFoundException("UserId not found: " + asset.getUserId());
+		}
 
-	            CustomerAssets updated = assetRepo.save(userAsset);
-
-	            // Map to DTO
-	            responseDto.setAssetCat(updated.getAssetCat());
-	            responseDto.setAssetSubCat(updated.getAssetSubCat());
-	            responseDto.setDistrict(updated.getDistrict());
-	            responseDto.setDoorNo(updated.getDoorNo());
-	            responseDto.setLocation(updated.getLocation());
-	            responseDto.setPinCode(updated.getPinCode());
-	            responseDto.setState(updated.getState());
-	            responseDto.setStreet(updated.getStreet());
-	            responseDto.setTown(updated.getTown());
-	            responseDto.setAssetBrand(updated.getAssetBrand());
-	            responseDto.setAssetModel(updated.getAssetModel());
-	            responseDto.setAssetId(updated.getAssetId());
-	            responseDto.setUserId(updated.getUserId());
-	            responseDto.setPlanId(updated.getPlanId());
-	            responseDto.setMembershipExp(updated.getMembershipExpDb());
-	            responseDto.setRegDate(updated.getRegDateFormatted());
-	        } else {
-	            throw new ResourceNotFoundException("Asset not found for user: " + userInfo.userId);
-	        }
-	    }
-
-	    // =========================
-	    // Unsupported user type
-	    // =========================
-	    else {
-	        throw new ResourceNotFoundException("Unsupported user type: " + userType);
-	    }
-
-	    return responseDto;
+		return responseDto;
 	}
-
-//	public CustomerAssets updateAssets(CustomerAssetDto asset, RegSource regSource) {
-//		UserInfo userInfo = getLoggedInUserInfo(regSource);
-//		Optional<CustomerAssets> assetDb = assetRepo.findByUserIdAndAssetId(userInfo.userId, asset.getAssetId());
-//		if (assetDb.isPresent()) {
-//			CustomerAssets user = assetDb.get();
-//			user.setAssetCat(asset.getAssetCat());
-//			user.setAssetSubCat(asset.getAssetSubCat());
-//			user.setDistrict(asset.getDistrict());
-//			user.setDoorNo(asset.getDoorNo());
-//			user.setLocation(asset.getLocation());
-//			user.setPinCode(asset.getPinCode());
-//			user.setState(asset.getState());
-//			user.setStreet(asset.getStreet());
-//			user.setTown(asset.getTown());
-//			user.setAssetBrand(asset.getAssetBrand());
-//			user.setAssetModel(asset.getAssetModel());
-//			return assetRepo.save(user);
-//
-//		}
-//		return null;
-//	}
 
 	@Override
 	public Page<?> getAssets(String userId, String assetId, String location, String assetCat, String assetSubCat,
-			String assetModel, String assetBrand, Pageable pageable, RegSource regSource,
-			UserType userType
-			) {
+			String assetModel, String assetBrand, Pageable pageable, RegSource regSource) {
+		String prefix = userId.substring(0, 2).toUpperCase();
 
-		// Determine logged-in user type
-		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
-		Collection<? extends GrantedAuthority> roles = AuthDetailsProvider.getLoggedRole();
-
-		String roleName = roles.stream().map(GrantedAuthority::getAuthority).map(r -> r.replace("ROLE_", ""))
-				.findFirst()
-				.orElseThrow(() -> new ResourceNotFoundException("User role not found for: " + loggedInUserEmail));
-
-//		UserType userType = UserType.valueOf(roleName);
-
-		if (userType == UserType.MS || userType==UserType.Developer) {
+		CustomerAssetDto responseDto = new CustomerAssetDto();
+		if (prefix.equals("MS") || prefix.equals("SP")) {
 			return getMaterialSupplierAssets(userId, assetId, location, assetCat, assetSubCat, assetModel, assetBrand,
 					pageable);
-		} else if (userType == UserType.EC) {
+		} else if (prefix.equals("CU")) {
 			return getCustomerAssetsInternal(userId, assetId, location, assetCat, assetSubCat, assetModel, assetBrand,
 					pageable);
 		} else {
-			throw new ResourceNotFoundException("Unsupported user type for assets: " + userType);
+			throw new ResourceNotFoundException("userId not found: " + userId);
 		}
 	}
 
@@ -345,120 +291,10 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 		return new PageImpl<>(typedQuery.getResultList(), pageable, total);
 	}
 
-//	@Override
-//	public Page<CustomerAssets> getCustomerAssets(String userId, String assetId, String location, String assetCat,
-//			String assetSubCat, String assetModel, String assetBrand, Pageable pageable) {
-//		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-//		CriteriaQuery<CustomerAssets> query = cb.createQuery(CustomerAssets.class);
-//		Root<CustomerAssets> root = query.from(CustomerAssets.class);
-//
-//		List<Predicate> predicates = new ArrayList<>();
-//
-//		if (userId != null && !userId.trim().isEmpty()) {
-//			predicates.add(cb.equal(root.get("userId"), userId));
-//		}
-//		if (assetId != null && !assetId.trim().isEmpty()) {
-//			predicates.add(cb.equal(root.get("assetId"), assetId));
-//		}
-//		if (location != null && !location.trim().isEmpty()) {
-//			predicates.add(cb.equal(root.get("location"), location));
-//		}
-//		if (assetCat != null && !assetCat.trim().isEmpty()) {
-//			predicates.add(cb.equal(root.get("assetCat"), assetCat));
-//		}
-//		if (assetSubCat != null && !assetSubCat.trim().isEmpty()) {
-//			predicates.add(cb.equal(root.get("assetSubCat"), assetSubCat));
-//		}
-//		if (assetModel != null && !assetModel.trim().isEmpty()) {
-//			predicates.add(cb.equal(root.get("assetModel"), assetModel));
-//		}
-//		if (assetBrand != null && !assetBrand.trim().isEmpty()) {
-//			predicates.add(cb.equal(root.get("assetBrand"), assetBrand));
-//		}
-//
-//		query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
-//		TypedQuery<CustomerAssets> typedQuery = entityManager.createQuery(query);
-//		typedQuery.setFirstResult((int) pageable.getOffset());
-//		typedQuery.setMaxResults(pageable.getPageSize());
-//
-//// Count query
-//		CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
-//		Root<CustomerAssets> countRoot = countQuery.from(CustomerAssets.class);
-//		List<Predicate> countPredicates = new ArrayList<>();
-//
-//		if (userId != null && !userId.trim().isEmpty()) {
-//			countPredicates.add(cb.equal(countRoot.get("userId"), userId));
-//		}
-//		if (assetId != null && !assetId.trim().isEmpty()) {
-//			countPredicates.add(cb.equal(countRoot.get("assetId"), assetId));
-//		}
-//		if (location != null && !location.trim().isEmpty()) {
-//			countPredicates.add(cb.equal(countRoot.get("location"), location));
-//		}
-//		if (assetCat != null && !assetCat.trim().isEmpty()) {
-//			countPredicates.add(cb.equal(countRoot.get("assetCat"), assetCat));
-//		}
-//		if (assetSubCat != null && !assetSubCat.trim().isEmpty()) {
-//			countPredicates.add(cb.equal(countRoot.get("assetSubCat"), assetSubCat));
-//		}
-//		if (assetModel != null && !assetModel.trim().isEmpty()) {
-//			countPredicates.add(cb.equal(countRoot.get("assetModel"), assetModel));
-//		}
-//		if (assetBrand != null && !assetBrand.trim().isEmpty()) {
-//			countPredicates.add(cb.equal(countRoot.get("assetBrand"), assetBrand));
-//		}
-//
-//		countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));
-//		Long total = entityManager.createQuery(countQuery).getSingleResult();
-//
-//		return new PageImpl<>(typedQuery.getResultList(), pageable, total);
-//	}
+	public CustomerAssetDto getAssetByAssetId(CustomerAssets asset, RegSource regSource) {
+		String prefix = asset.getUserId().substring(0, 2).toUpperCase();
 
-	@Override
-//	public CustomerAssetDto getAssetByAssetId(CustomerAssets asset, RegSource regSource) {
-//		UserInfo userInfo = getLoggedInUserInfo(regSource);
-//		
-//		asset.setUserId(userInfo.userId);
-//
-//	    // Save the entity
-//	    CustomerAssets savedAsset = assetRepo.save(asset);
-//		CustomerAssetDto assetDto = new CustomerAssetDto();
-//
-//		assetDto.setAssetCat(asset.getAssetCat());
-//		assetDto.setAssetSubCat(asset.getAssetSubCat());
-//		assetDto.setDistrict(asset.getDistrict());
-//		assetDto.setDoorNo(asset.getDoorNo());
-//		assetDto.setLocation(asset.getLocation());
-//		assetDto.setPinCode(asset.getPinCode());
-//		assetDto.setState(asset.getState());
-//		assetDto.setStreet(asset.getStreet());
-//		assetDto.setTown(asset.getTown());
-//		assetDto.setAssetModel(asset.getAssetModel());
-//		assetDto.setRegDate(asset.getRegDateFormatted());
-//		assetDto.setPlanId(asset.getPlanId());
-//		assetDto.setMembershipExp(asset.getMembershipExpDb());
-//		assetDto.setAssetId(asset.getAssetId());
-//		assetDto.setUserId(savedAsset.getUserId());
-//		assetDto.setAssetBrand(asset.getAssetBrand());
-//		assetRepo.save(asset);
-//		return assetDto;
-//
-//	}
-	public CustomerAssetDto getAssetByAssetId(CustomerAssets asset, RegSource regSource,UserType userType) {
-		UserInfo userInfo = getLoggedInUserInfo(regSource,userType);
-		asset.setUserId(userInfo.userId);
-
-		// Save based on user type
-		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
-		Collection<? extends GrantedAuthority> roles = AuthDetailsProvider.getLoggedRole();
-
-		String roleName = roles.stream().map(GrantedAuthority::getAuthority).map(r -> r.replace("ROLE_", ""))
-				.findFirst().orElseThrow(() -> new ResourceNotFoundException("User role not found"));
-
-//		UserType userType = UserType.valueOf(roleName);
-
-		if (userType == UserType.MS || userType ==UserType.Developer) {
-			// Map CustomerAssets -> MaterialSupplierAssets
+		if (prefix.equals("MS") || prefix.equals("SP")) {
 			MaterialSupplierAssets msAsset = new MaterialSupplierAssets();
 			msAsset.setUserId(asset.getUserId());
 			msAsset.setAssetCat(asset.getAssetCat());
@@ -478,11 +314,10 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 			// Set generated ID back into DTO
 			asset.setAssetId(savedAsset.getAssetId());
 			asset.setMembershipExp(savedAsset.getMembershipExp());
-		} 
-		else if (userType == UserType.EC) {
+		} else if (prefix.equals("CU")) {
 			assetRepo.save(asset);
 		} else {
-			throw new ResourceNotFoundException("Unsupported user type: " + userType);
+			throw new ResourceNotFoundException("Not found userId " + asset.getUserId());
 		}
 
 		// Prepare DTO for response
@@ -506,66 +341,4 @@ public class CustomerAssetsServiceImpl implements CustomerAssetsService {
 
 		return assetDto;
 	}
-
-	private static class UserInfo {
-
-		String userId;
-
-		UserInfo(String userId) {
-			this.userId = userId;
-		}
-
-	}
-
-	private UserInfo getLoggedInUserInfo(RegSource regSource,UserType userType) {
-		String loggedInUserEmail = AuthDetailsProvider.getLoggedEmail();
-		Collection<? extends GrantedAuthority> loggedInRole = AuthDetailsProvider.getLoggedRole();
-
-		List<String> roleNames = loggedInRole.stream().map(GrantedAuthority::getAuthority)
-				.map(role -> role.replace("ROLE_", "")).collect(Collectors.toList());
-
-		if (roleNames.isEmpty()) {
-			throw new ResourceNotFoundException("No roles assigned for user: " + loggedInUserEmail);
-		}
-
-//		userType = UserType.valueOf(roleNames.get(0));
-		String userId;
-
-		switch (userType) {
-		case Adm:
-			AdminDetails admin = adminRepo.findByEmailAndUserType(loggedInUserEmail,userType)
-					.orElseThrow(() -> new ResourceNotFoundException("Admin not found: " + loggedInUserEmail));
-			userId = admin.getEmail();
-			break;
-
-		case MS:
-			MaterialSupplierQuotationUser msUser = materialSupplierQuotationUserDAO
-					.findByEmailAndUserTypeAndRegSource(loggedInUserEmail,userType, regSource)
-					.orElseThrow(() -> new ResourceNotFoundException("Material User not found: " + loggedInUserEmail));
-			userId = msUser.getBodSeqNo();
-			break;
-
-		case EC:
-		case Developer:
-			// Try CustomerRegistration first
-			CustomerRegistration customer = regiRepo
-					.findByUserEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource).orElse(null);
-
-			if (customer != null) {
-				userId = customer.getUserid();
-			} else {
-				// If not found in Customer, try User table
-				User user = userDAO.findByEmailAndUserTypeAndRegSource(loggedInUserEmail, userType, regSource)
-						.orElseThrow(() -> new ResourceNotFoundException("User not found: " + loggedInUserEmail));
-				userId = user.getBodSeqNo();
-			}
-			break;
-
-		default:
-			throw new ResourceNotFoundException("Unsupported user type: " + userType);
-		}
-
-		return new UserInfo(userId);
-	}
-
 }

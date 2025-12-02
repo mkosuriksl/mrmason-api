@@ -2,6 +2,7 @@ package com.application.mrmason.service;
 
 import java.util.List;
 
+import com.application.mrmason.dto.UserChargeResponseDTO;
 import com.application.mrmason.dto.UserServiceChargeRequest;
 import com.application.mrmason.entity.UserServiceCharges;
 
@@ -11,4 +12,6 @@ public interface UserServiceChargesService {
 	public UserServiceCharges updateCharges(UserServiceCharges charges);
 	public List<UserServiceCharges> getUserServiceCharges(String serviceChargeKey, String serviceId, String location,
 			String brand, String model,String userId,String subcategory) ;
+	public List<UserChargeResponseDTO> getUserCharges(String serviceChargeKey, String serviceId, String location,
+			String brand, String model, String updatedBy, String subcategory);
 }

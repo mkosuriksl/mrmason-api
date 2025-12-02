@@ -23,4 +23,20 @@ public interface UserServiceChargesRepo extends JpaRepository<UserServiceCharges
 			@Param("model") String model, @Param("updatedBy") String updatedBy,
 			@Param("subcategory") String subcategory);
 
+	@Query("SELECT u FROM UserServiceCharges u " +
+            "WHERE (:serviceChargeKey IS NULL OR u.serviceChargeKey = :serviceChargeKey) AND " +
+            "(:serviceId IS NULL OR u.serviceId = :serviceId) AND " +
+            "(:location IS NULL OR u.location = :location) AND " +
+            "(:brand IS NULL OR u.brand = :brand) AND " +
+            "(:model IS NULL OR u.model = :model) AND " +
+            "(:subcategory IS NULL OR u.subcategory = :subcategory) AND " +
+            "(:updatedBy IS NULL OR u.updatedBy = :updatedBy)")
+    List<UserServiceCharges> searchCharges(
+            @Param("serviceChargeKey") String serviceChargeKey,
+            @Param("serviceId") String serviceId,
+            @Param("location") String location,
+            @Param("brand") String brand,
+            @Param("model") String model,
+            @Param("subcategory") String subcategory,
+            @Param("updatedBy") String updatedBy);
 }

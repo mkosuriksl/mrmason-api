@@ -58,53 +58,54 @@ public class SparePartServiceImpl implements SparePartService {
 	UserDAO userDAO;
 
 	@Override
-	public SparePartDto addSparePart(SparePartDto dto, RegSource regSource, UserType userType) {
+	public SparePartDto addSparePart(SparePartDto dto, RegSource regSource) {
 
-		UserInfo info = getLoggedInUserInfo(regSource, userType);
+	    // 🔥 Step 1: Generate composite primary key manually
+	    String compositeKey = dto.getRequestId() + "_" + dto.getSkuId();
 
-		SparePartEntity e = new SparePartEntity();
-		BeanUtils.copyProperties(dto, e);
+	    // 🔥 Step 2: Check duplicate
+	    if (sparePartRepo.existsByRequestIdSkuId(compositeKey)) {
+	        throw new RuntimeException(
+	            "Duplicate SparePart entry: RequestId '" + dto.getRequestId() +
+	            "' with SkuId '" + dto.getSkuId() + "' already exists.");
+	    }
 
-		e.setUpdatedBy(info.userId);
-		e.setRequestId(dto.getRequestId());
-		e.setSparePart(dto.getSparePart());
-		e.setSkuId(dto.getSkuId());
-		e.setBrand(dto.getBrand());
-		e.setModel(dto.getModel());
-		e.setAmount(dto.getAmount());
-		e.setDiscount(dto.getDiscount());
-		e.setGst(dto.getGst());
-		e.setTotalAmount(dto.getTotalAmount());
-		e.setWarranty(dto.getWarranty());
-		e.setUpdatedDate(new Date());
+	    SparePartEntity e = new SparePartEntity();
+	    BeanUtils.copyProperties(dto, e);
 
-		SparePartEntity saved = sparePartRepo.save(e);
+	    // Set primary key manually
+	    e.setRequestIdSkuId(compositeKey);
 
-		SparePartDto response = new SparePartDto();
-		BeanUtils.copyProperties(saved, response);
+	    e.setUpdatedBy(dto.getUserId());
+	    e.setUpdatedDate(new Date());
 
-		return response;
+	    SparePartEntity saved = sparePartRepo.save(e);
+
+	    SparePartDto response = new SparePartDto();
+	    BeanUtils.copyProperties(saved, response);
+
+	    return response;
 	}
 
+
 	@Override
-	public SparePartDto updateSparePart(SparePartDto dto, RegSource regSource, UserType userType) {
+	public SparePartDto updateSparePart(SparePartDto dto, RegSource regSource) {
 
 		// Fetch existing entity
 		SparePartEntity entity = sparePartRepo.findById(dto.getRequestIdSkuId()).orElseThrow(
 				() -> new ResourceNotFoundException("Spare part not found with id: " + dto.getRequestIdSkuId()));
 
-		// Get logged in user for updatedBy
-		UserInfo info = getLoggedInUserInfo(regSource, userType);
 
 		// Update fields from DTO
 		entity.setSparePart(dto.getSparePart());
+		entity.setUserId(dto.getUserId());
 		entity.setBrand(dto.getBrand());
 		entity.setModel(dto.getModel());
 		entity.setAmount(dto.getAmount());
 		entity.setDiscount(dto.getDiscount());
 		entity.setGst(dto.getGst());
 		entity.setWarranty(dto.getWarranty());
-		entity.setUpdatedBy(info.userId);
+		entity.setUpdatedBy(dto.getUserId());
 		entity.setUpdatedDate(new Date());
 		entity.setTotalAmount(dto.getTotalAmount());
 
@@ -120,7 +121,7 @@ public class SparePartServiceImpl implements SparePartService {
 
 	@Override
 	public Page<SparePartEntity> getSparePart(String requestId, String sparePart, String brand, String model,
-			String updatedBy, Pageable pageable) throws AccessDeniedException {
+			String userId, Pageable pageable) throws AccessDeniedException {
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<SparePartEntity> query = cb.createQuery(SparePartEntity.class);
@@ -139,8 +140,8 @@ public class SparePartServiceImpl implements SparePartService {
 		if (model != null && !model.trim().isEmpty()) {
 			predicates.add(cb.equal(root.get("model"), model));
 		}
-		if (updatedBy != null && !updatedBy.trim().isEmpty()) {
-			predicates.add(cb.equal(root.get("updatedBy"), updatedBy));
+		if (userId != null && !userId.trim().isEmpty()) {
+			predicates.add(cb.equal(root.get("userId"), userId));
 		}
 
 		query.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
@@ -165,8 +166,8 @@ public class SparePartServiceImpl implements SparePartService {
 		if (model != null && !model.trim().isEmpty()) {
 			countPredicates.add(cb.equal(countRoot.get("model"), model));
 		}
-		if (updatedBy != null && !updatedBy.trim().isEmpty()) {
-			countPredicates.add(cb.equal(countRoot.get("updatedBy"), updatedBy));
+		if (userId != null && !userId.trim().isEmpty()) {
+			countPredicates.add(cb.equal(countRoot.get("userId"), userId));
 		}
 
 		countQuery.select(cb.count(countRoot)).where(cb.and(countPredicates.toArray(new Predicate[0])));

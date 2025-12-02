@@ -32,6 +32,7 @@ public class SparePartEntity {
 	private Double gst;
 	private Double totalAmount;
 	private String warranty;
+	private String userId;
 
 	private String updatedBy;
 

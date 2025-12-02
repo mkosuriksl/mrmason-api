@@ -31,10 +31,10 @@ public class SparePartController {
 	SparePartService service;
 
 	@PostMapping("/add")
-	public GenericResponse<SparePartDto> addSparePart(@RequestBody SparePartDto dto, @RequestParam RegSource regSource,
-			@RequestParam UserType userType) {
+	public GenericResponse<SparePartDto> addSparePart(@RequestBody SparePartDto dto,
+			@RequestParam RegSource regSource) {
 
-		SparePartDto savedDto = service.addSparePart(dto, regSource, userType);
+		SparePartDto savedDto = service.addSparePart(dto, regSource);
 
 		return new GenericResponse<>(
 
@@ -43,9 +43,9 @@ public class SparePartController {
 
 	@PutMapping("/update")
 	public GenericResponse<SparePartDto> updateSparePart(@RequestBody SparePartDto dto,
-			@RequestParam RegSource regSource, @RequestParam UserType userType) {
+			@RequestParam RegSource regSource) {
 
-		SparePartDto updatedDto = service.updateSparePart(dto, regSource, userType);
+		SparePartDto updatedDto = service.updateSparePart(dto, regSource);
 
 		return new GenericResponse<>("Spare part updated successfully", true, updatedDto);
 	}

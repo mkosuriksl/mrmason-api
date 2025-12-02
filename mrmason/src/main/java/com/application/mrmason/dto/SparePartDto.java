@@ -21,5 +21,6 @@ public class SparePartDto {
     private String warranty;
     private String updatedBy;
     private Date updatedDate;
+    private String userId;
 }
 

@@ -58,6 +58,7 @@ public class WebConfig {
 						"/paint-master/**", "/api/v1/auth/**", "/v2/api-docs", "/v3/api-docs", "/v3/api-docs/**",
 						"/api/fr/register","/api/fr/send-otp","/api/fr/verify-otp",
 						"/api/fr/login","/api/fr/forgot/verify-otp","/api/fr/forgot/send-otp",
+						"/carstand-api/getUserServiceCharegs-withoutSecurity",
 						"/api/distinct-location-by-machine","/admin-machine-assets/get","/getUserServiceCharegs-withoutSecurity",
 						"/getBhatServiceCategory","/getBhatServiceCategory/nonCivil/{serviceCategory}","/getBhatServiceCategory/civil/{serviceCategory}",
 						"/swagger-resources", "/swagger-resources/**", "/configuration/ui", "/configuration/security","/api/distinct-location-by-ms","/distinct-location-by-sp",

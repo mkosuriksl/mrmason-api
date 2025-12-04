@@ -66,7 +66,7 @@ public class FrRegistrationServiceImpl implements FrRegistrationService {
 			return new GenericResponse<>("User already registered", false, null);
 		}
 
-		String userId = "FR" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+		String userId = "RT" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
 
 		// ✅ Save user registration
 		FrReg reg = FrReg.builder().frUserId(userId).frEmail(dto.getFrEmail()).frMobile(dto.getFrMobile())

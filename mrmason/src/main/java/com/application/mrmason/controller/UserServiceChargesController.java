@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -60,7 +61,8 @@ public class UserServiceChargesController {
 	public ResponseEntity<?> getUserCharges(@RequestParam(required = false) String serviceChargeKey,
 			@RequestParam(required = false) String serviceId, @RequestParam(required = false) String location,
 			@RequestParam(required = false) String brand, @RequestParam(required = false) String model,
-			@RequestParam String userId, @RequestParam(required = false) String subcategory) {
+			@RequestParam(required = false) String userId, @RequestParam(required = false) String subcategory,
+			@RequestHeader String token) {
 
 		if (userId == null || userId.isBlank() || userId.isEmpty()) {
 			throw new ResourceNotFoundException("User Id is required.");

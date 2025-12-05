@@ -19,6 +19,7 @@ public class ServiceRequestHeaderDTO {
 
     private String requestId;
     private LocalDate requestDate;
+    private String servicePersonId;
     private String requestedBy;
     private String contactNumber;
     private String vehicleId;

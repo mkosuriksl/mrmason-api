@@ -25,14 +25,14 @@ public class MrmasonController {
 	public ResponseEntity<PaginatedResponse<ServiceRequestHeaderDTO>> getWithoutSecurity(
 			@RequestParam(required = false) String fromRequestDate,
 			@RequestParam(required = false) String toRequestDate, @RequestParam(required = false) String requestId,
-			@RequestParam(required = false) String servicePersonId, @RequestParam(required = false) Status status,
+			@RequestParam(required = false) String serviceId, @RequestParam(required = false) Status status,
 			@RequestParam(required = false) String contactNumber, @RequestParam(required = false) String brand,
 			@RequestParam(required = false) String vehicleId, @RequestParam(required = false) String model,
 			@RequestParam(defaultValue = "0") int pageNo, @RequestParam(defaultValue = "10") int pageSize,
 			@RequestParam(required = false) Map<String, String> requestParams) {
 
 		PaginatedResponse<ServiceRequestHeaderDTO> response = mrmasonService.searchServiceRequests(fromRequestDate,
-				toRequestDate, requestId, servicePersonId, status, contactNumber, brand, vehicleId, model, pageNo,
+				toRequestDate, requestId, serviceId, status, contactNumber, brand, vehicleId, model, pageNo,
 				pageSize, requestParams);
 
 		return ResponseEntity.ok(response);

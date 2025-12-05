@@ -30,10 +30,10 @@ public class MrmasonService {
 	CarstandUrlAndApiKeyRepository apkKeyRepository;
 
 	public PaginatedResponse<ServiceRequestHeaderDTO> searchServiceRequests(
-	        String fromRequestDateStr,
-	        String toRequestDateStr,
+	        String fromRequestDate,
+	        String toRequestDate,
 	        String requestId,
-	        String servicePersonId,
+	        String serviceId,
 	        Status status,
 	        String contactNumber, // Fixed typo
 	        String brand,
@@ -53,17 +53,17 @@ public class MrmasonService {
 	    headers.set("token", smsDetails.getApiKey());
 
 	    // Add query parameters dynamically
-	    if (fromRequestDateStr != null && !fromRequestDateStr.isEmpty())
-	        builder.queryParam("fromRequestDateStr", fromRequestDateStr);
+	    if (fromRequestDate != null && !fromRequestDate.isEmpty())
+	        builder.queryParam("fromRequestDate", fromRequestDate);
 
-	    if (toRequestDateStr != null && !toRequestDateStr.isEmpty())
-	        builder.queryParam("toRequestDateStr", toRequestDateStr);
+	    if (toRequestDate != null && !toRequestDate.isEmpty())
+	        builder.queryParam("toRequestDate", toRequestDate);
 
 	    if (requestId != null && !requestId.isEmpty())
 	        builder.queryParam("requestId", requestId);
 
-	    if (servicePersonId != null && !servicePersonId.isEmpty())
-	        builder.queryParam("servicePersonId", servicePersonId);
+	    if (serviceId != null && !serviceId.isEmpty())
+	        builder.queryParam("serviceId", serviceId);
 
 	    if (status != null)
 	        builder.queryParam("status", status.name());

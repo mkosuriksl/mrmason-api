@@ -149,11 +149,12 @@ public class SpWorkersServiceImpl implements SpWorkersService {
 		String location = worker.getWorkerLocation();
 		String workerAvail = worker.getWorkerAvail();
 		String workerStatus = worker.getWorkerStatus();
-		
+		String workerName=worker.getWorkerName();		
 		Optional<SpWorkers> user = Optional.of(workerRepo.findByWorkerIdAndServicePersonId(workerId, spId));
 		if (user.isPresent()) {
 			user.get().setWorkerLocation(location);
 			user.get().setWorkerAvail(workerAvail);
+			user.get().setWorkerName(workerName);
 			workerRepo.save(user.get());
 			return "updated";
 		}

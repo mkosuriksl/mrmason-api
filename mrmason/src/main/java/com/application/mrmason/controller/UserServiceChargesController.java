@@ -61,8 +61,7 @@ public class UserServiceChargesController {
 	public ResponseEntity<?> getUserCharges(@RequestParam(required = false) String serviceChargeKey,
 			@RequestParam(required = false) String serviceId, @RequestParam(required = false) String location,
 			@RequestParam(required = false) String brand, @RequestParam(required = false) String model,
-			@RequestParam(required = false) String userId, @RequestParam(required = false) String subcategory,
-			@RequestHeader String token) {
+			@RequestParam(required = false) String userId, @RequestParam(required = false) String subcategory) {
 
 		if (userId == null || userId.isBlank() || userId.isEmpty()) {
 			throw new ResourceNotFoundException("User Id is required.");

@@ -108,9 +108,7 @@ public class UserServiceChargesServiceImpl implements UserServiceChargesService 
 	    }
 
 	    // 1️⃣ Fetch User (updatedBy = bodSeqNo)
-	    User user = userDAO.findByBodSeqNo(updatedBy);
 
-	    String userName = (user != null) ? user.getName() : null;
 
 	    // 2️⃣ Group by unique parent fields (NO updatedDate)
 	    Map<String, List<UserServiceCharges>> grouped = list.stream()
@@ -140,6 +138,10 @@ public class UserServiceChargesServiceImpl implements UserServiceChargesService 
 
 	        parent.setUpdatedBy(first.getUpdatedBy());
 	        parent.setBodSeqNo(first.getUpdatedBy());     // same as updatedBy
+	        
+		    User user = userDAO.findByBodSeqNo(first.getUpdatedBy());
+
+		    String userName = (user != null) ? user.getName() : null;
 	        parent.setName(userName);                     // USER NAME FROM USER TABLE
 	        parent.setBrand(first.getBrand());
 	        parent.setModel(first.getModel());

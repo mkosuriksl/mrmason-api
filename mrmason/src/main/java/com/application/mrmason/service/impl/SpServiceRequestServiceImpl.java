@@ -26,14 +26,14 @@ public class SpServiceRequestServiceImpl implements SpServiceRequestService{
 	public SpServiceRequestDto addServiceRequest(SpServiceRequest service) {
 		if (userRepo.findByBodSeqNo(service.getServicePersonId()) != null) 
 		{
-	//		if(seviceRepo.findByRequestId(service.getServiceReqId())!=null) 
-	//		{
-	//			if (requestRepo.findByServiceReqId(service.getServiceReqId()) == null)
-	//		    {
+		if(seviceRepo.findByRequestId(service.getServiceReqId())!=null) 
+			{
+			if (requestRepo.findByServiceReqId(service.getServiceReqId()) == null)
+		    {
 					requestRepo.save(service);
 					return getServiceByReqId(service.getServiceReqId());
-		//		}
-		//	}
+			}
+		}
 		
 		}
 		return null;
